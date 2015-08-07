@@ -1,0 +1,9 @@
+.directory
+.DS_Store
+src/Makefile
+*.pro.user*
+src/qrc_resources.cpp
+build-*
+src/*.o
+src/moc_*
+src/VPaint
