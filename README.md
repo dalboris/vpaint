@@ -1,8 +1,7 @@
 #  ABOUT VPAINT
 
-Program: VPaint
-Contact: Boris Dalstein <dalboris@gmail.com>
-Website: http://www.vpaint.org
+- Contact: Boris Dalstein <dalboris@gmail.com>
+- Website: http://www.vpaint.org
 
 VPaint is an experimental vector graphics editor based on the
 Vector Animation Complex technology. It allows you to create
