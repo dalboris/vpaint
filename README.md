@@ -22,7 +22,7 @@ innovative techniques.
 
 - In the status bar (at the bottom), whenever "CTRL" is mentionned, you should use the COMMAND key instead. 
 
-- Do delete something, you have to you the "Delete" key (i.e., "delete forward"). If you only have the "Backspace" key on your keyboard, you have to use Fn+Backspace instead.
+- To delete something, you have to you the "Delete" key (i.e., "delete forward"). If you only have the "Backspace" key on your keyboard, you have to use Fn+Backspace instead.
 
 
 #  LICENSE
@@ -51,8 +51,9 @@ See COPYING for details.
 
 (tested on MacOS X Yosemite 10.10.4, on MacBook Pro 15-inch Early 2008)
 
-Note 1: VPaint will -NOT- compile with clang or GCC 4.2 (provided by default on MacOS X)
-Note 2: There are bugs in Qt 5.1 to 5.4 with Yosemite, hence Qt 5.5+ is recommended
+- Note 1: VPaint will -NOT- compile with clang or GCC 4.2 (provided by default on MacOS X).
+
+- Note 2: There are bugs in Qt 5.1 to 5.4 with Yosemite, hence Qt 5.5+ is recommended.
 
 1. Install XCode
 2. Install GCC 4.8 via homebrew, following these instructions:
@@ -80,13 +81,13 @@ Note 2: There are bugs in Qt 5.1 to 5.4 with Yosemite, hence Qt 5.5+ is recommen
 
 (tested on Windows 7 64bit)
 
-Note 1: To support more user, compiling in 32bit is recommended, as
-        it can run on both 32bit and 64bit versions of Windows.
+- Note 1: To support more user, compiling in 32bit is recommended, as
+          it can run on both 32bit and 64bit versions of Windows.
 
-Note 2: Windows XP and lower are not supported
+- Note 2: Windows XP and lower are not supported.
 
-Note 3: VPaint will -NOT- compile with MinGW 4.8 (either 32bit and 64bit)
-        or Visual Studio 2010 or lower
+- Note 3: VPaint will -NOT- compile with MinGW 4.8 (either 32bit and 64bit)
+        or Visual Studio 2010 or lower.
 
 1. Make sure that Visual Studio 2012 or higher is installed on your system
 2. Download and install Qt 5.4 Community from http://www.qt.io/.  Make
