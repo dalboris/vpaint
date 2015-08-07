@@ -1,6 +1,4 @@
-# vpaint
-
-#  ABOUT
+#  ABOUT VPAINT
 
 Program: VPaint
 Contact: Boris Dalstein <dalboris@gmail.com>
@@ -21,7 +19,7 @@ innovative techniques.
 
 - On MacOS 10.10 Yosemite, maximizing the window is poorly supported. If you want to exit maximizing, hide the toolbar and action bar with "View > Toolbar" and "View > Action Bar" so you can access the minimize button again
 
-- Some users have experienced a mouse pointer issue: the pointer where you draw 
+- Some users have experienced a mouse pointer issue: the pointer drawn by VPaint is not at the same location as your mouse cursor. It doesn't prevent using VPaint but it is quite inconvenient. 
 
 
 #  LICENSE
