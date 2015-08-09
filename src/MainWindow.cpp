@@ -585,7 +585,7 @@ bool MainWindow::open()
     }
 
     QString filename = QFileDialog::getOpenFileName(
-        this, tr("Open"), QString(), tr("Vec files (*.vec)"));
+        this, tr("Open"), QString(), tr("Vec files (*.vec)"), QStandardPaths::writableLocation(QStandardPaths::PicturesLocation));
 
     bool success = doOpen(filename);
 
@@ -627,7 +627,7 @@ bool MainWindow::save()
 
 bool MainWindow::saveAs()
 {
-    QString filename = QFileDialog::getSaveFileName(this, tr("Save As"));
+    QString filename = QFileDialog::getSaveFileName(this, tr("Save As"), QStandardPaths::writableLocation(QStandardPaths::PicturesLocation));
 
     if (filename.isEmpty())
         return false;
@@ -653,7 +653,7 @@ bool MainWindow::saveAs()
 
 bool MainWindow::exportSVG()
 {
-    QString filename = QFileDialog::getSaveFileName(this, tr("Export as SVG"));
+    QString filename = QFileDialog::getSaveFileName(this, tr("Export as SVG"), QStandardPaths::writableLocation(QStandardPaths::PicturesLocation));
     if (filename.isEmpty())
         return false;
 
@@ -675,7 +675,7 @@ bool MainWindow::exportSVG()
 
 bool MainWindow::exportPNG()
 {
-    exportPngFilename_ = QFileDialog::getSaveFileName(this, tr("Export as PNG"));
+    exportPngFilename_ = QFileDialog::getSaveFileName(this, tr("Export as PNG"), QStandardPaths::writableLocation(QStandardPaths::PicturesLocation));
     if (exportPngFilename_.isEmpty())
         return false;
 
