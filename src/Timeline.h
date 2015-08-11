@@ -174,6 +174,10 @@ private slots:
     void goToPreviousFrame(View * view);
     void goToNextFrame(View * view);
     void goToLastFrame(View * view);
+    void checkPlayingWindow();
+    void clampFrame();
+    void clampFrame(double frame);
+    void clampFrame(View * view, double frame);
     void goToFrame(View * view, int frame);
     void goToFrame(View * view, double frame);
 

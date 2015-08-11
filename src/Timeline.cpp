@@ -565,6 +565,12 @@ Timeline::Timeline(Scene *scene, QWidget *parent) :
     setLastFrame(47);
     connect(lastFrameSpinBox_, SIGNAL(valueChanged(int)), this, SLOT(setLastFrame(int)));
 
+    // Check to make sure frame does not go beyond boundaries
+    connect(this, SIGNAL(timeChanged()), this, SLOT(clampFrame()));
+    // These two must be in this order
+    connect(this, SIGNAL(playingWindowChanged()), this, SLOT(checkPlayingWindow()));
+    connect(this, SIGNAL(playingWindowChanged()), this, SLOT(clampFrame()));
+
     // Set FPS
     timer_ = new QTimer();
     setFps(24);
@@ -789,6 +795,14 @@ void Timeline::setLastFrame(int lastFrame)
     emit playingWindowChanged();
 }
 
+void Timeline::checkPlayingWindow()
+{
+    if(firstFrame() > lastFrame())
+    {
+        setLastFrame(firstFrame());
+    }
+}
+
 void Timeline::setFps(int fps)
 {
     if(subframeInbetweening())
@@ -958,6 +972,27 @@ void Timeline::goToPreviousFrame(View * view)
     }
 }
 
+void Timeline::clampFrame()
+{
+    clampFrame(global()->activeTime().floatTime());
+}
+
+void Timeline::clampFrame(double frame)
+{
+    clampFrame(global()->activeView(), frame);
+}
+
+void Timeline::clampFrame(View * view, double frame)
+{
+    if(frame < firstFrame())
+    {
+        goToFrame(view, firstFrame());
+    }
+    else if(frame > lastFrame())
+    {
+        goToFrame(view, lastFrame());
+    }
+}
 
 void Timeline::goToFrame(View * view, double frame)
 {
@@ -977,6 +1012,7 @@ void Timeline::addView(View * view)
 {
     views_ << view;
     connect(view, SIGNAL(settingsChanged()), this, SLOT(update()));
+    connect(view, SIGNAL(settingsChanged()), this, SLOT(clampFrame()));
     hbar_->update();
 }
 
