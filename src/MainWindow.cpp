@@ -585,7 +585,7 @@ bool MainWindow::open()
     }
 
     QString filename = QFileDialog::getOpenFileName(
-        this, tr("Open"), QString(), tr("Vec files (*.vec)"), QStandardPaths::writableLocation(QStandardPaths::PicturesLocation));
+        this, tr("Open"), QStandardPaths::writableLocation(QStandardPaths::PicturesLocation), tr("Vec files (*.vec)"));
 
     bool success = doOpen(filename);
 
