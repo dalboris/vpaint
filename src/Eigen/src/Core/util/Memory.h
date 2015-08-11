@@ -731,10 +731,10 @@ public:
 
     // Support for c++11
 #if (__cplusplus >= 201103L)
-    template<typename... Args>
-    void  construct(pointer p, Args&&... args)
+    template<class U, typename... Args>
+    void  construct(U* p, Args&&... args)
     {
-      ::new(p) T(std::forward<Args>(args)...);
+      ::new((void*)p) U(std::forward<Args>(args)...);
     }
 #endif
 
