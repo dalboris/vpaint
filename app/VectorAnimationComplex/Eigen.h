@@ -10,8 +10,8 @@
 
 // Helper file to include the Eigen library
 
-#include "../Eigen/Core"
-#include "../Eigen/Dense"
-#include "../Eigen/StdVector"
+#include <Eigen/Core>
+#include <Eigen/Dense>
+#include <Eigen/StdVector>
 
 #endif // EIGEN_H

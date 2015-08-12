@@ -16,6 +16,8 @@ win32: RC_FILE = VPaint.rc
 # To create the icon on MacOS X
 macx: ICON = images/vpaint.icns
 
+QMAKE_CXXFLAGS += $$QMAKE_CFLAGS_ISYSTEM $$PWD/../lib
+
 # Compiler flags for Linux
 unix:!macx {
   # Link to GLU
@@ -91,9 +93,6 @@ HEADERS += MainWindow.h \
     VectorAnimationComplex/Algorithms.h \
     VectorAnimationComplex/SmartKeyEdgeSet.h \
     OpenGL.h \
-    GLEW/wglew.h \
-    GLEW/glew.h \
-    GLEW/glxew.h \
     VectorAnimationComplex/Triangles.h \
     SelectionInfoWidget.h \
     VectorAnimationComplex/Cycle.h \
@@ -171,7 +170,6 @@ SOURCES += main.cpp \
     VectorAnimationComplex/Cycle.cpp \
     VectorAnimationComplex/Algorithms.cpp \
     VectorAnimationComplex/SmartKeyEdgeSet.cpp \
-    GLEW/glew.c \
     VectorAnimationComplex/Triangles.cpp \
     SelectionInfoWidget.cpp \
     VectorAnimationComplex/Path.cpp \
@@ -206,3 +204,15 @@ SOURCES += main.cpp \
     ViewMacOsX.cpp
 
 DISTFILES +=
+
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../lib/GLEW/release/ -lglew
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../lib/GLEW/debug/ -lglew
+else:unix: LIBS += -L$$OUT_PWD/../lib/GLEW/ -lglew
+
+DEPENDPATH += $$PWD/../lib/GLEW
+
+win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../lib/GLEW/release/libglew.a
+else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../lib/GLEW/debug/libglew.a
+else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../lib/GLEW/release/glew.lib
+else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../lib/GLEW/debug/glew.lib
+else:unix: PRE_TARGETDEPS += $$OUT_PWD/../lib/GLEW/libglew.a
