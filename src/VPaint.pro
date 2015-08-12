@@ -19,7 +19,7 @@ macx: ICON = images/vpaint.icns
 # Compiler flags for Linux
 unix:!macx {
   # Use C++11
-  QMAKE_CXXFLAGS += -std=c++11
+  QMAKE_CXXFLAGS += $${QMAKE_CXXFLAGS_CXX11}
   # Link to GLU
   LIBS += -lGLU
   # Use dwarf debug dymbols
@@ -31,7 +31,7 @@ unix:!macx {
 # Compiler flags for Mac OS X
 macx {
   # Use C++11
-  QMAKE_CXXFLAGS += -std=c++11
+  QMAKE_CXXFLAGS += $${QMAKE_CXXFLAGS_CXX11}
 }
 
 # Compiler flags for Windows
