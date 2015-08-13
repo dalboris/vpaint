@@ -525,8 +525,6 @@ double Cycle::totalCurvature() const
     }
 }
 
-#define M_PI 3.14159265358979323846  /* pi */
-
 int Cycle::turningNumber() const
 {
     // Note: std::round is C++11, not supported by Visual Studio 2012
