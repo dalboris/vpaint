@@ -7,6 +7,7 @@
 
 # Basic Qt configuration
 TEMPLATE = app
+TARGET = VPaint
 CONFIG += qt
 QT += opengl network
 
