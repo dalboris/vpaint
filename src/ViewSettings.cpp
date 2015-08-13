@@ -958,16 +958,15 @@ void ViewSettingsWidget::updateWidgetFromSettings()
         break;
     }
 
-    switch(viewSettings_.onionSkinningIsEnabled())
+    if(viewSettings_.onionSkinningIsEnabled())
     {
-    case false:
-        onionSkinningButton_Off_->setChecked(true);
-        onionSkinningButton_->setIcon(QIcon(":images/onion-skinning-off.png"));
-        break;
-    case true:
         onionSkinningButton_On_->setChecked(true);
         onionSkinningButton_->setIcon(QIcon(":images/onion-skinning-on.png"));
-        break;
+    }
+    else
+    {
+        onionSkinningButton_Off_->setChecked(true);
+        onionSkinningButton_->setIcon(QIcon(":images/onion-skinning-off.png"));
     }
 }
 
