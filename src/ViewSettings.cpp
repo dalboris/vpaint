@@ -311,8 +311,6 @@ ViewSettingsWidget::ViewSettingsWidget(ViewSettings & viewSettings, QWidget * pa
     //frameZoomLayout->setMargin(0);
     //frameZoomLayout->setSpacing(0);
 
-    int frameZoomWidth = buttonSize+30;
-
     QPushButton * goToPreviousFrameButton = new QPushButton();
     goToPreviousFrameButton->setFixedSize(20,20);
     goToPreviousFrameButton->setIcon(QIcon(":/images/go-first-view.png"));
