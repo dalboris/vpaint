@@ -21,7 +21,7 @@
 #include <QDoubleSpinBox>
 #include "SpinBox.h"
 #include "TimeDef.h"
-#include "Eigen/Core"
+#include <Eigen/Core>
 #include <QLabel>
 
 class QHBoxLayout;

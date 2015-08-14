@@ -12,7 +12,7 @@
 #include <QPolygonF>
 #include <QRectF>
 
-#include "Eigen/Core"
+#include <Eigen/Core>
 
 class GLUtils
 {
