@@ -11,3 +11,5 @@ TEMPLATE = subdirs
 SUBDIRS += \
     lib/GLEW \
     app
+
+app.depends = lib/GLEW
