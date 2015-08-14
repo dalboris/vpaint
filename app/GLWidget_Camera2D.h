@@ -8,8 +8,8 @@
 #ifndef GLWIDGET_CAMERA2D_H
 #define GLWIDGET_CAMERA2D_H
 
-#include "Eigen/Core"
-#include "Eigen/Geometry"
+#include <Eigen/Core>
+#include <Eigen/Geometry>
 
 // for now, no rotation
 
