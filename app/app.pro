@@ -114,7 +114,6 @@ HEADERS += MainWindow.h \
     Color.h \
     DevSettings.h \
     Settings.h \
-    SettingsDialog.h \
     VectorAnimationComplex/InbetweenCell.h \
     VectorAnimationComplex/InbetweenEdge.h \
     VectorAnimationComplex/InbetweenFace.h \
@@ -190,7 +189,6 @@ SOURCES += main.cpp \
     Color.cpp \
     DevSettings.cpp \
     Settings.cpp \
-    SettingsDialog.cpp \
     VectorAnimationComplex/InbetweenCell.cpp \
     VectorAnimationComplex/InbetweenEdge.cpp \
     VectorAnimationComplex/InbetweenFace.cpp \

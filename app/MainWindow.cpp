@@ -1282,14 +1282,6 @@ void MainWindow::createActions()
     //actionExportPNG->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_E));
     connect(actionExportPNG, SIGNAL(triggered()), this, SLOT(exportPNG()));
 
-    // Preferences
-    /*
-    actionPreferences = new QAction(tr("&Preferences..."), this);
-    actionPreferences->setStatusTip(tr("Modify the settings of VPaint."));
-    actionPreferences->setShortcut(QKeySequence::Preferences);
-    connect(actionPreferences, SIGNAL(triggered()), global(), SLOT(openPreferencesDialog()));
-    */
-
     // Quit
     actionQuit = new QAction(/*QIcon(":/iconQuit"),*/ tr("&Quit"), this);
     actionQuit->setStatusTip(tr("Quit VPaint."));
@@ -1706,7 +1698,6 @@ void MainWindow::createMenus()
         exportMenu->addAction(actionExportSVG);
     }
     //menuFile->addSeparator();
-    //menuFile->addAction(actionPreferences);
     menuFile->addSeparator();
     menuFile->addAction(actionQuit);
     menuBar()->addMenu(menuFile);

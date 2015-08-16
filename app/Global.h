@@ -32,7 +32,6 @@ class QAction;
 class ToolModeAction;
 class ColorSelector;
 class QColor;
-class SettingsDialog;
 class View;
 class Timeline;
 class Scene;
@@ -143,9 +142,6 @@ public slots:
     void toggleSnapping();
     void toggleStylusPressure();
 
-    // Open preference dialog
-    void openPreferencesDialog();
-
     // Update widgets
     void updateWidgetValuesFromPreferences();
 
@@ -224,7 +220,6 @@ private:
     // Others
     MainWindow * mainWindow_;
     Settings preferences_;
-    SettingsDialog * preferencesDialog_;
     DevSettings * settings_;
     Qt::KeyboardModifiers keyboardModifiers_;
 

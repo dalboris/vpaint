@@ -11,7 +11,6 @@
 #include "Scene.h"
 #include "View.h"
 #include "MainWindow.h"
-#include "SettingsDialog.h"
 #include "DevSettings.h"
 #include "ColorSelector.h"
 #include "Timeline.h"
@@ -45,7 +44,6 @@ Global::Global(MainWindow * w) :
     otherDisplayMode_(ILLUSTRATION_OUTLINE),
     mainWindow_(w),
     preferences_(),
-    preferencesDialog_(0),
     settings_(0)
 {
     // Color selectors
@@ -769,19 +767,6 @@ void Global::setEdgeWidth(double w)
     }
 
     preferences_.setEdgeWidth(w);
-}
-
-void Global::openPreferencesDialog()
-{
-    // Create preferences dialog
-    if(!preferencesDialog_)
-    {
-        preferencesDialog_ = new SettingsDialog(mainWindow());
-        connect(preferencesDialog_, SIGNAL(preferencesChanged()), this, SLOT(updateWidgetValuesFromPreferences()));
-    }
-
-    // Update and show references dialog
-    preferencesDialog_->go();
 }
 
 void Global::updateWidgetValuesFromPreferences()
