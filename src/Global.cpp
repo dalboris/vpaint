@@ -119,6 +119,14 @@ bool Global::eventFilter(QObject * /*watched*/, QEvent * event)
         QKeyEvent * keyEvent = static_cast<QKeyEvent *>(event);
         if(keyEvent)
         {
+            // Workaround for Mac delete key
+            // This is needed because of a bug in QT 5 that has not been resolved as of 5.5.0
+#ifdef Q_OS_MAC
+            if(keyEvent->key() == Qt::Key_Backspace)
+            {
+                scene()->smartDelete();
+            }
+#endif
             if(keyEvent->key() == Qt::Key_Shift ||
                keyEvent->key() == Qt::Key_Alt ||
                keyEvent->key() == Qt::Key_Meta ||
