@@ -10,7 +10,7 @@
 
 #include <QPointF>
 #include <cmath>
-#include "Eigen/Core"
+#include <Eigen/Core>
 
 class GeometryUtils
 {

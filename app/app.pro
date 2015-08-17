@@ -7,6 +7,7 @@
 
 # Basic Qt configuration
 TEMPLATE = app
+TARGET = VPaint
 CONFIG += qt
 QT += opengl network
 
@@ -19,7 +20,7 @@ macx: ICON = images/vpaint.icns
 # Compiler flags for Linux
 unix:!macx {
   # Use C++11
-  QMAKE_CXXFLAGS += -std=c++11
+  QMAKE_CXXFLAGS += -std=c++11 $$QMAKE_CFLAGS_ISYSTEM $$PWD/../lib
   # Link to GLU
   LIBS += -lGLU
   # Use dwarf debug dymbols
@@ -31,13 +32,14 @@ unix:!macx {
 # Compiler flags for Mac OS X
 macx {
   # Use C++11
-  QMAKE_CXXFLAGS += -std=c++11
+  QMAKE_CXXFLAGS += -std=c++11 $$QMAKE_CFLAGS_ISYSTEM $$PWD/../lib
 }
 
 # Compiler flags for Windows
 win32 {
   # Embed the manifest file into the dll binary
   CONFIG += embed_manifest_exe
+  QMAKE_CXXFLAGS += $$QMAKE_CFLAGS_ISYSTEM $$PWD/../lib
 }
 
 # App resources to include in binary (images, etc.)
@@ -95,9 +97,6 @@ HEADERS += MainWindow.h \
     VectorAnimationComplex/Algorithms.h \
     VectorAnimationComplex/SmartKeyEdgeSet.h \
     OpenGL.h \
-    GLEW/wglew.h \
-    GLEW/glew.h \
-    GLEW/glxew.h \
     VectorAnimationComplex/Triangles.h \
     SelectionInfoWidget.h \
     VectorAnimationComplex/Cycle.h \
@@ -115,7 +114,6 @@ HEADERS += MainWindow.h \
     Color.h \
     DevSettings.h \
     Settings.h \
-    SettingsDialog.h \
     VectorAnimationComplex/InbetweenCell.h \
     VectorAnimationComplex/InbetweenEdge.h \
     VectorAnimationComplex/InbetweenFace.h \
@@ -175,7 +173,6 @@ SOURCES += main.cpp \
     VectorAnimationComplex/Cycle.cpp \
     VectorAnimationComplex/Algorithms.cpp \
     VectorAnimationComplex/SmartKeyEdgeSet.cpp \
-    GLEW/glew.c \
     VectorAnimationComplex/Triangles.cpp \
     SelectionInfoWidget.cpp \
     VectorAnimationComplex/Path.cpp \
@@ -192,7 +189,6 @@ SOURCES += main.cpp \
     Color.cpp \
     DevSettings.cpp \
     Settings.cpp \
-    SettingsDialog.cpp \
     VectorAnimationComplex/InbetweenCell.cpp \
     VectorAnimationComplex/InbetweenEdge.cpp \
     VectorAnimationComplex/InbetweenFace.cpp \
@@ -210,3 +206,15 @@ SOURCES += main.cpp \
     ViewMacOsX.cpp
 
 DISTFILES +=
+
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../lib/GLEW/release/ -lglew
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../lib/GLEW/debug/ -lglew
+else:unix: LIBS += -L$$OUT_PWD/../lib/GLEW/ -lglew
+
+DEPENDPATH += $$PWD/../lib/GLEW
+
+win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../lib/GLEW/release/libglew.a
+else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../lib/GLEW/debug/libglew.a
+else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../lib/GLEW/release/glew.lib
+else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../lib/GLEW/debug/glew.lib
+else:unix: PRE_TARGETDEPS += $$OUT_PWD/../lib/GLEW/libglew.a

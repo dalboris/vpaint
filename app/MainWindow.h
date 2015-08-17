@@ -197,7 +197,6 @@ private:
       QAction * actionOpen;
       QAction * actionSave;
       QAction * actionSaveAs;
-      QAction * actionPreferences;
       QAction * actionExportSVG;
       QAction * actionExportPNG;
       QAction * actionQuit;

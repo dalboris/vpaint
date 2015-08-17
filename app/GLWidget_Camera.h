@@ -8,8 +8,8 @@
 #ifndef GLWIDGET_CAMERA_H
 #define GLWIDGET_CAMERA_H
 
-#include "Eigen/Core"
-#include "Eigen/Geometry"
+#include <Eigen/Core>
+#include <Eigen/Geometry>
 
 /* 
  * The Camera is defined by:

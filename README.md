@@ -42,7 +42,7 @@ See COPYING for details.
 2. Install GLU for development. On Ubuntu, you can do this with:
      sudo apt-get install libglu1-mesa-dev
 3. Download and install Qt 5.4 Community from http://www.qt.io/
-4. Open src/VPaint.pro with Qt Creator
+4. Open VPaint.pro with Qt Creator
 5. Specify GCC 4.8+ as your compiler
 6. Build > Run
 
@@ -73,7 +73,7 @@ See COPYING for details.
     Name: Desktop Qt 5.5.0 G++ 4.8
     Compiler: G++ 4.8
     Qt mkspec: macx-g++48
-8. Open src/VPaint.pro
+8. Open VPaint.pro
 9. Build > Run
 
 
@@ -93,6 +93,6 @@ See COPYING for details.
 2. Download and install Qt 5.4 Community from http://www.qt.io/.  Make
    sure to use the OpenGL version (not ANGLE), and that it corresponds to
    the version of Visual Studio you have.
-3. Open src/VPaint.pro with Qt Creator
+3. Open VPaint.pro with Qt Creator
 4. Specify MSVC as your compiler
 5. Build > Run
