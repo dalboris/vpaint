@@ -7,7 +7,7 @@
 
 # Basic Qt configuration
 TEMPLATE = app
-CONFIG += qt
+CONFIG += qt c++11
 QT += opengl network
 
 # To create the icon on Windows
@@ -18,8 +18,6 @@ macx: ICON = images/vpaint.icns
 
 # Compiler flags for Linux
 unix:!macx {
-  # Use C++11
-  QMAKE_CXXFLAGS += -std=c++11
   # Link to GLU
   LIBS += -lGLU
   # Use dwarf debug dymbols
@@ -30,8 +28,6 @@ unix:!macx {
 
 # Compiler flags for Mac OS X
 macx {
-  # Use C++11
-  QMAKE_CXXFLAGS += -std=c++11
 }
 
 # Compiler flags for Windows
