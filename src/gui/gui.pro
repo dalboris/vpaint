@@ -17,7 +17,7 @@ win32: RC_FILE = VPaint.rc
 # To create the icon on MacOS X
 macx: ICON = images/vpaint.icns
 
-QMAKE_CXXFLAGS += $$QMAKE_CFLAGS_ISYSTEM $$PWD/../lib
+QMAKE_CXXFLAGS += $$QMAKE_CFLAGS_ISYSTEM $$PWD/../3rd
 
 # Compiler flags for Linux
 unix:!macx {
@@ -206,14 +206,14 @@ SOURCES += main.cpp \
 
 DISTFILES +=
 
-win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../lib/GLEW/release/ -lglew
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../lib/GLEW/debug/ -lglew
-else:unix: LIBS += -L$$OUT_PWD/../lib/GLEW/ -lglew
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../3rd/glew/release/ -lglew
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../3rd/glew/debug/ -lglew
+else:unix: LIBS += -L$$OUT_PWD/../3rd/glew/ -lglew
 
-DEPENDPATH += $$PWD/../lib/GLEW
+DEPENDPATH += $$PWD/../3rd/glew
 
-win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../lib/GLEW/release/libglew.a
-else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../lib/GLEW/debug/libglew.a
-else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../lib/GLEW/release/glew.lib
-else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../lib/GLEW/debug/glew.lib
-else:unix: PRE_TARGETDEPS += $$OUT_PWD/../lib/GLEW/libglew.a
+win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../3rd/glew/release/libglew.a
+else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../3rd/glew/debug/libglew.a
+else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../3rd/glew/release/glew.lib
+else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../3rd/glew/debug/glew.lib
+else:unix: PRE_TARGETDEPS += $$OUT_PWD/../3rd/glew/libglew.a

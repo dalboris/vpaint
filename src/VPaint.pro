@@ -9,7 +9,7 @@
 TEMPLATE = subdirs
 
 SUBDIRS += \
-    lib/GLEW \
-    app
+    3rd/glew \
+    gui
 
-app.depends = lib/GLEW
+gui.depends = 3rd/glew
