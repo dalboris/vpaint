@@ -767,6 +767,10 @@ void Timeline::goToLastFrame(View * view)
 
 void Timeline::setFirstFrame(int firstFrame)
 {
+    if(firstFrame > lastFrame())
+    {
+        firstFrame = lastFrame();
+    }
     if(firstFrameSpinBox_->value() != firstFrame)
     {
         firstFrameSpinBox_->setValue(firstFrame);
@@ -779,6 +783,9 @@ void Timeline::setFirstFrame(int firstFrame)
 
 void Timeline::setLastFrame(int lastFrame)
 {
+    if(lastFrame < firstFrame()) {
+        lastFrame = firstFrame();
+    }
     if(lastFrameSpinBox_->value() != lastFrame)
     {
         lastFrameSpinBox_->setValue(lastFrame);
@@ -903,7 +910,43 @@ void Timeline::goToNextFrame()
     goToNextFrame(global()->activeView());
 }
 
+// There are multiple implementations of goToNextFrame and goToPreviousFrame
+// See https://github.com/dalboris/vpaint/pull/4#issuecomment-130426290 for more details
+// Will likely be configurable through preferences one day
+// Implementation 1
 void Timeline::goToNextFrame(View * view)
+{
+    int currentFrame = view->activeTime().floatTime();
+
+    if(isPlaying()) {
+        if(currentFrame < firstFrame())
+        {
+            goToFrame(view, firstFrame());
+        }
+        else if(currentFrame >= lastFrame())
+        {
+            if(playMode() == PlaybackSettings::LOOP)
+            {
+                goToFrame(view, firstFrame());
+            }
+            else
+            {
+                pause();
+            }
+        }
+        else
+        {
+            goToFrame(view, currentFrame+1);
+        }
+    }
+    else
+    {
+        goToFrame(view, currentFrame+1);
+    }
+}
+
+// Implementation 2
+/*void Timeline::goToNextFrame(View * view)
 {
     int currentFrame = view->activeTime().floatTime();
 
@@ -926,14 +969,74 @@ void Timeline::goToNextFrame(View * view)
     {
         goToFrame(view, currentFrame+1);
     }
-}
+}*/
+
+// Implemenation 3
+/*void Timeline::goToNextFrame(View * view)
+{
+    int currentFrame = view->activeTime().floatTime();
+
+    if(currentFrame < firstFrame())
+    {
+        goToFrame(view, firstFrame());
+    }
+    else if(currentFrame >= lastFrame())
+    {
+        if(playMode() == PlaybackSettings::LOOP && isPlaying())
+        {
+            goToFrame(view, firstFrame());
+        }
+        else
+        {
+            pause();
+        }
+    }
+    else
+    {
+        goToFrame(view, currentFrame+1);
+    }
+}*/
 
 void Timeline::goToPreviousFrame()
 {
     goToPreviousFrame(global()->activeView());
 }
 
+// See comment above goToNextFrame
+// Implementation 1
 void Timeline::goToPreviousFrame(View * view)
+{
+    int currentFrame = view->activeTime().floatTime();
+
+    if(isPlaying()) {
+        if(currentFrame > lastFrame())
+        {
+            goToFrame(view, lastFrame());
+        }
+        else if(currentFrame <= firstFrame())
+        {
+            if(playMode() == PlaybackSettings::LOOP)
+            {
+                goToFrame(view, lastFrame());
+            }
+            else
+            {
+                pause();
+            }
+        }
+        else
+        {
+            goToFrame(view, currentFrame-1);
+        }
+    }
+    else
+    {
+        goToFrame(view, currentFrame-1);
+    }
+}
+
+// Implementation 2
+/*void Timeline::goToPreviousFrame(View * view)
 {
     int currentFrame = view->activeTime().floatTime();
 
@@ -956,8 +1059,33 @@ void Timeline::goToPreviousFrame(View * view)
     {
         goToFrame(view, currentFrame-1);
     }
-}
+}*/
 
+// Implemenation 3
+/*void Timeline::goToPreviousFrame(View * view)
+{
+    int currentFrame = view->activeTime().floatTime();
+
+    if(currentFrame > lastFrame())
+    {
+        goToFrame(view, lastFrame());
+    }
+    else if(currentFrame <= firstFrame())
+    {
+        if(playMode() == PlaybackSettings::LOOP && isPlaying())
+        {
+            goToFrame(view, lastFrame());
+        }
+        else
+        {
+            pause();
+        }
+    }
+    else
+    {
+        goToFrame(view, currentFrame-1);
+    }
+}*/
 
 void Timeline::goToFrame(View * view, double frame)
 {
