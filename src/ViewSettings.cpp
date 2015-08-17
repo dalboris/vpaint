@@ -311,8 +311,6 @@ ViewSettingsWidget::ViewSettingsWidget(ViewSettings & viewSettings, QWidget * pa
     //frameZoomLayout->setMargin(0);
     //frameZoomLayout->setSpacing(0);
 
-    int frameZoomWidth = buttonSize+30;
-
     QPushButton * goToPreviousFrameButton = new QPushButton();
     goToPreviousFrameButton->setFixedSize(20,20);
     goToPreviousFrameButton->setIcon(QIcon(":/images/go-first-view.png"));
@@ -960,16 +958,15 @@ void ViewSettingsWidget::updateWidgetFromSettings()
         break;
     }
 
-    switch(viewSettings_.onionSkinningIsEnabled())
+    if(viewSettings_.onionSkinningIsEnabled())
     {
-    case false:
-        onionSkinningButton_Off_->setChecked(true);
-        onionSkinningButton_->setIcon(QIcon(":images/onion-skinning-off.png"));
-        break;
-    case true:
         onionSkinningButton_On_->setChecked(true);
         onionSkinningButton_->setIcon(QIcon(":images/onion-skinning-on.png"));
-        break;
+    }
+    else
+    {
+        onionSkinningButton_Off_->setChecked(true);
+        onionSkinningButton_->setIcon(QIcon(":images/onion-skinning-off.png"));
     }
 }
 
