@@ -43,9 +43,9 @@
 #include <algorithm>
 #include <cassert>
 
-#include "../Eigen/Core"
-#include "../Eigen/LU"
-#include "../Eigen/StdVector"
+#include <Eigen/Core>
+#include <Eigen/LU>
+#include <Eigen/StdVector>
 
 #ifndef DEFINE_STD_VECTOR_INSERTION_OPERATOR
 #define DEFINE_STD_VECTOR_INSERTION_OPERATOR
