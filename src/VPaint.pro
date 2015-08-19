@@ -9,7 +9,7 @@
 TEMPLATE = subdirs
 
 SUBDIRS += \
-    3rd/glew \
-    gui
+    Third/GLEW \
+    Gui
 
-gui.depends = 3rd/glew
+Gui.depends = Third/GLEW

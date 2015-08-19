@@ -6,7 +6,7 @@
 
 QT       -= core gui
 
-TARGET = glew
+TARGET = GLEW
 TEMPLATE = lib
 CONFIG += staticlib
 
