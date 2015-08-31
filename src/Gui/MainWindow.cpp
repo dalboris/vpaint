@@ -1,6 +1,7 @@
 // This file is part of VPaint, a vector graphics editor.
 //
 // Copyright (C) 2012-2015 Boris Dalstein <dalboris@gmail.com>
+// Copyright (C) 2015 Connor Deptuck (@scribblemaniac)
 //
 // The content of this file is MIT licensed. See COPYING.MIT, or this link:
 //   http://opensource.org/licenses/MIT
@@ -179,12 +180,6 @@ MainWindow::MainWindow() :
 
     // Remove context menu on rightclick
     setContextMenuPolicy(Qt::NoContextMenu);
-
-    // About page
-    if(global()->settings().showAboutDialogAtStartup())
-    {
-        about();
-    }
 
     // Autosave
     autosaveBegin();
@@ -1078,7 +1073,6 @@ void MainWindow::about()
     {
         aboutDialog_ = new AboutDialog(global()->settings().showAboutDialogAtStartup());
         aboutDialog_->setParent(this, Qt::Dialog);
-        aboutDialog_->setModal(true);
     }
 
     aboutDialog_->exec();
