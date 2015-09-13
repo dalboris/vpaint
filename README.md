@@ -49,7 +49,7 @@ See COPYING for details.
 
 ## Mac OS X
 
-(tested on Mac OS X Yosemite 10.10.4, running on an early 2008 MacBook Pro 15-inch)
+(tested on Mac OS X Yosemite 10.10.4, running on a MacBook Pro 15-inch Early 2008)
 
 - Note 1: VPaint will -NOT- compile with clang or GCC 4.2 (provided by default on Mac OS X).
 
