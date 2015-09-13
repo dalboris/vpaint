@@ -81,8 +81,8 @@ See COPYING for details.
 
 (tested on Windows 7 64bit)
 
-- Note 1: To support more user, compiling in 32bit is recommended, as
-          it can run on both 32bit and 64bit versions of Windows.
+- Note 1: In order to support more users, it is recommended to compile as 32bit code, as
+          the resultant executables can run on both 32bit and 64bit versions of Windows.
 
 - Note 2: Windows XP and lower are not supported.
 
