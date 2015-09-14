@@ -14,9 +14,9 @@ innovative techniques.
 
 - VPaint 1.5 is considered a BETA version. It may crash unexpectedly, so it is recommended to save often. The most unstable features or still in development are marked with the text [Beta] in the menus.
 
-## MacOS X
+## Mac OS X
 
-- On MacOS 10.10 Yosemite, maximizing the window is poorly supported. If you want to exit maximizing, hide the toolbar and action bar with "View > Toolbar" and "View > Action Bar" so you can access the minimize button again.
+- On Mac OS X 10.10 Yosemite, maximizing the window is poorly supported. If you want to exit maximizing, hide the toolbar and action bar with "View > Toolbar" and "View > Action Bar" so you can access the minimize button again.
 
 - If you have a retina display, then the pointer drawn by VPaint is not at the same location as your mouse cursor. It doesn't prevent using VPaint but it is quite inconvenient. See [#22](https://github.com/dalboris/vpaint/issues/22) for details.
 
@@ -47,11 +47,11 @@ See COPYING for details.
 6. Build > Run
 
 
-## MacOS X
+## Mac OS X
 
-(tested on MacOS X Yosemite 10.10.4, on MacBook Pro 15-inch Early 2008)
+(tested on Mac OS X Yosemite 10.10.4, running on a MacBook Pro 15-inch Early 2008)
 
-- Note 1: VPaint will -NOT- compile with clang or GCC 4.2 (provided by default on MacOS X).
+- Note 1: VPaint will -NOT- compile with clang or GCC 4.2 (provided by default on Mac OS X).
 
 - Note 2: There are bugs in Qt 5.1 to 5.4 with Yosemite, hence Qt 5.5+ is recommended.
 
@@ -81,8 +81,8 @@ See COPYING for details.
 
 (tested on Windows 7 64bit)
 
-- Note 1: To support more user, compiling in 32bit is recommended, as
-          it can run on both 32bit and 64bit versions of Windows.
+- Note 1: In order to support more users, it is recommended to compile as 32bit code, as
+          the resultant executables can run on both 32bit and 64bit versions of Windows.
 
 - Note 2: Windows XP and lower are not supported.
 
