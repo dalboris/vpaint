@@ -27,8 +27,27 @@ innovative techniques.
 
 #  LICENSE
 
-VPaint is primarily licensed under the MIT License.
-See COPYING for details.
+VPaint is licensed under the MIT License. It depends on third-party libraries licensed under different license terms (primarily, LGPL, MPL, and BSD; see COPYING for details), but they are all compatible with the MIT. 
+
+This means that you are free to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of VPaint, either for non-commercial or commercial purposes. Whether you are an individual or a company, you should be able to use the code (and binaries) of VPaint for free, in whatever way you like, without any requirements on your part. 
+
+If you are interested to know why I have chosen the MIT and not the GPL, I explain it [here](https://github.com/dalboris/vpaint/wiki/Why-the-MIT-license%3F).
+
+# HOW TO CONTRIBUTE
+
+The easiest way, and arguably the most helpful way to contribute is simply to spread the word about VPaint! Share it on Facebook, tweet about it, or write a blog post about it. Also, the documentation is still very limited, so if you figure out by yourself how to use a feature which is poorly documented, a good way to contribute is to document it [here](https://github.com/dalboris/vpaint/wiki/Documentation).
+
+If you are a developer and want to contribute code, this is great! I'd be happy to collaborate with you. Though, there are is one requirement you must comply with:
+
+I will only merge pull requests of code that you license under the MIT. This means that for each source file that you modify or create, you *must add your copyright line* ("Copyright (C) Year Firstname Lastname \<optional@email.com\>") just *after existing copyright lines if any*, and just *before the MIT license notice*. If you don't do that, I am legally not allowed to use your contribution, nor anyone that wants to use the code of VPaint. There are a few other legal ways to achieve the same results (contributor license agreements, copyright assignments, dedication to the public domain, etc.), but this one is by far the simplest so let's not overcomplicate things.
+
+A few guidelines for effective contributions of code:
+
+1. Please do not contribute code refactoring, this is counterproductive and I won't merge it. The code of VPaint does require refactoring, but now is not a good time. I will do it myself, in a year or two, overriding whatever you would have done anyway.
+
+2. If you want to implement a new feature, please discuss it first (by opening a new feature request or replying to an existing one) before you start implementing. This makes sure that we are on the same page, improves the design of the feature by brainstorming it together, and make sure that you do not lost time implementing something which I do not agree with and would reject. Discussing features with me before implementing them ensures that VPaint follows a consistent direction, and do not become an unintuitive mess of unconsistent features. 
+
+3. If you want to fix a bug, feel free to go ahead without prior approval and submit a pull request. I might suggest a few modifications or ask clarifications before merging, but be confident that I will merge if it does fix a bug.
 
 
 # HOW TO COMPILE
