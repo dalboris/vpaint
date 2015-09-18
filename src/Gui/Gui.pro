@@ -1,6 +1,7 @@
 # This file is part of VPaint, a vector graphics editor.
 #
 # Copyright (C) 2012-2015 Boris Dalstein <dalboris@gmail.com>
+# Copyright (C) 2015 Connor Deptuck (@scribblemaniac)
 #
 # The content of this file is MIT licensed. See COPYING.MIT, or this link:
 #   http://opensource.org/licenses/MIT
@@ -10,6 +11,10 @@ TEMPLATE = app
 TARGET = VPaint
 CONFIG += qt c++11
 QT += opengl network
+
+# Set the version and add the APP_VERSION macro for convenience
+VERSION = 1.5
+DEFINES += APP_VERSION=\\\"$$VERSION\\\"
 
 # To create the icon on Windows
 win32: RC_FILE = VPaint.rc
@@ -31,6 +36,13 @@ unix:!macx {
 
 # Compiler flags for Mac OS X
 macx {
+  # Use a custom Info.plist
+  QMAKE_INFO_PLIST = Info.plist
+
+  # Add file icons into the application bundle resources
+  FILE_ICONS.files = images/vec.icns
+  FILE_ICONS.path = Contents/Resources
+  QMAKE_BUNDLE_DATA += FILE_ICONS
 }
 
 # Compiler flags for Windows
@@ -126,7 +138,8 @@ HEADERS += MainWindow.h \
     EditCanvasSizeDialog.h \
     ExportPngDialog.h \
     AboutDialog.h \
-    ViewMacOsX.h
+    ViewMacOsX.h \
+    Application.h
 
 
 SOURCES += main.cpp \
@@ -202,7 +215,8 @@ SOURCES += main.cpp \
     EditCanvasSizeDialog.cpp \
     ExportPngDialog.cpp \
     AboutDialog.cpp \
-    ViewMacOsX.cpp
+    ViewMacOsX.cpp \
+    Application.cpp
 
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../Third/GLEW/release/ -lGLEW
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../Third/GLEW/debug/ -lGLEW

@@ -1,6 +1,7 @@
 // This file is part of VPaint, a vector graphics editor.
 //
 // Copyright (C) 2012-2015 Boris Dalstein <dalboris@gmail.com>
+// Copyright (C) 2015 Connor Deptuck (@scribblemaniac)
 //
 // The content of this file is MIT licensed. See COPYING.MIT, or this link:
 //   http://opensource.org/licenses/MIT
@@ -70,6 +71,9 @@ public slots:
     void updateObjectProperties();
     void editAnimatedCycle(VectorAnimationComplex::InbetweenFace * inbetweenFace, int indexCycle);
 
+    void about();
+    bool doOpen(const QString & filename);
+
 private slots:
     // ---- File ----
     bool newDocument();
@@ -127,7 +131,6 @@ private slots:
     void onlineDocumentation();
     void gettingStarted();
     void manual();
-    void about();
     
 private:
     // ---------- initializations --------------
@@ -165,7 +168,6 @@ private:
     int autosaveIndex_;
     bool autosaveOn_;
     QDir autosaveDir_;
-    bool doOpen(const QString & filename);
     bool doSave(const QString & filename);
     bool doExportSVG(const QString & filename);
     bool doExportPNG(const QString & filename);
