@@ -37,7 +37,7 @@ If you are interested to know why I have chosen the MIT and not the GPL, I expla
 
 The easiest way, and arguably the most helpful way to contribute is simply to spread the word about VPaint! Share it on Facebook, tweet about it, or write a blog post about it. Also, the documentation is still very limited, so if you figure out by yourself how to use a feature which is poorly documented, a good way to contribute is to document it [here](https://github.com/dalboris/vpaint/wiki/Documentation).
 
-If you are a developer and want to contribute code, this is great! I'd be happy to collaborate with you. Though, there are is one requirement you must comply with:
+If you are a developer and want to contribute code, this is great! I'd be happy to collaborate with you. Though, there is one requirement you must comply with:
 
 I will only merge pull requests of code that you license under the MIT. This means that for each source file that you modify or create, you *must add your copyright line* ("Copyright (C) Year Firstname Lastname \<optional@email.com\>") just *after existing copyright lines if any*, and just *before the MIT license notice*. If you don't do that, I am legally not allowed to use your contribution, nor anyone that wants to use the code of VPaint. There are a few other legal ways to achieve the same results (contributor license agreements, copyright assignments, dedication to the public domain, etc.), but this one is by far the simplest so let's not overcomplicate things.
 
