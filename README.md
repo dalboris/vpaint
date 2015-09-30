@@ -22,8 +22,6 @@ innovative techniques.
 
 - In the status bar (at the bottom), whenever "CTRL" is mentioned, you should use the COMMAND key instead. 
 
-- To delete something, you have to use the "Delete" key (i.e., "delete forward"). If you only have the "Backspace" key on your keyboard, you have to use Fn+Backspace instead.
-
 
 #  LICENSE
 
