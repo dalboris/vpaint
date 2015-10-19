@@ -17,7 +17,7 @@ VERSION = 1.5
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"
 
 # To create the icon on Windows
-win32: RC_FILE = VPaint.rc
+win32: RC_ICONS += images/VPaint.ico
 
 # To create the icon on MacOS X
 macx: ICON = images/vpaint.icns
