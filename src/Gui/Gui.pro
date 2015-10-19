@@ -139,7 +139,9 @@ HEADERS += MainWindow.h \
     ExportPngDialog.h \
     AboutDialog.h \
     ViewMacOsX.h \
-    Application.h
+    Application.h \
+    Background.h \
+    BackgroundWidget.h
 
 
 SOURCES += main.cpp \
@@ -216,7 +218,9 @@ SOURCES += main.cpp \
     ExportPngDialog.cpp \
     AboutDialog.cpp \
     ViewMacOsX.cpp \
-    Application.cpp
+    Application.cpp \
+    Background.cpp \
+    BackgroundWidget.cpp
 
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../Third/GLEW/release/ -lGLEW
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../Third/GLEW/debug/ -lGLEW

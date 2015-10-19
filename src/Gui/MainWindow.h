@@ -31,6 +31,7 @@ class QTextStream;
 class EditCanvasSizeDialog;
 class ExportPngDialog;
 class AboutDialog;
+class BackgroundWidget;
 
 namespace VectorAnimationComplex
 {
@@ -279,6 +280,8 @@ private:
     QDockWidget * dockAdvancedSettings;
     QDockWidget * dockAnimatedCycleEditor;
     AnimatedCycleWidget * animatedCycleEditor;
+    BackgroundWidget * backgroundWidget;
+    QDockWidget * dockBackgroundWidget;
 };
 
 #endif

@@ -18,6 +18,7 @@
 #include "DevSettings.h"
 #include "ObjectPropertiesWidget.h"
 #include "AnimatedCycleWidget.h"
+#include "BackgroundWidget.h"
 #include "EditCanvasSizeDialog.h"
 #include "ExportPngDialog.h"
 #include "AboutDialog.h"
@@ -1748,6 +1749,7 @@ void MainWindow::createMenus()
     menuView->addAction(global()->toolBar()->toggleViewAction());
     menuView->addAction(global()->toolModeToolBar()->toggleViewAction());
     menuView->addAction(dockTimeLine->toggleViewAction());
+    menuView->addAction(dockBackgroundWidget->toggleViewAction());
     advancedViewMenu = menuView->addMenu(tr("Advanced [Beta]")); {
         advancedViewMenu->addAction(dockInspector->toggleViewAction());
         advancedViewMenu->addAction(dockAdvancedSettings->toggleViewAction());
@@ -1876,6 +1878,18 @@ void MainWindow::createDocks()
     dockAnimatedCycleEditor->setWidget(animatedCycleEditor);
     addDockWidget(Qt::RightDockWidgetArea, dockAnimatedCycleEditor);
     dockAnimatedCycleEditor->hide();
+
+    // ----- Background ---------
+
+    // Widget
+    backgroundWidget = new BackgroundWidget();
+
+    // Dock
+    dockBackgroundWidget = new QDockWidget(tr("Background"));
+    dockBackgroundWidget->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+    dockBackgroundWidget->setWidget(backgroundWidget);
+    addDockWidget(Qt::RightDockWidgetArea, dockBackgroundWidget);
+    //dockBackgroundWidget->hide(); todo: uncomment (commented for convenience while developing)
 
 
     // ----- TimeLine -------------
