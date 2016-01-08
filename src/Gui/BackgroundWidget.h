@@ -10,17 +10,59 @@
 
 #include <QWidget>
 
-#include "Background.h"
+class Background;
+class ColorSelector;
+
+class QLineEdit;
+class QPushButton;
+class QCheckBox;
+class QDoubleSpinBox;
+class QComboBox;
+
+/// BackgroundWidget is a widget that operate on a
+/// Background object, to change is value in a graphical way
+///
+/// Usage:
+/// // Create a background object
+/// Background * background = new Background();
+///
+/// // Add to some layout a widget to modify the background object
+/// BackgroundWidget * backgroundWidget = new BackgroundWidget();
+/// backgroundWidget->setBackground(background);
+/// someLayout->addWidget(backgroundWidget);
+///
 
 class BackgroundWidget: public QWidget
 {
 public:
     BackgroundWidget(QWidget * parent = 0);
 
-    const Background & background() const;
+    void setBackground(Background * background);
+    Background * background() const;
 
 private:
-    Background background_;
+    // Background viewed by widget
+    Background * background_;
+
+    // GUI
+    // Color
+    ColorSelector * colorSelector_;
+    // Images
+    QLineEdit * imagesTextEdit_;
+    QPushButton * imagesButton_;
+    // Position
+    QDoubleSpinBox * leftSpinBox_;
+    QDoubleSpinBox * topSpinBox_;
+    // Size
+    QComboBox * sizeComboBox_;
+    QDoubleSpinBox * widthSpinBox_;
+    QDoubleSpinBox * heightSpinBox_;
+    // Repeat
+    QComboBox * repeatComboBox_;
+    // Opacity
+    QDoubleSpinBox * opacitySpinBox_;
+    // Hold
+    QCheckBox * holdCheckBox_;
 };
 
 #endif // BACKGROUNDWIDGET_H
