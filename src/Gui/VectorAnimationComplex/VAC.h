@@ -404,6 +404,7 @@ private:
     Time timeCopy_;
 
     // Background color
+    // XXX remove it from VAC and use background object instead in Layer
     QColor backgroundColor_;
 
     // Selecting and highlighting

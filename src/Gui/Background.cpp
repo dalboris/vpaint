@@ -8,173 +8,156 @@
 #include "Background.h"
 
 Background::Background() :
-    isBackgroundColorEnabled_(true),
-    isBackgroundColorExported_(true),
-    backgroundColor_(255, 255, 255),
-
-    areBackgroundImagesEnabled_(false),
-    areBackgroundImagesExported_(false),
-    backgroundImagesPaths_(),
-    backgroundImages_(),
-    numFramesPerBackgroundImage_(1),
-    startFrameOfBackgroundImages_(0),
-    areBackgroundImagesHold_(),
-
-    backgroundImagesPosition_(0,0),
-    backgroundImagesSize_(640,480),
-    backgroundImagesOpacity_(1.0)
+    color_(),
+    imageUrl_(""),
+    position_(0.0, 0.0),
+    sizeType_(Cover),
+    size_(1280.0, 720.0),
+    repeatType_(NoRepeat),
+    opacity_(1.0),
+    hold_(true)
 {
-
 }
 
-
-// Getters
-bool Background::isBackgroundColorEnabled() const
+// Assignement operator. Re-implemented to emit changed().
+void Background::operator=(const Background & other)
 {
-    return isBackgroundColorEnabled_;
+    color_ = other.color_;
+    imageUrl_ = other.imageUrl_;
+    position_ = other.position_;
+    sizeType_ = other.sizeType_;
+    size_ = other.size_;
+    repeatType_ = other.repeatType_;
+    opacity_ = other.opacity_;
+    hold_ = other.hold_;
+
+    emit changed();
 }
 
-Color Background::backgroundColor() const
+// Color
+Color Background::color() const
 {
-    return backgroundColor_;
+    return color_;
 }
 
-bool Background::areBackgroundImagesEnabled() const
+void Background::setColor(const Color & newColor)
 {
-    return areBackgroundImagesEnabled_;
+    color_ = newColor;
+
+    emit colorChanged(color_);
+    emit changed();
 }
 
-bool Background::areBackgroundImagesExported() const
+// Image(s)
+QString Background::imageUrl() const
 {
-    return areBackgroundImagesExported_;
+    return imageUrl_;
 }
 
-QStringList Background::backgroundImagesPaths() const
+void Background::setImageUrl(const QString & newUrl)
 {
-    return backgroundImagesPaths_;
+    imageUrl_ = newUrl;
+
+    emit imageUrlChanged(imageUrl_);
+    emit changed();
 }
 
-QList<QImage> Background::backgroundImages() const
+QImage Background::image(int /* frame */) const
 {
-    return backgroundImages_;
+    return QImage();
+    // XXX todo
 }
 
-int Background::numBackgroundImages() const
+// Position
+Eigen::Vector2d Background::position() const
 {
-    return backgroundImages_.size();
+    return position_;
 }
 
-QImage Background::backgroundImage(int i) const
+void Background::setPosition(const Eigen::Vector2d & newPosition)
 {
-    return backgroundImages_[i];
+    position_ = newPosition;
+
+    emit positionChanged(position_);
+    emit changed();
 }
 
-int Background::numFramesPerBackgroundImage() const
+// Size
+Background::SizeType Background::sizeType() const
 {
-    return numFramesPerBackgroundImage_;
+    return sizeType_;
 }
 
-int Background::startFrameOfBackgroundImages() const
+Eigen::Vector2d Background::size() const
 {
-    return startFrameOfBackgroundImages_;
+    return size_;
 }
 
-bool Background::areBackgroundImagesHold() const
+void Background::setSizeType(SizeType newSizeType)
 {
-    return areBackgroundImagesHold_;
+    sizeType_ = newSizeType;
+
+    emit sizeTypeChanged(sizeType_);
+    emit changed();
 }
 
-
-Eigen::Vector2d Background::backgroundImagesPosition() const
+void Background::setSize(const Eigen::Vector2d & newSize)
 {
-    return backgroundImagesPosition_;
+    size_ = newSize;
+
+    emit sizeChanged(size_);
+    emit changed();
 }
 
-Eigen::Vector2d Background::backgroundImagesSize() const
+// Repeat
+Background::RepeatType Background::repeatType() const
 {
-    return backgroundImagesSize_;
+    return repeatType_;
 }
 
-double Background::backgroundImagesOpacity() const
+void Background::setRepeatType(RepeatType newRepeatType)
 {
-    return backgroundImagesOpacity_;
+    repeatType_ = newRepeatType;
+
+    emit repeatTypeChanged(repeatType_);
+    emit changed();
 }
 
-
-// Setters
-void Background::setBackgroundColorEnabled(bool b)
+// Opacity
+double Background::opacity() const
 {
-    isBackgroundColorEnabled_ = b;
+    return opacity_;
 }
 
-void Background::setBackgroundColorExported(bool b)
+void Background::setOpacity(double newOpacity)
 {
-    isBackgroundColorExported_ = b;
+    opacity_ = newOpacity;
+
+    emit opacityChanged(opacity_);
+    emit changed();
 }
 
-void Background::setBackgroundColor(const Color & color)
+// Hold
+bool Background::hold() const
 {
-    backgroundColor_ = color;
+    return hold_;
 }
 
-
-void Background::setBackgroundImagesEnabled(bool b)
+void Background::setHold(bool newHold)
 {
-    areBackgroundImagesEnabled_ = b;
+    hold_ = newHold;
+
+    emit holdChanged(hold_);
+    emit changed();
 }
 
-void Background::setBackgroundImagesExported(bool b)
-{
-    areBackgroundImagesExported_ = b;
-}
-
-void Background::setBackgroundImagesPaths(const QStringList & paths)
-{
-    backgroundImagesPaths_ = paths;
-    updateImagesFromPaths();
-}
-
-void Background::setNumFramesPerBackgroundImage(int numFrames)
-{
-    numFramesPerBackgroundImage_ = numFrames;
-}
-
-void Background::setStartFrameOfBackgroundImages(int frame)
-{
-    startFrameOfBackgroundImages_ = frame;
-}
-
-void Background::setBackgroundImagesHold(bool b)
-{
-    areBackgroundImagesHold_ = b;
-}
-
-
-void Background::setBackgroundImagesPosition(const Eigen::Vector2d & pos)
-{
-    backgroundImagesPosition_ = pos;
-}
-
-void Background::setBackgroundImagesSize(const Eigen::Vector2d & size)
-{
-    backgroundImagesSize_ = size;
-}
-
-void Background::setBackgroundImagesOpacity(double opacity)
-{
-    backgroundImagesOpacity_ = opacity;
-}
-
+/*
 void Background::updateImagesFromPaths()
 {
     backgroundImages_.clear();
     foreach(QString path, backgroundImagesPaths_)
     {
-        backgroundImages_ << makeImageFromPath(path);
+        backgroundImages_ << QImage(path);
     }
 }
-
-QImage Background::makeImageFromPath(const QString & path)
-{
-    return QImage(path);
-}
+*/

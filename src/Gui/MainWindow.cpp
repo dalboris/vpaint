@@ -1883,8 +1883,7 @@ void MainWindow::createDocks()
 
     // Widget
     backgroundWidget = new BackgroundWidget();
-    // todo
-    // backgroundWidget->setBackground(activeLayer()->background())
+    backgroundWidget->setBackground(&scene()->background());
 
     // Dock
     dockBackgroundWidget = new QDockWidget(tr("Background"));

@@ -8,73 +8,102 @@
 #ifndef BACKGROUND_H
 #define BACKGROUND_H
 
+#include <QObject>
+
 #include "Color.h"
+
 #include <QString>
 #include <QImage>
-#include <QList>
 #include <Eigen/Core>
 
-class Background
+class Background: public QObject
 {
+    Q_OBJECT
+
 public:
+    // Constructor / Copy constructor
     Background();
 
-    // Getters
-    bool isBackgroundColorEnabled() const;
-    bool isBackgroundColorExported() const;
-    Color backgroundColor() const;
+    // Assignement operator. Re-implemented to emit changed()
+    void operator=(const Background & other);
 
-    bool areBackgroundImagesEnabled() const;
-    bool areBackgroundImagesExported() const;
-    QStringList backgroundImagesPaths() const;
-    QList<QImage> backgroundImages() const;
-    int numBackgroundImages() const;
-    QImage backgroundImage(int i) const;
-    int numFramesPerBackgroundImage() const;
-    int startFrameOfBackgroundImages() const;
-    bool areBackgroundImagesHold() const;
+    // Color
+    Color color() const;
+    void setColor(const Color & newColor);
 
-    Eigen::Vector2d backgroundImagesPosition() const;
-    Eigen::Vector2d backgroundImagesSize() const;
-    double backgroundImagesOpacity() const;
+    // Image(s)
+    QString imageUrl() const;
+    void setImageUrl(const QString & newUrl);
+    QImage image(int frame) const;
 
-    // Setters
-    void setBackgroundColorEnabled(bool b);
-    void setBackgroundColorExported(bool b);
-    void setBackgroundColor(const Color & color);
+    // Position
+    Eigen::Vector2d position() const;
+    void setPosition(const Eigen::Vector2d & newPosition);
 
-    void setBackgroundImagesEnabled(bool b);
-    void setBackgroundImagesExported(bool b);
-    void setBackgroundImagesPaths(const QStringList & paths);
-    void setNumFramesPerBackgroundImage(int numFrames);
-    void setStartFrameOfBackgroundImages(int frame);
-    void setBackgroundImagesHold(bool b);
+    // Size
+    enum SizeType {
+        Cover = 0,
+        Manual = 1
+    };
+    SizeType sizeType() const;
+    Eigen::Vector2d size() const;
+    void setSizeType(SizeType newSizeType);
+    void setSize(const Eigen::Vector2d & newSize);
 
-    void setBackgroundImagesPosition(const Eigen::Vector2d & pos);
-    void setBackgroundImagesSize(const Eigen::Vector2d & size);
-    void setBackgroundImagesOpacity(double opacity);
+    // Repeat
+    enum RepeatType {
+        NoRepeat = 0,
+        RepeatX = 1,
+        RepeatY = 2,
+        Repeat = 3
+    };
+    RepeatType repeatType() const;
+    void setRepeatType(RepeatType newRepeatType);
 
-    // Others
-    void updateImagesFromPaths();
+    // Opacity
+    double opacity() const;
+    void setOpacity(double newOpacity);
+
+    // Hold
+    bool hold() const;
+    void setHold(bool newHold);
+
+signals:
+    // signal emitted whenever any value is changed
+    void changed();
+
+    // signals emitted when specific values are changed
+    void colorChanged(Color newColor);
+    void imageUrlChanged(QString newUrl);
+    void positionChanged(const Eigen::Vector2d & newPosition);
+    void sizeTypeChanged(SizeType newSizeType);
+    void sizeChanged(const Eigen::Vector2d & newSize);
+    void repeatTypeChanged(RepeatType newRepeatType);
+    void opacityChanged(double newOpacity);
+    void holdChanged(bool newHold);
 
 private:
-    QImage makeImageFromPath(const QString & path);
+    // Color
+    Color color_;
 
-    bool isBackgroundColorEnabled_;
-    bool isBackgroundColorExported_;
-    Color backgroundColor_;
+    // Image(s)
+    QString imageUrl_;
 
-    bool areBackgroundImagesEnabled_;
-    bool areBackgroundImagesExported_;
-    QStringList backgroundImagesPaths_;
-    QList<QImage> backgroundImages_;
-    int numFramesPerBackgroundImage_;
-    int startFrameOfBackgroundImages_;
-    bool areBackgroundImagesHold_;
+    // Position
+    Eigen::Vector2d position_;
 
-    Eigen::Vector2d backgroundImagesPosition_;
-    Eigen::Vector2d backgroundImagesSize_;
-    double backgroundImagesOpacity_;
+    // Size
+    SizeType sizeType_;
+    Eigen::Vector2d size_;
+
+    // Repeat
+    RepeatType repeatType_;
+
+    // Opacity
+    double opacity_;
+
+    // Hold
+    bool hold_;
 };
 
 #endif // BACKGROUND_H

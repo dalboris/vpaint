@@ -14,6 +14,7 @@
 #include "TimeDef.h"
 #include "Picking.h"
 #include "ViewSettings.h"
+#include "Background.h"
 
 class View;
 struct MouseEvent;
@@ -92,8 +93,12 @@ public:
     void setHeight(double h);
     void setCanvasDefaultValues();
 
-
-
+    // Background. This address is guaranteed not to change.
+    // This is different from vectorAnimationComplex(), which changes when
+    // copyFrom is called.
+    // XXX should vectorAnimationComplex() behave the same as background?
+    const Background & background() const;
+    Background & background();
     
 public slots:
     // --------- Tools ----------
@@ -166,6 +171,8 @@ private:
     double top_;
     double width_;
     double height_;
+
+    Background background_;
 };
     
 #endif

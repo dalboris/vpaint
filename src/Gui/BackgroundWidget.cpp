@@ -22,7 +22,8 @@
 
 BackgroundWidget::BackgroundWidget(QWidget * parent) :
     QWidget(parent),
-    background_(0)
+    background_(0),
+    isUpdatingFromBackground_(false)
 {
     // Layout
     QFormLayout * layout = new QFormLayout();
@@ -31,15 +32,26 @@ BackgroundWidget::BackgroundWidget(QWidget * parent) :
     // Color
     colorSelector_ = new ColorSelector(Qt::white);
     layout->addRow(tr("Color:"), colorSelector_);
+    connect(colorSelector_, SIGNAL(colorChanged(Color)),
+            this, SLOT(processColorSelectorColorChanged_(Color)));
 
     // Images
-    imagesTextEdit_ = new QLineEdit();
-    imagesButton_ = new QPushButton("...");
-    imagesButton_->setMaximumWidth(30);
+    imageLineEdit_ = new QLineEdit();
+    imageBrowseButton_ = new QPushButton("...");
+    imageBrowseButton_->setMaximumWidth(30);
+    imageRefreshButton_ = new QPushButton("O"); // XXX set icon
+    imageRefreshButton_->setMaximumWidth(30);
     QHBoxLayout * imagesLayout = new QHBoxLayout();
-    imagesLayout->addWidget(imagesTextEdit_);
-    imagesLayout->addWidget(imagesButton_);
+    imagesLayout->addWidget(imageLineEdit_);
+    imagesLayout->addWidget(imageBrowseButton_);
+    imagesLayout->addWidget(imageRefreshButton_);
     layout->addRow(tr("Image(s):"), imagesLayout);
+    connect(imageLineEdit_, SIGNAL(textChanged(QString)),
+            this, SLOT(processImageLineEditTextChanged_(QString)));
+    connect(imageBrowseButton_, SIGNAL(clicked(bool)),
+            this, SLOT(processImageBrowseButtonClicked_()));
+    connect(imageRefreshButton_, SIGNAL(clicked(bool)),
+            this, SLOT(processImageRefreshButtonClicked_()));
 
     // Position
     leftSpinBox_ = new QDoubleSpinBox();
@@ -54,6 +66,10 @@ BackgroundWidget::BackgroundWidget(QWidget * parent) :
     positionLayout->addWidget(leftSpinBox_);
     positionLayout->addWidget(topSpinBox_);
     layout->addRow(tr("Position:"), positionLayout);
+    connect(leftSpinBox_, SIGNAL(valueChanged(double)),
+            this, SLOT(processLeftSpinBoxValueChanged_(double)));
+    connect(topSpinBox_, SIGNAL(valueChanged(double)),
+            this, SLOT(processTopSpinBoxValueChanged_(double)));
 
     // Size
     sizeComboBox_ = new QComboBox();
@@ -75,6 +91,12 @@ BackgroundWidget::BackgroundWidget(QWidget * parent) :
     sizeLayout->addWidget(widthSpinBox_, 1, 0);
     sizeLayout->addWidget(heightSpinBox_, 1, 1);
     layout->addRow(tr("Size:"), sizeLayout);
+    connect(sizeComboBox_, SIGNAL(currentIndexChanged(int)),
+            this, SLOT(processSizeComboBoxCurrentIndexChanged_(int)));
+    connect(widthSpinBox_, SIGNAL(valueChanged(double)),
+            this, SLOT(processWidthSpinBoxValueChanged_(double)));
+    connect(heightSpinBox_, SIGNAL(valueChanged(double)),
+            this, SLOT(processHeightSpinBoxValueChanged_(double)));
 
     // Repeat
     repeatComboBox_ = new QComboBox();
@@ -84,6 +106,8 @@ BackgroundWidget::BackgroundWidget(QWidget * parent) :
     repeatComboBox_->addItem(tr("Both"));
     repeatComboBox_->setSizePolicy(QSizePolicy(QSizePolicy::Maximum, QSizePolicy::Preferred));
     layout->addRow(tr("Repeat:"), repeatComboBox_);
+    connect(repeatComboBox_, SIGNAL(currentIndexChanged(int)),
+            this, SLOT(processRepeatComboBoxCurrentIndexChanged_(int)));
 
     // Opacity
     opacitySpinBox_ = new QDoubleSpinBox();
@@ -93,18 +117,28 @@ BackgroundWidget::BackgroundWidget(QWidget * parent) :
     opacitySpinBox_->setSingleStep(0.1);
     opacitySpinBox_->setValue(1.0);
     layout->addRow(tr("Opacity:"), opacitySpinBox_);
+    connect(opacitySpinBox_, SIGNAL(valueChanged(double)),
+            this, SLOT(processOpacitySpinBoxValueChanged_(double)));
 
     // Hold
     holdCheckBox_ = new QCheckBox();
     holdCheckBox_->setChecked(true );
     layout->addRow(tr("Hold:"), holdCheckBox_);
+    connect(holdCheckBox_, SIGNAL(toggled(bool)),
+            this, SLOT(processHoldCheckBoxToggled_(bool)));
 
-    // Set background
+    // Set no background
     setBackground(0);
 }
 
 void BackgroundWidget::setBackground(Background * background)
 {
+    // Delete previous connections
+    if (background_)
+    {
+        background_->disconnect(this);
+    }
+
     // Store value
     background_ = background;
 
@@ -115,14 +149,158 @@ void BackgroundWidget::setBackground(Background * background)
         w->setEnabled(areChildrenEnabled);
 
     // Set widgets values from background values
+    updateFromBackground_();
+
+    // Create connections
     if (background_)
     {
-        // todo
-        // colorSelector_->setColor(...);
+        connect(background_, SIGNAL(changed()), this, SLOT(updateFromBackground_()));
+    }
+}
+
+void BackgroundWidget::updateFromBackground_()
+{
+    if (background_)
+    {
+        // Set guard
+        isUpdatingFromBackground_ = true;
+
+        // Color
+        colorSelector_->setColor(background_->color());
+
+
+        // Image
+        imageLineEdit_->setText(background_->imageUrl());
+
+        // Position
+        leftSpinBox_->setValue(background_->position()[0]);
+        topSpinBox_->setValue(background_->position()[1]);
+
+        // Size
+        sizeComboBox_->setCurrentIndex((int) background_->sizeType());
+        widthSpinBox_->setValue(background_->size()[0]);
+        heightSpinBox_->setValue(background_->size()[1]);
+        switch (background_->sizeType())
+        {
+        case Background::Cover:
+            widthSpinBox_->hide();
+            heightSpinBox_->hide();
+            break;
+        case Background::Manual:
+            widthSpinBox_->show();
+            heightSpinBox_->show();
+            break;
+        }
+
+        // Repeat
+        repeatComboBox_->setCurrentIndex((int) background_->repeatType());
+
+        // Opacity
+        opacitySpinBox_->setValue(background_->opacity());
+
+        // Hold
+        holdCheckBox_->setChecked(background_->hold());
+
+        // Unset guard
+        isUpdatingFromBackground_ = false;
     }
 }
 
 Background * BackgroundWidget::background() const
 {
     return background_;
+}
+
+void BackgroundWidget::processColorSelectorColorChanged_(const Color & newColor)
+{
+    if (background_ && !isUpdatingFromBackground_)
+    {
+        background_->setColor(newColor);
+    }
+}
+
+void BackgroundWidget::processImageLineEditTextChanged_(const QString & newText)
+{
+    if (background_ && !isUpdatingFromBackground_)
+    {
+        background_->setImageUrl(newText);
+    }
+}
+
+void BackgroundWidget::processImageBrowseButtonClicked_()
+{
+    // todo
+}
+
+void BackgroundWidget::processImageRefreshButtonClicked_()
+{
+    // todo
+}
+
+void BackgroundWidget::processLeftSpinBoxValueChanged_(double newLeft)
+{
+    if (background_ && !isUpdatingFromBackground_)
+    {
+        double top = background_->position()[1];
+        background_->setPosition(Eigen::Vector2d(newLeft, top));
+    }
+}
+
+void BackgroundWidget::processTopSpinBoxValueChanged_(double newTop)
+{
+    if (background_ && !isUpdatingFromBackground_)
+    {
+        double left = background_->position()[0];
+        background_->setPosition(Eigen::Vector2d(left, newTop));
+    }
+}
+
+void BackgroundWidget::processSizeComboBoxCurrentIndexChanged_(int newSizeType)
+{
+    if (background_ && !isUpdatingFromBackground_)
+    {
+        background_->setSizeType(static_cast<Background::SizeType>(newSizeType));
+    }
+}
+
+void BackgroundWidget::processWidthSpinBoxValueChanged_(double newWidth)
+{
+    if (background_ && !isUpdatingFromBackground_)
+    {
+        double height = background_->size()[1];
+        background_->setSize(Eigen::Vector2d(newWidth, height));
+    }
+}
+
+void BackgroundWidget::processHeightSpinBoxValueChanged_(double newHeight)
+{
+    if (background_ && !isUpdatingFromBackground_)
+    {
+        double width = background_->size()[0];
+        background_->setSize(Eigen::Vector2d(width, newHeight));
+    }
+}
+
+void BackgroundWidget::processRepeatComboBoxCurrentIndexChanged_(int newRepeatType)
+{
+    if (background_ && !isUpdatingFromBackground_)
+    {
+        background_->setRepeatType(static_cast<Background::RepeatType>(newRepeatType));
+    }
+}
+
+void BackgroundWidget::processOpacitySpinBoxValueChanged_(double newOpacity)
+{
+    if (background_ && !isUpdatingFromBackground_)
+    {
+        background_->setOpacity(newOpacity);
+    }
+}
+
+void BackgroundWidget::processHoldCheckBoxToggled_(bool newHold)
+{
+    if (background_ && !isUpdatingFromBackground_)
+    {
+        background_->setHold(newHold);
+    }
 }

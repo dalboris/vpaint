@@ -10,6 +10,8 @@
 
 #include <QWidget>
 
+#include "Color.h"
+
 class Background;
 class ColorSelector;
 
@@ -19,37 +21,58 @@ class QCheckBox;
 class QDoubleSpinBox;
 class QComboBox;
 
-/// BackgroundWidget is a widget that operate on a
-/// Background object, to change is value in a graphical way
+/// \class BackgroundWidget
+/// BackgroundWidget is a widget that allows users to change
+/// the value of a Background object in a graphical way
 ///
 /// Usage:
-/// // Create a background object
+/// \code
 /// Background * background = new Background();
-///
-/// // Add to some layout a widget to modify the background object
 /// BackgroundWidget * backgroundWidget = new BackgroundWidget();
 /// backgroundWidget->setBackground(background);
-/// someLayout->addWidget(backgroundWidget);
-///
+/// \endcode
 
 class BackgroundWidget: public QWidget
 {
+    Q_OBJECT
+
 public:
+    // Constructor
     BackgroundWidget(QWidget * parent = 0);
 
+    // Set/Get which Background object is edited by the BackgroundWidget
     void setBackground(Background * background);
     Background * background() const;
 
+private slots:
+    // Update values from background
+    void updateFromBackground_();
+
+    // Process user interaction with widgets
+    void processColorSelectorColorChanged_(const Color & newColor);
+    void processImageLineEditTextChanged_(const QString & newText);
+    void processImageBrowseButtonClicked_();
+    void processImageRefreshButtonClicked_();
+    void processLeftSpinBoxValueChanged_(double newLeft);
+    void processTopSpinBoxValueChanged_(double newTop);
+    void processSizeComboBoxCurrentIndexChanged_(int newSizeType);
+    void processWidthSpinBoxValueChanged_(double newWidth);
+    void processHeightSpinBoxValueChanged_(double newHeight);
+    void processRepeatComboBoxCurrentIndexChanged_(int newRepeatType);
+    void processOpacitySpinBoxValueChanged_(double newOpacity);
+    void processHoldCheckBoxToggled_(bool newHold);
+
 private:
-    // Background viewed by widget
+    // Background operated by BackgroundWidget
     Background * background_;
 
     // GUI
     // Color
     ColorSelector * colorSelector_;
     // Images
-    QLineEdit * imagesTextEdit_;
-    QPushButton * imagesButton_;
+    QLineEdit * imageLineEdit_;
+    QPushButton * imageBrowseButton_;
+    QPushButton * imageRefreshButton_;
     // Position
     QDoubleSpinBox * leftSpinBox_;
     QDoubleSpinBox * topSpinBox_;
@@ -63,6 +86,11 @@ private:
     QDoubleSpinBox * opacitySpinBox_;
     // Hold
     QCheckBox * holdCheckBox_;
+
+    // Guard needed for updateFromBackground_()
+    // It is needed is to avoid modifying back 'this->background_' when
+    // 'this' updates its widget values from 'this->background_'
+    bool isUpdatingFromBackground_;
 };
 
 #endif // BACKGROUNDWIDGET_H

@@ -25,7 +25,8 @@ Scene::Scene() :
     left_(0),
     top_(0),
     width_(1280),
-    height_(720)
+    height_(720),
+    background_()
 {
     VectorAnimationComplex::VAC * vac = new VectorAnimationComplex::VAC();
     connect(vac,SIGNAL(selectionChanged()),this,SIGNAL(selectionChanged()));
@@ -77,6 +78,16 @@ void Scene::setHeight(double h)
     emitChanged();
 }
 
+const Background & Scene::background() const
+{
+    return background_;
+}
+
+Background & Scene::background()
+{
+    return background_;
+}
+
 void Scene::setCanvasDefaultValues()
 {
     left_ = 0;
@@ -84,11 +95,18 @@ void Scene::setCanvasDefaultValues()
     width_ = 1280;
     height_ = 720;
 
-    // Don't emit changed on purpose:
+    // Don't emit changed on purpose
 }
 
 void Scene::copyFrom(Scene * other)
 {
+    // XXX This whole thing is ugly. I should isntead implement the
+    // copy constructor and assign operator, and do:
+    //    *scene = *otherScene;
+    // instead of
+    //    scene->copyFrom(otherScene);
+
+
     clear(true);
     foreach(SceneObject *sceneObject, other->sceneObjects_)
         addSceneObject(sceneObject->clone(), true);
@@ -102,6 +120,11 @@ void Scene::copyFrom(Scene * other)
         connect(vac,SIGNAL(selectionChanged()),this,SIGNAL(selectionChanged()));
         emit selectionChanged();
     }
+
+    // XXX Shouldn't this update left/top/width/height too?
+
+    // Update background
+    background_ = other->background_;
 }
 
 void Scene::clear(bool silent)
@@ -113,6 +136,11 @@ void Scene::clear(bool silent)
     foreach(SceneObject *sceneObject, sceneObjects_)
         delete sceneObject;
     sceneObjects_.clear();
+
+    // XXX Shouldn't this clear left/top/width/height too?
+
+    // Clear background
+    background_ = Background();
 
     if(!silent)
     {

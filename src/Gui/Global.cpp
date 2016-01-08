@@ -272,7 +272,7 @@ void Global::createToolBars()
     colorSelectorAction_->setStatusTip(tr("Click to open the color selector"));
     colorSelectorAction_->setShortcut(QKeySequence(Qt::Key_C));
     colorSelectorAction_->setShortcutContext(Qt::ApplicationShortcut);
-    connect(colorSelectorAction_, SIGNAL(triggered()), currentColor_, SLOT(changeColor()));
+    connect(colorSelectorAction_, SIGNAL(triggered()), currentColor_, SLOT(click()));
 
     // ----- Tool Options -----
 
