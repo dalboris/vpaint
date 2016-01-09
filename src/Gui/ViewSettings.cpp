@@ -98,18 +98,6 @@ void ViewSettings::toggleOutlineOnly()
     }
 }
 
-bool ViewSettings::drawBackground() const
-{
-    return drawBackground_;
-}
-void ViewSettings::setDrawBackground(bool newValue)
-{
-    if(drawBackground_ != newValue)
-    {
-        drawBackground_ = newValue;
-    }
-}
-
 bool ViewSettings::drawCursor() const
 {
     return drawCursor_;

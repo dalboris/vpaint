@@ -32,12 +32,14 @@ public:
     void toggleOutline();
     void toggleOutlineOnly();
 
-    bool drawBackground() const;
-    void setDrawBackground(bool newValue);
-
     bool drawCursor() const;
     void setDrawCursor(bool newValue);
 
+    // XXX isMainDrawing is used to draw the rectangle of
+    // selection only once, only in 2D view, and never when
+    // exporting to an image. This is a hack. In the future, the
+    // rectangle of selection shouldn't be drawn by VAC::draw(),
+    // and this isMainDrawing() attribute should be removed.
     bool isMainDrawing() const;
     void setMainDrawing(bool newValue);
 

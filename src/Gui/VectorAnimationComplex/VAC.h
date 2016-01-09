@@ -182,8 +182,10 @@ public:
     KeyVertex * split(double x, double y, Time time, bool interactive = true);
 
     // -- Paint Bucket tool --
+    // paint() returns the painted cell, if any. Might be an existing
+    // cell that has been re-colored, or a new face that has been created
     void updateToBePaintedFace(double x, double y, Time time);
-    KeyFace * paint(double x, double y, Time time);
+    Cell * paint(double x, double y, Time time);
 
     /////////////////////////////////////////////////////////////////
     //         SELECTION (MOUSE CLIC ACTIONS)                      //

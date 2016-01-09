@@ -6,18 +6,20 @@
 //   http://opensource.org/licenses/MIT
 
 #include "View.h"
+
 #include "Scene.h"
 #include "Timeline.h"
 #include "DevSettings.h"
 #include "Global.h"
-#include <QtDebug>
 #include "OpenGL.h"
+#include "Background.h"
+#include "VectorAnimationComplex/VAC.h"
+#include "VectorAnimationComplex/Cell.h"
+
+#include <QtDebug>
 #include <QApplication>
 #include <QPushButton>
 #include <cmath>
-
-#include "VectorAnimationComplex/VAC.h"
-#include "VectorAnimationComplex/Cell.h"
 
 // define mouse actions
 
@@ -384,7 +386,14 @@ void View::ClicEvent(int action, double x, double y)
         vac_ = scene_->vectorAnimationComplex();
         if(vac_)
         {
-            vac_->paint(x, y, interactiveTime());
+            VectorAnimationComplex::Cell * paintedCell = vac_->paint(x, y, interactiveTime());
+            if (!paintedCell)
+            {
+                scene_->background().setColor(global()->faceColor());
+                scene_->emitChanged();
+                scene_->emitCheckpoint();
+            }
+
             emit allViewsNeedToUpdatePicking();
             updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
             emit allViewsNeedToUpdate();
@@ -897,6 +906,34 @@ void View::PMRReleaseEvent(int action, double x, double y)
  */
 
 
+void View::drawBackground_(const Background & background)
+{
+    if(global()->showCanvas())
+    {
+        double x = scene_->left();
+        double y = scene_->top();
+        double w = scene_->width();
+        double h = scene_->height();
+
+        glColor4d(background.color().redF(),background.color().greenF(),background.color().blueF(),background.color().alpha());
+        glBegin(GL_QUADS);
+        {
+            glVertex2d(x,y);
+            glVertex2d(x+w,y);
+            glVertex2d(x+w,y+h);
+            glVertex2d(x,y+h);
+        }
+        glEnd();
+    }
+    else
+    {
+        // XXX when several layers are allowed, this would have to change from
+        //     glClearColor() to draw a quad of the size of the screen.
+        glClearColor(background.color().redF(),background.color().greenF(),background.color().blueF(),background.color().alpha());
+        glClear(GL_COLOR_BUFFER_BIT);
+    }
+}
+
 void View::drawScene()
 {
     if(!mouse_HideCursor_)
@@ -920,38 +957,57 @@ void View::drawScene()
         }
     }
 
+    // Clear to white
     glClearColor(1.0,1.0,1.0,1.0);
     glClear(GL_COLOR_BUFFER_BIT);
 
+    // Note:
+    // It is the responsability of view to decide when to call scene()->drawCanvas
+    // draw a canvas, and layer backgrounds, and in which order,
+    // since this is dependent on onion skinning settings which only
+    // view should be aware of
+
+    // Draw canvas
+    // XXX Should be replaced by drawCanvas_(scene_->canvas());
     scene_->drawCanvas(viewSettings_);
 
-    viewSettings_.setDrawBackground(true);
-    viewSettings_.setMainDrawing(false);
+    // Draw background
+    drawBackground_(scene_->background()); // later: drawBackground_(layer_->background())
 
+    // Loop over all onion skins. Draw in this order:
+    //   1. onion skins before
+    //   2. onion skins after
+    //   3. current frame
+    //
+    // Note 1: When layers will be implemented, then only the active layer has onion skins
+    // Note 2: Backgrounds are always ignored for onion skinning
+
+    viewSettings_.setMainDrawing(false);
     Time t = activeTime();
     {
         if(viewSettings_.onionSkinningIsEnabled())
         {
+            // Draw onion skins before
             Time tOnion = t;
             for(int i=0; i<viewSettings_.numOnionSkinsBefore(); ++i)
             {
-                glTranslated(-viewSettings_.onionSkinsXOffset(),-viewSettings_.onionSkinsYOffset(),0);
                 tOnion = tOnion - viewSettings_.onionSkinsTimeOffset();
-                scene_->draw(tOnion, viewSettings_);
-                viewSettings_.setDrawBackground(false);
+                glTranslated(-viewSettings_.onionSkinsXOffset(),-viewSettings_.onionSkinsYOffset(),0);
             }
             for(int i=0; i<viewSettings_.numOnionSkinsBefore(); ++i)
             {
+                scene_->draw(tOnion, viewSettings_); // XXX should be replaced by scene_->vectorAnimationComplex()->draw()
+                tOnion = tOnion + viewSettings_.onionSkinsTimeOffset();
                 glTranslated(viewSettings_.onionSkinsXOffset(),viewSettings_.onionSkinsYOffset(),0);
             }
 
+            // Draw onion skins after
             tOnion = t;
             for(int i=0; i<viewSettings_.numOnionSkinsAfter(); ++i)
             {
                 glTranslated(viewSettings_.onionSkinsXOffset(),viewSettings_.onionSkinsYOffset(),0);
                 tOnion = tOnion + viewSettings_.onionSkinsTimeOffset();
                 scene_->draw(tOnion, viewSettings_);
-                viewSettings_.setDrawBackground(false);
             }
             for(int i=0; i<viewSettings_.numOnionSkinsAfter(); ++i)
             {
@@ -1060,12 +1116,13 @@ void View::drawPick()
             Time tOnion = t;
             for(int i=0; i<viewSettings_.numOnionSkinsBefore(); ++i)
             {
-                glTranslated(-viewSettings_.onionSkinsXOffset(),-viewSettings_.onionSkinsYOffset(),0);
                 tOnion = tOnion - viewSettings_.onionSkinsTimeOffset();
-                scene_->drawPick(tOnion, viewSettings_);
+                glTranslated(-viewSettings_.onionSkinsXOffset(),-viewSettings_.onionSkinsYOffset(),0);
             }
             for(int i=0; i<viewSettings_.numOnionSkinsBefore(); ++i)
             {
+                scene_->drawPick(tOnion, viewSettings_);
+                tOnion = tOnion + viewSettings_.onionSkinsTimeOffset();
                 glTranslated(viewSettings_.onionSkinsXOffset(),viewSettings_.onionSkinsYOffset(),0);
             }
 
@@ -1442,7 +1499,10 @@ QImage View::drawToImage(Time t, double x, double y, double w, double h, int img
     // Draw scene
     ViewSettings::DisplayMode oldDM = viewSettings_.displayMode();
     viewSettings_.setDisplayMode(ViewSettings::ILLUSTRATION);
-    viewSettings_.setDrawBackground(!transparentBackground);
+    if(!transparentBackground)
+    {
+        drawBackground_(scene_->background());
+    }
     viewSettings_.setMainDrawing(false);
     viewSettings_.setDrawCursor(false);
     scene_->draw(t, viewSettings_);

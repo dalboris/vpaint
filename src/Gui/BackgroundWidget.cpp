@@ -168,7 +168,6 @@ void BackgroundWidget::updateFromBackground_()
         // Color
         colorSelector_->setColor(background_->color());
 
-
         // Image
         imageLineEdit_->setText(background_->imageUrl());
 
@@ -216,6 +215,7 @@ void BackgroundWidget::processColorSelectorColorChanged_(const Color & newColor)
     if (background_ && !isUpdatingFromBackground_)
     {
         background_->setColor(newColor);
+        background_->emitCheckpoint();
     }
 }
 

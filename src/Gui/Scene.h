@@ -51,6 +51,9 @@ public:
     void draw(Time time, ViewSettings & viewSettings);
     void drawPick(Time time, ViewSettings & viewSettings);
 
+    // XXX todo: there should be draw3D here too (not only in VAC),
+    //           responsible for instance to draw the canvas
+
     // Highlighting and Selecting
     void setHoveredObject(Time time, int index, int id);
     void setNoHoveredObject();
@@ -61,6 +64,7 @@ public:
 
     // Emit signals
     void emitChanged() {emit changed();}
+    void emitCheckpoint() {emit checkpoint();}
 
     // Save and load
     void exportSVG(Time t, QTextStream & out);

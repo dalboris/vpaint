@@ -68,9 +68,16 @@ public:
     bool hold() const;
     void setHold(bool newHold);
 
+    // Emit signals
+    void emitCheckpoint() {emit checkpoint();}
+
 signals:
     // signal emitted whenever any value is changed
     void changed();
+
+    // signal emitted whenever the user manually changed
+    // a value, and therefore should add an item in the undo stack
+    void checkpoint();
 
     // signals emitted when specific values are changed
     void colorChanged(Color newColor);

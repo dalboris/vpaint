@@ -721,36 +721,6 @@ void VAC::drawTimePlane(View3DSettings & viewSettings)
 
 void VAC::draw(Time time, ViewSettings & viewSettings)
 {
-    bool showCanvas = global()->showCanvas();
-
-    // Draw background
-    if(viewSettings.drawBackground())
-    {
-        if(showCanvas)
-        {
-            double x = global()->scene()->left();
-            double y = global()->scene()->top();
-            double w = global()->scene()->width();
-            double h = global()->scene()->height();
-
-            glColor4d(backgroundColor_.redF(),backgroundColor_.greenF(),backgroundColor_.blueF(),backgroundColor_.alpha());
-            glBegin(GL_QUADS);
-            {
-                glVertex2d(x,y);
-                glVertex2d(x+w,y);
-                glVertex2d(x+w,y+h);
-                glVertex2d(x,y+h);
-            }
-            glEnd();
-
-        }
-        else
-        {
-            glClearColor(backgroundColor_.redF(),backgroundColor_.greenF(),backgroundColor_.blueF(),backgroundColor_.alpha());
-            glClear(GL_COLOR_BUFFER_BIT);
-        }
-    }
-
     ViewSettings::DisplayMode displayMode = viewSettings.displayMode();
 
     // Illustration mode
@@ -854,8 +824,6 @@ void VAC::draw(Time time, ViewSettings & viewSettings)
             }
         }
         glEnd();
-
-
     }
 
     // Draw pen radius and snap threshold
@@ -975,9 +943,6 @@ void VAC::draw(Time time, ViewSettings & viewSettings)
             }
         }
     }
-
-
-
 }
 
 void VAC::drawPick(Time time, ViewSettings & viewSettings)
@@ -6833,15 +6798,16 @@ void VAC::updateToBePaintedFace(double x, double y, Time time)
     }
 }
 
-KeyFace * VAC::paint(double /*x*/, double /*y*/, Time /*time*/)
+Cell * VAC::paint(double /*x*/, double /*y*/, Time /*time*/)
 {
     // The created face, if any
-    KeyFace * res = 0;
+    Cell * res = 0;
 
     // Paint existing cell
     if(hoveredCell())
     {
         hoveredCell()->setColor(global()->faceColor());
+        res = hoveredCell();
     }
 
     // Create a new face
@@ -6850,15 +6816,12 @@ KeyFace * VAC::paint(double /*x*/, double /*y*/, Time /*time*/)
         res = newKeyFace(toBePaintedFace_->cycles());
     }
 
-    // Paint the background
-    else
+    if (res)
     {
-        backgroundColor_ = global()->faceColor();
+        emit needUpdatePicking();
+        emit changed();
+        emit checkpoint();
     }
-
-    emit needUpdatePicking();
-    emit changed();
-    emit checkpoint();
 
     // Return
     return res;

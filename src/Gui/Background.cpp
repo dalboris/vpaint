@@ -8,7 +8,7 @@
 #include "Background.h"
 
 Background::Background() :
-    color_(),
+    color_(Qt::white),
     imageUrl_(""),
     position_(0.0, 0.0),
     sizeType_(Cover),

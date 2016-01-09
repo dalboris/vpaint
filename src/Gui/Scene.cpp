@@ -30,6 +30,8 @@ Scene::Scene() :
 {
     VectorAnimationComplex::VAC * vac = new VectorAnimationComplex::VAC();
     connect(vac,SIGNAL(selectionChanged()),this,SIGNAL(selectionChanged()));
+    connect(&background_, SIGNAL(changed()), this, SIGNAL(changed()));
+    connect(&background_, SIGNAL(checkpoint()), this, SIGNAL(checkpoint()));
     addSceneObject(vac);
     indexHovered_ = -1;
 }
@@ -288,6 +290,12 @@ void Scene::drawCanvas(ViewSettings & /*viewSettings*/)
 
 void Scene::draw(Time time, ViewSettings & viewSettings)
 {
+    // Draw VAC
+    // XXX this was over-engineered. Should revert to something simpler:
+    //  vac_->draw(time, viewSettings);
+    // and later:
+    //   foreach(Layer * layer, layers_)
+    //     layer->draw(time, viewSettings);
     foreach(SceneObject *sceneObject, sceneObjects_)
     {
         sceneObject->draw(time, viewSettings);

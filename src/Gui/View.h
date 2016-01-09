@@ -34,6 +34,7 @@ class KeyVertex;
 class KeyEdge;
 }
 class Time;
+class Background;
 
 // mouse event in scene coordinates
 struct MouseEvent 
@@ -177,6 +178,9 @@ private:
     // View Settings
     ViewSettings viewSettings_;
     ViewSettingsWidget * viewSettingsWidget_;
+
+    // draw methods
+    void drawBackground_(const Background & background);
 };
 
 #endif
