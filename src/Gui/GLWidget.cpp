@@ -1041,23 +1041,25 @@ GLWidget * GLWidget::currentGLWidget_ = 0;
 void GLWidget::paintGL()
 {
     // ---- Drawing all opaques objects (here, mainly lines) ----
-      glDepthMask(GL_TRUE);
+    glDepthMask(GL_TRUE);
     
     // Clear the window and buffers
     glClearColor(settings_->backgroundColor_r(),
-             settings_->backgroundColor_g(),
-             settings_->backgroundColor_b(),
-             1);
-
+                 settings_->backgroundColor_g(),
+                 settings_->backgroundColor_b(),
+                 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-      // Initialize the view and lighting
-      setCameraPositionAndOrientation();
-      setLighting();
+    // Initialize the view and lighting
+    setCameraPositionAndOrientation();
+    setLighting();
 
-    // Draw the scene
+    // Set material (this is required for the 3D vew)
+    // XXX this shouldn't be done here
     setMaterial(material_);
-      glEnable(GL_COLOR_MATERIAL);
+    glEnable(GL_COLOR_MATERIAL);
+
+    // Draw scene
     currentGLWidget_ = this;
     drawScene();
     currentGLWidget_ = 0;

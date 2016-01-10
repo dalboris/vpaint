@@ -217,28 +217,37 @@ QImage Background::image(int frame) const
                 QString s = frameToString.first();
                 for (int i=1; i<frameToString.size()-1; ++i)
                 {
-                    if (frameToString[i].isEmpty())
-                    {
+                    if (frameToString[i].isEmpty()) {
                         frameToString[i] = s;
                     }
-                    else
-                    {
+                    else {
                         s = frameToString[i];
                     }
                 }
             }
 
-            // Now, just return the corresponding image
-            // XXX This is the only line of code that should be done in Background::image(int frame)
+            // Get file path for this frame
+            // XXX The lines of code below should be the only one done in Background::image(int frame)
             // All the lines of code above should be done in setImageUrl() and the result cached
+            QString filePath = prefix;
             if (frame < min) {
-                return QImage(prefix + frameToString.first() + suffix);
+                filePath += frameToString.first();
             }
             else if (frame > max) {
-                return QImage(prefix + frameToString.last() + suffix);
+                filePath += frameToString.last();
             }
             else {
-                return QImage(prefix + frameToString[frame - min] + suffix);
+                filePath += frameToString[frame - min];
+            }
+            filePath += suffix;
+
+            // Read and return image
+            QFileInfo fileInfo(filePath);
+            if (fileInfo.exists() && fileInfo.isFile()) {
+                return QImage(filePath);
+            }
+            else {
+                return QImage();
             }
         }
     }

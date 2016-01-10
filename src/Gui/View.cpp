@@ -913,17 +913,17 @@ void View::PMRReleaseEvent(int action, double x, double y)
 
 void View::drawBackground_(const Background & background)
 {
+    // Get canvas boundary
+    double x = scene_->left();
+    double y = scene_->top();
+    double w = scene_->width();
+    double h = scene_->height();
+
+    // ----- Draw background color -----
+
     if(global()->showCanvas())
     {
-        // If canvas is shown, then background should cover canvas
-
-        // --- Draw background color ---
-
-        double x = scene_->left();
-        double y = scene_->top();
-        double w = scene_->width();
-        double h = scene_->height();
-
+        // Draw rect covering canvas
         glColor4d(background.color().redF(),background.color().greenF(),background.color().blueF(),background.color().alpha());
         glBegin(GL_QUADS);
         {
@@ -933,40 +933,6 @@ void View::drawBackground_(const Background & background)
             glVertex2d(x,y+h);
         }
         glEnd();
-
-        // --- Draw background image ---
-
-        // XXX for now, I don't do any caching and send at each redraw. Caching will be implemented soon.
-
-        // Get image suitable for OpenGL drawing
-        QImage backgroundImage = convertToGLFormat(background.image(activeFrame()));
-
-        // Load texture in GPU
-        GLuint texid;
-        glGenTextures(1, &texid);
-        glBindTexture(GL_TEXTURE_2D, texid);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, backgroundImage.width(), backgroundImage.height(),
-                     0, GL_RGBA, GL_UNSIGNED_BYTE, backgroundImage.bits());
-        glBindTexture(GL_TEXTURE_2D, 0);
-
-        // Draw quad
-        glEnable(GL_TEXTURE_2D);
-        glBindTexture(GL_TEXTURE_2D, texid);
-        glBegin(GL_QUADS);
-        {
-            glTexCoord2d(0.0, 1.0); glVertex2d(x,y);
-            glTexCoord2d(1.0, 1.0); glVertex2d(x+w,y);
-            glTexCoord2d(1.0, 0.0); glVertex2d(x+w,y+h);
-            glTexCoord2d(0.0, 0.0); glVertex2d(x,y+h);
-        }
-        glEnd();
-        glBindTexture(GL_TEXTURE_2D, 0);
-        glDisable(GL_TEXTURE_2D);
-
-        // Delete GPU resources
-        glDeleteTextures(1, &texid);
     }
     else
     {
@@ -976,6 +942,48 @@ void View::drawBackground_(const Background & background)
         //     glClearColor() to draw a quad of the size of the screen.
         glClearColor(background.color().redF(),background.color().greenF(),background.color().blueF(),background.color().alpha());
         glClear(GL_COLOR_BUFFER_BIT);
+    }
+
+    // ----- Draw background image -----
+
+    // Get image suitable for OpenGL drawing
+    QImage backgroundImage = convertToGLFormat(background.image(activeFrame()));
+
+    // Draw image if non-empty
+    if (!backgroundImage.isNull())
+    {
+        // Load texture in GPU
+        // XXX todo: cache image instead of loading to GPU at every drawScene()
+        GLuint texid;
+        glGenTextures(1, &texid);
+        glBindTexture(GL_TEXTURE_2D, texid);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, backgroundImage.width(), backgroundImage.height(),
+                     0, GL_RGBA, GL_UNSIGNED_BYTE, backgroundImage.bits());
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        // Set texture and modulate by opacity
+        glEnable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, texid);
+        glColor4d(1.0, 1.0, 1.0, background.opacity());
+
+        // Draw quad
+        glBegin(GL_QUADS);
+        {
+            glTexCoord2d(0.0, 1.0); glVertex2d(x,y);
+            glTexCoord2d(1.0, 1.0); glVertex2d(x+w,y);
+            glTexCoord2d(1.0, 0.0); glVertex2d(x+w,y+h);
+            glTexCoord2d(0.0, 0.0); glVertex2d(x,y+h);
+        }
+        glEnd();
+
+        // Unset texture
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glDisable(GL_TEXTURE_2D);
+
+        // Delete texture in GPU
+        glDeleteTextures(1, &texid);
     }
 }
 
