@@ -7,9 +7,11 @@
 
 #include "Background.h"
 
+#include <QFileInfo>
+
 Background::Background() :
     color_(Qt::white),
-    imageUrl_(""),
+    imageUrl_("/home/boris/test.png"), // XXX change back to ""
     position_(0.0, 0.0),
     sizeType_(Cover),
     size_(1280.0, 720.0),
@@ -64,8 +66,16 @@ void Background::setImageUrl(const QString & newUrl)
 
 QImage Background::image(int /* frame */) const
 {
-    return QImage();
-    // XXX todo
+    // for now, ignore frame, and don't cache image
+    QFileInfo checkFile(imageUrl());
+    if (checkFile.exists() && checkFile.isFile())
+    {
+        return QImage(imageUrl());
+    }
+    else
+    {
+        return QImage();
+    }
 }
 
 // Position

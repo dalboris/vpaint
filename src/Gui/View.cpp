@@ -346,6 +346,11 @@ int View::decidePMRAction()
     return GLWidget::decidePMRAction();
 }
 
+int View::activeFrame() const
+{
+    return std::floor(viewSettings_.time().floatTime());
+}
+
 Time View::activeTime() const
 {
     return viewSettings_.time();
@@ -910,6 +915,10 @@ void View::drawBackground_(const Background & background)
 {
     if(global()->showCanvas())
     {
+        // If canvas is shown, then background should cover canvas
+
+        // --- Draw background color ---
+
         double x = scene_->left();
         double y = scene_->top();
         double w = scene_->width();
@@ -924,9 +933,45 @@ void View::drawBackground_(const Background & background)
             glVertex2d(x,y+h);
         }
         glEnd();
+
+        // --- Draw background image ---
+
+        // XXX for now, I don't do any caching and send at each redraw. Caching will be implemented soon.
+
+        // Get image suitable for OpenGL drawing
+        QImage backgroundImage = convertToGLFormat(background.image(activeFrame()));
+
+        // Load texture in GPU
+        GLuint texid;
+        glGenTextures(1, &texid);
+        glBindTexture(GL_TEXTURE_2D, texid);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, backgroundImage.width(), backgroundImage.height(),
+                     0, GL_RGBA, GL_UNSIGNED_BYTE, backgroundImage.bits());
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        // Draw quad
+        glEnable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, texid);
+        glBegin(GL_QUADS);
+        {
+            glTexCoord2d(0.0, 1.0); glVertex2d(x,y);
+            glTexCoord2d(1.0, 1.0); glVertex2d(x+w,y);
+            glTexCoord2d(1.0, 0.0); glVertex2d(x+w,y+h);
+            glTexCoord2d(0.0, 0.0); glVertex2d(x,y+h);
+        }
+        glEnd();
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glDisable(GL_TEXTURE_2D);
+
+        // Delete GPU resources
+        glDeleteTextures(1, &texid);
     }
     else
     {
+        // If canvas is not shown, then background should extend to view boundary
+
         // XXX when several layers are allowed, this would have to change from
         //     glClearColor() to draw a quad of the size of the screen.
         glClearColor(background.color().redF(),background.color().greenF(),background.color().blueF(),background.color().alpha());

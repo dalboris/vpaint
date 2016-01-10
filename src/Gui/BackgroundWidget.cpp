@@ -46,8 +46,8 @@ BackgroundWidget::BackgroundWidget(QWidget * parent) :
     imagesLayout->addWidget(imageBrowseButton_);
     imagesLayout->addWidget(imageRefreshButton_);
     layout->addRow(tr("Image(s):"), imagesLayout);
-    connect(imageLineEdit_, SIGNAL(textChanged(QString)),
-            this, SLOT(processImageLineEditTextChanged_(QString)));
+    connect(imageLineEdit_, SIGNAL(editingFinished()),
+            this, SLOT(processImageLineEditEditingFinished_()));
     connect(imageBrowseButton_, SIGNAL(clicked(bool)),
             this, SLOT(processImageBrowseButtonClicked_()));
     connect(imageRefreshButton_, SIGNAL(clicked(bool)),
@@ -219,11 +219,11 @@ void BackgroundWidget::processColorSelectorColorChanged_(const Color & newColor)
     }
 }
 
-void BackgroundWidget::processImageLineEditTextChanged_(const QString & newText)
+void BackgroundWidget::processImageLineEditEditingFinished_()
 {
     if (background_ && !isUpdatingFromBackground_)
     {
-        background_->setImageUrl(newText);
+        background_->setImageUrl(imageLineEdit_->text());
     }
 }
 

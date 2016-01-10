@@ -50,7 +50,7 @@ private slots:
 
     // Process user interaction with widgets
     void processColorSelectorColorChanged_(const Color & newColor);
-    void processImageLineEditTextChanged_(const QString & newText);
+    void processImageLineEditEditingFinished_();
     void processImageBrowseButtonClicked_();
     void processImageRefreshButtonClicked_();
     void processLeftSpinBoxValueChanged_(double newLeft);

@@ -84,6 +84,7 @@ public:
     void fitSelectionInWindow();
 
     // Active time
+    int activeFrame() const;
     Time activeTime() const;
     void setActiveTime(Time t);
 
