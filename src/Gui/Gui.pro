@@ -43,6 +43,13 @@ macx {
   FILE_ICONS.files = images/vec.icns
   FILE_ICONS.path = Contents/Resources
   QMAKE_BUNDLE_DATA += FILE_ICONS
+
+  # Names for control/command modifier key
+  DEFINES += ACTION_MODIFIER_NAME_SHORT=\\\"Cmd\\\" ACTION_MODIFIER_NAME=\\\"Command\\\"
+}
+else {
+  # Names for control/command modifier key
+  DEFINES += ACTION_MODIFIER_NAME_SHORT=\\\"Ctrl\\\" ACTION_MODIFIER_NAME=\\\"Control\\\"
 }
 
 # Compiler flags for Windows

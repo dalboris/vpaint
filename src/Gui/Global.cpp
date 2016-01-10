@@ -650,7 +650,7 @@ void Global::updateStatusBarHelp()
         message += "[";
         if(isCtrlDown)
         {
-            message += "CTRL";
+            message += QString(ACTION_MODIFIER_NAME_SHORT).toUpper();
             if(isShiftDown || isAltDown)
                 message += ",";
         }
@@ -671,7 +671,7 @@ void Global::updateStatusBarHelp()
     if(toolMode() == SELECT)
     {
         if(!isCtrlDown && !isShiftDown && !isAltDown) {
-            message += "Click to select highlighted object. Click on background to deselect all. Hold CTRL, SHIFT, or ALT for more actions.";
+            message += "Click to select highlighted object. Click on background to deselect all. Hold " + QString(ACTION_MODIFIER_NAME_SHORT).toUpper() + ", SHIFT, or ALT for more actions.";
         }
         else if(isCtrlDown && !isShiftDown && !isAltDown) {
             message += "Click on curve to insert end point. Click on face to insert point-in-face.";
@@ -692,7 +692,7 @@ void Global::updateStatusBarHelp()
     else if(toolMode() == SKETCH)
     {
         if(!isCtrlDown && !isShiftDown && !isAltDown) {
-            message += "Hold left mouse button to draw a curve. CTRL: Change pen width. ALT: Change snap threshold.";
+            message += "Hold left mouse button to draw a curve. " + QString(ACTION_MODIFIER_NAME_SHORT).toUpper() + ": Change pen width. ALT: Change snap threshold.";
         }
         else if(isCtrlDown && !isShiftDown && !isAltDown) {
             message += "Hold left mouse button to change pen width.";
@@ -719,7 +719,7 @@ void Global::updateStatusBarHelp()
     else if(toolMode() == SCULPT)
     {
         if(!isCtrlDown && !isShiftDown && !isAltDown) {
-            message += "Hold left mouse button (LMB) to drag endpoint, or drag curve within radius. CTRL: radius. SHIFT: smooth. ALT: thickness.";
+            message += "Hold left mouse button (LMB) to drag endpoint, or drag curve within radius. " + QString(ACTION_MODIFIER_NAME_SHORT).toUpper() + ": radius. SHIFT: smooth. ALT: thickness.";
         }
         else if(isCtrlDown && !isShiftDown && !isAltDown) {
             message += "Hold LMB to change the radius of the sculpting tool. Note: radius not visible if cursor too far from curve.";

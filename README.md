@@ -16,12 +16,9 @@ innovative techniques.
 
 ## Mac OS X
 
-- On Mac OS X 10.10 Yosemite, maximizing the window is poorly supported. If you want to exit maximizing, hide the toolbar and action bar with "View > Toolbar" and "View > Action Bar" so you can access the minimize button again.
+- On Mac OS X 10.10 Yosemite and above, maximizing the window is poorly supported. If you want to exit maximizing, hide the toolbar and action bar with "View > Toolbar" and "View > Action Bar" so you can access the minimize button again.
 
 - If you have a retina display, then the pointer drawn by VPaint is not at the same location as your mouse cursor. It doesn't prevent using VPaint but it is quite inconvenient. See [#22](https://github.com/dalboris/vpaint/issues/22) for details.
-
-- In the status bar (at the bottom), whenever "CTRL" is mentioned, you should use the COMMAND key instead. 
-
 
 #  LICENSE
 
