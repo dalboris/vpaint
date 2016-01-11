@@ -389,13 +389,11 @@ void PlaybackSettings::read(XmlStreamReader & xml)
 
 void PlaybackSettings::write(XmlStreamWriter & xml) const
 {
-    xml.writeStartElement("playback");
     xml.writeAttribute("firstframe", QString().setNum(firstFrame()));
     xml.writeAttribute("lastframe", QString().setNum(lastFrame()));
     xml.writeAttribute("fps", QString().setNum(fps()));
     xml.writeAttribute("subframeinbetweening", subframeInbetweening() ? "on" : "off");
     xml.writeAttribute("playmode", playModeToString(playMode()));
-    xml.writeEndElement();
 }
 
 

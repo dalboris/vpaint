@@ -1095,33 +1095,8 @@ int VAC::numSelectedCells() const
 
 void VAC::write(XmlStreamWriter & xml)
 {
-    // Background color
-    xml.writeAttribute("style", "background-color:rgba(" +
-                       QString().setNum(backgroundColor_.red()) + "," +
-                       QString().setNum(backgroundColor_.green()) + "," +
-                       QString().setNum(backgroundColor_.blue()) + "," +
-                       QString().setNum(backgroundColor_.alphaF()) + ");");
-
     for(Cell * cell: zOrdering_)
-    {
         cell->write(xml);
-    }
-
-    /*
-        // list of objects
-        out << Save::newField("Cells");
-        out << "\n" << Save::indent() << "[";
-        Save::incrIndent();
-        for(Cell * obj: zOrdering_)
-        {
-            out << Save::openCurlyBrackets();
-            obj->save(out);
-            out << Save::closeCurlyBrackets();
-        }
-        Save::decrIndent();
-        out << "\n" << Save::indent() << "]";
-        */
-
 }
 
 void VAC::clear()
@@ -1134,11 +1109,6 @@ void VAC::clear()
 void VAC::read(XmlStreamReader & xml)
 {
     clear();
-
-    // Background color (TODO)
-    QString style = xml.attributes().value("style").toString();
-    // [...]
-
 
     while (xml.readNextStartElement())
     {
@@ -1157,7 +1127,7 @@ void VAC::read(XmlStreamReader & xml)
         else if(xml.name() == "inbetweenface")
             cell = new InbetweenFace(this, xml);
 
-        xml.skipCurrentElement(); // reads "/>". set current element to "layer"
+        xml.skipCurrentElement(); // XXX this should be in "Cell(this, xml)"
 
         if(cell)
         {

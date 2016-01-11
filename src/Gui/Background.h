@@ -16,6 +16,9 @@
 #include <QImage>
 #include <Eigen/Core>
 
+class XmlStreamWriter;
+class XmlStreamReader;
+
 class Background: public QObject
 {
     Q_OBJECT
@@ -77,6 +80,10 @@ public:
 
     // Emit signals
     void emitCheckpoint() {emit checkpoint();}
+
+    // Read/Write XML
+    void write(XmlStreamWriter & xml);
+    void read(XmlStreamReader & xml);
 
 signals:
     // signal emitted whenever any value is changed

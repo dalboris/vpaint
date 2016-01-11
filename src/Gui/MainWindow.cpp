@@ -853,39 +853,47 @@ void MainWindow::write_DEPRECATED(QTextStream & out)
 
 void MainWindow::write(XmlStreamWriter &xml)
 {
-    // Header
+    // Start XML Document
     xml.writeStartDocument();
+
+    // Header
     xml.writeComment(" Created with VPaint (http://www.vpaint.org) ");
     xml.writeCharacters("\n\n");
 
-    // Start VEC
+    // Document
     xml.writeStartElement("vec");
-    xml.writeAttribute("version", "1.0");
+    {
+        xml.writeAttribute("version", "1.0");
 
-    // Metadata
-    // TODO: Give more thoughts before adding this into release.
-    //       Basically, be conservative in what is saved and what is not, since
-    //       everything that is saved will have to be supported "forever" for backward compatibility
-    //xmlStream.writeStartElement("metadata");
-    //xmlStream.writeAttribute("author", "Boris Dalstein");
-    //xmlStream.writeAttribute("license", "CC BY-SA");
-    //xmlStream.writeEndElement();
+        // Metadata such as author and license? Different options:
+        //   1) as comments in header (issue: not part of document or XML spec, cross-editor compatibility issues)
+        //   2) as attributes of vec
+        //   3) as its own XML element
+        // "metadata" or "properties"? Probably metadata. even in PDF when this info is often accessed
+        // in File > Properties, it is still sotred as "metadata"
+        // Resources:
+        //   https://helpx.adobe.com/acrobat/using/pdf-properties-metadata.html)
+        //   http://www.w3.org/TR/SVG/metadata.html
+        //xmlStream.writeStartElement("metadata");
+        //xmlStream.writeAttribute("author", "Boris Dalstein");
+        //xmlStream.writeAttribute("license", "CC BY-SA");
+        //xmlStream.writeEndElement();
 
-    // Playback
-    timeline()->write(xml);
+        // Playback
+        xml.writeStartElement("playback");
+        timeline()->write(xml);
+        xml.writeEndElement();
 
-    // Layer + Cells
-    scene()->write(xml);
-    /*
-    xml.writeStartElement("cells");
-    xml.writeStartElement("vertex");
-    xml.writeAttribute("id", "001");
-    xml.writeAttribute("pos", "42.5,87.6");
-    xml.writeEndElement();
-    xml.writeEndElement();
-    */
+        // Canvas
+        xml.writeStartElement("canvas");
+        scene()->writeCanvas(xml);
+        xml.writeEndElement();
 
-    // End VEC
+        // Layer
+        xml.writeStartElement("layer");
+        scene()->write(xml);
+        xml.writeEndElement();
+    }
     xml.writeEndElement();
 
     // End XML Document
@@ -894,54 +902,63 @@ void MainWindow::write(XmlStreamWriter &xml)
 
 void MainWindow::read(XmlStreamReader & xml)
 {
-    if (xml.readNextStartElement()) {
-        if (xml.name() == "vec")
+    if (xml.readNextStartElement())
+    {
+        if (xml.name() != "vec")
         {
-            if(xml.attributes().value("version") != "1.0")
+            QMessageBox::warning(this,
+                "Cannot open file",
+                "Sorry, the file you are trying to open is an invalid VEC file.");
+            return;
+        }
+
+        if(xml.attributes().value("version") != "1.0")
+        {
+            QMessageBox::warning(this,
+                "File version more recent than VPaint",
+                "The file you are trying to open has been created with a "
+                "version of VPaint more recent than the one you are using. "
+                "We will still try to open it, but errors may occur, or it "
+                "may not be displayed at intended. We recommend to download "
+                "the latest version of VPaint at www.vpaint.org");
+        }
+
+        int numLayer = 0;
+        while (xml.readNextStartElement())
+        {
+            // Playback
+            if (xml.name() == "playback")
             {
-                QMessageBox::warning(this,
-                                     "File version more recent than VPaint",
-                                     "The file you are trying to open has been created with a version of VPaint more recent than the one you are using. "
-                                     "We will still try to open it, but errors may occur, or it may not be displayed at intended. "
-                                     "We recommend to download the latest version of VPaint at www.vpaint.org");
+                timeline_->read(xml);
             }
 
-            int numLayer = 0;
-            while (xml.readNextStartElement())
+            // Canvas
+            else if (xml.name() == "canvas")
             {
-                if (xml.name() == "layer")
+                scene_->readCanvas(xml);
+            }
+
+            // Layer
+            else if (xml.name() == "layer")
+            {
+                // For now, only supports one layer, i.e., it reads the first one and
+                // ignore all the others
+                ++numLayer;
+                if(numLayer == 1)
                 {
-                    // For now, only supports one layer, i.e., it reads the first one and
-                    // ignore all the others
-                    ++numLayer;
-                    if(numLayer == 1)
-                    {
-                        scene_->read(xml);
-                    }
-                    else
-                    {
-                        xml.skipCurrentElement();
-                    }
-                }
-                else if (xml.name() == "canvas")
-                {
-                    scene_->readCanvas(xml);
-                }
-                else if (xml.name() == "playback")
-                {
-                    timeline_->read(xml);
+                    scene_->read(xml);
                 }
                 else
                 {
                     xml.skipCurrentElement();
                 }
             }
-        }
-        else
-        {
-            QMessageBox::warning(this,
-                                 "Cannot open file",
-                                 "Sorry, the file you are trying to open is an invalid VEC file.");
+
+            // Unknown
+            else
+            {
+                xml.skipCurrentElement();
+            }
         }
     }
 }

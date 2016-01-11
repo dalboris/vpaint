@@ -214,16 +214,13 @@ void Scene::read(QTextStream & in)
 
 void Scene::write(XmlStreamWriter & xml)
 {
-    // Canvas
-    xml.writeStartElement("canvas");
-    xml.writeAttribute("left", QString().setNum(left()));
-    xml.writeAttribute("top", QString().setNum(top()));
-    xml.writeAttribute("width", QString().setNum(width()));
-    xml.writeAttribute("height", QString().setNum(height()));
+    // Background
+    xml.writeStartElement("background");
+    background().write(xml);
     xml.writeEndElement();
 
-    // VAC
-    xml.writeStartElement("layer");
+    // Vector animation complex
+    xml.writeStartElement("objects");
     vectorAnimationComplex()->write(xml);
     xml.writeEndElement();
 }
@@ -232,11 +229,24 @@ void Scene::read(XmlStreamReader & xml)
 {
     clear(true);
 
-    // VAC
-    VectorAnimationComplex::VAC * vac = new VectorAnimationComplex::VAC();
-    vac->read(xml);
-    addSceneObject(vac, true);
-    connect(vac,SIGNAL(selectionChanged()),this,SIGNAL(selectionChanged()));
+    while (xml.readNextStartElement())
+    {
+        if (xml.name() == "background")
+        {
+            background().read(xml);
+        }
+        else if (xml.name() == "objects")
+        {
+            VectorAnimationComplex::VAC * vac = new VectorAnimationComplex::VAC();
+            vac->read(xml);
+            addSceneObject(vac, true);
+            connect(vac,SIGNAL(selectionChanged()),this,SIGNAL(selectionChanged()));
+        }
+        else
+        {
+            xml.skipCurrentElement();
+        }
+    }
 
     emit changed();
     emit needUpdatePicking();
@@ -245,6 +255,7 @@ void Scene::read(XmlStreamReader & xml)
 
 void Scene::readCanvas(XmlStreamReader & xml)
 {
+
     setCanvasDefaultValues();
 
     // Canvas
@@ -258,6 +269,14 @@ void Scene::readCanvas(XmlStreamReader & xml)
         setHeight(xml.attributes().value("height").toDouble());
 
     xml.skipCurrentElement();
+}
+
+void Scene::writeCanvas(XmlStreamWriter & xml)
+{
+    xml.writeAttribute("left", QString().setNum(left()));
+    xml.writeAttribute("top", QString().setNum(top()));
+    xml.writeAttribute("width", QString().setNum(width()));
+    xml.writeAttribute("height", QString().setNum(height()));
 }
 
 // ----------------------- Drawing the scene -------------------------

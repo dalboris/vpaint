@@ -7,13 +7,17 @@
 
 #include "Background.h"
 
+#include "XmlStreamReader.h"
+#include "XmlStreamWriter.h"
+#include "CssColor.h"
+
 #include <QDir>
 #include <QFileInfo>
 #include <QVector>
 
 Background::Background() :
     color_(Qt::white),
-    imageUrl_("test_*.png"), // XXX change back to ""
+    imageUrl_(""),
     position_(0.0, 0.0),
     sizeType_(Cover),
     size_(1280.0, 720.0),
@@ -357,4 +361,150 @@ void Background::setHold(bool newHold)
 
     emit holdChanged(hold_);
     emit changed();
+}
+
+namespace
+{
+QString toString(double x)
+{
+    return QString().setNum(x);
+}
+}
+
+void Background::write(XmlStreamWriter & xml)
+{
+    // Color
+    xml.writeAttribute("color", "rgba(" + toString(color().red()) + "," +
+                                          toString(color().green()) + "," +
+                                          toString(color().blue()) + "," +
+                                          toString(color().alphaF()) + ")");
+
+    // Image
+    xml.writeAttribute("image", imageUrl());
+
+    // Position
+    xml.writeAttribute("position", toString(position()[0]) + " " +
+                                   toString(position()[1]));
+
+    // Size
+    switch (sizeType())
+    {
+    case Cover:
+        xml.writeAttribute("size", "cover");
+        break;
+    case Manual:
+        xml.writeAttribute("size", toString(size()[0]) + " " +
+                                   toString(size()[1]));
+        break;
+    }
+
+    // Repeat
+    switch (repeatType())
+    {
+    case NoRepeat:
+        xml.writeAttribute("repeat", "norepeat");
+        break;
+    case RepeatX:
+        xml.writeAttribute("repeat", "repeatx");
+        break;
+    case RepeatY:
+        xml.writeAttribute("repeat", "repeaty");
+        break;
+    case Repeat:
+        xml.writeAttribute("repeat", "repeat");
+        break;
+    }
+
+    // Opacity
+    xml.writeAttribute("opacity", toString(opacity()));
+
+    // Hold
+    xml.writeAttribute("hold", hold() ? "yes" : "no");
+}
+
+void Background::read(XmlStreamReader & xml)
+{
+    // Reset to default
+    *this = Background();
+
+    // Color
+    if(xml.attributes().hasAttribute("color"))
+    {
+        CssColor c(xml.attributes().value("color").toString());
+        setColor(c.toColor());
+    }
+
+    // Image
+    if(xml.attributes().hasAttribute("image"))
+    {
+        setImageUrl(xml.attributes().value("image").toString());
+    }
+
+    // Position
+    if(xml.attributes().hasAttribute("position"))
+    {
+        QStringList sl =  xml.attributes().value("position").toString().split(' ');
+        setPosition(Eigen::Vector2d(sl[0].toDouble(), sl[1].toDouble()));
+    }
+
+    // Size
+    if(xml.attributes().hasAttribute("size"))
+    {
+        QString sizeString =  xml.attributes().value("size").toString();
+        if (sizeString == "cover")
+        {
+            setSizeType(Cover);
+        }
+        else
+        {
+            setSizeType(Manual);
+            QStringList sl =  sizeString.split(' ');
+            setSize(Eigen::Vector2d(sl[0].toDouble(), sl[1].toDouble()));
+        }
+    }
+
+    // Repeat
+    if(xml.attributes().hasAttribute("repeat"))
+    {
+        QString repeatString =  xml.attributes().value("repeat").toString();
+        if (repeatString == "norepeat")
+        {
+            setRepeatType(NoRepeat);
+        }
+        else if (repeatString == "repeatx")
+        {
+            setRepeatType(RepeatX);
+        }
+        else if (repeatString == "repeaty")
+        {
+            setRepeatType(RepeatY);
+        }
+        else if (repeatString == "repeat")
+        {
+            setRepeatType(Repeat);
+        }
+    }
+
+    // Opacity
+    if(xml.attributes().hasAttribute("opacity"))
+    {
+        setOpacity(xml.attributes().value("opacity").toDouble());
+    }
+
+    // Hold
+    if(xml.attributes().hasAttribute("hold"))
+    {
+        QString holdString =  xml.attributes().value("hold").toString();
+        if (holdString == "yes")
+        {
+            setHold(true);
+        }
+        else if (holdString == "no")
+        {
+            setHold(false);
+        }
+    }
+
+    // Unknown
+    xml.skipCurrentElement();
 }

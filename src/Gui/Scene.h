@@ -73,6 +73,7 @@ public:
     void write(XmlStreamWriter & xml);
     void read(XmlStreamReader & xml);
     void readCanvas(XmlStreamReader & xml);
+    void writeCanvas(XmlStreamWriter & xml);
 
     // Scene Objects getters
     VectorAnimationComplex::VAC * vectorAnimationComplex();
