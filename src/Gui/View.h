@@ -97,9 +97,7 @@ public:
     // Zoom level
     double zoom() const;
 
-    // Visible area of the scene, in Scene coordinate
-    // XXX This will be useless once we allow rotation of the
-    //     view, therefore avoid using it as much as possible
+    // Smallest/Biggest scene coordinates visible in the viewport
     double xSceneMin() const;
     double xSceneMax() const;
     double ySceneMin() const;

@@ -278,6 +278,19 @@ Eigen::Vector2d Background::size() const
     return size_;
 }
 
+Eigen::Vector2d Background::computedSize(const Eigen::Vector2d & canvasSize) const
+{
+    switch (sizeType())
+    {
+    case Background::Cover:
+        return canvasSize;
+    case Background::Manual:
+        return size();
+    default:
+        return size();
+    }
+}
+
 void Background::setSizeType(SizeType newSizeType)
 {
     sizeType_ = newSizeType;
@@ -306,6 +319,16 @@ void Background::setRepeatType(RepeatType newRepeatType)
 
     emit repeatTypeChanged(repeatType_);
     emit changed();
+}
+
+bool Background::repeatX() const
+{
+    return repeatType() & RepeatX;
+}
+
+bool Background::repeatY() const
+{
+    return repeatType() & RepeatY;
 }
 
 // Opacity

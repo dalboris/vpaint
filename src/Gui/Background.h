@@ -40,25 +40,32 @@ public:
     Eigen::Vector2d position() const;
     void setPosition(const Eigen::Vector2d & newPosition);
 
-    // Size
+    // Size Type
     enum SizeType {
         Cover = 0,
         Manual = 1
     };
     SizeType sizeType() const;
-    Eigen::Vector2d size() const;
     void setSizeType(SizeType newSizeType);
+
+    // Size as authored (ignore canvas size even if sizeType() == Cover)
+    Eigen::Vector2d size() const;
     void setSize(const Eigen::Vector2d & newSize);
+
+    // Actual size taking into account sizeType(), size(), and canvasSize.
+    Eigen::Vector2d computedSize(const Eigen::Vector2d & canvasSize) const;
 
     // Repeat
     enum RepeatType {
         NoRepeat = 0,
         RepeatX = 1,
         RepeatY = 2,
-        Repeat = 3
+        Repeat = 3 // == (RepeatX | RepeatY) if enum interpreted as bit flags
     };
     RepeatType repeatType() const;
     void setRepeatType(RepeatType newRepeatType);
+    bool repeatX() const; // true iff either RepeatX or Repeat
+    bool repeatY() const; // true iff either RepeatY or Repeat
 
     // Opacity
     double opacity() const;

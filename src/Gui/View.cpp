@@ -914,33 +914,45 @@ void View::PMRReleaseEvent(int action, double x, double y)
 void View::drawBackground_(const Background & background)
 {
     // Get canvas boundary
-    double x = scene_->left();
-    double y = scene_->top();
-    double w = scene_->width();
-    double h = scene_->height();
+    const double wc = scene_->width();
+    const double hc = scene_->height();
+    const double xc1 = scene_->left();
+    const double yc1 = scene_->top();
+    const double xc2 = xc1 + wc;
+    const double yc2 = yc1 + hc;
 
     // ----- Draw background color -----
 
     if(global()->showCanvas())
     {
-        // Draw rect covering canvas
-        glColor4d(background.color().redF(),background.color().greenF(),background.color().blueF(),background.color().alpha());
+        // Set color
+        glColor4d(background.color().redF(),
+                  background.color().greenF(),
+                  background.color().blueF(),
+                  background.color().alpha());
+
+        // Draw quad covering canvas
         glBegin(GL_QUADS);
         {
-            glVertex2d(x,y);
-            glVertex2d(x+w,y);
-            glVertex2d(x+w,y+h);
-            glVertex2d(x,y+h);
+            glVertex2d(xc1,yc1);
+            glVertex2d(xc2,yc1);
+            glVertex2d(xc2,yc2);
+            glVertex2d(xc1,yc2);
         }
         glEnd();
     }
     else
     {
-        // If canvas is not shown, then background should extend to view boundary
+        // XXX For now, we use glClear. Later, when several layers are allowed,
+        //     we should draw a quad of the size of the screen.
 
-        // XXX when several layers are allowed, this would have to change from
-        //     glClearColor() to draw a quad of the size of the screen.
-        glClearColor(background.color().redF(),background.color().greenF(),background.color().blueF(),background.color().alpha());
+        // Set clear color
+        glClearColor(background.color().redF(),
+                     background.color().greenF(),
+                     background.color().blueF(),
+                     background.color().alpha());
+
+        // Clear viewport
         glClear(GL_COLOR_BUFFER_BIT);
     }
 
@@ -952,38 +964,157 @@ void View::drawBackground_(const Background & background)
     // Draw image if non-empty
     if (!backgroundImage.isNull())
     {
-        // Load texture in GPU
-        // XXX todo: cache image instead of loading to GPU at every drawScene()
-        GLuint texid;
-        glGenTextures(1, &texid);
-        glBindTexture(GL_TEXTURE_2D, texid);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, backgroundImage.width(), backgroundImage.height(),
-                     0, GL_RGBA, GL_UNSIGNED_BYTE, backgroundImage.bits());
-        glBindTexture(GL_TEXTURE_2D, 0);
+        // Get background position and size
+        Eigen::Vector2d position = background.position();
+        Eigen::Vector2d size = background.computedSize(Eigen::Vector2d(wc, hc));
 
-        // Set texture and modulate by opacity
-        glEnable(GL_TEXTURE_2D);
-        glBindTexture(GL_TEXTURE_2D, texid);
-        glColor4d(1.0, 1.0, 1.0, background.opacity());
+        // Determine background quad positions and UVs
+        double x1, y1, u1, v1, x2, y2, u2, v2;
 
-        // Draw quad
-        glBegin(GL_QUADS);
+        // Set value assuming no clamping nor repeat
+        x1 = xc1 + position[0];
+        y1 = yc1 + position[1];
+        u1 = 0.0;
+        v1 = 1.0;
+        x2 = x1 + size[0];
+        y2 = y1 + size[1];
+        u2 = 1.0;
+        v2 = 0.0;
+
+        // Handle negative sizes
+        if (x1 > x2)
         {
-            glTexCoord2d(0.0, 1.0); glVertex2d(x,y);
-            glTexCoord2d(1.0, 1.0); glVertex2d(x+w,y);
-            glTexCoord2d(1.0, 0.0); glVertex2d(x+w,y+h);
-            glTexCoord2d(0.0, 0.0); glVertex2d(x,y+h);
+            std::swap(x1, x2);
+            std::swap(u1, u2);
         }
-        glEnd();
+        if (y1 > y2)
+        {
+            std::swap(y1, y2);
+            std::swap(v1, v2);
+        }
 
-        // Unset texture
-        glBindTexture(GL_TEXTURE_2D, 0);
-        glDisable(GL_TEXTURE_2D);
+        // Get min and max scene coordinates where some background will be visible
+        double xb1, xb2, yb1, yb2;
+        if(global()->showCanvas())
+        {
+            xb1 = xc1;
+            xb2 = xc2;
+            yb1 = yc1;
+            yb2 = yc2;
+        }
+        else
+        {
+            xb1 = xSceneMin();
+            xb2 = xSceneMax();
+            yb1 = ySceneMin();
+            yb2 = ySceneMax();
+        }
 
-        // Delete texture in GPU
-        glDeleteTextures(1, &texid);
+        // Repeat horizontally
+        if (background.repeatX())
+        {
+            const double dx = (x2-x1);
+            const double du = (u2-u1);
+
+            const double k1 = std::floor((xb1-x1)/dx);
+            const double k2 = 1 + std::floor((xb2-x2)/dx);
+
+            x1 += k1*dx;
+            x2 += k2*dx;
+
+            u1 += k1*du;
+            u2 += k2*du;
+        }
+
+        // Repeat vertically
+        if (background.repeatY())
+        {
+            const double dy = (y2-y1);
+            const double dv = (v2-v1);
+
+            const double k1 = std::floor((yb1-y1)/dy);
+            const double k2 = 1 + std::floor((yb2-y2)/dy);
+
+            y1 += k1*dy;
+            y2 += k2*dy;
+
+            v1 += k1*dv;
+            v2 += k2*dv;
+        }
+
+        // Apply clamping
+        bool outOfCanvas = false;
+        if(global()->showCanvas())
+        {
+            if ( x1 >= xc2 ||  x2 <= xc1 || y1 >= yc2 || y2 <= yc1)
+            {
+                outOfCanvas = true;
+            }
+            else
+            {
+                // Clamp right
+                if (x2 > xc2)
+                {
+                    u2 = u1 + (u2-u1)*(xc2-x1)/(x2-x1);
+                    x2 = xc2;
+                }
+                // Clamp left
+                if (x1 < xc1)
+                {
+                    u1 = u2 + (u1-u2)*(xc1-x2)/(x1-x2);
+                    x1 = xc1;
+                }
+                // Clamp bottom
+                if (y2 > yc2)
+                {
+                    v2 = v1 + (v2-v1)*(yc2-y1)/(y2-y1);
+                    y2 = yc2;
+                }
+                // Clamp top
+                if (y1 < yc1)
+                {
+                    v1 = v2 + (v1-v2)*(yc1-y2)/(y1-y2);
+                    y1 = yc1;
+                }
+            }
+        }
+
+        // Draw textured quad
+        if (!outOfCanvas)
+        {
+            // Load texture in GPU
+            // XXX todo: cache image instead of loading to GPU at every drawScene()
+            GLuint texid;
+            glGenTextures(1, &texid);
+            glBindTexture(GL_TEXTURE_2D, texid);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, backgroundImage.width(), backgroundImage.height(),
+                         0, GL_RGBA, GL_UNSIGNED_BYTE, backgroundImage.bits());
+            glBindTexture(GL_TEXTURE_2D, 0);
+
+            // Set texture and modulate by opacity
+            glEnable(GL_TEXTURE_2D);
+            glBindTexture(GL_TEXTURE_2D, texid);
+            glColor4d(1.0, 1.0, 1.0, background.opacity());
+
+            // Draw quad
+            glBegin(GL_QUADS);
+            {
+                glTexCoord2d(u1, v1); glVertex2d(x1,y1);
+                glTexCoord2d(u2, v1); glVertex2d(x2,y1);
+                glTexCoord2d(u2, v2); glVertex2d(x2,y2);
+                glTexCoord2d(u1, v2); glVertex2d(x1,y2);
+            }
+            glEnd();
+
+            // Unset texture
+            glBindTexture(GL_TEXTURE_2D, 0);
+            glDisable(GL_TEXTURE_2D);
+
+            // Delete texture in GPU
+            glDeleteTextures(1, &texid);
+        }
     }
 }
 
@@ -1116,6 +1247,15 @@ double View::zoom() const
 {
     return camera2D().zoom();
 }
+
+// Note: In the future, when rotation of the viewport is allowed,
+//       then it should be replaced by:
+//           xSceneMin = min(x1, x2, x3, x4);
+//           xSceneMax = max(x1, x2, x3, x4);
+//           ySceneMin = min(y1, y2, y3, y4);
+//           ySceneMax = max(y1, y2, y3, y4);
+//       where the (xi,yi)'s are the four corners of the viewport in
+//       scene coordinate, which in general will not be axis-aligned
 
 double  View::xSceneMin() const
 {
