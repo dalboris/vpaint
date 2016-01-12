@@ -265,7 +265,6 @@ void VAC::initNonCopyable()
 
 void VAC::initCopyable()
 {
-    backgroundColor_ = Qt::white;
     maxID_ = -1;
     ds_ = 5.0;
     cells_.clear();
@@ -295,9 +294,6 @@ VAC * VAC::clone()
 {
     // Create new Graph
     VAC * newVAC = new VAC();
-
-    // Copy background color
-    newVAC->backgroundColor_ = backgroundColor_;
 
     // Copy maxID
     newVAC->maxID_ = maxID_;
@@ -1177,13 +1173,6 @@ void VAC::read2ndPass_()
 
 void VAC::save_(QTextStream & out)
 {
-    // save background color
-    out << Save::newField("BackgroundColor")
-        << backgroundColor_.redF() << " "
-        << backgroundColor_.greenF() << " "
-        << backgroundColor_.blueF() << " "
-        << backgroundColor_.alphaF();
-
     // list of objects
     out << Save::newField("Cells");
     out << "\n" << Save::indent() << "[";
@@ -1206,15 +1195,6 @@ void VAC::exportSVG_(Time t, QTextStream & out)
         if(c->exists(t))
             c->exportSVG(t, out);
     }
-
-    // TODO: save background color
-    // Info: SVG doesn't have a "background color" specification.
-    //       It has to be simulated with a rectangle
-    // Relevant properties for when writing this:
-    //    backgroundColor_.redF()
-    //    backgroundColor_.greenF()
-    //    backgroundColor_.blueF()
-    //    backgroundColor_.alphaF()
 }
 
 VAC::VAC(QTextStream & in) :
@@ -1223,14 +1203,6 @@ VAC::VAC(QTextStream & in) :
     clear();
 
     Field field;
-
-    // Read background color
-    double r, g, b, a;
-    in >> field >> r >> g >> b >> a;
-    backgroundColor_.setRedF(r);
-    backgroundColor_.setGreenF(g);
-    backgroundColor_.setBlueF(b);
-    backgroundColor_.setAlphaF(a);
 
     // list of objects
     // -- 1st pass: construct temp objects storing IDs instead of pointers
