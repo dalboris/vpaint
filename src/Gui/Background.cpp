@@ -15,7 +15,10 @@
 #include <QFileInfo>
 #include <QVector>
 
-Background::Background() :
+// Constructor
+Background::Background(QObject * parent) :
+    QObject(parent),
+
     color_(Qt::white),
     imageUrl_(""),
     position_(0.0, 0.0),
@@ -23,12 +26,31 @@ Background::Background() :
     size_(1280.0, 720.0),
     repeatType_(NoRepeat),
     opacity_(1.0),
-    hold_(true)
+    hold_(true),
+
+    cached_(false)
 {
 }
 
-// Assignement operator. Re-implemented to emit changed().
-void Background::operator=(const Background & other)
+// Copy constructor
+Background::Background(const Background & other, QObject * parent) :
+    QObject(parent),
+
+    color_(other.color_),
+    imageUrl_(other.imageUrl_),
+    position_(other.position_),
+    sizeType_(other.sizeType_),
+    size_(other.size_),
+    repeatType_(other.repeatType_),
+    opacity_(other.opacity_),
+    hold_(other.hold_),
+
+    cached_(false)
+{
+}
+
+// Assignment operator
+Background &  Background::operator=(const Background & other)
 {
     color_ = other.color_;
     imageUrl_ = other.imageUrl_;
@@ -39,7 +61,11 @@ void Background::operator=(const Background & other)
     opacity_ = other.opacity_;
     hold_ = other.hold_;
 
+    clearCache_();
+
     emit changed();
+
+    return *this;
 }
 
 // Color
@@ -66,19 +92,44 @@ void Background::setImageUrl(const QString & newUrl)
 {
     imageUrl_ = newUrl;
 
+    clearCache_();
+
     emit imageUrlChanged(imageUrl_);
     emit changed();
 }
 
-QImage Background::image(int frame) const
+// Compute images
+void Background::clearCache_() const
 {
+    filePathsPrefix_.clear();
+    filePathsSuffix_.clear();
+    filePathsWildcards_.clear();
+
+    cached_ = false;
+}
+
+void Background::updateCache_() const
+{
+    if (!cached_)
+    {
+        computeCache_();
+        cached_ = true;
+    }
+}
+
+void Background::computeCache_() const
+{
+    // Default values, such that image(f) returns "" for all frames
+    filePathsWildcards_.clear();
+    filePathsPrefix_.clear();
+    filePathsSuffix_.clear();
+
     // Check that there is at most one "*" character, and
     // that it is not followed by any "/" character (todo)
     int wildcardIndex = -1;
-    QString url = imageUrl();
-    for (int i=0; i<url.length(); ++i)
+    for (int i=0; i<imageUrl_.length(); ++i)
     {
-        QChar c = url[i];
+        QChar c = imageUrl_[i];
         if (c == '*')
         {
             if (wildcardIndex == -1)
@@ -88,27 +139,21 @@ QImage Background::image(int frame) const
             else
             {
                 // XXX use a QMessageBox? a QLineEdit validation?
+                //     should the check be done and corrected even before
+                //     this function may be reached in this invalid state?
                 qDebug("more than one wildcard");
-                return QImage();
             }
         }
     }
 
-    // Set current directory
+    // Get url relative to working dir instead of document dir
     QDir dir = QDir::home();
+    QString url = dir.filePath(imageUrl_);
 
     // Case without wildcard
     if (wildcardIndex == -1)
     {
-        QFileInfo fileInfo(dir.filePath(url));
-        if (fileInfo.exists() && fileInfo.isFile())
-        {
-            return QImage(fileInfo.filePath());
-        }
-        else
-        {
-            return QImage();
-        }
+        filePathsPrefix_ = url;
     }
 
     // Case with wildcard
@@ -117,25 +162,27 @@ QImage Background::image(int frame) const
         // Get matching files
         QDir::Filters filters = QDir::Files | QDir::Readable;
         QStringList nameFilters;
-        nameFilters << imageUrl();
+        nameFilters << imageUrl_;
         QFileInfoList files = dir.entryInfoList(nameFilters, filters);
 
-        // Offset wildcardIndex and extend url. Why? Because:
-        //  BEFORE
-        //    url = my/background*.png
-        //    wildcardIndex = 13
+        // Offset wildcardIndex to make it relative to working dir instead of
+        // document dir. Here are what the values look like to help understand:
+        //
         //    dir.path() = "my/dir"
+        //
+        //    imageUrl_ = "my/background*.png"
+        //    url       = "my/dir/my/background*.png"
+        //
         //    files[i].filePath() = "my/dir/my/background015.png"
         //
-        //  AFTER
-        //    url = my/dir/my/background*.png
-        //    wildcardIndex = 20
-        url = dir.filePath(url);
+        //    wildcardIndex (before) = 13
+        //    wildcardIndex (after)  = 20 = 13 + 6 + 1
+        //
         wildcardIndex += dir.path().length() + 1;
 
         // Get prefix and suffix
-        QString prefix = url.left(wildcardIndex);
-        QString suffix = url.right(url.length() - wildcardIndex - 1);
+        filePathsPrefix_ = url.left(wildcardIndex);
+        filePathsSuffix_ = url.right(url.length() - wildcardIndex - 1);
 
         // Get wildcard values as string and int. Example:
         //   files[i].filePath() = "my/dir/my/background015.png"
@@ -146,8 +193,8 @@ QImage Background::image(int frame) const
         {
             // Get wildcard as string
             QString stringWildcard = i.filePath();
-            stringWildcard.remove(0, prefix.length());
-            stringWildcard.chop(suffix.length());
+            stringWildcard.remove(0, filePathsPrefix_.length());
+            stringWildcard.chop(filePathsSuffix_.length());
 
             // Try to convert to an int
             bool ok;
@@ -163,41 +210,28 @@ QImage Background::image(int frame) const
         int nWildcards = stringWildcards.size(); // == intWildcards.size();
 
         // If there is zero match, then it's trivial
-        if (nWildcards == 0)
-        {
-            // Last chance to find something: try without the wildcard
-            QFileInfo fileInfo(prefix + suffix);
-            if (fileInfo.exists() && fileInfo.isFile())
-            {
-                return QImage(fileInfo.filePath());
-            }
-            // Nope, there's really nothing matching
-            else
-            {
-                return QImage();
-            }
-        }
-        // If there is one match or more, then do the more complex stuff
-        else
+        if (nWildcards > 0) // Nothing to do if there's zero match:
+                            // image(f) will return prefix + suffix for all frames
         {
             // Find minimum, maximum, and their indices
             // Note: it's possible that min = max (e.g., only one entry)
             //       it's also possible that min or max are not unique (e.g., "background01.png" and "background1.png")
-            int min = intWildcards[0];
-            int max = intWildcards[0];
-            for (int i=0; i<nWildcards; ++i)
+            minFrame_ = intWildcards[0];
+            int maxFrame = intWildcards[0];
+            for (int i=1; i<nWildcards; ++i)
             {
-                if (intWildcards[i] > max) {
-                    max = intWildcards[i];
+                if (intWildcards[i] > maxFrame) {
+                    maxFrame = intWildcards[i];
                 }
-                if (intWildcards[i] < min) {
-                    min = intWildcards[i];
+                if (intWildcards[i] < minFrame_) {
+                    minFrame_ = intWildcards[i];
                 }
             }
 
-            // Create an array frameToString s.t. for each f in [min, max],
-            // the value frameToString[f-min] represent the stringWildcard
-            // to use for frame f.
+            // The remaining step is to create an array 'filePathsWildcards_' s.t.
+            // for each f in [min, max], the value filePathsWildcards_[f-min]
+            // represents the stringWildcard to use for frame f.
+            //
             // example:
             //    stringWildcards = [ "03", "8", "005" ]
             //    intWildcards =    [ 3, 8, 5 ]
@@ -211,49 +245,72 @@ QImage Background::image(int frame) const
             //    If hold == false:
             //    frameToString = [ "03", "",   "005",   "",    "",   "8" ]
             //                f =    3     4       5     6      7     8
-            QVector<QString> frameToString(max-min+1); // initialize with empty strings, and is never empty
+            //
+
+            // Initialization (non-empty vector of empty strings)
+            filePathsWildcards_ = QVector<QString>(maxFrame-minFrame_+1);
+
+            // Fill with values of existing files
             for (int i=0; i<nWildcards; ++i) {
-                frameToString[intWildcards[i] - min] = stringWildcards[i];
+                filePathsWildcards_[intWildcards[i] - minFrame_] = stringWildcards[i];
             }
-            // Here, we know frameToString.first() and frameToString.last() are non-empty string
+
+            // Fill the blanks between existing files if hold == true
             if (hold())
             {
-                QString s = frameToString.first();
-                for (int i=1; i<frameToString.size()-1; ++i)
+                QString lastValidWildcard = filePathsWildcards_.first();
+                for (int i=1; i<filePathsWildcards_.size()-1; ++i)
                 {
-                    if (frameToString[i].isEmpty()) {
-                        frameToString[i] = s;
+                    if (filePathsWildcards_[i].isEmpty()) {
+                        filePathsWildcards_[i] = lastValidWildcard;
                     }
                     else {
-                        s = frameToString[i];
+                        lastValidWildcard = filePathsWildcards_[i];
                     }
                 }
             }
-
-            // Get file path for this frame
-            // XXX The lines of code below should be the only one done in Background::image(int frame)
-            // All the lines of code above should be done in setImageUrl() and the result cached
-            QString filePath = prefix;
-            if (frame < min) {
-                filePath += frameToString.first();
-            }
-            else if (frame > max) {
-                filePath += frameToString.last();
-            }
-            else {
-                filePath += frameToString[frame - min];
-            }
-            filePath += suffix;
-
-            // Read and return image
-            QFileInfo fileInfo(filePath);
-            if (fileInfo.exists() && fileInfo.isFile()) {
-                return QImage(filePath);
-            }
-            else {
-                return QImage();
-            }
         }
+    }
+}
+
+QImage Background::image(int frame) const
+{
+    updateCache_();
+
+    // Prefix
+    QString filePath(filePathsPrefix_);
+
+    // Wildcard
+    if (!filePathsWildcards_.isEmpty())
+    {
+        if (frame < minFrame_)
+        {
+            if (hold())
+                filePath += filePathsWildcards_.first();
+        }
+        else if (frame < minFrame_ + filePathsWildcards_.size())
+        {
+            filePath += filePathsWildcards_[frame - minFrame_];
+        }
+        else
+        {
+            if (hold())
+                filePath += filePathsWildcards_.last();
+        }
+    }
+
+    // Suffix
+    filePath += filePathsSuffix_;
+
+    // Read and return image
+    QFileInfo fileInfo(filePath);
+    if (fileInfo.exists() && fileInfo.isFile())
+    {
+        return QImage(filePath);
+    }
+    else
+    {
+        return QImage();
     }
 }
 
@@ -358,6 +415,8 @@ bool Background::hold() const
 void Background::setHold(bool newHold)
 {
     hold_ = newHold;
+
+    clearCache_();
 
     emit holdChanged(hold_);
     emit changed();

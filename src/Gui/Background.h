@@ -12,6 +12,7 @@
 
 #include "Color.h"
 
+#include <QVector>
 #include <QString>
 #include <QImage>
 #include <Eigen/Core>
@@ -24,11 +25,16 @@ class Background: public QObject
     Q_OBJECT
 
 public:
-    // Constructor / Copy constructor
-    Background();
+    // Constructor
+    Background(QObject * parent = 0);
 
-    // Assignement operator. Re-implemented to emit changed()
-    void operator=(const Background & other);
+    // Copy constructor and assignment operator. Semantics:
+    //   * Copy data
+    //   * Clear cache
+    //   * Don't copy QObject "identity" (parent, name, etc...)
+    //   * assignment emit changed()
+    Background(const Background & other, QObject * parent = 0);
+    Background & operator=(const Background & other);
 
     // Color
     Color color() const;
@@ -125,6 +131,16 @@ private:
 
     // Hold
     bool hold_;
+
+    // Cache
+    void clearCache_() const;
+    void updateCache_() const;
+    void computeCache_() const;
+    mutable bool cached_;
+    mutable int minFrame_;
+    mutable QString filePathsPrefix_;
+    mutable QString filePathsSuffix_;
+    mutable QVector<QString> filePathsWildcards_;
 };
 
 #endif // BACKGROUND_H

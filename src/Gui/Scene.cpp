@@ -102,13 +102,6 @@ void Scene::setCanvasDefaultValues()
 
 void Scene::copyFrom(Scene * other)
 {
-    // XXX This whole thing is ugly. I should isntead implement the
-    // copy constructor and assign operator, and do:
-    //    *scene = *otherScene;
-    // instead of
-    //    scene->copyFrom(otherScene);
-
-
     clear(true);
     foreach(SceneObject *sceneObject, other->sceneObjects_)
         addSceneObject(sceneObject->clone(), true);
@@ -126,7 +119,7 @@ void Scene::copyFrom(Scene * other)
     // XXX Shouldn't this update left/top/width/height too?
 
     // Update background
-    background_ = other->background_;
+    background_ = other->background_; // XXX Assignment operator on subclass of QObject. How is this even legal?
 }
 
 void Scene::clear(bool silent)

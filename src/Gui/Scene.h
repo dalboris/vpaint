@@ -36,7 +36,7 @@ class Scene: public QObject
     
 public:
     Scene();
-    void copyFrom(Scene * other); // copy existing scene (for undo purpose)
+    void copyFrom(Scene * other);
     void clear(bool silent = false);
     ~Scene();
 
