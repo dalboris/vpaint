@@ -61,7 +61,7 @@ Background &  Background::operator=(const Background & other)
     opacity_ = other.opacity_;
     hold_ = other.hold_;
 
-    clearCache_();
+    clearCache();
 
     emit changed();
 
@@ -92,20 +92,22 @@ void Background::setImageUrl(const QString & newUrl)
 {
     imageUrl_ = newUrl;
 
-    clearCache_();
+    clearCache();
 
     emit imageUrlChanged(imageUrl_);
     emit changed();
 }
 
 // Compute images
-void Background::clearCache_() const
+void Background::clearCache()
 {
     filePathsPrefix_.clear();
     filePathsSuffix_.clear();
     filePathsWildcards_.clear();
 
     cached_ = false;
+
+    emit cacheCleared();
 }
 
 void Background::updateCache_() const
@@ -416,7 +418,7 @@ void Background::setHold(bool newHold)
 {
     hold_ = newHold;
 
-    clearCache_();
+    clearCache();
 
     emit holdChanged(hold_);
     emit changed();

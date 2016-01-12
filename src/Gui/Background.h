@@ -84,6 +84,9 @@ public:
     bool hold() const;
     void setHold(bool newHold);
 
+    // Cache
+    void clearCache();
+
     // Emit signals
     void emitCheckpoint() {emit checkpoint();}
 
@@ -92,14 +95,14 @@ public:
     void read(XmlStreamReader & xml);
 
 signals:
-    // signal emitted whenever any value is changed
+    // Signal emitted whenever any value is changed
     void changed();
 
-    // signal emitted whenever the user manually changed
+    // Signal emitted whenever the user manually changed
     // a value, and therefore should add an item in the undo stack
     void checkpoint();
 
-    // signals emitted when specific values are changed
+    // Signals emitted when specific values are changed
     void colorChanged(Color newColor);
     void imageUrlChanged(QString newUrl);
     void positionChanged(const Eigen::Vector2d & newPosition);
@@ -108,6 +111,11 @@ signals:
     void repeatTypeChanged(RepeatType newRepeatType);
     void opacityChanged(double newOpacity);
     void holdChanged(bool newHold);
+
+    // Signal emitted when the cache is cleared.
+    // Clients performing further caching of images should listen to this
+    // and clear their own cache when the signal is emitted
+    void cacheCleared();
 
 private:
     // Color
@@ -133,7 +141,6 @@ private:
     bool hold_;
 
     // Cache
-    void clearCache_() const;
     void updateCache_() const;
     void computeCache_() const;
     mutable bool cached_;

@@ -21,6 +21,7 @@
 #include "TimeDef.h"
 
 #include <QImage>
+#include <QMap>
 
 #include "ViewSettings.h"
 
@@ -137,6 +138,10 @@ signals:
 
     void settingsChanged();
 
+private slots:
+    void clearBackgroundCache_();
+    void clearBackgroundCache_(const Background * background);
+
 private:
     // What scene to draw
     // Note: which frame to render is specified in viewSettings
@@ -182,8 +187,16 @@ private:
     ViewSettings viewSettings_;
     ViewSettingsWidget * viewSettingsWidget_;
 
-    // draw methods
-    void drawBackground_(const Background & background);
+    // Draw background
+    // For now, there's only one background per scene, but we anticipate the
+    // case where there is one background per layer, reason why we have
+    //     QMap<const Background *, QMap<int,GLuint> >
+    // instead of simply
+    //     QMap<int,GLuint>
+    // See also comment in the implementation of clearBackgroundCache_()
+    void drawBackground_(const Background & background, int frame);
+    GLuint backgroundTexId_(const Background & background, int frame);
+    QMap<const Background *, QMap<int,GLuint> > backgroundTexIds_;
 };
 
 #endif
