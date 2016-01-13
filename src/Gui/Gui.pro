@@ -140,10 +140,10 @@ HEADERS += MainWindow.h \
     AboutDialog.h \
     ViewMacOsX.h \
     Application.h \
-    Background.h \
-    BackgroundWidget.h \
-    BackgroundData.h \
-    BackgroundRenderer.h
+    Background/Background.h \
+    Background/BackgroundData.h \
+    Background/BackgroundRenderer.h \
+    Background/BackgroundWidget.h
 
 
 SOURCES += main.cpp \
@@ -221,10 +221,10 @@ SOURCES += main.cpp \
     AboutDialog.cpp \
     ViewMacOsX.cpp \
     Application.cpp \
-    Background.cpp \
-    BackgroundWidget.cpp \
-    BackgroundData.cpp \
-    BackgroundRenderer.cpp
+    Background/Background.cpp \
+    Background/BackgroundData.cpp \
+    Background/BackgroundRenderer.cpp \
+    Background/BackgroundWidget.cpp
 
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../Third/GLEW/release/ -lGLEW
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../Third/GLEW/debug/ -lGLEW

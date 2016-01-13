@@ -12,8 +12,8 @@
 #include "DevSettings.h"
 #include "Global.h"
 #include "OpenGL.h"
-#include "Background.h"
-#include "BackgroundRenderer.h"
+#include "Background/Background.h"
+#include "Background/BackgroundRenderer.h"
 #include "VectorAnimationComplex/VAC.h"
 #include "VectorAnimationComplex/Cell.h"
 

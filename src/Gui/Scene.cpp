@@ -12,6 +12,7 @@
 
 #include "VectorAnimationComplex/VAC.h"
 #include "VectorAnimationComplex/InbetweenFace.h"
+#include "Background/Background.h"
 
 #include <QtDebug>
 

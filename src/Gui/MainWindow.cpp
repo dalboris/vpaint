@@ -18,7 +18,7 @@
 #include "DevSettings.h"
 #include "ObjectPropertiesWidget.h"
 #include "AnimatedCycleWidget.h"
-#include "BackgroundWidget.h"
+#include "Background/BackgroundWidget.h"
 #include "EditCanvasSizeDialog.h"
 #include "ExportPngDialog.h"
 #include "AboutDialog.h"

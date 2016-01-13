@@ -14,8 +14,8 @@
 #include "TimeDef.h"
 #include "Picking.h"
 #include "ViewSettings.h"
-#include "Background.h"
 
+class Background;
 class View;
 struct MouseEvent;
 class QKeyEvent;
