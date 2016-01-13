@@ -124,6 +124,7 @@ void Background::clearCache()
     filePathsPrefix_.clear();
     filePathsSuffix_.clear();
     filePathsWildcards_.clear();
+    referenceFrames_.clear();
     cached_ = false;
     emit cacheCleared();
 }
@@ -141,6 +142,7 @@ void Background::computeCache_() const
 {
     // Default values, such that image(f) returns "" for all frames
     filePathsWildcards_.clear();
+    referenceFrames_.clear();
     filePathsPrefix_.clear();
     filePathsSuffix_.clear();
 
@@ -269,26 +271,79 @@ void Background::computeCache_() const
 
             // Initialization (non-empty vector of empty strings)
             filePathsWildcards_ = QVector<QString>(maxFrame-minFrame_+1);
+            referenceFrames_ = QVector<int>(maxFrame-minFrame_+1, 0);
 
             // Fill with values of existing files
             for (int i=0; i<nWildcards; ++i) {
                 filePathsWildcards_[intWildcards[i] - minFrame_] = stringWildcards[i];
+                referenceFrames_[intWildcards[i] - minFrame_] = intWildcards[i];
             }
 
             // Fill the blanks between existing files if hold == true
             if (hold())
             {
                 QString lastValidWildcard = filePathsWildcards_.first();
+                int lastValidIntWildcard = referenceFrames_.first();
                 for (int i=1; i<filePathsWildcards_.size()-1; ++i)
                 {
                     if (filePathsWildcards_[i].isEmpty()) {
                         filePathsWildcards_[i] = lastValidWildcard;
+                        referenceFrames_[i] = lastValidIntWildcard;
                     }
                     else {
                         lastValidWildcard = filePathsWildcards_[i];
+                        lastValidIntWildcard = referenceFrames_[i];
                     }
                 }
             }
+            // Fill the blanks between existing files if hold == false
+            // Nothing to do for filePathsWildcards_. The blank are
+            // already an empty string, which is the correct result.
+            // However, for now the blanks in referenceFrames_ are 0,
+            // which is not good, 0 might be a provided frame. We want
+            // to make sure each blank point to an unprovided frame, so
+            // we choose minFrame - 1.
+            else
+            {
+                for (int i=1; i<filePathsWildcards_.size()-1; ++i)
+                {
+                    if (filePathsWildcards_[i].isEmpty()) {
+                        referenceFrames_[i] = minFrame_ - 1;
+                    }
+                }
+            }
+        }
+    }
+}
+
+int Background::referenceFrame(int frame) const
+{
+    updateCache_();
+
+    if (referenceFrames_.isEmpty())
+    {
+        // All frames share the same background image
+        return 0;
+    }
+    else
+    {
+        if (frame < minFrame_)
+        {
+            if (hold())
+                return referenceFrames_.first();
+            else
+                return minFrame_ - 1;
+        }
+        else if (frame < minFrame_ + filePathsWildcards_.size())
+        {
+            return referenceFrames_[frame - minFrame_];
+        }
+        else
+        {
+            if (hold())
+                return referenceFrames_.last();
+            else
+                return minFrame_ - 1;
         }
     }
 }

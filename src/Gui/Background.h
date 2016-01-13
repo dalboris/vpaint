@@ -76,7 +76,20 @@ public:
     // Image(s)
     QString imageUrl() const;
     void setImageUrl(const QString & newUrl);
+
+    // The method 'image(f)' gives you the image to draw at frame f. If 'hold()'
+    // is true, or if 'imageUrl()' doesn't contain a wildcard, then this image
+    // may be identical to the one for another frame, which we refer to as
+    // 'referenceFrame(f)'. Clients drawing the background may use this
+    // function for caching purposes.
+    //
+    // If imageUrl() has a wildcard, hold() == false, and f is a frame with no
+    // corresponding image on disk, then referenceFrame(f) returns minFrame-1,
+    // where minFrame is the smallest frame with an image on disk. This way,
+    // all "empty" frames share the same reference frame (we cannot use 0, or -1
+    // from this, since the frame 0 or even -1 may have an image on disk)
     QImage image(int frame) const;
+    int referenceFrame(int frame) const;
 
     // Position
     Eigen::Vector2d position() const;
@@ -163,6 +176,7 @@ private:
     mutable QString filePathsPrefix_;
     mutable QString filePathsSuffix_;
     mutable QVector<QString> filePathsWildcards_;
+    mutable QVector<int> referenceFrames_;
 };
 
 #endif // BACKGROUND_H

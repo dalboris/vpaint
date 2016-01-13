@@ -958,6 +958,9 @@ void View::clearBackgroundCache_(const Background * background)
 
 GLuint View::backgroundTexId_(const Background & background, int frame)
 {
+    // Avoid allocating several textures for frames sharing the same image
+    frame = background.referenceFrame(frame);
+
     // Test whether texture is already cached in GPU or not. If not, cache it.
     // As a side effect of the test itself, it inserts &background in the map
     // if it wasn't already there. This is intended and not a bug.
@@ -973,6 +976,8 @@ GLuint View::backgroundTexId_(const Background & background, int frame)
         }
         else
         {
+            qDebug("allocate texture in GPU");
+
             // Load texture in GPU
             GLuint texId;
             glGenTextures(1, &texId);
