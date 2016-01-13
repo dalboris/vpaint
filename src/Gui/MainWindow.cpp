@@ -1900,7 +1900,7 @@ void MainWindow::createDocks()
 
     // Widget
     backgroundWidget = new BackgroundWidget();
-    backgroundWidget->setBackground(&scene()->background());
+    backgroundWidget->setBackground(scene()->background());
 
     // Dock
     dockBackgroundWidget = new QDockWidget(tr("Background"));

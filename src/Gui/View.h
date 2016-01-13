@@ -140,7 +140,7 @@ signals:
 
 private slots:
     void clearBackgroundCache_();
-    void clearBackgroundCache_(const Background * background);
+    void clearBackgroundCache_(Background * background);
 
 private:
     // What scene to draw
@@ -194,9 +194,9 @@ private:
     // instead of simply
     //     QMap<int,GLuint>
     // See also comment in the implementation of clearBackgroundCache_()
-    void drawBackground_(const Background & background, int frame);
-    GLuint backgroundTexId_(const Background & background, int frame);
-    QMap<const Background *, QMap<int,GLuint> > backgroundTexIds_;
+    void drawBackground_(Background * background, int frame);
+    GLuint backgroundTexId_(Background * background, int frame);
+    QMap<Background *, QMap<int,GLuint> > backgroundTexIds_;
 };
 
 #endif

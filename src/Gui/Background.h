@@ -66,8 +66,10 @@ public:
     Background & operator=(const Background & other);
 
     // Data
-    Data data() const;
+    const Data & data() const;
     void setData(const Data & newData);
+    void setData(const Background * other);
+    void resetData();
 
     // Color
     Color color() const;

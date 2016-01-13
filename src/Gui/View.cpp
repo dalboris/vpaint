@@ -76,7 +76,7 @@ View::View(Scene *scene, QWidget *parent) :
 
     connect(global(),SIGNAL(keyboardModifiersChanged()),this,SLOT(handleNewKeyboardModifiers()));
 
-    connect(&scene->background(), SIGNAL(cacheCleared()), this, SLOT(clearBackgroundCache_()));
+    connect(scene->background(), SIGNAL(cacheCleared()), this, SLOT(clearBackgroundCache_()));
 }
 
 View::~View()
@@ -396,7 +396,7 @@ void View::ClicEvent(int action, double x, double y)
             VectorAnimationComplex::Cell * paintedCell = vac_->paint(x, y, interactiveTime());
             if (!paintedCell)
             {
-                scene_->background().setColor(global()->faceColor());
+                scene_->background()->setColor(global()->faceColor());
                 scene_->emitChanged();
                 scene_->emitCheckpoint();
             }
@@ -938,7 +938,7 @@ void View::clearBackgroundCache_()
     clearBackgroundCache_(background);
 }
 
-void View::clearBackgroundCache_(const Background * background)
+void View::clearBackgroundCache_(Background * background)
 {
     if (backgroundTexIds_.contains(background))
     {
@@ -956,23 +956,23 @@ void View::clearBackgroundCache_(const Background * background)
     }
 }
 
-GLuint View::backgroundTexId_(const Background & background, int frame)
+GLuint View::backgroundTexId_(Background * background, int frame)
 {
     // Avoid allocating several textures for frames sharing the same image
-    frame = background.referenceFrame(frame);
+    frame = background->referenceFrame(frame);
 
     // Test whether texture is already cached in GPU or not. If not, cache it.
     // As a side effect of the test itself, it inserts &background in the map
     // if it wasn't already there. This is intended and not a bug.
-    if (!backgroundTexIds_[&background].contains(frame))
+    if (!backgroundTexIds_[background].contains(frame))
     {
         // Get QImage
-        QImage img = convertToGLFormat(background.image(activeFrame()));
+        QImage img = convertToGLFormat(background->image(frame));
 
         if (img.isNull())
         {
             // Set 0 as cached value, so we won't try to re-read the file later.
-            backgroundTexIds_[&background][frame] = (GLuint) 0;
+            backgroundTexIds_[background][frame] = (GLuint) 0;
         }
         else
         {
@@ -989,19 +989,19 @@ GLuint View::backgroundTexId_(const Background & background, int frame)
             glBindTexture(GL_TEXTURE_2D, 0);
 
             // Store texId in map
-            backgroundTexIds_[&background][frame] = texId;
+            backgroundTexIds_[background][frame] = texId;
         }
     }
 
     // Returned cached texture
-    return backgroundTexIds_[&background][frame];
+    return backgroundTexIds_[background][frame];
 }
 
 namespace
 {
 void computeBackgroundQuad_(
         // Input
-        const Background & background,
+        Background * background,
         double wc, double hc,
         double xc1, double xc2,
         double yc1, double yc2,
@@ -1016,8 +1016,8 @@ void computeBackgroundQuad_(
         bool & outOfCanvas)
 {
     // Get background position and size
-    Eigen::Vector2d position = background.position();
-    Eigen::Vector2d size = background.computedSize(Eigen::Vector2d(wc, hc));
+    Eigen::Vector2d position = background->position();
+    Eigen::Vector2d size = background->computedSize(Eigen::Vector2d(wc, hc));
 
     // Set value assuming no clamping nor repeat
     x1 = xc1 + position[0];
@@ -1059,7 +1059,7 @@ void computeBackgroundQuad_(
     }
 
     // Repeat horizontally
-    if (background.repeatX())
+    if (background->repeatX())
     {
         const double dx = (x2-x1);
         const double du = (u2-u1);
@@ -1075,7 +1075,7 @@ void computeBackgroundQuad_(
     }
 
     // Repeat vertically
-    if (background.repeatY())
+    if (background->repeatY())
     {
         const double dy = (y2-y1);
         const double dv = (v2-v1);
@@ -1129,7 +1129,7 @@ void computeBackgroundQuad_(
 }
 }
 
-void View::drawBackground_(const Background & background, int frame)
+void View::drawBackground_(Background * background, int frame)
 {
     // Get canvas boundary
     const double wc = scene_->width();
@@ -1144,10 +1144,10 @@ void View::drawBackground_(const Background & background, int frame)
     if(global()->showCanvas())
     {
         // Set color
-        glColor4d(background.color().redF(),
-                  background.color().greenF(),
-                  background.color().blueF(),
-                  background.color().alpha());
+        glColor4d(background->color().redF(),
+                  background->color().greenF(),
+                  background->color().blueF(),
+                  background->color().alpha());
 
         // Draw quad covering canvas
         glBegin(GL_QUADS);
@@ -1165,10 +1165,10 @@ void View::drawBackground_(const Background & background, int frame)
         //     we should draw a quad of the size of the screen.
 
         // Set clear color
-        glClearColor(background.color().redF(),
-                     background.color().greenF(),
-                     background.color().blueF(),
-                     background.color().alpha());
+        glClearColor(background->color().redF(),
+                     background->color().greenF(),
+                     background->color().blueF(),
+                     background->color().alpha());
 
         // Clear viewport
         glClear(GL_COLOR_BUFFER_BIT);
@@ -1195,7 +1195,7 @@ void View::drawBackground_(const Background & background, int frame)
             // Set texture and modulate by opacity
             glEnable(GL_TEXTURE_2D);
             glBindTexture(GL_TEXTURE_2D, texId);
-            glColor4d(1.0, 1.0, 1.0, background.opacity());
+            glColor4d(1.0, 1.0, 1.0, background->opacity());
 
             // Draw quad
             glBegin(GL_QUADS);

@@ -65,12 +65,12 @@ Background::Background(const Background & other, QObject * parent) :
 // Assignment operator
 Background &  Background::operator=(const Background & other)
 {
-    setData(other.data_);
+    setData(other.data());
     return *this;
 }
 
 // Data
-Background::Data Background::data() const
+const Background::Data & Background::data() const
 {
     return data_;
 }
@@ -83,6 +83,19 @@ void Background::setData(const Data & newData)
         clearCache();
         emit changed();
     }
+}
+
+void Background::setData(const Background * other)
+{
+    if (other)
+        setData(other->data());
+    else
+        resetData();
+}
+
+void Background::resetData()
+{
+    setData(Data());
 }
 
 // Color

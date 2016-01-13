@@ -26,12 +26,12 @@ Scene::Scene() :
     top_(0),
     width_(1280),
     height_(720),
-    background_()
+    background_(new Background(this))
 {
     VectorAnimationComplex::VAC * vac = new VectorAnimationComplex::VAC();
     connect(vac,SIGNAL(selectionChanged()),this,SIGNAL(selectionChanged()));
-    connect(&background_, SIGNAL(changed()), this, SIGNAL(changed()));
-    connect(&background_, SIGNAL(checkpoint()), this, SIGNAL(checkpoint()));
+    connect(background_, SIGNAL(changed()), this, SIGNAL(changed()));
+    connect(background_, SIGNAL(checkpoint()), this, SIGNAL(checkpoint()));
     addSceneObject(vac);
     indexHovered_ = -1;
 }
@@ -80,12 +80,7 @@ void Scene::setHeight(double h)
     emitChanged();
 }
 
-const Background & Scene::background() const
-{
-    return background_;
-}
-
-Background & Scene::background()
+Background * Scene::background() const
 {
     return background_;
 }
@@ -102,24 +97,36 @@ void Scene::setCanvasDefaultValues()
 
 void Scene::copyFrom(Scene * other)
 {
+    // XXX
+    // In this method, here's is what's wrong:
+    //  - canvas is not copied
+    //  - VAC is should copied in a cleaner way (take Background as a model)
+    //  - signals should be blocked in a cleaner way
+
+    // Reset to default
     clear(true);
+
+    // Copy VAC
     foreach(SceneObject *sceneObject, other->sceneObjects_)
         addSceneObject(sceneObject->clone(), true);
+
+    // Reset hovered
     indexHovered_ = -1;
+
+    // Copy background
+    background_->setData(other->background_);
+
+    // Emit signals
     emit needUpdatePicking();
     emitChanged();
 
+    // Create new connections
     VectorAnimationComplex::VAC * vac = getVAC_();
     if(vac)
     {
         connect(vac,SIGNAL(selectionChanged()),this,SIGNAL(selectionChanged()));
         emit selectionChanged();
     }
-
-    // XXX Shouldn't this update left/top/width/height too?
-
-    // Update background
-    background_ = other->background_; // XXX Assignment operator on subclass of QObject. How is this even legal?
 }
 
 void Scene::clear(bool silent)
@@ -134,8 +141,8 @@ void Scene::clear(bool silent)
 
     // XXX Shouldn't this clear left/top/width/height too?
 
-    // Clear background
-    background_ = Background();
+    // Reset background data
+    background_->resetData();
 
     if(!silent)
     {
@@ -209,7 +216,7 @@ void Scene::write(XmlStreamWriter & xml)
 {
     // Background
     xml.writeStartElement("background");
-    background().write(xml);
+    background()->write(xml);
     xml.writeEndElement();
 
     // Vector animation complex
@@ -226,7 +233,7 @@ void Scene::read(XmlStreamReader & xml)
     {
         if (xml.name() == "background")
         {
-            background().read(xml);
+            background()->read(xml);
         }
         else if (xml.name() == "objects")
         {
