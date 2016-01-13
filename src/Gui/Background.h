@@ -25,6 +25,35 @@ class Background: public QObject
     Q_OBJECT
 
 public:
+    // Enums
+    enum class SizeType {
+        Cover = 0,
+        Manual = 1
+    };
+    enum class RepeatType {
+        NoRepeat = 0,
+        RepeatX = 1,
+        RepeatY = 2,
+        Repeat = 3
+    };
+
+    // Data
+    struct Data
+    {
+        Data();
+        bool operator==(const Data & other) const;
+        bool operator!=(const Data & other) const;
+
+        Color color;
+        QString imageUrl;
+        Eigen::Vector2d position;
+        SizeType sizeType;
+        Eigen::Vector2d size;
+        RepeatType repeatType;
+        double opacity;
+        bool hold;
+    };
+
     // Constructor
     Background(QObject * parent = 0);
 
@@ -35,6 +64,10 @@ public:
     //   * assignment emit changed()
     Background(const Background & other, QObject * parent = 0);
     Background & operator=(const Background & other);
+
+    // Data
+    Data data() const;
+    void setData(const Data & newData);
 
     // Color
     Color color() const;
@@ -50,10 +83,6 @@ public:
     void setPosition(const Eigen::Vector2d & newPosition);
 
     // Size Type
-    enum SizeType {
-        Cover = 0,
-        Manual = 1
-    };
     SizeType sizeType() const;
     void setSizeType(SizeType newSizeType);
 
@@ -65,12 +94,6 @@ public:
     Eigen::Vector2d computedSize(const Eigen::Vector2d & canvasSize) const;
 
     // Repeat
-    enum RepeatType {
-        NoRepeat = 0,
-        RepeatX = 1,
-        RepeatY = 2,
-        Repeat = 3 // == (RepeatX | RepeatY) if enum interpreted as bit flags
-    };
     RepeatType repeatType() const;
     void setRepeatType(RepeatType newRepeatType);
     bool repeatX() const; // true iff either RepeatX or Repeat
@@ -100,9 +123,20 @@ signals:
 
     // Signal emitted whenever the user manually changed
     // a value, and therefore should add an item in the undo stack
+    //
+    // XXX This should be refactored out of this class. It should
+    // be the 'widget editing the object' that issues checkpoint()
+    // without going through the object.
+    //
+    // Right now, we can see that checkpoint() is only emitted
+    // by the object when the widget tells it to, by calling
+    // emitCheckpoint(). This is a clear sign that emitting this
+    // signal is not the responsability of the object. Therefore,
+    // the undo manager should listen to a checkpoint from the widget
+    // directly, not from the object.
     void checkpoint();
 
-    // Signals emitted when specific values are changed
+    // Signals emitted when individual values are changed
     void colorChanged(Color newColor);
     void imageUrlChanged(QString newUrl);
     void positionChanged(const Eigen::Vector2d & newPosition);
@@ -118,27 +152,8 @@ signals:
     void cacheCleared();
 
 private:
-    // Color
-    Color color_;
-
-    // Image(s)
-    QString imageUrl_;
-
-    // Position
-    Eigen::Vector2d position_;
-
-    // Size
-    SizeType sizeType_;
-    Eigen::Vector2d size_;
-
-    // Repeat
-    RepeatType repeatType_;
-
-    // Opacity
-    double opacity_;
-
-    // Hold
-    bool hold_;
+    // Data
+    Data data_;
 
     // Cache
     void updateCache_() const;

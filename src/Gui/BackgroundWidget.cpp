@@ -23,7 +23,8 @@
 BackgroundWidget::BackgroundWidget(QWidget * parent) :
     QWidget(parent),
     background_(0),
-    isUpdatingFromBackground_(false)
+    isUpdatingFromBackground_(false),
+    isBeingEdited_(false)
 {
     // Layout
     QFormLayout * layout = new QFormLayout();
@@ -70,6 +71,10 @@ BackgroundWidget::BackgroundWidget(QWidget * parent) :
             this, SLOT(processLeftSpinBoxValueChanged_(double)));
     connect(topSpinBox_, SIGNAL(valueChanged(double)),
             this, SLOT(processTopSpinBoxValueChanged_(double)));
+    connect(leftSpinBox_, SIGNAL(editingFinished()),
+            this, SLOT(processLeftSpinBoxEditingFinished_()));
+    connect(topSpinBox_, SIGNAL(editingFinished()),
+            this, SLOT(processTopSpinBoxEditingFinished_()));
 
     // Size
     sizeComboBox_ = new QComboBox();
@@ -97,6 +102,10 @@ BackgroundWidget::BackgroundWidget(QWidget * parent) :
             this, SLOT(processWidthSpinBoxValueChanged_(double)));
     connect(heightSpinBox_, SIGNAL(valueChanged(double)),
             this, SLOT(processHeightSpinBoxValueChanged_(double)));
+    connect(widthSpinBox_, SIGNAL(editingFinished()),
+            this, SLOT(processWidthSpinBoxEditingFinished_()));
+    connect(heightSpinBox_, SIGNAL(editingFinished()),
+            this, SLOT(processHeightSpinBoxEditingFinished_()));
 
     // Repeat
     repeatComboBox_ = new QComboBox();
@@ -119,6 +128,8 @@ BackgroundWidget::BackgroundWidget(QWidget * parent) :
     layout->addRow(tr("Opacity:"), opacitySpinBox_);
     connect(opacitySpinBox_, SIGNAL(valueChanged(double)),
             this, SLOT(processOpacitySpinBoxValueChanged_(double)));
+    connect(opacitySpinBox_, SIGNAL(editingFinished()),
+            this, SLOT(processOpacitySpinBoxEditingFinished_()));
 
     // Hold
     holdCheckBox_ = new QCheckBox();
@@ -154,6 +165,8 @@ void BackgroundWidget::setBackground(Background * background)
     // Create connections
     if (background_)
     {
+        // XXX We could instead use individual values connections instead,
+        // to avoid updating everything each time
         connect(background_, SIGNAL(changed()), this, SLOT(updateFromBackground_()));
     }
 }
@@ -181,11 +194,11 @@ void BackgroundWidget::updateFromBackground_()
         heightSpinBox_->setValue(background_->size()[1]);
         switch (background_->sizeType())
         {
-        case Background::Cover:
+        case Background::SizeType::Cover:
             widthSpinBox_->hide();
             heightSpinBox_->hide();
             break;
-        case Background::Manual:
+        case Background::SizeType::Manual:
             widthSpinBox_->show();
             heightSpinBox_->show();
             break;
@@ -199,6 +212,12 @@ void BackgroundWidget::updateFromBackground_()
 
         // Hold
         holdCheckBox_->setChecked(background_->hold());
+
+        // Cache value before editing
+        if (!isBeingEdited_)
+        {
+            dataBeforeEditing_ = background_->data();
+        }
 
         // Unset guard
         isUpdatingFromBackground_ = false;
@@ -214,8 +233,10 @@ void BackgroundWidget::processColorSelectorColorChanged_(const Color & newColor)
 {
     if (background_ && !isUpdatingFromBackground_)
     {
+        isBeingEdited_ = true;
         background_->setColor(newColor);
-        background_->emitCheckpoint();
+        isBeingEdited_ = false;
+        emitCheckpoint_();
     }
 }
 
@@ -223,7 +244,10 @@ void BackgroundWidget::processImageLineEditEditingFinished_()
 {
     if (background_ && !isUpdatingFromBackground_)
     {
+        isBeingEdited_ = true;
         background_->setImageUrl(imageLineEdit_->text());
+        isBeingEdited_ = false;
+        emitCheckpoint_();
     }
 }
 
@@ -241,8 +265,10 @@ void BackgroundWidget::processLeftSpinBoxValueChanged_(double newLeft)
 {
     if (background_ && !isUpdatingFromBackground_)
     {
+        isBeingEdited_ = true;
         double top = background_->position()[1];
         background_->setPosition(Eigen::Vector2d(newLeft, top));
+        isBeingEdited_ = false;
     }
 }
 
@@ -250,16 +276,31 @@ void BackgroundWidget::processTopSpinBoxValueChanged_(double newTop)
 {
     if (background_ && !isUpdatingFromBackground_)
     {
+        isBeingEdited_ = true;
         double left = background_->position()[0];
         background_->setPosition(Eigen::Vector2d(left, newTop));
+        isBeingEdited_ = false;
     }
+}
+
+void BackgroundWidget::processLeftSpinBoxEditingFinished_()
+{
+    emitCheckpoint_();
+}
+
+void BackgroundWidget::processTopSpinBoxEditingFinished_()
+{
+    emitCheckpoint_();
 }
 
 void BackgroundWidget::processSizeComboBoxCurrentIndexChanged_(int newSizeType)
 {
     if (background_ && !isUpdatingFromBackground_)
     {
+        isBeingEdited_ = true;
         background_->setSizeType(static_cast<Background::SizeType>(newSizeType));
+        isBeingEdited_ = false;
+        emitCheckpoint_();
     }
 }
 
@@ -267,8 +308,10 @@ void BackgroundWidget::processWidthSpinBoxValueChanged_(double newWidth)
 {
     if (background_ && !isUpdatingFromBackground_)
     {
+        isBeingEdited_ = true;
         double height = background_->size()[1];
         background_->setSize(Eigen::Vector2d(newWidth, height));
+        isBeingEdited_ = false;
     }
 }
 
@@ -276,16 +319,31 @@ void BackgroundWidget::processHeightSpinBoxValueChanged_(double newHeight)
 {
     if (background_ && !isUpdatingFromBackground_)
     {
+        isBeingEdited_ = true;
         double width = background_->size()[0];
         background_->setSize(Eigen::Vector2d(width, newHeight));
+        isBeingEdited_ = false;
     }
+}
+
+void BackgroundWidget::processWidthSpinBoxEditingFinished_()
+{
+    emitCheckpoint_();
+}
+
+void BackgroundWidget::processHeightSpinBoxEditingFinished_()
+{
+    emitCheckpoint_();
 }
 
 void BackgroundWidget::processRepeatComboBoxCurrentIndexChanged_(int newRepeatType)
 {
     if (background_ && !isUpdatingFromBackground_)
     {
+        isBeingEdited_ = true;
         background_->setRepeatType(static_cast<Background::RepeatType>(newRepeatType));
+        isBeingEdited_ = false;
+        emitCheckpoint_();
     }
 }
 
@@ -293,14 +351,33 @@ void BackgroundWidget::processOpacitySpinBoxValueChanged_(double newOpacity)
 {
     if (background_ && !isUpdatingFromBackground_)
     {
+        isBeingEdited_ = true;
         background_->setOpacity(newOpacity);
+        isBeingEdited_ = false;
     }
+}
+
+void BackgroundWidget::processOpacitySpinBoxEditingFinished_()
+{
+    emitCheckpoint_();
 }
 
 void BackgroundWidget::processHoldCheckBoxToggled_(bool newHold)
 {
     if (background_ && !isUpdatingFromBackground_)
     {
+        isBeingEdited_ = true;
         background_->setHold(newHold);
+        isBeingEdited_ = false;
+        emitCheckpoint_();
+    }
+}
+
+void BackgroundWidget::emitCheckpoint_()
+{
+    if (background_ && (background_->data() != dataBeforeEditing_))
+    {
+        dataBeforeEditing_ = background_->data();
+        background_->emitCheckpoint();
     }
 }

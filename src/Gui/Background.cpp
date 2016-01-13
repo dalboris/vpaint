@@ -15,19 +15,41 @@
 #include <QFileInfo>
 #include <QVector>
 
+// Default background data values
+Background::Data::Data() :
+    color(Qt::white),
+    imageUrl(""),
+    position(0.0, 0.0),
+    sizeType(SizeType::Cover),
+    size(1280.0, 720.0),
+    repeatType(RepeatType::NoRepeat),
+    opacity(1.0),
+    hold(true)
+{
+}
+
+// Comparison of background data
+bool Background::Data::operator==(const Data & other) const
+{
+    return (color == other.color) &&
+           (imageUrl == other.imageUrl) &&
+           (position == other.position) &&
+           (sizeType == other.sizeType) &&
+           (size == other.size) &&
+           (repeatType == other.repeatType) &&
+           (opacity == other.opacity) &&
+           (hold == other.hold);
+}
+
+bool Background::Data::operator!=(const Data & other) const
+{
+    return !(*this == other);
+}
+
 // Constructor
 Background::Background(QObject * parent) :
     QObject(parent),
-
-    color_(Qt::white),
-    imageUrl_(""),
-    position_(0.0, 0.0),
-    sizeType_(Cover),
-    size_(1280.0, 720.0),
-    repeatType_(NoRepeat),
-    opacity_(1.0),
-    hold_(true),
-
+    data_(),
     cached_(false)
 {
 }
@@ -35,16 +57,7 @@ Background::Background(QObject * parent) :
 // Copy constructor
 Background::Background(const Background & other, QObject * parent) :
     QObject(parent),
-
-    color_(other.color_),
-    imageUrl_(other.imageUrl_),
-    position_(other.position_),
-    sizeType_(other.sizeType_),
-    size_(other.size_),
-    repeatType_(other.repeatType_),
-    opacity_(other.opacity_),
-    hold_(other.hold_),
-
+    data_(other.data_),
     cached_(false)
 {
 }
@@ -52,50 +65,57 @@ Background::Background(const Background & other, QObject * parent) :
 // Assignment operator
 Background &  Background::operator=(const Background & other)
 {
-    color_ = other.color_;
-    imageUrl_ = other.imageUrl_;
-    position_ = other.position_;
-    sizeType_ = other.sizeType_;
-    size_ = other.size_;
-    repeatType_ = other.repeatType_;
-    opacity_ = other.opacity_;
-    hold_ = other.hold_;
-
-    clearCache();
-
-    emit changed();
-
+    setData(other.data_);
     return *this;
+}
+
+// Data
+Background::Data Background::data() const
+{
+    return data_;
+}
+
+void Background::setData(const Data & newData)
+{
+    if (data_ != newData)
+    {
+        data_ = newData;
+        clearCache();
+        emit changed();
+    }
 }
 
 // Color
 Color Background::color() const
 {
-    return color_;
+    return data_.color;
 }
 
 void Background::setColor(const Color & newColor)
 {
-    color_ = newColor;
-
-    emit colorChanged(color_);
-    emit changed();
+    if (data_.color != newColor)
+    {
+        data_.color = newColor;
+        emit colorChanged(data_.color);
+        emit changed();
+    }
 }
 
 // Image(s)
 QString Background::imageUrl() const
 {
-    return imageUrl_;
+    return data_.imageUrl;
 }
 
 void Background::setImageUrl(const QString & newUrl)
 {
-    imageUrl_ = newUrl;
-
-    clearCache();
-
-    emit imageUrlChanged(imageUrl_);
-    emit changed();
+    if (data_.imageUrl != newUrl)
+    {
+        data_.imageUrl = newUrl;
+        clearCache();
+        emit imageUrlChanged(data_.imageUrl);
+        emit changed();
+    }
 }
 
 // Compute images
@@ -104,9 +124,7 @@ void Background::clearCache()
     filePathsPrefix_.clear();
     filePathsSuffix_.clear();
     filePathsWildcards_.clear();
-
     cached_ = false;
-
     emit cacheCleared();
 }
 
@@ -129,9 +147,9 @@ void Background::computeCache_() const
     // Check that there is at most one "*" character, and
     // that it is not followed by any "/" character (todo)
     int wildcardIndex = -1;
-    for (int i=0; i<imageUrl_.length(); ++i)
+    for (int i=0; i<data_.imageUrl.length(); ++i)
     {
-        QChar c = imageUrl_[i];
+        QChar c = data_.imageUrl[i];
         if (c == '*')
         {
             if (wildcardIndex == -1)
@@ -150,7 +168,7 @@ void Background::computeCache_() const
 
     // Get url relative to working dir instead of document dir
     QDir dir = QDir::home();
-    QString url = dir.filePath(imageUrl_);
+    QString url = dir.filePath(data_.imageUrl);
 
     // Case without wildcard
     if (wildcardIndex == -1)
@@ -164,7 +182,7 @@ void Background::computeCache_() const
         // Get matching files
         QDir::Filters filters = QDir::Files | QDir::Readable;
         QStringList nameFilters;
-        nameFilters << imageUrl_;
+        nameFilters << data_.imageUrl;
         QFileInfoList files = dir.entryInfoList(nameFilters, filters);
 
         // Offset wildcardIndex to make it relative to working dir instead of
@@ -319,35 +337,40 @@ QImage Background::image(int frame) const
 // Position
 Eigen::Vector2d Background::position() const
 {
-    return position_;
+    return data_.position;
 }
 
 void Background::setPosition(const Eigen::Vector2d & newPosition)
 {
-    position_ = newPosition;
-
-    emit positionChanged(position_);
-    emit changed();
+    if (data_.position != newPosition)
+    {
+        data_.position = newPosition;
+        if (data_.position[0] < -2.0) {
+            data_.position[0] = -2.0;
+        }
+        emit positionChanged(data_.position);
+        emit changed();
+    }
 }
 
 // Size
 Background::SizeType Background::sizeType() const
 {
-    return sizeType_;
+    return data_.sizeType;
 }
 
 Eigen::Vector2d Background::size() const
 {
-    return size_;
+    return data_.size;
 }
 
 Eigen::Vector2d Background::computedSize(const Eigen::Vector2d & canvasSize) const
 {
     switch (sizeType())
     {
-    case Background::Cover:
+    case SizeType::Cover:
         return canvasSize;
-    case Background::Manual:
+    case SizeType::Manual:
         return size();
     default:
         return size();
@@ -356,72 +379,95 @@ Eigen::Vector2d Background::computedSize(const Eigen::Vector2d & canvasSize) con
 
 void Background::setSizeType(SizeType newSizeType)
 {
-    sizeType_ = newSizeType;
-
-    emit sizeTypeChanged(sizeType_);
-    emit changed();
+    if(data_.sizeType != newSizeType)
+    {
+        data_.sizeType = newSizeType;
+        emit sizeTypeChanged(data_.sizeType);
+        emit changed();
+    }
 }
 
 void Background::setSize(const Eigen::Vector2d & newSize)
 {
-    size_ = newSize;
-
-    emit sizeChanged(size_);
-    emit changed();
+    if (data_.size != newSize)
+    {
+        data_.size = newSize;
+        emit sizeChanged(data_.size);
+        emit changed();
+    }
 }
 
 // Repeat
 Background::RepeatType Background::repeatType() const
 {
-    return repeatType_;
+    return data_.repeatType;
 }
 
 void Background::setRepeatType(RepeatType newRepeatType)
 {
-    repeatType_ = newRepeatType;
-
-    emit repeatTypeChanged(repeatType_);
-    emit changed();
+    if (data_.repeatType != newRepeatType)
+    {
+        data_.repeatType = newRepeatType;
+        emit repeatTypeChanged(data_.repeatType);
+        emit changed();
+    }
 }
 
 bool Background::repeatX() const
 {
-    return repeatType() & RepeatX;
+    switch (repeatType())
+    {
+    case RepeatType::RepeatX:
+    case RepeatType::Repeat:
+        return true;
+    default:
+        return false;
+    }
 }
 
 bool Background::repeatY() const
 {
-    return repeatType() & RepeatY;
+    switch (repeatType())
+    {
+    case RepeatType::RepeatY:
+    case RepeatType::Repeat:
+        return true;
+    default:
+        return false;
+    }
 }
 
 // Opacity
 double Background::opacity() const
 {
-    return opacity_;
+    return data_.opacity;
 }
 
 void Background::setOpacity(double newOpacity)
 {
-    opacity_ = newOpacity;
-
-    emit opacityChanged(opacity_);
-    emit changed();
+    if (data_.opacity != newOpacity)
+    {
+        data_.opacity = newOpacity;
+        emit opacityChanged(data_.opacity);
+        emit changed();
+    }
 }
 
 // Hold
 bool Background::hold() const
 {
-    return hold_;
+    return data_.hold;
 }
 
 void Background::setHold(bool newHold)
 {
-    hold_ = newHold;
-
-    clearCache();
-
-    emit holdChanged(hold_);
-    emit changed();
+    if (data_.hold != newHold)
+    {
+        data_.hold = newHold;
+        clearCache();
+        emit holdChanged(data_.hold);
+        emit changed();
+    }
 }
 
 namespace
@@ -450,10 +496,10 @@ void Background::write(XmlStreamWriter & xml)
     // Size
     switch (sizeType())
     {
-    case Cover:
+    case SizeType::Cover:
         xml.writeAttribute("size", "cover");
         break;
-    case Manual:
+    case SizeType::Manual:
         xml.writeAttribute("size", toString(size()[0]) + " " +
                                    toString(size()[1]));
         break;
@@ -462,16 +508,16 @@ void Background::write(XmlStreamWriter & xml)
     // Repeat
     switch (repeatType())
     {
-    case NoRepeat:
+    case RepeatType::NoRepeat:
         xml.writeAttribute("repeat", "norepeat");
         break;
-    case RepeatX:
+    case RepeatType::RepeatX:
         xml.writeAttribute("repeat", "repeatx");
         break;
-    case RepeatY:
+    case RepeatType::RepeatY:
         xml.writeAttribute("repeat", "repeaty");
         break;
-    case Repeat:
+    case RepeatType::Repeat:
         xml.writeAttribute("repeat", "repeat");
         break;
     }
@@ -485,27 +531,27 @@ void Background::write(XmlStreamWriter & xml)
 
 void Background::read(XmlStreamReader & xml)
 {
-    // Reset to default
-    *this = Background();
+    // Default data values
+    Data data;
 
     // Color
     if(xml.attributes().hasAttribute("color"))
     {
         CssColor c(xml.attributes().value("color").toString());
-        setColor(c.toColor());
+        data.color = c.toColor();
     }
 
     // Image
     if(xml.attributes().hasAttribute("image"))
     {
-        setImageUrl(xml.attributes().value("image").toString());
+        data.imageUrl = xml.attributes().value("image").toString();
     }
 
     // Position
     if(xml.attributes().hasAttribute("position"))
     {
         QStringList sl =  xml.attributes().value("position").toString().split(' ');
-        setPosition(Eigen::Vector2d(sl[0].toDouble(), sl[1].toDouble()));
+        data.position = Eigen::Vector2d(sl[0].toDouble(), sl[1].toDouble());
     }
 
     // Size
@@ -514,13 +560,13 @@ void Background::read(XmlStreamReader & xml)
         QString sizeString =  xml.attributes().value("size").toString();
         if (sizeString == "cover")
         {
-            setSizeType(Cover);
+            data.sizeType = SizeType::Cover;
         }
         else
         {
-            setSizeType(Manual);
             QStringList sl =  sizeString.split(' ');
-            setSize(Eigen::Vector2d(sl[0].toDouble(), sl[1].toDouble()));
+            data.sizeType = SizeType::Manual;
+            data.size = Eigen::Vector2d(sl[0].toDouble(), sl[1].toDouble());
         }
     }
 
@@ -530,26 +576,26 @@ void Background::read(XmlStreamReader & xml)
         QString repeatString =  xml.attributes().value("repeat").toString();
         if (repeatString == "norepeat")
         {
-            setRepeatType(NoRepeat);
+            data.repeatType = RepeatType::NoRepeat;
         }
         else if (repeatString == "repeatx")
         {
-            setRepeatType(RepeatX);
+            data.repeatType = RepeatType::RepeatX;
         }
         else if (repeatString == "repeaty")
         {
-            setRepeatType(RepeatY);
+            data.repeatType = RepeatType::RepeatY;
         }
         else if (repeatString == "repeat")
         {
-            setRepeatType(Repeat);
+            data.repeatType = RepeatType::Repeat;
         }
     }
 
     // Opacity
     if(xml.attributes().hasAttribute("opacity"))
     {
-        setOpacity(xml.attributes().value("opacity").toDouble());
+        data.opacity = xml.attributes().value("opacity").toDouble();
     }
 
     // Hold
@@ -558,14 +604,17 @@ void Background::read(XmlStreamReader & xml)
         QString holdString =  xml.attributes().value("hold").toString();
         if (holdString == "yes")
         {
-            setHold(true);
+            data.hold = true;
         }
         else if (holdString == "no")
         {
-            setHold(false);
+            data.hold = false;
         }
     }
 
     // Unknown
     xml.skipCurrentElement();
+
+    // Set Data
+    setData(data);
 }

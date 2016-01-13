@@ -11,8 +11,8 @@
 #include <QWidget>
 
 #include "Color.h"
+#include "Background.h"
 
-class Background;
 class ColorSelector;
 
 class QLineEdit;
@@ -49,17 +49,29 @@ private slots:
     void updateFromBackground_();
 
     // Process user interaction with widgets
+    // Color
     void processColorSelectorColorChanged_(const Color & newColor);
+    // Image
     void processImageLineEditEditingFinished_();
     void processImageBrowseButtonClicked_();
     void processImageRefreshButtonClicked_();
+    // Position
     void processLeftSpinBoxValueChanged_(double newLeft);
     void processTopSpinBoxValueChanged_(double newTop);
+    void processLeftSpinBoxEditingFinished_();
+    void processTopSpinBoxEditingFinished_();
+    // Size
     void processSizeComboBoxCurrentIndexChanged_(int newSizeType);
     void processWidthSpinBoxValueChanged_(double newWidth);
     void processHeightSpinBoxValueChanged_(double newHeight);
+    void processWidthSpinBoxEditingFinished_();
+    void processHeightSpinBoxEditingFinished_();
+    // Repeat
     void processRepeatComboBoxCurrentIndexChanged_(int newRepeatType);
+    // Opacity
     void processOpacitySpinBoxValueChanged_(double newOpacity);
+    void processOpacitySpinBoxEditingFinished_();
+    // Hold
     void processHoldCheckBoxToggled_(bool newHold);
 
 private:
@@ -91,6 +103,13 @@ private:
     // It is needed is to avoid modifying back 'this->background_' when
     // 'this' updates its widget values from 'this->background_'
     bool isUpdatingFromBackground_;
+
+    // Mechanism for issuing undo commands
+    // We keep a local copy of background data to compare values before and after
+    // editing, in order to issue an undoable command only when they differ
+    void emitCheckpoint_();
+    bool isBeingEdited_;
+    Background::Data dataBeforeEditing_;
 };
 
 #endif // BACKGROUNDWIDGET_H
