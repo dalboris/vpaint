@@ -290,12 +290,14 @@ void Scene::drawCanvas(ViewSettings & /*viewSettings*/)
     double w = width();
     double h = height();
 
-    glClearColor(0.8, 0.8, 0.8, 1.0);
-    glClear(GL_COLOR_BUFFER_BIT);
-
     if(global()->showCanvas())
     {
-        glColor4d(0, 0, 0, 1.0);
+        // Out-of-canvas background color
+        glClearColor(0.8, 0.8, 0.8, 1.0);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        // Canvas border
+        glColor4d(0.0, 0.0, 0.0, 1.0);
         glLineWidth(3.0);
         glBegin(GL_LINE_LOOP);
         {
@@ -305,6 +307,23 @@ void Scene::drawCanvas(ViewSettings & /*viewSettings*/)
             glVertex2d(x,y+h);
         }
         glEnd();
+
+        // Canvas color
+        glColor4d(1.0, 1.0, 1.0, 1.0);
+        glBegin(GL_QUADS);
+        {
+            glVertex2d(x,y);
+            glVertex2d(x+w,y);
+            glVertex2d(x+w,y+h);
+            glVertex2d(x,y+h);
+        }
+        glEnd();
+    }
+    else
+    {
+        // Canvas color
+        glColor4d(1.0, 1.0, 1.0, 1.0);
+        glClear(GL_COLOR_BUFFER_BIT);
     }
 }
 

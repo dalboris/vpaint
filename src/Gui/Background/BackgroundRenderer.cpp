@@ -1,3 +1,10 @@
+// This file is part of VPaint, a vector graphics editor.
+//
+// Copyright (C) 2016 Boris Dalstein <dalboris@gmail.com>
+//
+// The content of this file is MIT licensed. See COPYING.MIT, or this link:
+//   http://opensource.org/licenses/MIT
+
 #include "BackgroundRenderer.h"
 
 #include "Background.h"
@@ -20,7 +27,7 @@ void BackgroundRenderer::clearCache_()
     // Set OpenGL context (we are likely outside paintGL())
     context_->makeCurrent();
 
-    // Delete all textures
+    // Delete all textures allocated in GPU
     foreach (GLuint texId, texIds_)
     {
         context_->deleteTexture(texId);
@@ -35,13 +42,10 @@ GLuint BackgroundRenderer::texId_(int frame)
     // Avoid allocating several textures for frames sharing the same image
     frame = background_->referenceFrame(frame);
 
-    // Test whether texture is already cached in GPU or not. If not, cache it.
-    // As a side effect of the test itself, it inserts &background in the map
-    // if it wasn't already there. This is intended and not a bug.
+    // Load texture to GPU if not done already
     if (!texIds_.contains(frame))
     {
         // Get QImage
-        //QImage img = convertToGLFormat(background_->image(frame));
         QImage img = background_->image(frame);
 
         if (img.isNull())
@@ -51,21 +55,8 @@ GLuint BackgroundRenderer::texId_(int frame)
         }
         else
         {
+            // Load texture to GPU.
             texIds_[frame] = context_->bindTexture(img);
-            /*
-            // Load texture in GPU
-            GLuint texId;
-            glGenTextures(1, &texId);
-            glBindTexture(GL_TEXTURE_2D, texId);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img.width(), img.height(),
-                         0, GL_RGBA, GL_UNSIGNED_BYTE, img.bits());
-            glBindTexture(GL_TEXTURE_2D, 0);
-
-            // Store texId in map
-            texIds_[frame] = texId;
-            */
         }
     }
 
@@ -221,14 +212,14 @@ void BackgroundRenderer::draw(int frame,
 
     // ----- Draw background color -----
 
+    // Set color
+    glColor4d(background_->color().redF(),
+              background_->color().greenF(),
+              background_->color().blueF(),
+              background_->color().alphaF());
+
     if(showCanvas)
     {
-        // Set color
-        glColor4d(background_->color().redF(),
-                  background_->color().greenF(),
-                  background_->color().blueF(),
-                  background_->color().alpha());
-
         // Draw quad covering canvas
         glBegin(GL_QUADS);
         {
@@ -241,17 +232,32 @@ void BackgroundRenderer::draw(int frame,
     }
     else
     {
-        // XXX For now, we use glClear. Later, when several layers are allowed,
-        //     we should draw a quad of the size of the screen.
+        // Cover the whole screen with background color.
+        //
+        // Note: we don't use glClear() because the background color may have
+        // transparency, hence we want to perform alpha blending.
 
-        // Set clear color
-        glClearColor(background_->color().redF(),
-                     background_->color().greenF(),
-                     background_->color().blueF(),
-                     background_->color().alpha());
+        glMatrixMode(GL_PROJECTION);
+        glPushMatrix();
+        glLoadIdentity();
 
-        // Clear viewport
-        glClear(GL_COLOR_BUFFER_BIT);
+        glMatrixMode(GL_MODELVIEW);
+        glPushMatrix();
+        glLoadIdentity();
+
+        glBegin(GL_QUADS);
+        {
+            glVertex2d(-1.0, -1.0);
+            glVertex2d(1.0, -1.0);
+            glVertex2d(1.0, 1.0);
+            glVertex2d(-1.0, 1.0);
+        }
+        glEnd();
+
+        glPopMatrix();
+        glMatrixMode(GL_PROJECTION);
+        glPopMatrix();
+        glMatrixMode(GL_MODELVIEW);
     }
 
     // ----- Draw background image -----
@@ -276,6 +282,7 @@ void BackgroundRenderer::draw(int frame,
             // Set texture and modulate by opacity
             glEnable(GL_TEXTURE_2D);
             glBindTexture(GL_TEXTURE_2D, texId);
+            glColor4d(1.0, 1.0, 1.0, background_->opacity());
             glColor4d(1.0, 1.0, 1.0, background_->opacity());
 
             // Draw quad
