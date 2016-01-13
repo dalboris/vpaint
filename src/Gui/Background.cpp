@@ -15,37 +15,6 @@
 #include <QFileInfo>
 #include <QVector>
 
-// Default background data values
-Background::Data::Data() :
-    color(Qt::white),
-    imageUrl(""),
-    position(0.0, 0.0),
-    sizeType(SizeType::Cover),
-    size(1280.0, 720.0),
-    repeatType(RepeatType::NoRepeat),
-    opacity(1.0),
-    hold(true)
-{
-}
-
-// Comparison of background data
-bool Background::Data::operator==(const Data & other) const
-{
-    return (color == other.color) &&
-           (imageUrl == other.imageUrl) &&
-           (position == other.position) &&
-           (sizeType == other.sizeType) &&
-           (size == other.size) &&
-           (repeatType == other.repeatType) &&
-           (opacity == other.opacity) &&
-           (hold == other.hold);
-}
-
-bool Background::Data::operator!=(const Data & other) const
-{
-    return !(*this == other);
-}
-
 // Constructor
 Background::Background(QObject * parent) :
     QObject(parent),

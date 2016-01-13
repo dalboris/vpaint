@@ -10,11 +10,12 @@
 
 #include <QObject>
 
+#include "BackgroundData.h"
 #include "Color.h"
 
-#include <QVector>
 #include <QString>
 #include <QImage>
+#include <QVector>
 #include <Eigen/Core>
 
 class XmlStreamWriter;
@@ -25,34 +26,9 @@ class Background: public QObject
     Q_OBJECT
 
 public:
-    // Enums
-    enum class SizeType {
-        Cover = 0,
-        Manual = 1
-    };
-    enum class RepeatType {
-        NoRepeat = 0,
-        RepeatX = 1,
-        RepeatY = 2,
-        Repeat = 3
-    };
-
-    // Data
-    struct Data
-    {
-        Data();
-        bool operator==(const Data & other) const;
-        bool operator!=(const Data & other) const;
-
-        Color color;
-        QString imageUrl;
-        Eigen::Vector2d position;
-        SizeType sizeType;
-        Eigen::Vector2d size;
-        RepeatType repeatType;
-        double opacity;
-        bool hold;
-    };
+    typedef BackgroundData Data;
+    typedef Data::RepeatType RepeatType;
+    typedef Data::SizeType SizeType;
 
     // Constructor
     Background(QObject * parent = 0);

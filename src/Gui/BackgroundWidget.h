@@ -11,8 +11,9 @@
 #include <QWidget>
 
 #include "Color.h"
-#include "Background.h"
+#include "BackgroundData.h"
 
+class Background;
 class ColorSelector;
 
 class QLineEdit;
@@ -109,7 +110,7 @@ private:
     // editing, in order to issue an undoable command only when they differ
     void emitCheckpoint_();
     bool isBeingEdited_;
-    Background::Data dataBeforeEditing_;
+    BackgroundData dataBeforeEditing_;
 };
 
 #endif // BACKGROUNDWIDGET_H

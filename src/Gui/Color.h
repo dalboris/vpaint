@@ -8,6 +8,9 @@
 #ifndef COLOR_H
 #define COLOR_H
 
+// Note: since it's a typedef, you can't forward-declare it as 'class Color;',
+//       so you must '#include "Color.h"'
+
 #include <QColor>
 
 typedef QColor Color;

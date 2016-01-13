@@ -976,8 +976,6 @@ GLuint View::backgroundTexId_(Background * background, int frame)
         }
         else
         {
-            qDebug("allocate texture in GPU");
-
             // Load texture in GPU
             GLuint texId;
             glGenTextures(1, &texId);

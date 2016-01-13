@@ -141,7 +141,8 @@ HEADERS += MainWindow.h \
     ViewMacOsX.h \
     Application.h \
     Background.h \
-    BackgroundWidget.h
+    BackgroundWidget.h \
+    BackgroundData.h
 
 
 SOURCES += main.cpp \
@@ -220,7 +221,8 @@ SOURCES += main.cpp \
     ViewMacOsX.cpp \
     Application.cpp \
     Background.cpp \
-    BackgroundWidget.cpp
+    BackgroundWidget.cpp \
+    BackgroundData.cpp
 
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../Third/GLEW/release/ -lGLEW
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../Third/GLEW/debug/ -lGLEW
