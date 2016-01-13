@@ -142,7 +142,8 @@ HEADERS += MainWindow.h \
     Application.h \
     Background.h \
     BackgroundWidget.h \
-    BackgroundData.h
+    BackgroundData.h \
+    BackgroundRenderer.h
 
 
 SOURCES += main.cpp \
@@ -222,7 +223,8 @@ SOURCES += main.cpp \
     Application.cpp \
     Background.cpp \
     BackgroundWidget.cpp \
-    BackgroundData.cpp
+    BackgroundData.cpp \
+    BackgroundRenderer.cpp
 
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../Third/GLEW/release/ -lGLEW
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../Third/GLEW/debug/ -lGLEW

@@ -13,6 +13,7 @@
 #include "Global.h"
 #include "OpenGL.h"
 #include "Background.h"
+#include "BackgroundRenderer.h"
 #include "VectorAnimationComplex/VAC.h"
 #include "VectorAnimationComplex/Cell.h"
 
@@ -58,8 +59,6 @@ View::View(Scene *scene, QWidget *parent) :
     connect(viewSettingsWidget_, SIGNAL(changed()), this, SIGNAL(settingsChanged()));
     cameraTravellingIsEnabled_ = true;
 
-    // Mac OS X fix: view settings does not appear, so display it in a layout
-
     connect(this, SIGNAL(viewIsGoingToChange(int, int)), this, SLOT(updatePicking()));
     //connect(this, SIGNAL(viewIsGoingToChange(int, int)), this, SLOT(updateHighlightedObject(int, int)));
     connect(this, SIGNAL(viewIsGoingToChange(int, int)), this, SLOT(update()));
@@ -74,9 +73,7 @@ View::View(Scene *scene, QWidget *parent) :
     connect(this, SIGNAL(viewChanged(int, int)), this, SLOT(updateHoveredObject(int, int)));
     connect(this, SIGNAL(viewChanged(int, int)), this, SLOT(update()));
 
-    connect(global(),SIGNAL(keyboardModifiersChanged()),this,SLOT(handleNewKeyboardModifiers()));
-
-    connect(scene->background(), SIGNAL(cacheCleared()), this, SLOT(clearBackgroundCache_()));
+    connect(global(), SIGNAL(keyboardModifiersChanged()), this, SLOT(handleNewKeyboardModifiers()));
 }
 
 View::~View()
@@ -912,304 +909,18 @@ void View::PMRReleaseEvent(int action, double x, double y)
  *              DRAWING
  */
 
-// Note: I may switch later to using QGLContext function for generating
-//       and deleting the textures. But note that I can't use drawTexture
-//       since I have custom UVs to implement repeat.
-
-void View::clearBackgroundCache_()
-{
-    // XXX This should be refactored. It means the function only works
-    // when it is calls via a signal/slot connection from a Background object.
-    // Instead, we should either:
-    //   1) pass the "Background *" or "Background &" as a parameter of the
-    //      signal/slot. This is easy to implement but not idiomatic (signals
-    //      in general don't pass the sender as parameter, it feels wrong to do
-    //      it for this specific signal just because we know a clients needs it)
-    //   2) Implement a class BackgroundRenderer inheriting QObject. For each
-    //      Background in scene, View should instanciate one BackgroundRenderer
-    //      and manage it. The signal Background::cacheCleared() should then be
-    //      connected to this one object. More complex to implement and takes
-    //      more memory, but cleaner and more maintainable design. That also
-    //      allows to define clearBackgroundCache_() with a different semantics:
-    //      clears background cache for all backgrounds (instead of just the
-    //      sender)
-
-    Background * background = qobject_cast<Background*>(sender());
-    clearBackgroundCache_(background);
-}
-
-void View::clearBackgroundCache_(Background * background)
-{
-    if (backgroundTexIds_.contains(background))
-    {
-        // Manually set OpenGL context, because we may be outside paintGL()
-        makeCurrent();
-
-        // Delete all textures
-        foreach (GLuint texId, backgroundTexIds_[background])
-        {
-            glDeleteTextures(1, &texId);
-        }
-
-        // Clear map
-        backgroundTexIds_[background].clear();
-    }
-}
-
-GLuint View::backgroundTexId_(Background * background, int frame)
-{
-    // Avoid allocating several textures for frames sharing the same image
-    frame = background->referenceFrame(frame);
-
-    // Test whether texture is already cached in GPU or not. If not, cache it.
-    // As a side effect of the test itself, it inserts &background in the map
-    // if it wasn't already there. This is intended and not a bug.
-    if (!backgroundTexIds_[background].contains(frame))
-    {
-        // Get QImage
-        QImage img = convertToGLFormat(background->image(frame));
-
-        if (img.isNull())
-        {
-            // Set 0 as cached value, so we won't try to re-read the file later.
-            backgroundTexIds_[background][frame] = (GLuint) 0;
-        }
-        else
-        {
-            // Load texture in GPU
-            GLuint texId;
-            glGenTextures(1, &texId);
-            glBindTexture(GL_TEXTURE_2D, texId);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img.width(), img.height(),
-                         0, GL_RGBA, GL_UNSIGNED_BYTE, img.bits());
-            glBindTexture(GL_TEXTURE_2D, 0);
-
-            // Store texId in map
-            backgroundTexIds_[background][frame] = texId;
-        }
-    }
-
-    // Returned cached texture
-    return backgroundTexIds_[background][frame];
-}
-
-namespace
-{
-void computeBackgroundQuad_(
-        // Input
-        Background * background,
-        double wc, double hc,
-        double xc1, double xc2,
-        double yc1, double yc2,
-        double xSceneMin, double xSceneMax,
-        double ySceneMin, double ySceneMax,
-
-        // Output
-        double & x1, double & x2,
-        double & y1, double & y2,
-        double & u1, double & u2,
-        double & v1, double & v2,
-        bool & outOfCanvas)
-{
-    // Get background position and size
-    Eigen::Vector2d position = background->position();
-    Eigen::Vector2d size = background->computedSize(Eigen::Vector2d(wc, hc));
-
-    // Set value assuming no clamping nor repeat
-    x1 = xc1 + position[0];
-    y1 = yc1 + position[1];
-    u1 = 0.0;
-    v1 = 1.0;
-    x2 = x1 + size[0];
-    y2 = y1 + size[1];
-    u2 = 1.0;
-    v2 = 0.0;
-
-    // Handle negative sizes
-    if (x1 > x2)
-    {
-        std::swap(x1, x2);
-        std::swap(u1, u2);
-    }
-    if (y1 > y2)
-    {
-        std::swap(y1, y2);
-        std::swap(v1, v2);
-    }
-
-    // Get min and max scene coordinates where some background will be visible
-    double xb1, xb2, yb1, yb2;
-    if(global()->showCanvas())
-    {
-        xb1 = xc1;
-        xb2 = xc2;
-        yb1 = yc1;
-        yb2 = yc2;
-    }
-    else
-    {
-        xb1 = xSceneMin;
-        xb2 = xSceneMax;
-        yb1 = ySceneMin;
-        yb2 = ySceneMax;
-    }
-
-    // Repeat horizontally
-    if (background->repeatX())
-    {
-        const double dx = (x2-x1);
-        const double du = (u2-u1);
-
-        const double k1 = std::floor((xb1-x1)/dx);
-        const double k2 = 1 + std::floor((xb2-x2)/dx);
-
-        x1 += k1*dx;
-        x2 += k2*dx;
-
-        u1 += k1*du;
-        u2 += k2*du;
-    }
-
-    // Repeat vertically
-    if (background->repeatY())
-    {
-        const double dy = (y2-y1);
-        const double dv = (v2-v1);
-
-        const double k1 = std::floor((yb1-y1)/dy);
-        const double k2 = 1 + std::floor((yb2-y2)/dy);
-
-        y1 += k1*dy;
-        y2 += k2*dy;
-
-        v1 += k1*dv;
-        v2 += k2*dv;
-    }
-
-    // Apply clamping
-    outOfCanvas = false;
-    if(global()->showCanvas())
-    {
-        if ( x1 >= xc2 ||  x2 <= xc1 || y1 >= yc2 || y2 <= yc1)
-        {
-            outOfCanvas = true;
-        }
-        else
-        {
-            // Clamp right
-            if (x2 > xc2)
-            {
-                u2 = u1 + (u2-u1)*(xc2-x1)/(x2-x1);
-                x2 = xc2;
-            }
-            // Clamp left
-            if (x1 < xc1)
-            {
-                u1 = u2 + (u1-u2)*(xc1-x2)/(x1-x2);
-                x1 = xc1;
-            }
-            // Clamp bottom
-            if (y2 > yc2)
-            {
-                v2 = v1 + (v2-v1)*(yc2-y1)/(y2-y1);
-                y2 = yc2;
-            }
-            // Clamp top
-            if (y1 < yc1)
-            {
-                v1 = v2 + (v1-v2)*(yc1-y2)/(y1-y2);
-                y1 = yc1;
-            }
-        }
-    }
-}
-}
-
 void View::drawBackground_(Background * background, int frame)
 {
-    // Get canvas boundary
-    const double wc = scene_->width();
-    const double hc = scene_->height();
-    const double xc1 = scene_->left();
-    const double yc1 = scene_->top();
-    const double xc2 = xc1 + wc;
-    const double yc2 = yc1 + hc;
-
-    // ----- Draw background color -----
-
-    if(global()->showCanvas())
+    if (!backgroundRenderers_.contains(background))
     {
-        // Set color
-        glColor4d(background->color().redF(),
-                  background->color().greenF(),
-                  background->color().blueF(),
-                  background->color().alpha());
-
-        // Draw quad covering canvas
-        glBegin(GL_QUADS);
-        {
-            glVertex2d(xc1,yc1);
-            glVertex2d(xc2,yc1);
-            glVertex2d(xc2,yc2);
-            glVertex2d(xc1,yc2);
-        }
-        glEnd();
-    }
-    else
-    {
-        // XXX For now, we use glClear. Later, when several layers are allowed,
-        //     we should draw a quad of the size of the screen.
-
-        // Set clear color
-        glClearColor(background->color().redF(),
-                     background->color().greenF(),
-                     background->color().blueF(),
-                     background->color().alpha());
-
-        // Clear viewport
-        glClear(GL_COLOR_BUFFER_BIT);
+        backgroundRenderers_[background] = new BackgroundRenderer(background, context(), this);
     }
 
-    // ----- Draw background image -----
-
-    // Get texture id
-    GLuint texId = backgroundTexId_(background, frame);
-
-    // Draw image if non-zero
-    if (texId)
-    {
-        // Determine background quad positions and UVs
-        double x1, x2, y1, y2, u1, u2, v1, v2;
-        bool outOfCanvas;
-        computeBackgroundQuad_(background, wc, hc, xc1, xc2, yc1, yc2,
-                               xSceneMin(), xSceneMax(), ySceneMin(), ySceneMax(),
-                               x1, x2, y1, y2, u1, u2, v1, v2, outOfCanvas);
-
-        // Draw textured quad
-        if (!outOfCanvas)
-        {
-            // Set texture and modulate by opacity
-            glEnable(GL_TEXTURE_2D);
-            glBindTexture(GL_TEXTURE_2D, texId);
-            glColor4d(1.0, 1.0, 1.0, background->opacity());
-
-            // Draw quad
-            glBegin(GL_QUADS);
-            {
-                glTexCoord2d(u1, v1); glVertex2d(x1,y1);
-                glTexCoord2d(u2, v1); glVertex2d(x2,y1);
-                glTexCoord2d(u2, v2); glVertex2d(x2,y2);
-                glTexCoord2d(u1, v2); glVertex2d(x1,y2);
-            }
-            glEnd();
-
-            // Unset texture
-            glBindTexture(GL_TEXTURE_2D, 0);
-            glDisable(GL_TEXTURE_2D);
-        }
-    }
+    backgroundRenderers_[background]->draw(
+                frame,
+                global()->showCanvas(),
+                scene_->width(), scene_->height(), scene_->left(), scene_->top(),
+                xSceneMin(), xSceneMax(), ySceneMin(), ySceneMax());
 }
 
 void View::drawScene()

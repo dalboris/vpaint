@@ -25,7 +25,6 @@
 
 #include "ViewSettings.h"
 
-// pre-declarations
 
 class Scene;
 namespace VectorAnimationComplex
@@ -36,6 +35,7 @@ class KeyEdge;
 }
 class Time;
 class Background;
+class BackgroundRenderer;
 
 // mouse event in scene coordinates
 struct MouseEvent 
@@ -138,10 +138,6 @@ signals:
 
     void settingsChanged();
 
-private slots:
-    void clearBackgroundCache_();
-    void clearBackgroundCache_(Background * background);
-
 private:
     // What scene to draw
     // Note: which frame to render is specified in viewSettings
@@ -188,15 +184,10 @@ private:
     ViewSettingsWidget * viewSettingsWidget_;
 
     // Draw background
-    // For now, there's only one background per scene, but we anticipate the
-    // case where there is one background per layer, reason why we have
-    //     QMap<const Background *, QMap<int,GLuint> >
-    // instead of simply
-    //     QMap<int,GLuint>
-    // See also comment in the implementation of clearBackgroundCache_()
+    // We use a map of BackgroundRenderer to anticipate the moment we have more
+    // than one Background (i.e., one per layer)
     void drawBackground_(Background * background, int frame);
-    GLuint backgroundTexId_(Background * background, int frame);
-    QMap<Background *, QMap<int,GLuint> > backgroundTexIds_;
+    QMap<Background *, BackgroundRenderer *> backgroundRenderers_;
 };
 
 #endif
