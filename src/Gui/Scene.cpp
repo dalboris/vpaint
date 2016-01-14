@@ -102,7 +102,9 @@ void Scene::copyFrom(Scene * other)
     // In this method, here's is what's wrong:
     //  - canvas is not copied
     //  - VAC is should copied in a cleaner way (take Background as a model)
-    //  - signals should be blocked in a cleaner way
+
+    // Block signals
+    blockSignals(true);
 
     // Reset to default
     clear(true);
@@ -116,6 +118,9 @@ void Scene::copyFrom(Scene * other)
 
     // Copy background
     background_->setData(other->background_);
+
+    // Unblock signals
+    blockSignals(false);
 
     // Emit signals
     emit needUpdatePicking();
