@@ -11,6 +11,8 @@
 #include "XmlStreamWriter.h"
 #include "CssColor.h"
 
+#include "../Global.h" // XXX this is for documentDir(). It should be refactored.
+
 #include <QDir>
 #include <QFileInfo>
 #include <QVector>
@@ -49,7 +51,7 @@ void Background::setData(const Data & newData)
     if (data_ != newData)
     {
         data_ = newData;
-        clearCache();
+        clearCache_();
         emit changed();
     }
 }
@@ -94,14 +96,14 @@ void Background::setImageUrl(const QString & newUrl)
     if (data_.imageUrl != newUrl)
     {
         data_.imageUrl = newUrl;
-        clearCache();
+        clearCache_();
         emit imageUrlChanged(data_.imageUrl);
         emit changed();
     }
 }
 
 // Compute images
-void Background::clearCache()
+void Background::clearCache_()
 {
     filePathsPrefix_.clear();
     filePathsSuffix_.clear();
@@ -109,6 +111,12 @@ void Background::clearCache()
     referenceFrames_.clear();
     cached_ = false;
     emit cacheCleared();
+}
+
+void Background::clearCache()
+{
+    clearCache_();
+    emit changed();
 }
 
 void Background::updateCache_() const
@@ -151,7 +159,7 @@ void Background::computeCache_() const
     }
 
     // Get url relative to working dir instead of document dir
-    QDir dir = QDir::home();
+    QDir dir = global()->documentDir();
     QString url = dir.filePath(data_.imageUrl);
 
     // Case without wildcard
@@ -501,7 +509,7 @@ void Background::setHold(bool newHold)
     if (data_.hold != newHold)
     {
         data_.hold = newHold;
-        clearCache();
+        clearCache_();
         emit holdChanged(data_.hold);
         emit changed();
     }

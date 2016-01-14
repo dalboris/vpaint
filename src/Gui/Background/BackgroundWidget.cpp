@@ -6,9 +6,9 @@
 //   http://opensource.org/licenses/MIT
 
 #include "BackgroundWidget.h"
-
 #include "Background.h"
 #include "ColorSelector.h"
+#include "../Global.h" // XXX This is for documentDir()
 
 #include <QFormLayout>
 #include <QHBoxLayout>
@@ -19,6 +19,8 @@
 #include <QCheckBox>
 #include <QDoubleSpinBox>
 #include <QComboBox>
+#include <QFileDialog>
+#include <QMessageBox>
 
 BackgroundWidget::BackgroundWidget(QWidget * parent) :
     QWidget(parent),
@@ -253,12 +255,184 @@ void BackgroundWidget::processImageLineEditEditingFinished_()
 
 void BackgroundWidget::processImageBrowseButtonClicked_()
 {
-    // todo
+    // Get filenames
+    QDir documentDir = global()->documentDir();
+    QStringList filenames = QFileDialog::getOpenFileNames(
+                this,
+                tr("Select image, or sequence of images, to set as background"),
+                documentDir.path(),
+                tr("Image files (*.jpg *.png)"));
+
+
+    // Convert to path relative to current document
+    for (int i=0; i<filenames.size(); ++i)
+    {
+        filenames[i] = documentDir.relativeFilePath(filenames[i]);
+    }
+
+    // Detect wildcard
+    QString url;
+    if (filenames.size() == 0)
+    {
+        url = QString();
+    }
+    else if (filenames.size() == 1)
+    {
+        url = filenames[0];
+    }
+    else // filenames.size() >= 2
+    {
+        // Compute largest shared prefix of first two filenames
+        const QString & s0 = filenames[0];
+        const QString & s1 = filenames[1];
+        int prefixLength = 0;
+        while (s0.length() > prefixLength &&
+               s1.length() > prefixLength &&
+               s0[prefixLength] == s1[prefixLength])
+        {
+            prefixLength++;
+        }
+
+        // Chop digits at the end of prefix
+        while (prefixLength > 0 &&
+               s0[prefixLength-1].isDigit())
+        {
+            prefixLength--;
+        }
+
+        // Chop minus sign, unless all filenames have one, in which case it's
+        // probably intented to be a separating dash and not a minus sign
+        if (prefixLength > 0 && s0[prefixLength-1] == '-')
+        {
+            bool theyAllHaveIt = true;
+            for (int i=0; i<filenames.size(); ++i)
+            {
+                if ( (filenames[i].length() < prefixLength) ||
+                     (filenames[i][prefixLength-1] != '-' )    )
+                {
+                    theyAllHaveIt = false;
+                    break;
+                }
+            }
+
+            if (!theyAllHaveIt)
+                prefixLength--;
+        }
+
+        // Read wildcard of s0
+        int s0WildcardLength = 0;
+        if (s0.length() == prefixLength)
+        {
+            // That's weird, but might be the fallback value with
+            // a wildcard at the end (i.e., without file extension)
+            s0WildcardLength = 0;
+        }
+        else if (s0[prefixLength] == '-')
+        {
+            // s0 wildcard is negative
+            s0WildcardLength++;
+            while (s0.length() > prefixLength+s0WildcardLength &&
+                   s0[prefixLength+s0WildcardLength].isDigit())
+            {
+                s0WildcardLength++;
+            }
+        }
+        else if (s0[prefixLength].isDigit())
+        {
+            // s0 wildcard is positive
+            while (s0.length() > prefixLength+s0WildcardLength &&
+                   s0[prefixLength+s0WildcardLength].isDigit())
+            {
+                s0WildcardLength++;
+            }
+        }
+        else
+        {
+            // Might be the fallback value
+            s0WildcardLength = 0;
+        }
+
+        // Deduce prefix and suffix
+        int suffixLength = s0.length() - prefixLength - s0WildcardLength;
+        QString prefix = s0.left(prefixLength);
+        QString suffix = s0.right(suffixLength);
+
+        // Set url
+        url = prefix + "*" + suffix;
+
+        // Check for inconsistent names
+        QString inconsistentFilenames;
+        for (int i=0; i<filenames.size(); ++i)
+        {
+            bool inconsistent = false;
+
+            if (filenames[i].left(prefixLength)  != prefix ||
+                filenames[i].right(suffixLength) != suffix )
+            {
+                inconsistent = true;
+            }
+            else
+            {
+                // Get wildcard
+                QString w = filenames[i];
+                w.remove(0, prefixLength);
+                w.chop(suffixLength);
+
+                if (w.length() == 0)
+                {
+                    // It's the fallback value: filename[i] == prefix+suffix
+                    inconsistent = false;
+                }
+                else
+                {
+                    // Try to convert to an int
+                    bool ok;
+                    w.toInt(&ok);
+                    if (!ok)
+                    {
+                        inconsistent = true;
+                    }
+                }
+            }
+
+            if(inconsistent)
+            {
+                inconsistentFilenames += filenames[i] + "\n";
+
+            }
+        }
+        if (inconsistentFilenames.length() > 0)
+        {
+            // Remove last newline
+            inconsistentFilenames.chop(1);
+
+            // issue warning
+            QMessageBox::warning(
+                        this,
+                        tr("Inconsistent file names"),
+                        tr("Warning: The selected files don't have a consistent naming scheme. "
+                           "The following files do not match \"%1\" and will be ignored:\n%2")
+                        .arg(url)
+                        .arg(inconsistentFilenames));
+        }
+    }
+
+    // Set image url
+    if (background_ && !isUpdatingFromBackground_)
+    {
+        isBeingEdited_ = true;
+        background_->setImageUrl(url);
+        isBeingEdited_ = false;
+        emitCheckpoint_();
+    }
 }
 
 void BackgroundWidget::processImageRefreshButtonClicked_()
 {
-    // todo
+    if (background_)
+    {
+        background_->clearCache();
+    }
 }
 
 void BackgroundWidget::processLeftSpinBoxValueChanged_(double newLeft)

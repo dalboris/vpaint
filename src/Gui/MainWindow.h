@@ -169,6 +169,7 @@ private:
     int autosaveIndex_;
     bool autosaveOn_;
     QDir autosaveDir_;
+    void setSaveFilename_(const QString & filename);
     bool doSave(const QString & filename);
     bool doExportSVG(const QString & filename);
     bool doExportPNG(const QString & filename);

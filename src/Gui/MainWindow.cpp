@@ -563,7 +563,7 @@ bool MainWindow::newDocument()
         return false;
 
     // If success, proceed
-    saveFilename_ = QString();
+    setSaveFilename_(QString());
     Scene * newScene = new Scene();
     scene_->copyFrom(newScene);
     addToUndoStack();
@@ -587,7 +587,7 @@ bool MainWindow::open()
 
     if(success)
     {
-        saveFilename_ = filename;
+        setSaveFilename_(filename);
         setWindowFilePath(filename);
         return true;
     }
@@ -636,8 +636,8 @@ bool MainWindow::saveAs()
     if(success)
     {
         statusBar()->showMessage(tr("File %1 successfully saved.").arg(filename));
+        setSaveFilename_(filename);
         setWindowFilePath(filename);
-        saveFilename_ = filename;
         return true;
     }
     else
@@ -734,6 +734,21 @@ bool MainWindow::rejectExportPNG()
     update();
 
     return false;
+}
+
+void MainWindow::setSaveFilename_(const QString & filename)
+{
+    saveFilename_ = filename;
+
+    QFileInfo fileInfo(filename);
+    if (fileInfo.exists() && fileInfo.isFile())
+    {
+        global()->setDocumentDir(fileInfo.dir());
+    }
+    else
+    {
+        global()->setDocumentDir(QDir::home());
+    }
 }
 
 bool MainWindow::doOpen(const QString & filename)

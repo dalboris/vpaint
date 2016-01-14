@@ -23,6 +23,7 @@
 #include "TimeDef.h"
 #include <Eigen/Core>
 #include <QLabel>
+#include <QDir>
 
 class QHBoxLayout;
 class DevSettings;
@@ -134,6 +135,10 @@ public:
     QToolBar * toolModeToolBar() const;
     QToolBar * toolBar() const;
 
+    // Directory from which paths in document are relative to
+    void setDocumentDir(const QDir & dir);
+    QDir documentDir() const;
+
 signals:
     void keyboardModifiersChanged();
 
@@ -227,6 +232,7 @@ private:
     SettingsDialog * preferencesDialog_;
     DevSettings * settings_;
     Qt::KeyboardModifiers keyboardModifiers_;
+    QDir documentDir_;
 
     // Status bar help
     QLabel * statusBarHelp_;

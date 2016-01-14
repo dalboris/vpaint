@@ -47,7 +47,8 @@ Global::Global(MainWindow * w) :
     mainWindow_(w),
     preferences_(),
     preferencesDialog_(0),
-    settings_(0)
+    settings_(0),
+    documentDir_(QDir::home())
 {
     // Color selectors
     currentColor_ = new ColorSelector();
@@ -874,4 +875,14 @@ ToolModeAction::ToolModeAction(Global::ToolMode mode, QObject * parent) :
 void ToolModeAction::emitSpecializedTriggered()
 {
     emit triggered(toolMode);
+}
+
+void Global::setDocumentDir(const QDir & dir)
+{
+    documentDir_ = dir;
+}
+
+QDir Global::documentDir() const
+{
+    return documentDir_;
 }

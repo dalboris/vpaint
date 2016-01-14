@@ -147,6 +147,7 @@ private:
     Data data_;
 
     // Cache
+    void clearCache_();
     void updateCache_() const;
     void computeCache_() const;
     mutable bool cached_;
