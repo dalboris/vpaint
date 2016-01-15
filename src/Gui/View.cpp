@@ -45,7 +45,7 @@
 
 #define  PAINT_ACTION                                       400
 
-View::View(Scene *scene, QWidget *parent) :
+View::View(Scene * scene, QWidget * parent) :
     GLWidget(parent, true),
     scene_(scene),
     pickingImg_(0),
@@ -53,6 +53,10 @@ View::View(Scene *scene, QWidget *parent) :
     currentAction_(0),
     vac_(0)
 {
+    // Make renderers
+    Background * bg = scene_->background();
+    backgroundRenderers_[bg] = new BackgroundRenderer(bg, context(), this);
+
     // View settings widget
     viewSettingsWidget_ = new ViewSettingsWidget(viewSettings_, this);
     connect(viewSettingsWidget_, SIGNAL(changed()), this, SLOT(update()));
@@ -911,11 +915,6 @@ void View::PMRReleaseEvent(int action, double x, double y)
 
 void View::drawBackground_(Background * background, int frame)
 {
-    if (!backgroundRenderers_.contains(background))
-    {
-        backgroundRenderers_[background] = new BackgroundRenderer(background, context(), this);
-    }
-
     backgroundRenderers_[background]->draw(
                 frame,
                 global()->showCanvas(),
