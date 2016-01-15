@@ -34,17 +34,32 @@ BackgroundWidget::BackgroundWidget(QWidget * parent) :
 
     // Color
     colorSelector_ = new ColorSelector(Qt::white);
+    colorSelector_->setToolTip(tr("Set background color"));
+    colorSelector_->setStatusTip(tr("Set background color, possibly transparent."));
     layout->addRow(tr("Color:"), colorSelector_);
     connect(colorSelector_, SIGNAL(colorChanged(Color)),
             this, SLOT(processColorSelectorColorChanged_(Color)));
 
     // Images
     imageLineEdit_ = new QLineEdit();
+    imageLineEdit_->setToolTip(tr("Set background image(s) url"));
+    imageLineEdit_->setStatusTip(tr("Set background image(s) url. For example, set "
+                                    "'image.png' for a fixed image shared across all frames, "
+                                    ", or set 'image*.png' for 'image01.png' at frame 1, "
+                                    "'image02.png' at frame 2, etc. Paths must be relative to "
+                                    "where the vec file is saved."));
     imageBrowseButton_ = new QPushButton("...");
+    imageBrowseButton_->setToolTip(tr("Browse for background image(s)"));
+    imageBrowseButton_->setStatusTip(tr("Browse for background image(s). Select two or more files, "
+                                        "and a pattern of the form 'image*.png' will be automatically "
+                                        "detected, loading all images matching patterns even if not selected."));
     imageBrowseButton_->setMaximumWidth(30);
-    imageRefreshButton_ = new QPushButton("O"); // XXX set icon
+    imageRefreshButton_ = new QPushButton(QIcon(":/images/refresh.png"), tr(""));
+    imageRefreshButton_->setToolTip(tr("Reload background image(s)"));
+    imageRefreshButton_->setStatusTip(tr("Reload background image(s) to reflect changes on disk."));
     imageRefreshButton_->setMaximumWidth(30);
     QHBoxLayout * imagesLayout = new QHBoxLayout();
+    imagesLayout->setSpacing(0);
     imagesLayout->addWidget(imageLineEdit_);
     imagesLayout->addWidget(imageBrowseButton_);
     imagesLayout->addWidget(imageRefreshButton_);
@@ -58,10 +73,14 @@ BackgroundWidget::BackgroundWidget(QWidget * parent) :
 
     // Position
     leftSpinBox_ = new QDoubleSpinBox();
+    leftSpinBox_->setToolTip(tr("X coordinate of top-left corner of background image(s)"));
+    leftSpinBox_->setStatusTip(tr("Set the X coordinate of the position of the top-left corner of background image(s)."));
     leftSpinBox_->setMaximumWidth(80);
     leftSpinBox_->setMinimum(-1e6);
     leftSpinBox_->setMaximum(1e6);
     topSpinBox_ = new QDoubleSpinBox();
+    topSpinBox_->setToolTip(tr("Y coordinate of top-left corner of background image(s)"));
+    topSpinBox_->setStatusTip(tr("Set the Y coordinate of the position of the top-left corner of background image(s)."));
     topSpinBox_->setMaximumWidth(80);
     topSpinBox_->setMinimum(-1e6);
     topSpinBox_->setMaximum(1e6);
@@ -80,15 +99,21 @@ BackgroundWidget::BackgroundWidget(QWidget * parent) :
 
     // Size
     sizeComboBox_ = new QComboBox();
+    sizeComboBox_->setToolTip(tr("Set size of background image(s)"));
+    sizeComboBox_->setStatusTip(tr("Set the size of background image(s)."));
     sizeComboBox_->addItem(tr("Fit to canvas"));
     sizeComboBox_->addItem(tr("Manual"));
     sizeComboBox_->setSizePolicy(QSizePolicy(QSizePolicy::Maximum, QSizePolicy::Preferred));
     widthSpinBox_ = new QDoubleSpinBox();
+    widthSpinBox_->setToolTip(tr("Width of background image(s)"));
+    widthSpinBox_->setStatusTip(tr("Set width of background image(s)."));
     widthSpinBox_->setMaximumWidth(80);
     widthSpinBox_->setMinimum(-1e6);
     widthSpinBox_->setMaximum(1e6);
     widthSpinBox_->setValue(1280);
     heightSpinBox_ = new QDoubleSpinBox();
+    heightSpinBox_->setToolTip(tr("Height of background image(s)"));
+    heightSpinBox_->setStatusTip(tr("Set height of background image(s)."));
     heightSpinBox_->setMaximumWidth(80);
     heightSpinBox_->setMinimum(-1e6);
     heightSpinBox_->setMaximum(1e6);
@@ -111,6 +136,9 @@ BackgroundWidget::BackgroundWidget(QWidget * parent) :
 
     // Repeat
     repeatComboBox_ = new QComboBox();
+    repeatComboBox_->setToolTip(tr("Repeat background image(s)"));
+    repeatComboBox_->setStatusTip(tr("Set whether background image(s) should "
+                                     "be repeated, either horizontally, vertically, or both"));
     repeatComboBox_->addItem(tr("No"));
     repeatComboBox_->addItem(tr("Horizontally"));
     repeatComboBox_->addItem(tr("Vertically"));
@@ -122,6 +150,10 @@ BackgroundWidget::BackgroundWidget(QWidget * parent) :
 
     // Opacity
     opacitySpinBox_ = new QDoubleSpinBox();
+    opacitySpinBox_->setToolTip(tr("Opacity of background image(s)"));
+    opacitySpinBox_->setStatusTip(tr("Set the opacity of background image(s). Note: this does "
+                                     "not affect the opacity of the background color (use an alpha "
+                                     "value for the color instead)."));
     opacitySpinBox_->setMaximumWidth(80);
     opacitySpinBox_->setMinimum(0);
     opacitySpinBox_->setMaximum(1);
@@ -135,6 +167,12 @@ BackgroundWidget::BackgroundWidget(QWidget * parent) :
 
     // Hold
     holdCheckBox_ = new QCheckBox();
+    holdCheckBox_->setToolTip(tr("Hold background image(s)"));
+    holdCheckBox_->setStatusTip(tr("Set whether to hold background image(s). Example: 'image*.png'"
+                                   " with only 'image01.png' and 'image03.png' on disk. At "
+                                   "frame 2, if hold is checked, 'image01.png' appears. If hold is "
+                                   "not checked, no image appears, unless 'image.png' exists in which "
+                                   "case it is used as a fallback value."));
     holdCheckBox_->setChecked(true );
     layout->addRow(tr("Hold:"), holdCheckBox_);
     connect(holdCheckBox_, SIGNAL(toggled(bool)),

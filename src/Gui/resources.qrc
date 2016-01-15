@@ -1,6 +1,7 @@
 <RCC>
     <qresource prefix="/">
-        <file>images/go-first-view.png</file>
+	<file>images/refresh.png</file>
+	<file>images/go-first-view.png</file>
         <file>images/go-first.png</file>
         <file>images/go-previous.png</file>
         <file>images/go-play.png</file>
