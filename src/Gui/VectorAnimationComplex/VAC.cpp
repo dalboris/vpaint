@@ -556,132 +556,31 @@ void VAC::drawKeyCells3D(View3DSettings & viewSettings, ViewSettings & view2DSet
 
             glTranslated(0,0,eps);
         }
-        glPopMatrix();
+        glPopMatrix(); // XXX Two pushes, one pop, isn't there a hidden bug here????
     }
 }
 
-void VAC::draw3D(View3DSettings & viewSettings)
+void VAC::drawInbetweenCells3D(View3DSettings & viewSettings)
 {
-    // Draw grid
-    if(viewSettings.drawGrid())
-        drawInbetweenGrid(viewSettings);
+    // Draw inbetween vertices
+    InbetweenVertexSet inbetweenVertices = cells();
+    foreach(InbetweenVertex * v, inbetweenVertices)
+        v->draw3D(viewSettings);
 
-    // Get appropriate 2D settings
-    ViewSettings view2DSettings = global()->activeView()->viewSettings();
-    view2DSettings.setScreenRelative(false);
-    view2DSettings.setVertexTopologySize(viewSettings.vertexTopologySize());
-    view2DSettings.setEdgeTopologyWidth(viewSettings.edgeTopologyWidth());
-    view2DSettings.setDrawTopologyFaces(viewSettings.drawTopologyFaces());
-
-    // Draw current frame
-    //
-    // Note: if we do this after doing drawAllFrames3D() instead of before,
-    // then we get an interesting effect: the current frame is not obscured by
-    // other frames. Even though it shouldn't be the default, there might be
-    // use cases where it is useful and could be added as a settings:
-    //   [ ] Current frame not obscured by other frames
-    glDepthFunc(GL_ALWAYS);
-    if(viewSettings.drawCurrentFrame())
-        drawOneFrame3D(global()->activeTime(), viewSettings, view2DSettings, viewSettings.drawCurrentFrameAsTopology());
-    glDepthFunc(GL_LESS);
-
-    // Draw all frames
-    //
-    // XXX This should probably not draw the current current frame if
-    // drawCurrentFrame() is true, since it will be drawn anyway below
-    //
-    // XXX glDepthFunc(GL_ALWAYS); should be disabled too for this, but in order
-    // to work correctly we first need to order the frames back to front. It
-    // would fix the ugly "z-translation-by-epsilon"
-    // that is currently done in drawOneFrame3D. It would be cleaner, more
-    // robust, and give better result (no z-fighting).
-    if(viewSettings.drawAllFrames())
-        drawAllFrames3D(viewSettings, view2DSettings);
-
-    // draw key cells
-    if(viewSettings.drawKeyCells())
-        drawKeyCells3D(viewSettings, view2DSettings);
-
-    // Draw inbetween cells
-    if(viewSettings.drawInbetweenCells())
-    {
-        // Draw inbetween vertices
-        InbetweenVertexSet inbetweenVertices = cells();
-        foreach(InbetweenVertex * v, inbetweenVertices)
-            v->draw3D(viewSettings);
-
-        // Draw inbetween edges
-        //glEnable(GL_LIGHTING);
-
-        GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1.0 };
-        GLfloat mat_shininess[] = { 50.0 };
-        GLfloat light_position[] = { 1.0, 1.0, 1.0, 0.0 };
-        glClearColor (0.0, 0.0, 0.0, 0.0);
-        glShadeModel (GL_SMOOTH);
-
-        glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
-        glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
-        glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-
-        glEnable(GL_NORMALIZE);
-        glEnable(GL_LIGHTING);
-        glEnable(GL_LIGHT0);
-        glEnable(GL_DEPTH_TEST);
-        glDepthMask(false);
-
-        //drawSphere(0.05,50,50);
-
-        if(viewSettings.drawAsMesh())
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-        //glColor4d(0.5,1.0,0.5,viewSettings.opacity());
-        glColor4d(1.0,0.5,0.5,viewSettings.opacity());
-        InbetweenEdgeSet inbetweenEdges = cells();
-        foreach(InbetweenEdge * e, inbetweenEdges)
-            e->draw3D(viewSettings);
-        if(viewSettings.drawAsMesh())
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-    }
+    // Draw inbetween edges
+    //glColor4d(1.0,0.5,0.5,viewSettings.opacity());
+    glColor4d(0.6, 0.4, 0.4, 1.0);
+    if(viewSettings.drawAsMesh())
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    InbetweenEdgeSet inbetweenEdges = cells();
+    foreach(InbetweenEdge * e, inbetweenEdges)
+        e->draw3D(viewSettings);
+    if(viewSettings.drawAsMesh())
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
 void VAC::drawPick3D(View3DSettings & /*viewSettings*/)
 {
-}
-
-void VAC::drawInbetweenGrid(View3DSettings & viewSettings)
-{
-    Timeline * timeline = global()->timeline();
-    int firstFrame = timeline->firstFrame();
-    int lastFrame = timeline->lastFrame();
-
-    // Get scene values
-    double xSceneMin = viewSettings.xSceneMin();
-    double xSceneMax = viewSettings.xSceneMax();
-    double ySceneMin = viewSettings.ySceneMin();
-    double ySceneMax = viewSettings.ySceneMax();
-
-    // Convert to OpenGL units
-    double xMin = viewSettings.xFromX2D(xSceneMin);
-    double xMax = viewSettings.xFromX2D(xSceneMax);
-    double yMin = viewSettings.yFromY2D(ySceneMin);
-    double yMax = viewSettings.yFromY2D(ySceneMax);
-
-    glDisable(GL_LIGHTING);
-    glLineWidth(1.0);
-    glColor3f(0.5, 0.5, 0.5);
-
-    for(int i=firstFrame; i<=lastFrame; ++i)
-    {
-        double z = viewSettings.zFromT(i);
-
-        glBegin(GL_LINE_LOOP);
-        glVertex3d(xMin, yMin, z);
-        glVertex3d(xMin, yMax, z);
-        glVertex3d(xMax, yMax, z);
-        glVertex3d(xMax, yMin, z);
-        glEnd();
-    }
 }
 
 void VAC::draw(Time time, ViewSettings & viewSettings)
@@ -1240,6 +1139,11 @@ InbetweenEdge * VAC::getInbetweenEdge(int /*id*/)
 InbetweenFace * VAC::getInbetweenFace(int /*id*/)
 {
     return 0;
+}
+
+const ZOrderedCells & VAC::zOrdering() const
+{
+    return zOrdering_;
 }
 
 CellSet VAC::cells()

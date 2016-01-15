@@ -126,7 +126,7 @@ struct MouseEvent
     void drawCanvas_();
 
     // Draw background
-    void drawBackground_(Background * background, int frame);
+    void drawBackground_(Background * background, double t);
     QMap<Background *, BackgroundRenderer *> backgroundRenderers_;
 
 };

@@ -46,6 +46,26 @@ ZOrderedCells::ReverseIterator ZOrderedCells::rend()
     return list_.rend();
 }
 
+ZOrderedCells::ConstIterator ZOrderedCells::cbegin() const
+{
+    return list_.cbegin();
+}
+
+ZOrderedCells::ConstIterator ZOrderedCells::cend() const
+{
+    return list_.cend();
+}
+
+ZOrderedCells::ConstReverseIterator ZOrderedCells::crbegin() const
+{
+    return list_.crbegin();
+}
+
+ZOrderedCells::ConstReverseIterator ZOrderedCells::crend() const
+{
+    return list_.crend();
+}
+
 void ZOrderedCells::insertLast(Cell * cell)
 {
     list_.append(cell);

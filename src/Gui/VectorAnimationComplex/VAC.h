@@ -69,11 +69,11 @@ public:
     // Drawing
     void draw(Time time, ViewSettings & viewSettings);
     void drawPick(Time time, ViewSettings & viewSettings);
-    void draw3D(View3DSettings & viewSettings);
-    void drawPick3D(View3DSettings & viewSettings);
+    void drawInbetweenCells3D(View3DSettings & viewSettings);
     void drawOneFrame3D(Time time, View3DSettings & viewSettings, ViewSettings & view2DSettings, bool drawAsTopo = false);
     void drawAllFrames3D(View3DSettings & viewSettings, ViewSettings & view2DSettings);
     void drawKeyCells3D(View3DSettings & viewSettings, ViewSettings & view2DSettings);
+    void drawPick3D(View3DSettings & viewSettings);
 
     // Selecting and Highlighting
     void setHoveredObject(Time time, int id);
@@ -124,6 +124,9 @@ public:
     EdgeCellList edges(Time time);
     KeyEdgeList instantEdges(Time time);
     KeyVertexList instantVertices(Time time);
+
+    // Get all cells, ordered
+    const ZOrderedCells & zOrdering() const;
 
     // Populate MainWindow toolbar (called once, when launching application)
     static void populateToolBar(QToolBar * toolBar, Scene * scene);
@@ -411,10 +414,6 @@ private:
 
     // Z-layering
     ZOrderedCells zOrdering_;
-
-    // Draw3D
-    // XXX This will be removed
-    void drawInbetweenGrid(View3DSettings & viewSettings);
 
     // Smart aggregation of signals
     void emitSelectionChanged_();

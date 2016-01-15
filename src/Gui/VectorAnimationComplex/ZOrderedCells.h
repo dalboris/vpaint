@@ -25,10 +25,16 @@ public:
 
     typedef CellLinkedList::Iterator Iterator;
     typedef CellLinkedList::ReverseIterator ReverseIterator;
+    typedef CellLinkedList::ConstIterator ConstIterator;
+    typedef CellLinkedList::ConstReverseIterator ConstReverseIterator;
     Iterator begin();
     Iterator end();
     ReverseIterator rbegin();
     ReverseIterator rend();
+    ConstIterator cbegin() const;
+    ConstIterator cend() const;
+    ConstReverseIterator crbegin() const;
+    ConstReverseIterator crend() const;
 
     void insertCell(Cell * cell); // insert just below boundary
     void insertLast(Cell * cell); // insert on top

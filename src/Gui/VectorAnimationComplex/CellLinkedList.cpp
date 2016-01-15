@@ -34,22 +34,22 @@ CellLinkedList::ReverseIterator CellLinkedList::rend()
     return list_.rend();
 }
 
-CellLinkedList::ConstIterator CellLinkedList::cbegin()
+CellLinkedList::ConstIterator CellLinkedList::cbegin() const
 {
     return list_.cbegin();
 }
 
-CellLinkedList::ConstIterator CellLinkedList::cend()
+CellLinkedList::ConstIterator CellLinkedList::cend() const
 {
     return list_.cend();
 }
 
-CellLinkedList::ConstReverseIterator CellLinkedList::crbegin()
+CellLinkedList::ConstReverseIterator CellLinkedList::crbegin() const
 {
     return list_.crbegin();
 }
 
-CellLinkedList::ConstReverseIterator CellLinkedList::crend()
+CellLinkedList::ConstReverseIterator CellLinkedList::crend() const
 {
     return list_.crend();
 }
