@@ -88,6 +88,7 @@ public:
     VectorAnimationComplex::InbetweenFace * createInbetweenFace();
 
     // Scene properties
+    // XXX refactor this out in a Canvas class
     double left() const;
     double top() const;
     double width() const;

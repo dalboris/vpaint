@@ -482,7 +482,8 @@ void VAC::drawOneFrame3D(Time time, View3DSettings & viewSettings, ViewSettings 
     glTranslated(0,0,z);
 
     glDisable(GL_LIGHTING);
-    //glDisable(GL_DEPTH_TEST);
+    //glDisable(GL_DEPTH_TEST); // Responsability of caller to do this because
+                                // sometimes it should be disabled, sometimes not
     double eps = 1.0e-2;
     for(auto c: zOrdering_)
     {
@@ -572,21 +573,34 @@ void VAC::draw3D(View3DSettings & viewSettings)
     view2DSettings.setEdgeTopologyWidth(viewSettings.edgeTopologyWidth());
     view2DSettings.setDrawTopologyFaces(viewSettings.drawTopologyFaces());
 
-    // Draw all frames
-    if(viewSettings.drawAllFrames())
-        drawAllFrames3D(viewSettings, view2DSettings);
-
     // Draw current frame
+    //
+    // Note: if we do this after doing drawAllFrames3D() instead of before,
+    // then we get an interesting effect: the current frame is not obscured by
+    // other frames. Even though it shouldn't be the default, there might be
+    // use cases where it is useful and could be added as a settings:
+    //   [ ] Current frame not obscured by other frames
+    glDepthFunc(GL_ALWAYS);
     if(viewSettings.drawCurrentFrame())
         drawOneFrame3D(global()->activeTime(), viewSettings, view2DSettings, viewSettings.drawCurrentFrameAsTopology());
+    glDepthFunc(GL_LESS);
+
+    // Draw all frames
+    //
+    // XXX This should probably not draw the current current frame if
+    // drawCurrentFrame() is true, since it will be drawn anyway below
+    //
+    // XXX glDepthFunc(GL_ALWAYS); should be disabled too for this, but in order
+    // to work correctly we first need to order the frames back to front. It
+    // would fix the ugly "z-translation-by-epsilon"
+    // that is currently done in drawOneFrame3D. It would be cleaner, more
+    // robust, and give better result (no z-fighting).
+    if(viewSettings.drawAllFrames())
+        drawAllFrames3D(viewSettings, view2DSettings);
 
     // draw key cells
     if(viewSettings.drawKeyCells())
         drawKeyCells3D(viewSettings, view2DSettings);
-
-    // Draw time plane
-    if(viewSettings.drawTimePlane())
-        drawTimePlane(viewSettings);
 
     // Draw inbetween cells
     if(viewSettings.drawInbetweenCells())
@@ -648,10 +662,10 @@ void VAC::drawInbetweenGrid(View3DSettings & viewSettings)
     double ySceneMax = viewSettings.ySceneMax();
 
     // Convert to OpenGL units
-    double xMin = viewSettings.xFromXScene(xSceneMin);
-    double xMax = viewSettings.xFromXScene(xSceneMax);
-    double yMin = viewSettings.yFromYScene(ySceneMin);
-    double yMax = viewSettings.yFromYScene(ySceneMax);
+    double xMin = viewSettings.xFromX2D(xSceneMin);
+    double xMax = viewSettings.xFromX2D(xSceneMax);
+    double yMin = viewSettings.yFromY2D(ySceneMin);
+    double yMax = viewSettings.yFromY2D(ySceneMax);
 
     glDisable(GL_LIGHTING);
     glLineWidth(1.0);
@@ -668,51 +682,6 @@ void VAC::drawInbetweenGrid(View3DSettings & viewSettings)
         glVertex3d(xMax, yMin, z);
         glEnd();
     }
-}
-void VAC::drawTimePlane(View3DSettings & viewSettings)
-{
-    // Get scene values
-    double xSceneMin = viewSettings.xSceneMin();
-    double xSceneMax = viewSettings.xSceneMax();
-    double ySceneMin = viewSettings.ySceneMin();
-    double ySceneMax = viewSettings.ySceneMax();
-
-    // Get Timeline value
-    double t = global()->activeTime().floatTime();
-
-    // Convert to OpenGL units
-    double xMin = viewSettings.xFromXScene(xSceneMin);
-    double xMax = viewSettings.xFromXScene(xSceneMax);
-    double yMin = viewSettings.yFromYScene(ySceneMin);
-    double yMax = viewSettings.yFromYScene(ySceneMax);
-    double z = viewSettings.zFromT(t);
-    double eps = 1.0e-2;
-    z -= eps;
-
-    // Draw
-    glDisable(GL_LIGHTING);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    glBegin(GL_QUADS);
-    {
-        //glColor4f(1, 0, 0, 0.6);
-        glColor4f(0, 0, 0, 1);
-        glVertex3f(xMin, yMin, z);
-        glVertex3f(xMax, yMin, z);
-        glVertex3f(xMax, yMax, z);
-        glVertex3f(xMin, yMax, z);
-    }
-    glEnd();
-    glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
-    glBegin(GL_QUADS);
-    {
-        //glColor4f(1, 0, 0, 0.6);
-        glColor4f(1, 1, 1, 1);
-        glVertex3f(xMin, yMin, z);
-        glVertex3f(xMax, yMin, z);
-        glVertex3f(xMax, yMax, z);
-        glVertex3f(xMin, yMax, z);
-    }
-    glEnd();
 }
 
 void VAC::draw(Time time, ViewSettings & viewSettings)

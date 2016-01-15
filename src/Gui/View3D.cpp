@@ -12,6 +12,8 @@
 #include "OpenGL.h"
 #include "Global.h"
 #include "View.h"
+#include "Background/Background.h"
+#include "Background/BackgroundRenderer.h"
 
 #include "VectorAnimationComplex/VAC.h"
 
@@ -32,6 +34,10 @@ View3D::View3D(Scene *scene, QWidget *parent) :
     //frame_(0),
     vac_(0)
 {
+    // Make renderers
+    Background * bg = scene_->background();
+    backgroundRenderers_[bg] = new BackgroundRenderer(bg, context(), this);
+
 
     viewSettingsWidget_ = new View3DSettingsWidget(viewSettings_);
     viewSettingsWidget_->setParent(this, Qt::Window);
@@ -288,6 +294,104 @@ void drawSphere(double r, int lats, int longs)
 */
 }
 
+int View3D::activeFrame() const
+{
+    return std::floor(activeTime().floatTime());
+}
+
+Time View3D::activeTime() const
+{
+    return global()->activeTime(); // XXX should refactor this
+}
+
+void View3D::drawBackground_(Background * background, int frame)
+{
+    // Get canvas boundary
+    double x1 = scene_->left();
+    double y1 = scene_->top();
+    double w = scene_->width();
+    double h = scene_->height();
+    double x2 = x1 + w;
+    double y2 = y1 + h;
+
+    // Get time
+    double t = activeTime().floatTime();
+
+    // Convert to 3D coords
+    x1 = viewSettings_.xFromX2D(x1);
+    x2 = viewSettings_.xFromX2D(x2);
+    y1 = viewSettings_.yFromY2D(y1);
+    y2 = viewSettings_.yFromY2D(y2);
+    double z = viewSettings_.zFromT(t);
+
+    // Translate to appropriate z value
+    glPushMatrix();
+    glScaled(1, -1, 1);
+    glTranslated(0,0,z);
+
+    // Disable lighting and set depth function
+    glDisable(GL_LIGHTING);
+    glDepthFunc(GL_ALWAYS);
+
+    // Draw background
+    backgroundRenderers_[background]->draw(
+                frame,
+                true, // = showCanvas
+                x1, y1, w, h,
+                viewSettings_.xSceneMin(), viewSettings_.xSceneMax(), viewSettings_.ySceneMin(), viewSettings_.ySceneMax());
+
+    // Restore OpenGL state
+    glDepthFunc(GL_LESS);
+    glPopMatrix();
+}
+
+// XXX Refactor this: move it to a CanvasRenderer class
+// Right now, this codes duplicates part of Scene::drawCanvas()
+void View3D::drawCanvas_()
+{
+    // Get canvas boundary
+    double x1 = scene_->left();
+    double y1 = scene_->top();
+    double w = scene_->width();
+    double h = scene_->height();
+    double x2 = x1 + w;
+    double y2 = y1 + h;
+
+    // Get time
+    double t = activeTime().floatTime();
+
+    // Convert to 3D coords
+    x1 = viewSettings_.xFromX2D(x1);
+    x2 = viewSettings_.xFromX2D(x2);
+    y1 = viewSettings_.yFromY2D(y1);
+    y2 = viewSettings_.yFromY2D(y2);
+    double z = viewSettings_.zFromT(t);
+    double eps = 1.0e-2;
+    z -= eps;
+
+    // Draw quad and its boundary
+    glDisable(GL_LIGHTING);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glBegin(GL_QUADS);
+    {
+        glColor4f(0.0, 0.0, 0.0, 1.0);
+        glVertex3f(x1, y1, z);
+        glVertex3f(x2, y1, z);
+        glVertex3f(x2, y2, z);
+        glVertex3f(x1, y2, z);
+    }
+    glEnd();
+    glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
+    glBegin(GL_QUADS);
+    {
+        glColor4f(1.0, 1.0, 1.0, 1.0);
+        glVertex3f(x1, y1, z);
+        glVertex3f(x2, y1, z);
+        glVertex3f(x2, y2, z);
+        glVertex3f(x1, y2, z);
+    }
+    glEnd();
+}
 
 void View3D::drawScene()
 {
@@ -305,6 +409,7 @@ void View3D::drawScene()
 
     if(scene_->vectorAnimationComplex())
     {
+        // Translate and scale
         glEnable(GL_NORMALIZE);
         double s = viewSettings_.spaceScale();
         double invS = 1.0 / s;
@@ -313,7 +418,18 @@ void View3D::drawScene()
         {
             glTranslated(0,0,-viewSettings_.zFromT(global()->activeTime()));
         }
+
+        // Draw canvas and background
+        if(viewSettings_.drawTimePlane())
+        {
+            drawCanvas_();
+            drawBackground_(scene_->background(), activeFrame());
+        }
+
+        // Draw VAC
         scene_->vectorAnimationComplex()->draw3D(viewSettings_);
+
+        // Un-translate and un-scale
         if(viewSettings_.cameraFollowActiveTime())
         {
             glTranslated(0,0,viewSettings_.zFromT(global()->activeTime()));

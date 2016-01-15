@@ -213,8 +213,8 @@ void InbetweenVertex::drawRaw3D(View3DSettings & viewSettings)
     for(double t=t1; t<t2+eps; t+=dt)
     {
         Eigen::Vector2d p = pos(Time(t));
-        double x = viewSettings.xFromXScene(p[0]);
-        double y = viewSettings.yFromYScene(p[1]);
+        double x = viewSettings.xFromX2D(p[0]);
+        double y = viewSettings.yFromY2D(p[1]);
         double z = viewSettings.zFromT(t);
         glVertex3d(x,y,z);
     }

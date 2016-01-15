@@ -918,7 +918,7 @@ void View::drawBackground_(Background * background, int frame)
     backgroundRenderers_[background]->draw(
                 frame,
                 global()->showCanvas(),
-                scene_->width(), scene_->height(), scene_->left(), scene_->top(),
+                scene_->left(), scene_->top(), scene_->width(), scene_->height(),
                 xSceneMin(), xSceneMax(), ySceneMin(), ySceneMax());
 }
 

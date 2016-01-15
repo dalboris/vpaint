@@ -287,7 +287,8 @@ void Scene::writeCanvas(XmlStreamWriter & xml)
 
 // ----------------------- Drawing the scene -------------------------
 
-
+// XXX Refactor this: move it to View. Even better, have a Canvas and
+// CanvasRenderer class
 void Scene::drawCanvas(ViewSettings & /*viewSettings*/)
 {
     double x = left();

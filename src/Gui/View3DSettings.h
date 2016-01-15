@@ -73,14 +73,11 @@ public:
     int k2() const;
     void setK2(int newValue);
 
-
-
-
-
-
-    double xFromXScene(double xScene) const;
-    double yFromYScene(double yScene) const;
-
+    // Convert 2D scene coordinate and time to 3D coordinates for View3D
+    // XXX Refactor in one method:
+    //   Eigen::Vector3d to3DCoords(double x2D, double y2D, double time) const;
+    double xFromX2D(double xScene) const;
+    double yFromY2D(double yScene) const;
     double zFromT(double time) const;
     double zFromT(int time) const;
     double zFromT(Time time) const;

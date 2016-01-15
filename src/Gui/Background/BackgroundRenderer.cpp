@@ -197,10 +197,13 @@ void computeBackgroundQuad_(
 }
 }
 
-void BackgroundRenderer::draw(int frame,
-                              bool showCanvas,
-                              double canvasWidth, double canvasHeight, double canvasLeft, double canvasTop,
-                              double xSceneMin, double xSceneMax, double ySceneMin, double ySceneMax)
+void BackgroundRenderer::draw(int frame, bool showCanvas,
+
+                              double canvasLeft, double canvasTop,
+                              double canvasWidth, double canvasHeight,
+
+                              double xSceneMin, double xSceneMax,
+                              double ySceneMin, double ySceneMax)
 {
     // Get canvas boundary
     const double & wc = canvasWidth;

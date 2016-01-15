@@ -413,8 +413,8 @@ private:
     ZOrderedCells zOrdering_;
 
     // Draw3D
+    // XXX This will be removed
     void drawInbetweenGrid(View3DSettings & viewSettings);
-    void drawTimePlane(View3DSettings & viewSettings);
 
     // Smart aggregation of signals
     void emitSelectionChanged_();

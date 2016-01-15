@@ -26,10 +26,30 @@ public:
                        QGLContext * context,
                        QObject * parent = 0);
 
-    void draw(int frame,
-              bool showCanvas,
-              double canvasWidth, double canvasHeight, double canvasLeft, double canvasTop,
-              double xSceneMin, double xSceneMax, double ySceneMin, double ySceneMax);
+    // Draw the background for specified frame.
+    //
+    // If showCanvas = true, then draw an area covering the canvas only, and
+    // the variables xSceneMin, xSceneMax, ySceneMin, and ySceneMax are unused.
+    //
+    // If showCanvas = false, then draw an area covering the whole screen. Though,
+    // it still the canvas dimensions and positions, to know the position and size
+    // of he background image.
+    //
+    // 3D view should either use showCanvas = true, or not draw the background
+    // at all, since showCanvas = false would paint the whole window with the
+    // background color, which doesn't make sense.
+    //
+    // XXX We should probably pass a pointer to a canvas object in the
+    // constructor, so we don't have to pass that many parameters. (but the
+    // 'Canvas' class is not even implemented yet)
+    //
+    void draw(int frame,bool showCanvas,
+
+              double canvasLeft, double canvasTop,
+              double canvasWidth, double canvasHeight,
+
+              double xSceneMin, double xSceneMax,
+              double ySceneMin, double ySceneMax);
 
 private slots:
     void clearCache_();
