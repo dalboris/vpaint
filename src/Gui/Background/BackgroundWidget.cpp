@@ -6,7 +6,9 @@
 //   http://opensource.org/licenses/MIT
 
 #include "BackgroundWidget.h"
+
 #include "Background.h"
+#include "BackgroundUrlValidator.h"
 #include "ColorSelector.h"
 #include "../Global.h" // XXX This is for documentDir()
 
@@ -21,63 +23,6 @@
 #include <QComboBox>
 #include <QFileDialog>
 #include <QMessageBox>
-
-namespace
-{
-// Validator to test whether the entered url is valid
-class ImageUrlValidator: public QValidator
-{
-public:
-    ImageUrlValidator(QObject * parent = 0) :
-        QValidator(parent)
-    {
-    }
-
-    State validate(QString & input, int & /*pos*/) const
-    {
-        // Check that there no more than one wildcard, and
-        // no slash after wildcards
-
-        int wildcardCount = 0;
-        for (int i=0; i<input.size(); ++i)
-        {
-            if (input[i] == '*')
-            {
-                if(wildcardCount == 0)
-                    wildcardCount++;
-                else
-                    return Intermediate;
-            }
-            else if (input[i] == '/' && wildcardCount > 0)
-            {
-                return Intermediate;
-            }
-        }
-
-        return Acceptable;
-    }
-
-    void fixup(QString & input) const
-    {
-        // Get last index of '*' or '/' (return -1 if not found)
-        int j = input.lastIndexOf('*');
-        int k = input.lastIndexOf('/');
-
-        // Remove '*' if followed by '/'
-        if (k > j)
-            j = -1;
-
-        // Only keep wildcard at index j
-        QString res;
-        for (int i=0; i<input.size(); ++i)
-            if (input[i] != '*' || i==j)
-                res.append(input[i]);
-
-        // Set result
-        input = res;
-    }
-};
-}
 
 BackgroundWidget::BackgroundWidget(QWidget * parent) :
     QWidget(parent),
@@ -99,7 +44,7 @@ BackgroundWidget::BackgroundWidget(QWidget * parent) :
 
     // Images
     imageLineEdit_ = new QLineEdit();
-    imageLineEdit_->setValidator(new ImageUrlValidator(imageLineEdit_));
+    imageLineEdit_->setValidator(new BackgroundUrlValidator(imageLineEdit_));
     imageLineEdit_->setToolTip(tr("Set background image(s) url\n\n"
                                   "Example 1: 'image.png' for the same image at all frames\n"
                                   "Example 2: 'image*.png' for 'image2.png' on frame 2, etc."));

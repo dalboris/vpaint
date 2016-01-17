@@ -580,11 +580,22 @@ bool MainWindow::open()
         return false;
     }
 
+    // Browse for a file to open
     QString filename = QFileDialog::getOpenFileName(
         this, tr("Open"), QStandardPaths::writableLocation(QStandardPaths::PicturesLocation), tr("Vec files (*.vec)"));
 
+    // Set save filename.
+    //
+    // This must be done *before* calling doOpen() because doOpen() will cause
+    // the scene to change which will cause a redraw, which requires the save
+    // filename to be set to resolve relative file paths
+    QString oldFilename = saveFilename_;
+    setSaveFilename_(filename);
+
+    // Try to open file
     bool success = doOpen(filename);
 
+    // Set a few things depending on success
     if(success)
     {
         setSaveFilename_(filename);
@@ -593,6 +604,7 @@ bool MainWindow::open()
     }
     else
     {
+        setSaveFilename_(oldFilename);
         return false;
     }
 }
@@ -631,7 +643,8 @@ bool MainWindow::saveAs()
     if(!filename.endsWith(".vec"))
         filename.append(".vec");
 
-    bool success = doSave(filename);
+    bool relativeRemap = true;
+    bool success = doSave(filename, relativeRemap);
 
     if(success)
     {
@@ -798,7 +811,7 @@ bool MainWindow::doOpen(const QString & filename)
     return true;
 }
 
-bool MainWindow::doSave(const QString & filename)
+bool MainWindow::doSave(const QString & filename, bool relativeRemap)
 {
     // Open file to save to
     QFile file(filename);
@@ -808,13 +821,22 @@ bool MainWindow::doSave(const QString & filename)
         return false;
     }
 
+    // Remap relative paths if need be
+    if (relativeRemap)
+    {
+        QFileInfo fileInfo(file);
+        QDir oldDocumentDir = global()->documentDir();
+        QDir newDocumentDir = fileInfo.dir();
+        if (oldDocumentDir != newDocumentDir)
+        {
+            global()->setDocumentDir(newDocumentDir);
+            scene()->relativeRemap(oldDocumentDir, newDocumentDir);
+        }
+    }
+
     // Write to file
     XmlStreamWriter xmlStream(&file);
     write(xmlStream);
-
-    // Write to file (deprecated)
-    //QTextStream textStream(&file);
-    //write_DEPRECATED(textStream);
 
     // Close file
     file.close();

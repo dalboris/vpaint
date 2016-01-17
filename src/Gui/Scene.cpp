@@ -148,6 +148,7 @@ void Scene::clear(bool silent)
     // XXX Shouldn't this clear left/top/width/height too?
 
     // Reset background data
+    // As a side effect, this clears the cache if there were any
     background_->resetData();
 
     if(!silent)
@@ -233,6 +234,8 @@ void Scene::write(XmlStreamWriter & xml)
 
 void Scene::read(XmlStreamReader & xml)
 {
+    blockSignals(true);
+
     clear(true);
 
     while (xml.readNextStartElement())
@@ -254,8 +257,10 @@ void Scene::read(XmlStreamReader & xml)
         }
     }
 
-    emit changed();
+    blockSignals(false);
+
     emit needUpdatePicking();
+    emit changed();
     emit selectionChanged();
 }
 
@@ -283,6 +288,11 @@ void Scene::writeCanvas(XmlStreamWriter & xml)
     xml.writeAttribute("top", QString().setNum(top()));
     xml.writeAttribute("width", QString().setNum(width()));
     xml.writeAttribute("height", QString().setNum(height()));
+}
+
+void Scene::relativeRemap(const QDir & oldDir, const QDir & newDir)
+{
+    background()->relativeRemap(oldDir, newDir);
 }
 
 // ----------------------- Drawing the scene -------------------------

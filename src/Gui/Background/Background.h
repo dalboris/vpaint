@@ -21,6 +21,8 @@
 class XmlStreamWriter;
 class XmlStreamReader;
 
+class QDir;
+
 class Background: public QObject
 {
     Q_OBJECT
@@ -107,6 +109,9 @@ public:
     // Read/Write XML
     void write(XmlStreamWriter & xml);
     void read(XmlStreamReader & xml);
+
+    // Remap relative files
+    void relativeRemap(const QDir & oldDir, const QDir & newDir);
 
 signals:
     // Signal emitted whenever any value is changed

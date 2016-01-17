@@ -7,11 +7,13 @@
 
 #include "Background.h"
 
+#include "BackgroundUrlValidator.h"
+
 #include "XmlStreamReader.h"
 #include "XmlStreamWriter.h"
 #include "CssColor.h"
 
-#include "../Global.h" // XXX this is for documentDir(). It should be refactored.
+#include "Global.h" // XXX this is for documentDir(). It should be refactored.
 
 #include <QDir>
 #include <QFileInfo>
@@ -51,6 +53,7 @@ void Background::setData(const Data & newData)
     if (data_ != newData)
     {
         data_ = newData;
+        BackgroundUrlValidator::fixupUrl(data_.imageUrl);
         clearCache_();
         emit changed();
     }
@@ -96,6 +99,7 @@ void Background::setImageUrl(const QString & newUrl)
     if (data_.imageUrl != newUrl)
     {
         data_.imageUrl = newUrl;
+        BackgroundUrlValidator::fixupUrl(data_.imageUrl);
         clearCache_();
         emit imageUrlChanged(data_.imageUrl);
         emit changed();
@@ -136,83 +140,59 @@ void Background::computeCache_() const
     filePathsPrefix_.clear();
     filePathsSuffix_.clear();
 
-    // Check that there is at most one "*" character, and
-    // that it is not followed by any "/" character (todo)
-    int wildcardIndex = -1;
-    for (int i=0; i<data_.imageUrl.length(); ++i)
-    {
-        QChar c = data_.imageUrl[i];
-        if (c == '*')
-        {
-            if (wildcardIndex == -1)
-            {
-                wildcardIndex = i;
-            }
-            else
-            {
-                // XXX use a QMessageBox? a QLineEdit validation?
-                //     should the check be done and corrected even before
-                //     this function may be reached in this invalid state?
-                qDebug("more than one wildcard");
-            }
-        }
-    }
-
-    // Get url relative to working dir instead of document dir
+    // Get url relative to working dir
     QDir dir = global()->documentDir();
     QString url = dir.filePath(data_.imageUrl);
 
     // Case without wildcard
-    if (wildcardIndex == -1)
+    if (!url.contains('*'))
     {
         filePathsPrefix_ = url;
     }
 
     // Case with wildcard
+    //
+    // Note: At this point, we are guaranteed that there is one and
+    // only one '*', and that it is not followed by '/'
     else
     {
+        // Get url relative to parent dir
+        QFileInfo fileInfo(url);
+        QDir parentDir = fileInfo.dir();
+        url = fileInfo.fileName();
+
+        // Store path of parent dir in cached prefix
+        filePathsPrefix_ = parentDir.path() + "/";
+
         // Get matching files
+        QStringList nameFilters(url);
         QDir::Filters filters = QDir::Files | QDir::Readable;
-        QStringList nameFilters;
-        nameFilters << data_.imageUrl;
-        QFileInfoList files = dir.entryInfoList(nameFilters, filters);
+        QFileInfoList files = parentDir.entryInfoList(nameFilters, filters);
 
-        // Offset wildcardIndex to make it relative to working dir instead of
-        // document dir. Here are what the values look like to help understand:
-        //
-        //    dir.path() = "my/dir"
-        //
-        //    imageUrl_ = "my/background*.png"
-        //    url       = "my/dir/my/background*.png"
-        //
-        //    files[i].filePath() = "my/dir/my/background015.png"
-        //
-        //    wildcardIndex (before) = 13
-        //    wildcardIndex (after)  = 20 = 13 + 6 + 1
-        //
-        wildcardIndex += dir.path().length() + 1;
+        // Get wildcard index
+        int wildcardIndex = url.indexOf('*');
 
-        // Get prefix and suffix
-        filePathsPrefix_ = url.left(wildcardIndex);
+        // Cache prefix and suffix
+        filePathsPrefix_ += url.left(wildcardIndex);
         filePathsSuffix_ = url.right(url.length() - wildcardIndex - 1);
 
-        // Get wildcard values as string and int. Example:
-        //   files[i].filePath() = "my/dir/my/background015.png"
-        //   wildcardValue[i]    = "015"
+        // Get wildcard values as string and int.
+        // Example:
+        //   files[i].fileName() = "image015.png"
+        //   stringWildcards[i]  = "015"
+        //   intWildcards[i]     = 15
         QStringList stringWildcards;
         QList<int> intWildcards;
         foreach(QFileInfo i, files)
         {
             // Get wildcard as string
-            QString stringWildcard = i.filePath();
-            stringWildcard.remove(0, filePathsPrefix_.length());
-            stringWildcard.chop(filePathsSuffix_.length());
+            QString fileName = i.fileName();
+            QString stringWildcard = fileName.mid(
+                        wildcardIndex, fileName.length() - url.length() + 1);
 
-            // Try to convert to an int
+            // Append to lists, if can convert to an int
             bool ok;
             int intWildcard = stringWildcard.toInt(&ok);
-
-            // Append to lists, but only if conversion succeeded
             if (ok)
             {
                 stringWildcards << stringWildcard;
@@ -663,3 +643,15 @@ void Background::read(XmlStreamReader & xml)
     // Set Data
     setData(data);
 }
+
+void Background::relativeRemap(const QDir & oldDir, const QDir & newDir)
+{
+    QString url = imageUrl();
+    if(!url.isEmpty() && oldDir.isRelativePath(url))
+    {
+        QString oldFilepath = oldDir.filePath(url);
+        QString newFilepath = newDir.relativeFilePath(oldFilepath);
+        setImageUrl(newFilepath);
+    }
+}
+

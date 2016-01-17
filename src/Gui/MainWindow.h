@@ -170,7 +170,7 @@ private:
     bool autosaveOn_;
     QDir autosaveDir_;
     void setSaveFilename_(const QString & filename);
-    bool doSave(const QString & filename);
+    bool doSave(const QString & filename, bool relativeRemap = false);
     bool doExportSVG(const QString & filename);
     bool doExportPNG(const QString & filename);
     void read_DEPRECATED(QTextStream & in);

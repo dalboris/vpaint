@@ -29,6 +29,7 @@ namespace VectorAnimationComplex
 class VAC;
 class InbetweenFace;
 }
+class QDir;
 
 class Scene: public QObject
 {
@@ -74,6 +75,7 @@ public:
     void read(XmlStreamReader & xml);
     void readCanvas(XmlStreamReader & xml);
     void writeCanvas(XmlStreamWriter & xml);
+    void relativeRemap(const QDir & oldDir, const QDir & newDir);
 
     // Scene Objects getters
     VectorAnimationComplex::VAC * vectorAnimationComplex();
