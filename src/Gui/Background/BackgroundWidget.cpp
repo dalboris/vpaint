@@ -22,6 +22,63 @@
 #include <QFileDialog>
 #include <QMessageBox>
 
+namespace
+{
+// Validator to test whether the entered url is valid
+class ImageUrlValidator: public QValidator
+{
+public:
+    ImageUrlValidator(QObject * parent = 0) :
+        QValidator(parent)
+    {
+    }
+
+    State validate(QString & input, int & /*pos*/) const
+    {
+        // Check that there no more than one wildcard, and
+        // no slash after wildcards
+
+        int wildcardCount = 0;
+        for (int i=0; i<input.size(); ++i)
+        {
+            if (input[i] == '*')
+            {
+                if(wildcardCount == 0)
+                    wildcardCount++;
+                else
+                    return Intermediate;
+            }
+            else if (input[i] == '/' && wildcardCount > 0)
+            {
+                return Intermediate;
+            }
+        }
+
+        return Acceptable;
+    }
+
+    void fixup(QString & input) const
+    {
+        // Get last index of '*' or '/' (return -1 if not found)
+        int j = input.lastIndexOf('*');
+        int k = input.lastIndexOf('/');
+
+        // Remove '*' if followed by '/'
+        if (k > j)
+            j = -1;
+
+        // Only keep wildcard at index j
+        QString res;
+        for (int i=0; i<input.size(); ++i)
+            if (input[i] != '*' || i==j)
+                res.append(input[i]);
+
+        // Set result
+        input = res;
+    }
+};
+}
+
 BackgroundWidget::BackgroundWidget(QWidget * parent) :
     QWidget(parent),
     background_(0),
@@ -42,11 +99,14 @@ BackgroundWidget::BackgroundWidget(QWidget * parent) :
 
     // Images
     imageLineEdit_ = new QLineEdit();
-    imageLineEdit_->setToolTip(tr("Set background image(s) url"));
+    imageLineEdit_->setValidator(new ImageUrlValidator(imageLineEdit_));
+    imageLineEdit_->setToolTip(tr("Set background image(s) url\n\n"
+                                  "Example 1: 'image.png' for the same image at all frames\n"
+                                  "Example 2: 'image*.png' for 'image2.png' on frame 2, etc."));
     imageLineEdit_->setStatusTip(tr("Set background image(s) url. For example, set "
                                     "'image.png' for a fixed image shared across all frames, "
-                                    ", or set 'image*.png' for 'image01.png' at frame 1, "
-                                    "'image02.png' at frame 2, etc. Paths must be relative to "
+                                    ", or set 'image*.png' for 'image1.png' at frame 1, "
+                                    "'image2.png' at frame 2, etc. Paths must be relative to "
                                     "where the vec file is saved."));
     imageBrowseButton_ = new QPushButton("...");
     imageBrowseButton_->setToolTip(tr("Browse for background image(s)"));
