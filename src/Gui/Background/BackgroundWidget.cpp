@@ -10,7 +10,7 @@
 #include "Background.h"
 #include "BackgroundUrlValidator.h"
 #include "ColorSelector.h"
-#include "../Global.h" // XXX This is for documentDir()
+#include "Global.h"
 
 #include <QFormLayout>
 #include <QHBoxLayout>
@@ -22,7 +22,8 @@
 #include <QDoubleSpinBox>
 #include <QComboBox>
 #include <QFileDialog>
-#include <QMessageBox>
+#include <QTextEdit>
+#include <QDialogButtonBox>
 
 BackgroundWidget::BackgroundWidget(QWidget * parent) :
     QWidget(parent),
@@ -207,11 +208,9 @@ void BackgroundWidget::setBackground(Background * background)
     // Set widgets values from background values
     updateFromBackground_();
 
-    // Create connections
+    // Update widget values when data changes
     if (background_)
     {
-        // XXX We could instead use individual values connections instead,
-        // to avoid updating everything each time
         connect(background_, SIGNAL(changed()), this, SLOT(updateFromBackground_()));
     }
 }
@@ -294,6 +293,64 @@ void BackgroundWidget::processImageLineEditEditingFinished_()
         isBeingEdited_ = false;
         emitCheckpoint_();
     }
+}
+
+
+namespace
+{
+class InconsistentFileNamesDialog: public QDialog
+{
+public:
+    InconsistentFileNamesDialog(QWidget * parent = 0) :
+        QDialog(parent)
+    {
+        // Window title
+        setWindowTitle("Inconsistent file names");
+
+        // Label with warning message and pattern
+        label_ = new QLabel;
+        label_->setWordWrap(true);
+
+        // Text edit with list of inconsistent file names
+        textEdit_ = new QTextEdit;
+        textEdit_->setReadOnly(true);
+
+        // Button box
+        QDialogButtonBox * buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok);
+        connect(buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
+
+        // Layout
+        QVBoxLayout * layout = new QVBoxLayout(this);
+        layout->addWidget(label_);
+        layout->addWidget(textEdit_);
+        layout->addWidget(buttonBox);
+        setLayout(layout);
+    }
+
+    void setPattern(const QString & pattern)
+    {
+        label_->setText(
+            tr("Warning: The selected files do not have consistent names. "
+               "The detected pattern is \"%1\", but the following files "
+               "do not match it and therefore will be ignored:").arg(pattern));
+    }
+
+    void setFileNames(const QStringList & fileNames)
+    {
+        QString text;
+        for (int i=0; i<fileNames.size(); ++i)
+        {
+            if (i>0)
+                text += '\n';
+            text += fileNames[i];
+        }
+        textEdit_->setText(text);
+    }
+
+private:
+    QLabel * label_;
+    QTextEdit * textEdit_;
+};
 }
 
 void BackgroundWidget::processImageBrowseButtonClicked_()
@@ -404,59 +461,41 @@ void BackgroundWidget::processImageBrowseButtonClicked_()
         url = prefix + "*" + suffix;
 
         // Check for inconsistent names
-        QString inconsistentFilenames;
+        QStringList inconsistentFilenames;
         for (int i=0; i<filenames.size(); ++i)
         {
-            bool inconsistent = false;
-
+            // Check that prefix and suffix match
             if (filenames[i].left(prefixLength)  != prefix ||
                 filenames[i].right(suffixLength) != suffix )
             {
-                inconsistent = true;
+                inconsistentFilenames << filenames[i];
             }
+
+            // Check that wildcard can be converted to an int
             else
             {
-                // Get wildcard
-                QString w = filenames[i];
-                w.remove(0, prefixLength);
-                w.chop(suffixLength);
+                // Get wildcard and convert to int
+                QString w = filenames[i].mid(prefixLength, filenames[i].length() - url.length() + 1);
+                bool canConvertToInt;
+                w.toInt(&canConvertToInt);
 
-                if (w.length() == 0)
+                // Add to inconsistent names if it cannot be converted to an int
+                // (unless length == 0, in which case it's the fallback value)
+                if (w.length() > 0 && !canConvertToInt)
                 {
-                    // It's the fallback value: filename[i] == prefix+suffix
-                    inconsistent = false;
+                    inconsistentFilenames << filenames[i];
                 }
-                else
-                {
-                    // Try to convert to an int
-                    bool ok;
-                    w.toInt(&ok);
-                    if (!ok)
-                    {
-                        inconsistent = true;
-                    }
-                }
-            }
-
-            if(inconsistent)
-            {
-                inconsistentFilenames += filenames[i] + "\n";
-
             }
         }
+
+        // Display warning to user if some file names are inconsistent
         if (inconsistentFilenames.length() > 0)
         {
-            // Remove last newline
-            inconsistentFilenames.chop(1);
-
             // issue warning
-            QMessageBox::warning(
-                        this,
-                        tr("Inconsistent file names"),
-                        tr("Warning: The selected files don't have a consistent naming scheme. "
-                           "The following files do not match \"%1\" and will be ignored:\n%2")
-                        .arg(url)
-                        .arg(inconsistentFilenames));
+            InconsistentFileNamesDialog dialog(this);
+            dialog.setPattern(url);
+            dialog.setFileNames(inconsistentFilenames);
+            dialog.exec();
         }
     }
 
