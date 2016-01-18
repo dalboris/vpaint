@@ -920,9 +920,9 @@
      inkscape:window-x="-3"
      inkscape:window-height="1025"
      inkscape:window-width="1920"
-     inkscape:cy="66.96547"
-     inkscape:cx="20.212047"
-     inkscape:zoom="4"
+     inkscape:cy="229.5522"
+     inkscape:cx="339.48627"
+     inkscape:zoom="11.313708"
      gridtolerance="6"
      snaptogrid="false"
      showgrid="false"
@@ -3572,5 +3572,31 @@
        id="path3511"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="ccccccccc" />
+  </g>
+  <g
+     id="g5632"
+     inkscape:export-filename="/home/boris/Documents/vpaint-dev/src/Gui/images/refresh.png"
+     inkscape:export-xdpi="119.94723"
+     inkscape:export-ydpi="119.94723">
+    <rect
+       style="color:#000000;fill:none;fill-opacity:1;stroke:none;stroke-width:1;marker:none;display:inline"
+       id="rect5630"
+       width="24"
+       height="24"
+       x="334.66904"
+       y="57.890442" />
+    <g
+       inkscape:export-ydpi="144.72433"
+       inkscape:export-xdpi="144.72433"
+       inkscape:export-filename="/home/boris/Documents/vpaint-dev/src/Gui/images/refresh.png"
+       transform="matrix(-0.7167854,0.7167854,-0.7167854,-0.7167854,751.69516,-165.23177)"
+       id="g4392">
+      <path
+         sodipodi:nodetypes="ccccssccsscc"
+         inkscape:connector-curvature="0"
+         d="m 445.6254,118.5636 -4.55819,-4.55819 -4.55917,4.55918 3.19421,-0.002 c 0.094,3.78592 3.18355,6.76004 6.95367,6.76004 3.8274,0 6.95289,-3.1255 6.95289,-6.95289 0,-3.82739 -3.71789,-6.95291 -6.7664,-6.89806 l -0.1753,2.0243 c 2.7134,0 4.86422,2.15082 4.86422,4.86422 0,2.71339 -2.15082,4.8642 -4.86422,4.8642 -2.6428,0 -4.75192,-1.97103 -4.85324,-4.62848 z"
+         style="fill-rule:evenodd;stroke:none"
+         id="path4398" />
+    </g>
   </g>
 </svg>
