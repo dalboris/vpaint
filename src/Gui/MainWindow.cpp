@@ -322,8 +322,9 @@ void MainWindow::autosaveEnd()
 
 MainWindow::~MainWindow()
 {
-    foreach(Scene * s, undoStack_)
-        delete s;
+    typedef QPair<QDir,Scene*> UndoItem;
+    foreach(UndoItem p, undoStack_)
+        delete p.second;
     delete scene_;
 
     autosaveEnd();
@@ -340,19 +341,36 @@ void MainWindow::addToUndoStack()
     undoIndex_++;
     for(int j=undoStack_.size()-1; j>=undoIndex_; j--)
     {
-        delete undoStack_[j];
+        delete undoStack_[j].second;
         undoStack_.removeLast();
     }
-    undoStack_ << new Scene();
-    undoStack_[undoIndex_]->copyFrom(scene_);
+    undoStack_ << qMakePair(global()->documentDir(), new Scene());
+    undoStack_[undoIndex_].second->copyFrom(scene_);
+}
+
+void MainWindow::goToUndoIndex_(int undoIndex)
+{
+    // Set new undo index
+    undoIndex_ = undoIndex;
+
+    // Remap relative paths in history
+    if (undoStack_[undoIndex].first != global()->documentDir())
+    {
+        undoStack_[undoIndex].second->relativeRemap(
+            undoStack_[undoIndex_].first,
+            global()->documentDir());
+        undoStack_[undoIndex].first = global()->documentDir();
+    }
+
+    // Set scene data from undo history
+    scene_->copyFrom(undoStack_[undoIndex].second);
 }
 
 void MainWindow::undo()
 {
     if(undoIndex_>0)
     {
-        undoIndex_--;
-        scene_->copyFrom(undoStack_[undoIndex_]);
+        goToUndoIndex_(undoIndex_ - 1);
     }
     else
     {
@@ -364,8 +382,7 @@ void MainWindow::redo()
 {
     if(undoIndex_<undoStack_.size()-1)
     {
-        undoIndex_++;
-        scene_->copyFrom(undoStack_[undoIndex_]);
+        goToUndoIndex_(undoIndex_ + 1);
     }
     else
     {

@@ -159,7 +159,8 @@ private:
     QTextBrowser * gettingStarted_;
     QTextBrowser * userManual_;
     // Undo/Redo
-    QList<Scene*> undoStack_;
+    void goToUndoIndex_(int undoIndex);
+    QList< QPair<QDir,Scene*> > undoStack_;
     int undoIndex_;
     // I/O
     QString fileHeader_;
