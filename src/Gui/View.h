@@ -112,8 +112,8 @@ public:
     // View opened (e.g., command-line vec->png conversion).
     // In the meantime, that was the easiest way to implement it.
     // Will refactor later.
-    QImage drawToImage(double x, double y, double w, double h, int imgW, int imgH, bool transparentBackground = true);
-    QImage drawToImage(Time t, double x, double y, double w, double h, int imgW, int imgH, bool transparentBackground = true);
+    QImage drawToImage(double x, double y, double w, double h, int imgW, int imgH);
+    QImage drawToImage(Time t, double x, double y, double w, double h, int imgW, int imgH);
 
 public slots:
     void update();        // update only this view (i.e., redraw the scene, leave other views unchanged)

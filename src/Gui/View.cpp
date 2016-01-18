@@ -1371,12 +1371,12 @@ void imageCleanupHandler(void * info)
 
 }
 
-QImage View::drawToImage(double x, double y, double w, double h, int imgW, int imgH, bool transparentBackground)
+QImage View::drawToImage(double x, double y, double w, double h, int imgW, int imgH)
 {
-    return drawToImage(activeTime(), x, y, w, h, imgW, imgH, transparentBackground);
+    return drawToImage(activeTime(), x, y, w, h, imgW, imgH);
 }
 
-QImage View::drawToImage(Time t, double x, double y, double w, double h, int imgW, int imgH, bool transparentBackground)
+QImage View::drawToImage(Time t, double x, double y, double w, double h, int imgW, int imgH)
 {
     // Test availability of OpenGL functionality
     if(!GLEW_VERSION_2_0) {
@@ -1475,8 +1475,8 @@ QImage View::drawToImage(Time t, double x, double y, double w, double h, int img
     viewportHeight_ = IMG_SIZE_Y;
     glViewport(0, 0, viewportWidth_, viewportHeight_);
 
-    // Clear buffers
-    glClearColor(0.0, 0.0, 0.0, 0.0); // Important: full black + transparency
+    // Clear FBO to fully transparent
+    glClearColor(0.0, 0.0, 0.0, 0.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Set projection matrix
@@ -1496,10 +1496,7 @@ QImage View::drawToImage(Time t, double x, double y, double w, double h, int img
     // Draw scene
     ViewSettings::DisplayMode oldDM = viewSettings_.displayMode();
     viewSettings_.setDisplayMode(ViewSettings::ILLUSTRATION);
-    if(!transparentBackground)
-    {
-        drawBackground_(scene_->background(), t.frame());
-    }
+    drawBackground_(scene_->background(), t.frame());
     viewSettings_.setMainDrawing(false);
     viewSettings_.setDrawCursor(false);
     scene_->draw(t, viewSettings_);
@@ -1548,49 +1545,31 @@ QImage View::drawToImage(Time t, double x, double y, double w, double h, int img
     glDeleteTextures(1, &textureId);
 
 
-    // ------ Fix black border bleeding ---------
+    // ------ un-premultiply alpha ---------
 
-    // Notations:
-    //     RGBA_old:  RGBA value already stored in frame buffer
-    //     RGBA:      RGBA value of fragment incoming to frame buffer
-    //     RGBA_new:  RGBA value to be stored in frame buffer after blending RGBA_old and RGBA
+    // Once can notice that glBlendFuncSeparate(alpha, 1-alpha, 1, 1-alpha)
+    // performs the correct blending function with input:
+    //    Frame buffer color as pre-multiplied alpha
+    //    Input fragment color as post-multiplied alpha
+    // and output:
+    //    New frame buffer color as pre-multiplied alpha
     //
-    // The issue is caused by glBlendFunc which is kinda dumb. Indeed, when
-    // A_old (the alpha that's already in the frame buffer) is 0, i.e. no fragment
-    // have ever touched this pixel yet, then we don't want to use the equation:
-    //                     RGBA_new = RGBA*A + RGBA_old*(1-A)
-    // Instead, we really want:
-    //                     RGBA_new = RGBA
-    // since the RGB_old value is irrelevant (it's black because it has to be smth,
-    // but really, it is "undefined", and it shouldn't darken the source RGB). More
-    // Generally, the actual equations should be:
-    //                     RGB_new  = RGB*A + RGB_old*(1-A)*A_old
-    //                     A_new    = A     + (1-A)*A_old
-    // For some reasons that I cannot explain, these equations are not definable by
-    // glBlendFunc, while actually, it really should be the default. As a workaround,
-    // I fix this as a post-processing step, and it seems to work well.
+    // So by starting with glClearColor(0.0, 0.0, 0.0, 0.0), which is the
+    // correct pre-multiplied representation for fully transparent, then
+    // by specifying glColor() in post-multiplied alpha, we get the correct
+    // blending behaviour and simply have to un-premultiply the value obtained
+    // in the frame buffer at the very end
 
-    // How does the fix work?
-    //
-    // If a pixel has, say, a RGBA final value of   (0.8, 0, 0, 0.8), it is likely that
-    // it was originally a transparent red fragment (1  , 0, 0, 0.8) --or opaque red border
-    // fragment with anti-aliasing-- which has been blended with the "black" background (0,0,0,0).
-    // Therefore, I need to map back the red "0.8" to "1", i.e. multiply all RGB values by the
-    // inverse of the alpha value 0.8. Then we clamp it to [0,1] to make sure we don't overflow.
-
-    if(transparentBackground)
+    for(uint k=0; k<IMG_SIZE_X*IMG_SIZE_Y; ++k)
     {
-        for(uint k=0; k<IMG_SIZE_X*IMG_SIZE_Y; ++k)
+        uchar * pixel = &(img[4*k]);
+        double a = pixel[3];
+        if( 0 < a && a < 255 )
         {
-            uchar * pixel = &(img[4*k]);
-            double a = pixel[3];
-            if( 0 < a && a < 255 )
-            {
-                double s = 255.0 / a;
-                pixel[0] = (uchar) (std::min(255.0,std::floor(0.5+s*pixel[0])));
-                pixel[1] = (uchar) (std::min(255.0,std::floor(0.5+s*pixel[1])));
-                pixel[2] = (uchar) (std::min(255.0,std::floor(0.5+s*pixel[2])));
-            }
+            double s = 255.0 / a;
+            pixel[0] = (uchar) (std::min(255.0,std::floor(0.5+s*pixel[0])));
+            pixel[1] = (uchar) (std::min(255.0,std::floor(0.5+s*pixel[1])));
+            pixel[2] = (uchar) (std::min(255.0,std::floor(0.5+s*pixel[2])));
         }
     }
 

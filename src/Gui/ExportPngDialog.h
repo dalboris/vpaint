@@ -38,7 +38,6 @@ public:
     int pngWidth() const;
     int pngHeight() const;
     bool preserveAspectRatio() const;
-    bool transparentBackground() const;
     bool exportSequence() const;
 
 public slots:
@@ -67,7 +66,6 @@ private:
     QSpinBox * pngWidthSpinBox_;
     QSpinBox * pngHeightSpinBox_;
     QCheckBox * preserveAspectRatioCheckBox_;
-    QCheckBox * transparentBackgroundCheckBox_;
     QCheckBox * exportSequenceCheckBox_;
 
     double oldTop_;

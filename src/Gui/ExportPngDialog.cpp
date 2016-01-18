@@ -62,10 +62,6 @@ ExportPngDialog::ExportPngDialog(Scene * scene) :
     preserveAspectRatioCheckBox_->setChecked(true);
     formLayoutPng->addRow(tr("Preserve Aspect Ratio"), preserveAspectRatioCheckBox_);
 
-    transparentBackgroundCheckBox_ = new QCheckBox();
-    transparentBackgroundCheckBox_->setChecked(true);
-    formLayoutPng->addRow(tr("Transparent Background"), transparentBackgroundCheckBox_);
-
     exportSequenceCheckBox_ = new QCheckBox();
     exportSequenceCheckBox_->setChecked(false);
     formLayoutPng->addRow(tr("Export Sequence"), exportSequenceCheckBox_);
@@ -139,11 +135,6 @@ int ExportPngDialog::pngHeight() const
 bool ExportPngDialog::preserveAspectRatio() const
 {
     return preserveAspectRatioCheckBox_->isChecked();
-}
-
-bool ExportPngDialog::transparentBackground() const
-{
-    return transparentBackgroundCheckBox_->isChecked();
 }
 
 bool ExportPngDialog::exportSequence() const

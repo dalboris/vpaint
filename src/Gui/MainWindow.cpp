@@ -1055,8 +1055,7 @@ bool MainWindow::doExportPNG(const QString & filename)
 
         QImage img = multiView_->activeView()->drawToImage(
                     scene()->left(), scene()->top(), scene()->width(), scene()->height(),
-                    exportPngDialog_->pngWidth(), exportPngDialog_->pngHeight(),
-                    exportPngDialog_->transparentBackground());
+                    exportPngDialog_->pngWidth(), exportPngDialog_->pngHeight());
 
         img.save(filename);
     }
@@ -1110,8 +1109,7 @@ bool MainWindow::doExportPNG(const QString & filename)
             QImage img = multiView_->activeView()->drawToImage(
                         Time(i),
                         scene()->left(), scene()->top(), scene()->width(), scene()->height(),
-                        exportPngDialog_->pngWidth(), exportPngDialog_->pngHeight(),
-                        exportPngDialog_->transparentBackground());
+                        exportPngDialog_->pngWidth(), exportPngDialog_->pngHeight());
 
             img.save(filePath);
         }
