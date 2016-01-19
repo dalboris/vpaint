@@ -88,8 +88,8 @@ void computeBackgroundQuad_(
     Eigen::Vector2d size = background->computedSize(Eigen::Vector2d(wc, hc));
 
     // Set value assuming no clamping nor repeat
-    x1 = xc1 + position[0];
-    y1 = yc1 + position[1];
+    x1 = position[0];
+    y1 = position[1];
     u1 = 0.0;
     v1 = 1.0;
     x2 = x1 + size[0];
