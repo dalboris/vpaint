@@ -13,11 +13,12 @@
 #include "XmlStreamWriter.h"
 #include "CssColor.h"
 
-#include "Global.h" // XXX this is for documentDir(). It should be refactored.
+#include "Global.h"
 
 #include <QDir>
 #include <QFileInfo>
 #include <QVector>
+#include <QTextStream>
 
 // Constructor
 Background::Background(QObject * parent) :
@@ -318,7 +319,7 @@ int Background::referenceFrame(int frame) const
     }
 }
 
-QImage Background::image(int frame) const
+QString Background::resolvedImageFilePath(int frame) const
 {
     updateCache_();
 
@@ -346,6 +347,15 @@ QImage Background::image(int frame) const
 
     // Suffix
     filePath += filePathsSuffix_;
+
+    // Return resolved url
+    return filePath;
+}
+
+QImage Background::image(int frame) const
+{
+    // Resolve url
+    QString filePath = resolvedImageFilePath(frame);
 
     // Read and return image
     QFileInfo fileInfo(filePath);
@@ -642,6 +652,104 @@ void Background::read(XmlStreamReader & xml)
 
     // Set Data
     setData(data);
+}
+
+void Background::exportSVG(int frame, QTextStream & out,
+                           double canvasLeft, double canvasTop,
+                           double canvasWidth, double canvasHeight)
+{
+    // Get linked image info
+    int linkedImageWidth = 0;
+    int linkedImageHeight = 0;
+    QString linkedImageAbsoluteFilePath;
+    QString linkedImageFilePath = resolvedImageFilePath(frame);
+    QFileInfo fileInfo(linkedImageFilePath);
+    if (fileInfo.exists() && fileInfo.isFile())
+    {
+        QImage image(linkedImageFilePath);
+        linkedImageWidth = image.width();
+        linkedImageHeight = image.height();
+        linkedImageAbsoluteFilePath = fileInfo.absoluteFilePath();
+    }
+
+    // Get drawn image info
+    Eigen::Vector2d imageComputedSize = computedSize(
+                Eigen::Vector2d(canvasWidth, canvasHeight));
+    double imageLeft = position()[0];
+    double imageTop = position()[1];
+    double imageWidth = imageComputedSize[0];
+    double imageHeight = imageComputedSize[1];
+    if (repeatX())
+    {
+        imageLeft = canvasLeft;
+        imageWidth = canvasWidth;
+    }
+    if (repeatY())
+    {
+        imageTop = canvasTop;
+        imageHeight = canvasHeight;
+    }
+
+    // Set SVG string to write
+    QString s = QString(
+                "<defs>\n"
+                "  <pattern \n"
+                "    id=\"backgroundpattern\"\n"
+                "    width=\"%1\"\n"
+                "    height=\"%2\"\n"
+                "    patternUnits=\"userSpaceOnUse\"\n"
+                "    patternTransform=\"translate(%3,%4) scale(%5,%6)\" >\n"
+                "    <image\n"
+                "         y=\"0\"\n"
+                "         x=\"0\"\n"
+                "         width=\"%7\"\n"
+                "         height=\"%8\"\n"
+                "         xlink:href=\"file://%9\" />\n"
+                "  </pattern>\n"
+                "</defs>\n"
+                "<rect\n"
+                "  id=\"backgroundcolor\"\n"
+                "  x=\"%10\"\n"
+                "  y=\"%11\"\n"
+                "  width=\"%12\"\n"
+                "  height=\"%13\"\n"
+                "  style=\"fill:%14;fill-opacity:%15;stroke:none\" />\n"
+                "<rect\n"
+                "  id=\"backgroundimage\"\n"
+                "  x=\"%16\"\n"
+                "  y=\"%17\"\n"
+                "  width=\"%18\"\n"
+                "  height=\"%19\"\n"
+                "  style=\"fill:url(#backgroundpattern);fill-opacity:%20\" />\n")
+
+            // Pattern
+            .arg(linkedImageWidth)
+            .arg(linkedImageHeight)
+            .arg(position()[0])
+            .arg(position()[1])
+            .arg(linkedImageWidth == 0 ? 0.0 : imageComputedSize[0] / linkedImageWidth)
+            .arg(linkedImageHeight == 0 ? 0.0 : imageComputedSize[1] / linkedImageHeight)
+            .arg(linkedImageWidth)
+            .arg(linkedImageHeight)
+            .arg(linkedImageAbsoluteFilePath)
+
+            // Background color
+            .arg(canvasLeft)
+            .arg(canvasTop)
+            .arg(canvasWidth)
+            .arg(canvasHeight)
+            .arg(color().name())
+            .arg(color().alphaF())
+
+            // Background image
+            .arg(imageLeft)
+            .arg(imageTop)
+            .arg(imageWidth)
+            .arg(imageHeight)
+            .arg(opacity());
+
+    // Write to file
+    out << s;
 }
 
 void Background::relativeRemap(const QDir & oldDir, const QDir & newDir)

@@ -185,6 +185,11 @@ void Scene::save(QTextStream & out)
 
 void Scene::exportSVG(Time t, QTextStream & out)
 {
+    // Export background
+    background_->exportSVG(t.frame(), out,
+                           left(), top(), width(), height());
+
+    // Export VAC
     foreach(SceneObject *sceneObject, sceneObjects_)
     {
         sceneObject->exportSVG(t, out);

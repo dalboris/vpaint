@@ -22,6 +22,7 @@ class XmlStreamWriter;
 class XmlStreamReader;
 
 class QDir;
+class QTextStream;
 
 class Background: public QObject
 {
@@ -68,6 +69,7 @@ public:
     // where minFrame is the smallest frame with an image on disk. This way,
     // all "empty" frames share the same reference frame (we cannot use 0, or -1
     // from this, since the frame 0 or even -1 may have an image on disk)
+    QString resolvedImageFilePath(int frame) const;
     QImage image(int frame) const;
     int referenceFrame(int frame) const;
 
@@ -109,6 +111,11 @@ public:
     // Read/Write XML
     void write(XmlStreamWriter & xml);
     void read(XmlStreamReader & xml);
+
+    // SVG export
+    void exportSVG(int frame, QTextStream & out,
+                   double canvasLeft, double canvasTop,
+                   double canvasWidth, double canvasHeight);
 
     // Remap relative files
     void relativeRemap(const QDir & oldDir, const QDir & newDir);

@@ -1027,9 +1027,12 @@ bool MainWindow::doExportSVG(const QString & filename)
         QString header =
                 "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n"
                 "<!-- Created with VPaint (http://www.vpaint.org/) -->\n\n"
+
                 "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\"\n"
                 "  \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n"
-                "<svg xmlns=\"http://www.w3.org/2000/svg\">\n";
+                "<svg \n"
+                "  xmlns=\"http://www.w3.org/2000/svg\"\n"
+                "  xmlns:xlink=\"http://www.w3.org/1999/xlink\">\n";
 
         QString footer = "</svg>";
 
