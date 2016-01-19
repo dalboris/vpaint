@@ -1,5 +1,7 @@
 #  ABOUT VPAINT
 
+[![Join the chat at https://gitter.im/dalboris/vpaint](https://badges.gitter.im/dalboris/vpaint.svg)](https://gitter.im/dalboris/vpaint?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 - Contact: Boris Dalstein <dalboris@gmail.com>
 - Website: http://www.vpaint.org
 
