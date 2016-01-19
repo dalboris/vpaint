@@ -8,6 +8,8 @@
 #ifndef CSSCOLOR_H
 #define CSSCOLOR_H
 
+#include "Color.h"
+
 #include <QString>
 
 class CssColor
@@ -27,6 +29,8 @@ public:
     double gF() const;
     double bF() const;
     double aF() const;
+
+    Color toColor() const;
 
     // Set
     void setRgba(int r, int g, int b, double a);

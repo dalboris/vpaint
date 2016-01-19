@@ -9,31 +9,40 @@
 #include <QColorDialog>
 #include <QPainter>
 
-ColorSelector::ColorSelector(const QColor & initialColor, QWidget *parent) :
+ColorSelector::ColorSelector(const Color & initialColor, QWidget *parent) :
     QToolButton(parent),
     color_(initialColor)
 {
-    connect(this, SIGNAL(clicked()), this, SLOT(changeColor()));
+    connect(this, SIGNAL(clicked()), this, SLOT(processClick_()));
     updateIcon();
     setFocusPolicy(Qt::NoFocus);
 }
 
-QColor ColorSelector::color()
+Color ColorSelector::color() const
 {
     return color_;
 }
 
-void ColorSelector::changeColor()
+void ColorSelector::setColor(const Color & newColor)
 {
-    QColor c = QColorDialog::getColor(
-                color_, 0, tr("select the color"),
-                QColorDialog::ShowAlphaChannel);
-    if(c.isValid())
-        color_ = c;
-    updateIcon();
+    if (newColor.isValid())
+    {
+        color_ = newColor;
+        updateIcon();
+        emit colorChanged(color_);
+    }
 }
 
-#include <QtDebug>
+void ColorSelector::processClick_()
+{
+    Color c = QColorDialog::getColor(
+                color_,
+                0,
+                tr("select the color"),
+                QColorDialog::ShowAlphaChannel);
+
+    setColor(c);
+}
 
 void ColorSelector::updateIcon()
 {
@@ -51,7 +60,7 @@ void ColorSelector::updateIcon()
     QPixmap pix(pixSize);
     pix.fill(color_);
 
-    QPainter painter( &pix );
+    QPainter painter(&pix);
 
     // Border
     painter.setPen(QPen(Qt::black));
@@ -60,17 +69,9 @@ void ColorSelector::updateIcon()
     // Text
     painter.setPen(QPen(textColor));
     painter.setFont(QFont("Arial"));
-    painter.drawText( 0, 0, w, h, (Qt::AlignHCenter |  Qt::AlignVCenter), text() );
+    painter.drawText(0, 0, w, h, (Qt::AlignHCenter |  Qt::AlignVCenter), text());
 
     // Set pixmap as tool icon
     setIcon(pix);
-
-    // Apply new colors to button
-    /*
-        QString qss = QString("QToolButton { background-color: %1; color: %2; font-weight: %3; }")
-                .arg(color_.name())
-                .arg(textColor.name())
-                .arg("normal");
-        setStyleSheet(qss);
-        */
 }
+

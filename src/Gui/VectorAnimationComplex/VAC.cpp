@@ -265,7 +265,6 @@ void VAC::initNonCopyable()
 
 void VAC::initCopyable()
 {
-    backgroundColor_ = Qt::white;
     maxID_ = -1;
     ds_ = 5.0;
     cells_.clear();
@@ -295,9 +294,6 @@ VAC * VAC::clone()
 {
     // Create new Graph
     VAC * newVAC = new VAC();
-
-    // Copy background color
-    newVAC->backgroundColor_ = backgroundColor_;
 
     // Copy maxID
     newVAC->maxID_ = maxID_;
@@ -486,7 +482,8 @@ void VAC::drawOneFrame3D(Time time, View3DSettings & viewSettings, ViewSettings 
     glTranslated(0,0,z);
 
     glDisable(GL_LIGHTING);
-    //glDisable(GL_DEPTH_TEST);
+    //glDisable(GL_DEPTH_TEST); // Responsability of caller to do this because
+                                // sometimes it should be disabled, sometimes not
     double eps = 1.0e-2;
     for(auto c: zOrdering_)
     {
@@ -559,198 +556,35 @@ void VAC::drawKeyCells3D(View3DSettings & viewSettings, ViewSettings & view2DSet
 
             glTranslated(0,0,eps);
         }
-        glPopMatrix();
+        glPopMatrix(); // XXX Two pushes, one pop, isn't there a hidden bug here????
     }
 }
 
-void VAC::draw3D(View3DSettings & viewSettings)
+void VAC::drawInbetweenCells3D(View3DSettings & viewSettings)
 {
-    // Draw grid
-    if(viewSettings.drawGrid())
-        drawInbetweenGrid(viewSettings);
+    // Draw inbetween vertices
+    InbetweenVertexSet inbetweenVertices = cells();
+    foreach(InbetweenVertex * v, inbetweenVertices)
+        v->draw3D(viewSettings);
 
-    // Get appropriate 2D settings
-    ViewSettings view2DSettings = global()->activeView()->viewSettings();
-    view2DSettings.setScreenRelative(false);
-    view2DSettings.setVertexTopologySize(viewSettings.vertexTopologySize());
-    view2DSettings.setEdgeTopologyWidth(viewSettings.edgeTopologyWidth());
-    view2DSettings.setDrawTopologyFaces(viewSettings.drawTopologyFaces());
-
-    // Draw all frames
-    if(viewSettings.drawAllFrames())
-        drawAllFrames3D(viewSettings, view2DSettings);
-
-    // Draw current frame
-    if(viewSettings.drawCurrentFrame())
-        drawOneFrame3D(global()->activeTime(), viewSettings, view2DSettings, viewSettings.drawCurrentFrameAsTopology());
-
-    // draw key cells
-    if(viewSettings.drawKeyCells())
-        drawKeyCells3D(viewSettings, view2DSettings);
-
-    // Draw time plane
-    if(viewSettings.drawTimePlane())
-        drawTimePlane(viewSettings);
-
-    // Draw inbetween cells
-    if(viewSettings.drawInbetweenCells())
-    {
-        // Draw inbetween vertices
-        InbetweenVertexSet inbetweenVertices = cells();
-        foreach(InbetweenVertex * v, inbetweenVertices)
-            v->draw3D(viewSettings);
-
-        // Draw inbetween edges
-        //glEnable(GL_LIGHTING);
-
-        GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1.0 };
-        GLfloat mat_shininess[] = { 50.0 };
-        GLfloat light_position[] = { 1.0, 1.0, 1.0, 0.0 };
-        glClearColor (0.0, 0.0, 0.0, 0.0);
-        glShadeModel (GL_SMOOTH);
-
-        glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
-        glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
-        glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-
-        glEnable(GL_NORMALIZE);
-        glEnable(GL_LIGHTING);
-        glEnable(GL_LIGHT0);
-        glEnable(GL_DEPTH_TEST);
-        glDepthMask(false);
-
-        //drawSphere(0.05,50,50);
-
-        if(viewSettings.drawAsMesh())
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-        //glColor4d(0.5,1.0,0.5,viewSettings.opacity());
-        glColor4d(1.0,0.5,0.5,viewSettings.opacity());
-        InbetweenEdgeSet inbetweenEdges = cells();
-        foreach(InbetweenEdge * e, inbetweenEdges)
-            e->draw3D(viewSettings);
-        if(viewSettings.drawAsMesh())
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-    }
+    // Draw inbetween edges
+    //glColor4d(1.0,0.5,0.5,viewSettings.opacity());
+    glColor4d(0.6, 0.4, 0.4, 1.0);
+    if(viewSettings.drawAsMesh())
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    InbetweenEdgeSet inbetweenEdges = cells();
+    foreach(InbetweenEdge * e, inbetweenEdges)
+        e->draw3D(viewSettings);
+    if(viewSettings.drawAsMesh())
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
 void VAC::drawPick3D(View3DSettings & /*viewSettings*/)
 {
 }
 
-void VAC::drawInbetweenGrid(View3DSettings & viewSettings)
-{
-    Timeline * timeline = global()->timeline();
-    int firstFrame = timeline->firstFrame();
-    int lastFrame = timeline->lastFrame();
-
-    // Get scene values
-    double xSceneMin = viewSettings.xSceneMin();
-    double xSceneMax = viewSettings.xSceneMax();
-    double ySceneMin = viewSettings.ySceneMin();
-    double ySceneMax = viewSettings.ySceneMax();
-
-    // Convert to OpenGL units
-    double xMin = viewSettings.xFromXScene(xSceneMin);
-    double xMax = viewSettings.xFromXScene(xSceneMax);
-    double yMin = viewSettings.yFromYScene(ySceneMin);
-    double yMax = viewSettings.yFromYScene(ySceneMax);
-
-    glDisable(GL_LIGHTING);
-    glLineWidth(1.0);
-    glColor3f(0.5, 0.5, 0.5);
-
-    for(int i=firstFrame; i<=lastFrame; ++i)
-    {
-        double z = viewSettings.zFromT(i);
-
-        glBegin(GL_LINE_LOOP);
-        glVertex3d(xMin, yMin, z);
-        glVertex3d(xMin, yMax, z);
-        glVertex3d(xMax, yMax, z);
-        glVertex3d(xMax, yMin, z);
-        glEnd();
-    }
-}
-void VAC::drawTimePlane(View3DSettings & viewSettings)
-{
-    // Get scene values
-    double xSceneMin = viewSettings.xSceneMin();
-    double xSceneMax = viewSettings.xSceneMax();
-    double ySceneMin = viewSettings.ySceneMin();
-    double ySceneMax = viewSettings.ySceneMax();
-
-    // Get Timeline value
-    double t = global()->activeTime().floatTime();
-
-    // Convert to OpenGL units
-    double xMin = viewSettings.xFromXScene(xSceneMin);
-    double xMax = viewSettings.xFromXScene(xSceneMax);
-    double yMin = viewSettings.yFromYScene(ySceneMin);
-    double yMax = viewSettings.yFromYScene(ySceneMax);
-    double z = viewSettings.zFromT(t);
-    double eps = 1.0e-2;
-    z -= eps;
-
-    // Draw
-    glDisable(GL_LIGHTING);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    glBegin(GL_QUADS);
-    {
-        //glColor4f(1, 0, 0, 0.6);
-        glColor4f(0, 0, 0, 1);
-        glVertex3f(xMin, yMin, z);
-        glVertex3f(xMax, yMin, z);
-        glVertex3f(xMax, yMax, z);
-        glVertex3f(xMin, yMax, z);
-    }
-    glEnd();
-    glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
-    glBegin(GL_QUADS);
-    {
-        //glColor4f(1, 0, 0, 0.6);
-        glColor4f(1, 1, 1, 1);
-        glVertex3f(xMin, yMin, z);
-        glVertex3f(xMax, yMin, z);
-        glVertex3f(xMax, yMax, z);
-        glVertex3f(xMin, yMax, z);
-    }
-    glEnd();
-}
-
 void VAC::draw(Time time, ViewSettings & viewSettings)
 {
-    bool showCanvas = global()->showCanvas();
-
-    // Draw background
-    if(viewSettings.drawBackground())
-    {
-        if(showCanvas)
-        {
-            double x = global()->scene()->left();
-            double y = global()->scene()->top();
-            double w = global()->scene()->width();
-            double h = global()->scene()->height();
-
-            glColor4d(backgroundColor_.redF(),backgroundColor_.greenF(),backgroundColor_.blueF(),backgroundColor_.alpha());
-            glBegin(GL_QUADS);
-            {
-                glVertex2d(x,y);
-                glVertex2d(x+w,y);
-                glVertex2d(x+w,y+h);
-                glVertex2d(x,y+h);
-            }
-            glEnd();
-
-        }
-        else
-        {
-            glClearColor(backgroundColor_.redF(),backgroundColor_.greenF(),backgroundColor_.blueF(),backgroundColor_.alpha());
-            glClear(GL_COLOR_BUFFER_BIT);
-        }
-    }
-
     ViewSettings::DisplayMode displayMode = viewSettings.displayMode();
 
     // Illustration mode
@@ -854,8 +688,6 @@ void VAC::draw(Time time, ViewSettings & viewSettings)
             }
         }
         glEnd();
-
-
     }
 
     // Draw pen radius and snap threshold
@@ -975,9 +807,6 @@ void VAC::draw(Time time, ViewSettings & viewSettings)
             }
         }
     }
-
-
-
 }
 
 void VAC::drawPick(Time time, ViewSettings & viewSettings)
@@ -1130,33 +959,8 @@ int VAC::numSelectedCells() const
 
 void VAC::write(XmlStreamWriter & xml)
 {
-    // Background color
-    xml.writeAttribute("style", "background-color:rgba(" +
-                       QString().setNum(backgroundColor_.red()) + "," +
-                       QString().setNum(backgroundColor_.green()) + "," +
-                       QString().setNum(backgroundColor_.blue()) + "," +
-                       QString().setNum(backgroundColor_.alphaF()) + ");");
-
     for(Cell * cell: zOrdering_)
-    {
         cell->write(xml);
-    }
-
-    /*
-        // list of objects
-        out << Save::newField("Cells");
-        out << "\n" << Save::indent() << "[";
-        Save::incrIndent();
-        for(Cell * obj: zOrdering_)
-        {
-            out << Save::openCurlyBrackets();
-            obj->save(out);
-            out << Save::closeCurlyBrackets();
-        }
-        Save::decrIndent();
-        out << "\n" << Save::indent() << "]";
-        */
-
 }
 
 void VAC::clear()
@@ -1169,11 +973,6 @@ void VAC::clear()
 void VAC::read(XmlStreamReader & xml)
 {
     clear();
-
-    // Background color (TODO)
-    QString style = xml.attributes().value("style").toString();
-    // [...]
-
 
     while (xml.readNextStartElement())
     {
@@ -1192,7 +991,7 @@ void VAC::read(XmlStreamReader & xml)
         else if(xml.name() == "inbetweenface")
             cell = new InbetweenFace(this, xml);
 
-        xml.skipCurrentElement(); // reads "/>". set current element to "layer"
+        xml.skipCurrentElement(); // XXX this should be in "Cell(this, xml)"
 
         if(cell)
         {
@@ -1242,13 +1041,6 @@ void VAC::read2ndPass_()
 
 void VAC::save_(QTextStream & out)
 {
-    // save background color
-    out << Save::newField("BackgroundColor")
-        << backgroundColor_.redF() << " "
-        << backgroundColor_.greenF() << " "
-        << backgroundColor_.blueF() << " "
-        << backgroundColor_.alphaF();
-
     // list of objects
     out << Save::newField("Cells");
     out << "\n" << Save::indent() << "[";
@@ -1271,15 +1063,6 @@ void VAC::exportSVG_(Time t, QTextStream & out)
         if(c->exists(t))
             c->exportSVG(t, out);
     }
-
-    // TODO: save background color
-    // Info: SVG doesn't have a "background color" specification.
-    //       It has to be simulated with a rectangle
-    // Relevant properties for when writing this:
-    //    backgroundColor_.redF()
-    //    backgroundColor_.greenF()
-    //    backgroundColor_.blueF()
-    //    backgroundColor_.alphaF()
 }
 
 VAC::VAC(QTextStream & in) :
@@ -1288,14 +1071,6 @@ VAC::VAC(QTextStream & in) :
     clear();
 
     Field field;
-
-    // Read background color
-    double r, g, b, a;
-    in >> field >> r >> g >> b >> a;
-    backgroundColor_.setRedF(r);
-    backgroundColor_.setGreenF(g);
-    backgroundColor_.setBlueF(b);
-    backgroundColor_.setAlphaF(a);
 
     // list of objects
     // -- 1st pass: construct temp objects storing IDs instead of pointers
@@ -1364,6 +1139,11 @@ InbetweenEdge * VAC::getInbetweenEdge(int /*id*/)
 InbetweenFace * VAC::getInbetweenFace(int /*id*/)
 {
     return 0;
+}
+
+const ZOrderedCells & VAC::zOrdering() const
+{
+    return zOrdering_;
 }
 
 CellSet VAC::cells()
@@ -6833,15 +6613,16 @@ void VAC::updateToBePaintedFace(double x, double y, Time time)
     }
 }
 
-KeyFace * VAC::paint(double /*x*/, double /*y*/, Time /*time*/)
+Cell * VAC::paint(double /*x*/, double /*y*/, Time /*time*/)
 {
     // The created face, if any
-    KeyFace * res = 0;
+    Cell * res = 0;
 
     // Paint existing cell
     if(hoveredCell())
     {
         hoveredCell()->setColor(global()->faceColor());
+        res = hoveredCell();
     }
 
     // Create a new face
@@ -6850,15 +6631,12 @@ KeyFace * VAC::paint(double /*x*/, double /*y*/, Time /*time*/)
         res = newKeyFace(toBePaintedFace_->cycles());
     }
 
-    // Paint the background
-    else
+    if (res)
     {
-        backgroundColor_ = global()->faceColor();
+        emit needUpdatePicking();
+        emit changed();
+        emit checkpoint();
     }
-
-    emit needUpdatePicking();
-    emit changed();
-    emit checkpoint();
 
     // Return
     return res;

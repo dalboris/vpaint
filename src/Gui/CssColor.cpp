@@ -46,6 +46,11 @@ double to1(int x)   { return x * (1.0/255.0); }
 
 }
 
+Color CssColor::toColor() const
+{
+    return Color(r(), g(), b(), to255(a()));
+}
+
 double CssColor::rF() const { return to1(r_); }
 double CssColor::gF() const { return to1(g_); }
 double CssColor::bF() const { return to1(b_); }

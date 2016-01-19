@@ -12,8 +12,11 @@
 #include "OpenGL.h"
 #include "Global.h"
 #include "View.h"
+#include "Background/Background.h"
+#include "Background/BackgroundRenderer.h"
 
 #include "VectorAnimationComplex/VAC.h"
+#include "VectorAnimationComplex/KeyCell.h"
 
 // define mouse actions
 
@@ -32,6 +35,10 @@ View3D::View3D(Scene *scene, QWidget *parent) :
     //frame_(0),
     vac_(0)
 {
+    // Make renderers
+    Background * bg = scene_->background();
+    backgroundRenderers_[bg] = new BackgroundRenderer(bg, context(), this);
+
 
     viewSettingsWidget_ = new View3DSettingsWidget(viewSettings_);
     viewSettingsWidget_->setParent(this, Qt::Window);
@@ -288,40 +295,279 @@ void drawSphere(double r, int lats, int longs)
 */
 }
 
+int View3D::activeFrame() const
+{
+    return std::floor(activeTime().floatTime());
+}
+
+Time View3D::activeTime() const
+{
+    return global()->activeTime(); // XXX should refactor this
+}
+
+void View3D::drawBackground_(Background * background, double t)
+{
+    // Get canvas boundary
+    double x1 = scene_->left();
+    double y1 = scene_->top();
+    double w = scene_->width();
+    double h = scene_->height();
+    double x2 = x1 + w;
+    double y2 = y1 + h;
+
+    // Convert to 3D coords
+    x1 = viewSettings_.xFromX2D(x1);
+    x2 = viewSettings_.xFromX2D(x2);
+    y1 = viewSettings_.yFromY2D(y1);
+    y2 = viewSettings_.yFromY2D(y2);
+
+    // Draw background
+    backgroundRenderers_[background]->draw(
+                Time(t).frame(),
+                true, // = showCanvas
+                x1, y1, w, h,
+                0, 0, 0, 0);
+}
+
+// XXX Refactor this: move it to a CanvasRenderer class
+// Right now, this codes duplicates part of Scene::drawCanvas()
+void View3D::drawCanvas_()
+{
+    // Get canvas boundary
+    double x1 = scene_->left();
+    double y1 = scene_->top();
+    double w = scene_->width();
+    double h = scene_->height();
+    double x2 = x1 + w;
+    double y2 = y1 - h;
+
+    // Convert to 3D coords
+    x1 = viewSettings_.xFromX2D(x1);
+    x2 = viewSettings_.xFromX2D(x2);
+    y1 = viewSettings_.yFromY2D(y1);
+    y2 = viewSettings_.yFromY2D(y2);
+
+    // Draw quad boundary
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glBegin(GL_QUADS);
+    {
+        glColor4f(0.0, 0.0, 0.0, 1.0);
+        glVertex2d(x1, y1);
+        glVertex2d(x2, y1);
+        glVertex2d(x2, y2);
+        glVertex2d(x1, y2);
+    }
+    glEnd();
+    glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
+}
 
 void View3D::drawScene()
 {
-    if(!viewSettings_.freezeSpaceRect())
+    using namespace VectorAnimationComplex;
+
+    // Get VAC
+    VAC * vac = scene_->vectorAnimationComplex();
+
+    // Get t-position of camera eye to determine back-to front order
+    double zEye = camera_.position()[2];
+    double tEye = - zEye / viewSettings_.timeScale();
+    if(viewSettings_.cameraFollowActiveTime())
+        tEye += activeTime().floatTime();
+
+    // Scale and translate view
+    glEnable(GL_NORMALIZE);
+    double s = viewSettings_.spaceScale();
+    glPushMatrix();
+    glScaled(s,s,s);
+    if(viewSettings_.cameraFollowActiveTime())
+        glTranslated(0,0,-viewSettings_.zFromT(global()->activeTime()));
+
+
+    // ----- Draw opaque objects first, with depth test enabled -----
+
+    // Here, depth buffer writing is enabled by default
+
+    // Disable lighting
+    glDisable(GL_LIGHTING);
+
+    // Draw inbetween cells
+    if(viewSettings_.drawInbetweenCells())
+        vac->drawInbetweenCells3D(viewSettings_);
+
+
+    // ----- Then, draw transparent objects, back to front, with depth buffer writing disabled -----
+
+    // Set 2D settings from 3D settings
+    ViewSettings view2DSettings = global()->activeView()->viewSettings();
+    view2DSettings.setScreenRelative(false);
+    view2DSettings.setVertexTopologySize(viewSettings_.vertexTopologySize());
+    view2DSettings.setEdgeTopologyWidth(viewSettings_.edgeTopologyWidth());
+    view2DSettings.setDrawTopologyFaces(viewSettings_.drawTopologyFaces());
+
+    // Disable writing to depth buffer
+    glDepthMask(false);
+
+    // Get the list of all ordered cells
+    const ZOrderedCells & cells = vac->zOrdering();
+    typedef ZOrderedCells::ConstIterator Iter;
+
+    // Find what times to draw, and for each the following parameters:
+    //    1. Should we draw no cells (i.e., just the canvas), only key cells, or all cells?
+    //    2. Should we draw as topology or as illustration?
+    //    3. should we draw canvas (+ background)?
+
+    enum WhatCells { NoCells, KeyCells, AllCells };
+
+    struct Params {
+        WhatCells whatCellsToDraw;
+        bool drawAsTopology;
+        bool drawCanvas;
+    };
+
+    QMap<double, Params> timesToDraw;
+    typedef QMapIterator<double, Params> MapIter;
+
+    // Key cells
+    if(viewSettings_.drawKeyCells())
     {
-        View * activeView = global()->activeView();
-        if(activeView)
+        // Params for drawing key cells
+        Params params;
+        params.whatCellsToDraw = KeyCells;
+        params.drawAsTopology = viewSettings_.drawFramesAsTopology();
+        params.drawCanvas = false;
+
+        // Find times with key cells
+        for(Iter it = cells.cbegin(); it != cells.cend(); ++it)
         {
-            viewSettings_.setXSceneMin(activeView->xSceneMin());
-            viewSettings_.setXSceneMax(activeView->xSceneMax());
-            viewSettings_.setYSceneMin(activeView->ySceneMin());
-            viewSettings_.setYSceneMax(activeView->ySceneMax());
+            KeyCell * kc = (*it)->toKeyCell();
+            if(kc)
+                timesToDraw[kc->time().floatTime()] = params;
         }
     }
 
-    if(scene_->vectorAnimationComplex())
+    // All frames
+    if(viewSettings_.drawAllFrames())
     {
-        glEnable(GL_NORMALIZE);
-        double s = viewSettings_.spaceScale();
-        double invS = 1.0 / s;
-        glScaled(s,s,s);
-        if(viewSettings_.cameraFollowActiveTime())
-        {
-            glTranslated(0,0,-viewSettings_.zFromT(global()->activeTime()));
-        }
-        scene_->vectorAnimationComplex()->draw3D(viewSettings_);
-        if(viewSettings_.cameraFollowActiveTime())
-        {
-            glTranslated(0,0,viewSettings_.zFromT(global()->activeTime()));
-        }
-        glScaled(invS,invS,invS);
+        // Params for drawing key cells
+        Params params;
+        params.whatCellsToDraw = AllCells;
+        params.drawAsTopology = viewSettings_.drawFramesAsTopology();
+        params.drawCanvas = false;
+
+        // Find times for all cells
+        Timeline * timeline = global()->timeline();
+        int firstFrame = timeline->firstFrame();
+        int lastFrame = timeline->lastFrame();
+        for(int i=firstFrame; i<=lastFrame; ++i)
+            timesToDraw[(double)i] = params;
     }
+
+    // Current frame
+    if(viewSettings_.drawTimePlane() || viewSettings_.drawCurrentFrame())
+    {
+        // Params for drawing key cells
+        Params params;
+        params.whatCellsToDraw = viewSettings_.drawCurrentFrame() ? AllCells : NoCells;
+        params.drawAsTopology = viewSettings_.drawCurrentFrameAsTopology();
+        params.drawCanvas = viewSettings_.drawTimePlane();
+
+        // Add current time to list of times to draw
+        timesToDraw[global()->activeTime().floatTime()] = params;
+    }
+
+    // Then, now that we have all times, find out in which order to draw them
+    QList<double> timesBeforeEye;
+    QList<double> timesAfterEye;
+    QList<double> sortedTimes;
+    MapIter i(timesToDraw);
+    while (i.hasNext())
+    {
+        i.next();
+        double t = i.key();
+        if (t < tEye)
+            timesBeforeEye << t;
+        else
+            timesAfterEye << t;
+    }
+    std::sort(timesBeforeEye.begin(), timesBeforeEye.end());
+    std::sort(timesAfterEye.begin(), timesAfterEye.end());
+    for (int i=0; i<timesBeforeEye.size(); ++i)
+        sortedTimes << timesBeforeEye[i];
+    for (int i=timesAfterEye.size()-1; i>=0; --i)
+        sortedTimes << timesAfterEye[i];
+
+    // Now, we "just" have to draw them!
+
+    // Disable lighting
+    glDisable(GL_LIGHTING);
+
+    // Iterate times
+    for (double t: sortedTimes)
+    {
+        // Get params for that time
+        Params params = timesToDraw[t];
+
+        // Translate to appropriate z value
+        glPushMatrix();
+        glScaled(1, -1, 1);
+        glTranslated(0,0,viewSettings_.zFromT(t));
+
+        // Draw canvas + background
+        if(params.drawCanvas)
+        {
+            drawCanvas_();
+            drawBackground_(scene_->background(), t);
+        }
+
+        // Draw cells
+        if (params.whatCellsToDraw != NoCells)
+        {
+            if (params.drawAsTopology)
+            {
+                if (params.whatCellsToDraw == KeyCells)
+                {
+                    for(Iter it = cells.cbegin(); it != cells.cend(); ++it)
+                    {
+                        if ((*it)->toKeyCell())
+                            (*it)->drawTopology(t, view2DSettings);
+                    }
+                }
+                else
+                {
+                    for(Iter it = cells.cbegin(); it != cells.cend(); ++it)
+                    {
+                        (*it)->drawTopology(t, view2DSettings);
+                    }
+                }
+            }
+            else // params.drawAsTopology == false
+            {
+                if (params.whatCellsToDraw == KeyCells)
+                {
+                    for(Iter it = cells.cbegin(); it != cells.cend(); ++it)
+                    {
+                        if ((*it)->toKeyCell())
+                            (*it)->draw(t, view2DSettings);
+                    }
+                }
+                else
+                {
+                    for(Iter it = cells.cbegin(); it != cells.cend(); ++it)
+                    {
+                        (*it)->draw(t, view2DSettings);
+                    }
+                }
+            }
+        }
+
+        // Translate back
+        glPopMatrix();
+    }
+
+    // Restore state
+    glDepthMask(true);
+    glPopMatrix();
 }
-
 
 
 /***********************************************************

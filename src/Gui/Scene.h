@@ -15,6 +15,7 @@
 #include "Picking.h"
 #include "ViewSettings.h"
 
+class Background;
 class View;
 struct MouseEvent;
 class QKeyEvent;
@@ -28,6 +29,7 @@ namespace VectorAnimationComplex
 class VAC;
 class InbetweenFace;
 }
+class QDir;
 
 class Scene: public QObject
 {
@@ -35,7 +37,7 @@ class Scene: public QObject
     
 public:
     Scene();
-    void copyFrom(Scene * other); // copy existing scene (for undo purpose)
+    void copyFrom(Scene * other);
     void clear(bool silent = false);
     ~Scene();
 
@@ -50,6 +52,9 @@ public:
     void draw(Time time, ViewSettings & viewSettings);
     void drawPick(Time time, ViewSettings & viewSettings);
 
+    // XXX todo: there should be draw3D here too (not only in VAC),
+    //           responsible for instance to draw the canvas
+
     // Highlighting and Selecting
     void setHoveredObject(Time time, int index, int id);
     void setNoHoveredObject();
@@ -60,6 +65,7 @@ public:
 
     // Emit signals
     void emitChanged() {emit changed();}
+    void emitCheckpoint() {emit checkpoint();}
 
     // Save and load
     void exportSVG(Time t, QTextStream & out);
@@ -68,6 +74,8 @@ public:
     void write(XmlStreamWriter & xml);
     void read(XmlStreamReader & xml);
     void readCanvas(XmlStreamReader & xml);
+    void writeCanvas(XmlStreamWriter & xml);
+    void relativeRemap(const QDir & oldDir, const QDir & newDir);
 
     // Scene Objects getters
     VectorAnimationComplex::VAC * vectorAnimationComplex();
@@ -82,6 +90,7 @@ public:
     VectorAnimationComplex::InbetweenFace * createInbetweenFace();
 
     // Scene properties
+    // XXX refactor this out in a Canvas class
     double left() const;
     double top() const;
     double width() const;
@@ -92,8 +101,8 @@ public:
     void setHeight(double h);
     void setCanvasDefaultValues();
 
-
-
+    // Background
+    Background * background() const;
     
 public slots:
     // --------- Tools ----------
@@ -166,6 +175,8 @@ private:
     double top_;
     double width_;
     double height_;
+
+    Background * background_;
 };
     
 #endif

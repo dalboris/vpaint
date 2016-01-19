@@ -21,10 +21,10 @@
 #include "TimeDef.h"
 
 #include <QImage>
+#include <QMap>
 
 #include "ViewSettings.h"
 
-// pre-declarations
 
 class Scene;
 namespace VectorAnimationComplex
@@ -34,6 +34,8 @@ class KeyVertex;
 class KeyEdge;
 }
 class Time;
+class Background;
+class BackgroundRenderer;
 
 // mouse event in scene coordinates
 struct MouseEvent 
@@ -83,6 +85,7 @@ public:
     void fitSelectionInWindow();
 
     // Active time
+    int activeFrame() const;
     Time activeTime() const;
     void setActiveTime(Time t);
 
@@ -92,8 +95,10 @@ public:
     void enablePicking();
     void disablePicking();
 
-    // Displayed scene info
+    // Zoom level
     double zoom() const;
+
+    // Smallest/Biggest scene coordinates visible in the viewport
     double xSceneMin() const;
     double xSceneMax() const;
     double ySceneMin() const;
@@ -107,8 +112,8 @@ public:
     // View opened (e.g., command-line vec->png conversion).
     // In the meantime, that was the easiest way to implement it.
     // Will refactor later.
-    QImage drawToImage(double x, double y, double w, double h, int imgW, int imgH, bool transparentBackground = true);
-    QImage drawToImage(Time t, double x, double y, double w, double h, int imgW, int imgH, bool transparentBackground = true);
+    QImage drawToImage(double x, double y, double w, double h, int imgW, int imgH);
+    QImage drawToImage(Time t, double x, double y, double w, double h, int imgW, int imgH);
 
 public slots:
     void update();        // update only this view (i.e., redraw the scene, leave other views unchanged)
@@ -177,6 +182,12 @@ private:
     // View Settings
     ViewSettings viewSettings_;
     ViewSettingsWidget * viewSettingsWidget_;
+
+    // Draw background
+    // We use a map of BackgroundRenderer to anticipate the moment we have more
+    // than one Background (i.e., one per layer)
+    void drawBackground_(Background * background, int frame);
+    QMap<Background *, BackgroundRenderer *> backgroundRenderers_;
 };
 
 #endif

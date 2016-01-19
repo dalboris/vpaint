@@ -47,7 +47,8 @@ Global::Global(MainWindow * w) :
     mainWindow_(w),
     preferences_(),
     preferencesDialog_(0),
-    settings_(0)
+    settings_(0),
+    documentDir_(QDir::home())
 {
     // Color selectors
     currentColor_ = new ColorSelector();
@@ -272,7 +273,7 @@ void Global::createToolBars()
     colorSelectorAction_->setStatusTip(tr("Click to open the color selector"));
     colorSelectorAction_->setShortcut(QKeySequence(Qt::Key_C));
     colorSelectorAction_->setShortcutContext(Qt::ApplicationShortcut);
-    connect(colorSelectorAction_, SIGNAL(triggered()), currentColor_, SLOT(changeColor()));
+    connect(colorSelectorAction_, SIGNAL(triggered()), currentColor_, SLOT(click()));
 
     // ----- Tool Options -----
 
@@ -874,4 +875,14 @@ ToolModeAction::ToolModeAction(Global::ToolMode mode, QObject * parent) :
 void ToolModeAction::emitSpecializedTriggered()
 {
     emit triggered(toolMode);
+}
+
+void Global::setDocumentDir(const QDir & dir)
+{
+    documentDir_ = dir;
+}
+
+QDir Global::documentDir() const
+{
+    return documentDir_;
 }

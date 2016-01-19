@@ -245,14 +245,11 @@ void View3DSettings::setK2(int newValue)
 }
 
 
-
-
-
-double View3DSettings::xFromXScene(double xScene) const
+double View3DSettings::xFromX2D(double xScene) const
 {
     return xScene;
 }
-double View3DSettings::yFromYScene(double yScene) const
+double View3DSettings::yFromY2D(double yScene) const
 {
     return -yScene;
 }
@@ -356,7 +353,7 @@ View3DSettingsWidget::View3DSettingsWidget(View3DSettings & viewSettings) :
     layout->addRow("Freeze space rect:", freezeSpaceRect_);
     layout->addRow("Camera follow active time:", cameraFollowActiveTime_);
     layout->addRow("Draw grid:", drawGrid_);
-    layout->addRow("Draw time plane:", drawTimePlane_);
+    layout->addRow("Draw canvas:", drawTimePlane_);
     layout->addRow("Draw current frame:", drawCurrentFrame_);
     layout->addRow("Draw current frame as topology:", drawCurrentFrameAsTopology_);
     layout->addRow("Draw faces:", drawTopologyFaces_);

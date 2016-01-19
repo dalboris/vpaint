@@ -18,6 +18,7 @@
 #include "DevSettings.h"
 #include "ObjectPropertiesWidget.h"
 #include "AnimatedCycleWidget.h"
+#include "Background/BackgroundWidget.h"
 #include "EditCanvasSizeDialog.h"
 #include "ExportPngDialog.h"
 #include "AboutDialog.h"
@@ -321,8 +322,9 @@ void MainWindow::autosaveEnd()
 
 MainWindow::~MainWindow()
 {
-    foreach(Scene * s, undoStack_)
-        delete s;
+    typedef QPair<QDir,Scene*> UndoItem;
+    foreach(UndoItem p, undoStack_)
+        delete p.second;
     delete scene_;
 
     autosaveEnd();
@@ -339,19 +341,36 @@ void MainWindow::addToUndoStack()
     undoIndex_++;
     for(int j=undoStack_.size()-1; j>=undoIndex_; j--)
     {
-        delete undoStack_[j];
+        delete undoStack_[j].second;
         undoStack_.removeLast();
     }
-    undoStack_ << new Scene();
-    undoStack_[undoIndex_]->copyFrom(scene_);
+    undoStack_ << qMakePair(global()->documentDir(), new Scene());
+    undoStack_[undoIndex_].second->copyFrom(scene_);
+}
+
+void MainWindow::goToUndoIndex_(int undoIndex)
+{
+    // Set new undo index
+    undoIndex_ = undoIndex;
+
+    // Remap relative paths in history
+    if (undoStack_[undoIndex].first != global()->documentDir())
+    {
+        undoStack_[undoIndex].second->relativeRemap(
+            undoStack_[undoIndex_].first,
+            global()->documentDir());
+        undoStack_[undoIndex].first = global()->documentDir();
+    }
+
+    // Set scene data from undo history
+    scene_->copyFrom(undoStack_[undoIndex].second);
 }
 
 void MainWindow::undo()
 {
     if(undoIndex_>0)
     {
-        undoIndex_--;
-        scene_->copyFrom(undoStack_[undoIndex_]);
+        goToUndoIndex_(undoIndex_ - 1);
     }
     else
     {
@@ -363,8 +382,7 @@ void MainWindow::redo()
 {
     if(undoIndex_<undoStack_.size()-1)
     {
-        undoIndex_++;
-        scene_->copyFrom(undoStack_[undoIndex_]);
+        goToUndoIndex_(undoIndex_ + 1);
     }
     else
     {
@@ -562,7 +580,7 @@ bool MainWindow::newDocument()
         return false;
 
     // If success, proceed
-    saveFilename_ = QString();
+    setSaveFilename_(QString());
     Scene * newScene = new Scene();
     scene_->copyFrom(newScene);
     addToUndoStack();
@@ -579,19 +597,31 @@ bool MainWindow::open()
         return false;
     }
 
+    // Browse for a file to open
     QString filename = QFileDialog::getOpenFileName(
         this, tr("Open"), QStandardPaths::writableLocation(QStandardPaths::PicturesLocation), tr("Vec files (*.vec)"));
 
+    // Set save filename.
+    //
+    // This must be done *before* calling doOpen() because doOpen() will cause
+    // the scene to change which will cause a redraw, which requires the save
+    // filename to be set to resolve relative file paths
+    QString oldFilename = saveFilename_;
+    setSaveFilename_(filename);
+
+    // Try to open file
     bool success = doOpen(filename);
 
+    // Set a few things depending on success
     if(success)
     {
-        saveFilename_ = filename;
+        setSaveFilename_(filename);
         setWindowFilePath(filename);
         return true;
     }
     else
     {
+        setSaveFilename_(oldFilename);
         return false;
     }
 }
@@ -630,13 +660,14 @@ bool MainWindow::saveAs()
     if(!filename.endsWith(".vec"))
         filename.append(".vec");
 
-    bool success = doSave(filename);
+    bool relativeRemap = true;
+    bool success = doSave(filename, relativeRemap);
 
     if(success)
     {
         statusBar()->showMessage(tr("File %1 successfully saved.").arg(filename));
+        setSaveFilename_(filename);
         setWindowFilePath(filename);
-        saveFilename_ = filename;
         return true;
     }
     else
@@ -735,6 +766,21 @@ bool MainWindow::rejectExportPNG()
     return false;
 }
 
+void MainWindow::setSaveFilename_(const QString & filename)
+{
+    saveFilename_ = filename;
+
+    QFileInfo fileInfo(filename);
+    if (fileInfo.exists() && fileInfo.isFile())
+    {
+        global()->setDocumentDir(fileInfo.dir());
+    }
+    else
+    {
+        global()->setDocumentDir(QDir::home());
+    }
+}
+
 bool MainWindow::doOpen(const QString & filename)
 {
     // Open file
@@ -782,7 +828,7 @@ bool MainWindow::doOpen(const QString & filename)
     return true;
 }
 
-bool MainWindow::doSave(const QString & filename)
+bool MainWindow::doSave(const QString & filename, bool relativeRemap)
 {
     // Open file to save to
     QFile file(filename);
@@ -792,13 +838,22 @@ bool MainWindow::doSave(const QString & filename)
         return false;
     }
 
+    // Remap relative paths if need be
+    if (relativeRemap)
+    {
+        QFileInfo fileInfo(file);
+        QDir oldDocumentDir = global()->documentDir();
+        QDir newDocumentDir = fileInfo.dir();
+        if (oldDocumentDir != newDocumentDir)
+        {
+            global()->setDocumentDir(newDocumentDir);
+            scene()->relativeRemap(oldDocumentDir, newDocumentDir);
+        }
+    }
+
     // Write to file
     XmlStreamWriter xmlStream(&file);
     write(xmlStream);
-
-    // Write to file (deprecated)
-    //QTextStream textStream(&file);
-    //write_DEPRECATED(textStream);
 
     // Close file
     file.close();
@@ -852,39 +907,47 @@ void MainWindow::write_DEPRECATED(QTextStream & out)
 
 void MainWindow::write(XmlStreamWriter &xml)
 {
-    // Header
+    // Start XML Document
     xml.writeStartDocument();
+
+    // Header
     xml.writeComment(" Created with VPaint (http://www.vpaint.org) ");
     xml.writeCharacters("\n\n");
 
-    // Start VEC
+    // Document
     xml.writeStartElement("vec");
-    xml.writeAttribute("version", "1.0");
+    {
+        xml.writeAttribute("version", "1.0");
 
-    // Metadata
-    // TODO: Give more thoughts before adding this into release.
-    //       Basically, be conservative in what is saved and what is not, since
-    //       everything that is saved will have to be supported "forever" for backward compatibility
-    //xmlStream.writeStartElement("metadata");
-    //xmlStream.writeAttribute("author", "Boris Dalstein");
-    //xmlStream.writeAttribute("license", "CC BY-SA");
-    //xmlStream.writeEndElement();
+        // Metadata such as author and license? Different options:
+        //   1) as comments in header (issue: not part of document or XML spec, cross-editor compatibility issues)
+        //   2) as attributes of vec
+        //   3) as its own XML element
+        // "metadata" or "properties"? Probably metadata. even in PDF when this info is often accessed
+        // in File > Properties, it is still sotred as "metadata"
+        // Resources:
+        //   https://helpx.adobe.com/acrobat/using/pdf-properties-metadata.html)
+        //   http://www.w3.org/TR/SVG/metadata.html
+        //xmlStream.writeStartElement("metadata");
+        //xmlStream.writeAttribute("author", "Boris Dalstein");
+        //xmlStream.writeAttribute("license", "CC BY-SA");
+        //xmlStream.writeEndElement();
 
-    // Playback
-    timeline()->write(xml);
+        // Playback
+        xml.writeStartElement("playback");
+        timeline()->write(xml);
+        xml.writeEndElement();
 
-    // Layer + Cells
-    scene()->write(xml);
-    /*
-    xml.writeStartElement("cells");
-    xml.writeStartElement("vertex");
-    xml.writeAttribute("id", "001");
-    xml.writeAttribute("pos", "42.5,87.6");
-    xml.writeEndElement();
-    xml.writeEndElement();
-    */
+        // Canvas
+        xml.writeStartElement("canvas");
+        scene()->writeCanvas(xml);
+        xml.writeEndElement();
 
-    // End VEC
+        // Layer
+        xml.writeStartElement("layer");
+        scene()->write(xml);
+        xml.writeEndElement();
+    }
     xml.writeEndElement();
 
     // End XML Document
@@ -893,54 +956,63 @@ void MainWindow::write(XmlStreamWriter &xml)
 
 void MainWindow::read(XmlStreamReader & xml)
 {
-    if (xml.readNextStartElement()) {
-        if (xml.name() == "vec")
+    if (xml.readNextStartElement())
+    {
+        if (xml.name() != "vec")
         {
-            if(xml.attributes().value("version") != "1.0")
+            QMessageBox::warning(this,
+                "Cannot open file",
+                "Sorry, the file you are trying to open is an invalid VEC file.");
+            return;
+        }
+
+        if(xml.attributes().value("version") != "1.0")
+        {
+            QMessageBox::warning(this,
+                "File version more recent than VPaint",
+                "The file you are trying to open has been created with a "
+                "version of VPaint more recent than the one you are using. "
+                "We will still try to open it, but errors may occur, or it "
+                "may not be displayed at intended. We recommend to download "
+                "the latest version of VPaint at www.vpaint.org");
+        }
+
+        int numLayer = 0;
+        while (xml.readNextStartElement())
+        {
+            // Playback
+            if (xml.name() == "playback")
             {
-                QMessageBox::warning(this,
-                                     "File version more recent than VPaint",
-                                     "The file you are trying to open has been created with a version of VPaint more recent than the one you are using. "
-                                     "We will still try to open it, but errors may occur, or it may not be displayed at intended. "
-                                     "We recommend to download the latest version of VPaint at www.vpaint.org");
+                timeline_->read(xml);
             }
 
-            int numLayer = 0;
-            while (xml.readNextStartElement())
+            // Canvas
+            else if (xml.name() == "canvas")
             {
-                if (xml.name() == "layer")
+                scene_->readCanvas(xml);
+            }
+
+            // Layer
+            else if (xml.name() == "layer")
+            {
+                // For now, only supports one layer, i.e., it reads the first one and
+                // ignore all the others
+                ++numLayer;
+                if(numLayer == 1)
                 {
-                    // For now, only supports one layer, i.e., it reads the first one and
-                    // ignore all the others
-                    ++numLayer;
-                    if(numLayer == 1)
-                    {
-                        scene_->read(xml);
-                    }
-                    else
-                    {
-                        xml.skipCurrentElement();
-                    }
-                }
-                else if (xml.name() == "canvas")
-                {
-                    scene_->readCanvas(xml);
-                }
-                else if (xml.name() == "playback")
-                {
-                    timeline_->read(xml);
+                    scene_->read(xml);
                 }
                 else
                 {
                     xml.skipCurrentElement();
                 }
             }
-        }
-        else
-        {
-            QMessageBox::warning(this,
-                                 "Cannot open file",
-                                 "Sorry, the file you are trying to open is an invalid VEC file.");
+
+            // Unknown
+            else
+            {
+                xml.skipCurrentElement();
+            }
         }
     }
 }
@@ -952,12 +1024,21 @@ bool MainWindow::doExportSVG(const QString & filename)
 
         QTextStream out(&data);
 
-        QString header =
+        QString header = QString(
                 "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n"
                 "<!-- Created with VPaint (http://www.vpaint.org/) -->\n\n"
+
                 "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\"\n"
                 "  \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n"
-                "<svg xmlns=\"http://www.w3.org/2000/svg\">\n";
+                "<svg \n"
+                "  viewBox=\"%1 %2 %3 %4\"\n"
+                "  xmlns=\"http://www.w3.org/2000/svg\"\n"
+                "  xmlns:xlink=\"http://www.w3.org/1999/xlink\">\n")
+
+                .arg(scene_->left())
+                .arg(scene_->top())
+                .arg(scene_->width())
+                .arg(scene_->height());
 
         QString footer = "</svg>";
 
@@ -983,8 +1064,7 @@ bool MainWindow::doExportPNG(const QString & filename)
 
         QImage img = multiView_->activeView()->drawToImage(
                     scene()->left(), scene()->top(), scene()->width(), scene()->height(),
-                    exportPngDialog_->pngWidth(), exportPngDialog_->pngHeight(),
-                    exportPngDialog_->transparentBackground());
+                    exportPngDialog_->pngWidth(), exportPngDialog_->pngHeight());
 
         img.save(filename);
     }
@@ -1038,8 +1118,7 @@ bool MainWindow::doExportPNG(const QString & filename)
             QImage img = multiView_->activeView()->drawToImage(
                         Time(i),
                         scene()->left(), scene()->top(), scene()->width(), scene()->height(),
-                        exportPngDialog_->pngWidth(), exportPngDialog_->pngHeight(),
-                        exportPngDialog_->transparentBackground());
+                        exportPngDialog_->pngWidth(), exportPngDialog_->pngHeight());
 
             img.save(filePath);
         }
@@ -1748,6 +1827,7 @@ void MainWindow::createMenus()
     menuView->addAction(global()->toolBar()->toggleViewAction());
     menuView->addAction(global()->toolModeToolBar()->toggleViewAction());
     menuView->addAction(dockTimeLine->toggleViewAction());
+    menuView->addAction(dockBackgroundWidget->toggleViewAction());
     advancedViewMenu = menuView->addMenu(tr("Advanced [Beta]")); {
         advancedViewMenu->addAction(dockInspector->toggleViewAction());
         advancedViewMenu->addAction(dockAdvancedSettings->toggleViewAction());
@@ -1876,6 +1956,19 @@ void MainWindow::createDocks()
     dockAnimatedCycleEditor->setWidget(animatedCycleEditor);
     addDockWidget(Qt::RightDockWidgetArea, dockAnimatedCycleEditor);
     dockAnimatedCycleEditor->hide();
+
+    // ----- Background ---------
+
+    // Widget
+    backgroundWidget = new BackgroundWidget();
+    backgroundWidget->setBackground(scene()->background());
+
+    // Dock
+    dockBackgroundWidget = new QDockWidget(tr("Background"));
+    dockBackgroundWidget->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+    dockBackgroundWidget->setWidget(backgroundWidget);
+    addDockWidget(Qt::RightDockWidgetArea, dockBackgroundWidget);
+    //dockBackgroundWidget->hide(); todo: uncomment (commented for convenience while developing)
 
 
     // ----- TimeLine -------------

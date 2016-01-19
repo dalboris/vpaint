@@ -51,16 +51,16 @@ Time::Time(int f, bool justAfter) :
 
 Time::Time(double t) : 
     type_(FloatTime), 
-    frame_((int)t*FPS), 
+    frame_(std::floor(t*FPS)), // by default, truncate towards negative infinite
     time_(t) 
 {
     double eps = 1.0e-4;
-    double rounded = std::floor(t+0.5);
+    double rounded = std::floor(t*FPS+0.5);
     double rest = t - rounded;
-    if( -eps<rest && rest<eps )
+    if( -eps<rest && rest<eps ) // unless epsilon-close to an integer (e.g., t=41.9999)
     {
-        type_ = ExactFrame;
-        frame_ = (int) rounded;
+        type_ = ExactFrame;     // in which case we assume the frame is exact
+        frame_ = (int) rounded; // and truncate to nearest (e.g., 42)
     }
 }
 

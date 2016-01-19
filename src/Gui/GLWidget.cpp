@@ -20,11 +20,33 @@
 #define MIN_SIZE_DRAWING 5
 #define GLWIDGET_PI 3.1415926535897932
 
+namespace
+{
+QGLFormat format_()
+{
+    // Enable multisampling (for antialiasing)
+    QGLFormat res(QGL::SampleBuffers);
+    res.setSamples(16);
+    return res;
+
+    // Note: the Qt doc says that by default, it uses the maximum
+    // supported number of samples, but I tested and it's not true.
+    // In my configuration, if I don't do 'res.setSamples(16);' here,
+    // then calling format().samples() in the constructor of GLWidget
+    // returns 4. If I do 'res.setSamples(16);', then it returns
+    // 16 as expected, and there is a clear improvement of the
+    // anti-aliasing.
+    //
+    // Normally, one should use glGetIntegerv(GL_MAX_SAMPLES, &ms_samples)
+    // instead of using the hard coded number 16, but since this function
+    // has to be called before the OpenGL context is created, I'm not sure
+    // how I can achieve this, so the manual method is fine for now.
+}
+}
+
 GLWidget::GLWidget(QWidget *parent, bool isOnly2D) :
 
-    QGLWidget(QGLFormat(//QGL::SingleBuffer, // Because double buffering force v-sync which mess up with multiviews
-                        QGL::SampleBuffers), // to get antialiasing
-              parent),
+    QGLWidget(format_(), parent),
 
     isOnly2D_(isOnly2D),
     
@@ -69,40 +91,30 @@ GLWidget::GLWidget(QWidget *parent, bool isOnly2D) :
 
     mouse_tabletEventToMouseEvent_(QEvent::MouseButtonPress, QPoint(), Qt::LeftButton, Qt::NoButton, Qt::NoModifier)
 {
-    // TODO: avoid doing useless things in 2D mode
+    // To grab keyboard focus when user clicks
+    setFocusPolicy(Qt::ClickFocus);
 
-      // To grab keyboard focus when user clicks
-      setFocusPolicy(Qt::ClickFocus);
-      
-      setMinimumSize(200, 200);
-      //setAutoFillBackground(false);
+    setMinimumSize(200, 200);
+    //setAutoFillBackground(false);
 
-      // Making  mouse  move events  occur  even  without any  buttons
-      // pressed. Useful for picking points
-      setMouseTracking(true);
-      
-      // lighting initialisation
-      GL_LIGHT_[0] = GL_LIGHT0;
-      GL_LIGHT_[1] = GL_LIGHT1;
-      GL_LIGHT_[2] = GL_LIGHT2;
-      GL_LIGHT_[3] = GL_LIGHT3;
-      GL_LIGHT_[4] = GL_LIGHT4;
-      GL_LIGHT_[5] = GL_LIGHT5;
-      GL_LIGHT_[6] = GL_LIGHT6;
-      GL_LIGHT_[7] = GL_LIGHT7;
-      //lights_.append(GLWidget_Light(-7.0f, 3.0f, -4.0f, 0.2f, 0.2f, 0.2f,
-    //                    QString("Left back light")));
-//lights_.append(GLWidget_Light(7.0f, 3.0f, -4.0f, 0.2f, 0.2f, 0.2f,
-    //                    QString("Right back light")));
-      //lights_.append(GLWidget_Light(0.0f, 3.0f, 10.0f, 0.2f, 0.2f, 0.2f,
-    //QString("Front white light")));
-      //lights_.append(GLWidget_Light(0.0f, -10.0f, 0.0f, 0.2f, 0.2f, 0.2f,
-    //                    QString("Bottom light")));
+    // Making  mouse  move events  occur  even  without any  buttons
+    // pressed. Useful for picking points
+    setMouseTracking(true);
+
+    // lighting initialisation
+    GL_LIGHT_[0] = GL_LIGHT0;
+    GL_LIGHT_[1] = GL_LIGHT1;
+    GL_LIGHT_[2] = GL_LIGHT2;
+    GL_LIGHT_[3] = GL_LIGHT3;
+    GL_LIGHT_[4] = GL_LIGHT4;
+    GL_LIGHT_[5] = GL_LIGHT5;
+    GL_LIGHT_[6] = GL_LIGHT6;
+    GL_LIGHT_[7] = GL_LIGHT7;
 
     // Display settings
     settings_ = new GLWidget_Settings();
     connect(settings_, SIGNAL(changed()),
-          this, SLOT(updateGL()));
+            this, SLOT(updateGL()));
 }
 
 
@@ -768,7 +780,8 @@ void GLWidget::initializeGL()
 
     // Alpha blending
     glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA,
+                        GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     
     // Line Antialiasing
     //glEnable( GL_LINE_SMOOTH );
@@ -1041,23 +1054,25 @@ GLWidget * GLWidget::currentGLWidget_ = 0;
 void GLWidget::paintGL()
 {
     // ---- Drawing all opaques objects (here, mainly lines) ----
-      glDepthMask(GL_TRUE);
+    glDepthMask(GL_TRUE);
     
     // Clear the window and buffers
     glClearColor(settings_->backgroundColor_r(),
-             settings_->backgroundColor_g(),
-             settings_->backgroundColor_b(),
-             1);
-
+                 settings_->backgroundColor_g(),
+                 settings_->backgroundColor_b(),
+                 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-      // Initialize the view and lighting
-      setCameraPositionAndOrientation();
-      setLighting();
+    // Initialize the view and lighting
+    setCameraPositionAndOrientation();
+    setLighting();
 
-    // Draw the scene
+    // Set material (this is required for the 3D vew)
+    // XXX this shouldn't be done here
     setMaterial(material_);
-      glEnable(GL_COLOR_MATERIAL);
+    glEnable(GL_COLOR_MATERIAL);
+
+    // Draw scene
     currentGLWidget_ = this;
     drawScene();
     currentGLWidget_ = 0;

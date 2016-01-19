@@ -31,6 +31,7 @@ class QTextStream;
 class EditCanvasSizeDialog;
 class ExportPngDialog;
 class AboutDialog;
+class BackgroundWidget;
 
 namespace VectorAnimationComplex
 {
@@ -158,7 +159,8 @@ private:
     QTextBrowser * gettingStarted_;
     QTextBrowser * userManual_;
     // Undo/Redo
-    QList<Scene*> undoStack_;
+    void goToUndoIndex_(int undoIndex);
+    QList< QPair<QDir,Scene*> > undoStack_;
     int undoIndex_;
     // I/O
     QString fileHeader_;
@@ -168,7 +170,8 @@ private:
     int autosaveIndex_;
     bool autosaveOn_;
     QDir autosaveDir_;
-    bool doSave(const QString & filename);
+    void setSaveFilename_(const QString & filename);
+    bool doSave(const QString & filename, bool relativeRemap = false);
     bool doExportSVG(const QString & filename);
     bool doExportPNG(const QString & filename);
     void read_DEPRECATED(QTextStream & in);
@@ -279,6 +282,8 @@ private:
     QDockWidget * dockAdvancedSettings;
     QDockWidget * dockAnimatedCycleEditor;
     AnimatedCycleWidget * animatedCycleEditor;
+    BackgroundWidget * backgroundWidget;
+    QDockWidget * dockBackgroundWidget;
 };
 
 #endif

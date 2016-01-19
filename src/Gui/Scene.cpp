@@ -12,6 +12,7 @@
 
 #include "VectorAnimationComplex/VAC.h"
 #include "VectorAnimationComplex/InbetweenFace.h"
+#include "Background/Background.h"
 
 #include <QtDebug>
 
@@ -25,10 +26,13 @@ Scene::Scene() :
     left_(0),
     top_(0),
     width_(1280),
-    height_(720)
+    height_(720),
+    background_(new Background(this))
 {
     VectorAnimationComplex::VAC * vac = new VectorAnimationComplex::VAC();
     connect(vac,SIGNAL(selectionChanged()),this,SIGNAL(selectionChanged()));
+    connect(background_, SIGNAL(changed()), this, SIGNAL(changed()));
+    connect(background_, SIGNAL(checkpoint()), this, SIGNAL(checkpoint()));
     addSceneObject(vac);
     indexHovered_ = -1;
 }
@@ -77,6 +81,11 @@ void Scene::setHeight(double h)
     emitChanged();
 }
 
+Background * Scene::background() const
+{
+    return background_;
+}
+
 void Scene::setCanvasDefaultValues()
 {
     left_ = 0;
@@ -84,18 +93,40 @@ void Scene::setCanvasDefaultValues()
     width_ = 1280;
     height_ = 720;
 
-    // Don't emit changed on purpose:
+    // Don't emit changed on purpose
 }
 
 void Scene::copyFrom(Scene * other)
 {
+    // XXX
+    // In this method, here's is what's wrong:
+    //  - canvas is not copied
+    //  - VAC is should copied in a cleaner way (take Background as a model)
+
+    // Block signals
+    blockSignals(true);
+
+    // Reset to default
     clear(true);
+
+    // Copy VAC
     foreach(SceneObject *sceneObject, other->sceneObjects_)
         addSceneObject(sceneObject->clone(), true);
+
+    // Reset hovered
     indexHovered_ = -1;
+
+    // Copy background
+    background_->setData(other->background_);
+
+    // Unblock signals
+    blockSignals(false);
+
+    // Emit signals
     emit needUpdatePicking();
     emitChanged();
 
+    // Create new connections
     VectorAnimationComplex::VAC * vac = getVAC_();
     if(vac)
     {
@@ -113,6 +144,12 @@ void Scene::clear(bool silent)
     foreach(SceneObject *sceneObject, sceneObjects_)
         delete sceneObject;
     sceneObjects_.clear();
+
+    // XXX Shouldn't this clear left/top/width/height too?
+
+    // Reset background data
+    // As a side effect, this clears the cache if there were any
+    background_->resetData();
 
     if(!silent)
     {
@@ -148,6 +185,11 @@ void Scene::save(QTextStream & out)
 
 void Scene::exportSVG(Time t, QTextStream & out)
 {
+    // Export background
+    background_->exportSVG(t.frame(), out,
+                           left(), top(), width(), height());
+
+    // Export VAC
     foreach(SceneObject *sceneObject, sceneObjects_)
     {
         sceneObject->exportSVG(t, out);
@@ -184,37 +226,52 @@ void Scene::read(QTextStream & in)
 
 void Scene::write(XmlStreamWriter & xml)
 {
-    // Canvas
-    xml.writeStartElement("canvas");
-    xml.writeAttribute("left", QString().setNum(left()));
-    xml.writeAttribute("top", QString().setNum(top()));
-    xml.writeAttribute("width", QString().setNum(width()));
-    xml.writeAttribute("height", QString().setNum(height()));
+    // Background
+    xml.writeStartElement("background");
+    background()->write(xml);
     xml.writeEndElement();
 
-    // VAC
-    xml.writeStartElement("layer");
+    // Vector animation complex
+    xml.writeStartElement("objects");
     vectorAnimationComplex()->write(xml);
     xml.writeEndElement();
 }
 
 void Scene::read(XmlStreamReader & xml)
 {
+    blockSignals(true);
+
     clear(true);
 
-    // VAC
-    VectorAnimationComplex::VAC * vac = new VectorAnimationComplex::VAC();
-    vac->read(xml);
-    addSceneObject(vac, true);
-    connect(vac,SIGNAL(selectionChanged()),this,SIGNAL(selectionChanged()));
+    while (xml.readNextStartElement())
+    {
+        if (xml.name() == "background")
+        {
+            background()->read(xml);
+        }
+        else if (xml.name() == "objects")
+        {
+            VectorAnimationComplex::VAC * vac = new VectorAnimationComplex::VAC();
+            vac->read(xml);
+            addSceneObject(vac, true);
+            connect(vac,SIGNAL(selectionChanged()),this,SIGNAL(selectionChanged()));
+        }
+        else
+        {
+            xml.skipCurrentElement();
+        }
+    }
 
-    emit changed();
+    blockSignals(false);
+
     emit needUpdatePicking();
+    emit changed();
     emit selectionChanged();
 }
 
 void Scene::readCanvas(XmlStreamReader & xml)
 {
+
     setCanvasDefaultValues();
 
     // Canvas
@@ -230,9 +287,23 @@ void Scene::readCanvas(XmlStreamReader & xml)
     xml.skipCurrentElement();
 }
 
+void Scene::writeCanvas(XmlStreamWriter & xml)
+{
+    xml.writeAttribute("left", QString().setNum(left()));
+    xml.writeAttribute("top", QString().setNum(top()));
+    xml.writeAttribute("width", QString().setNum(width()));
+    xml.writeAttribute("height", QString().setNum(height()));
+}
+
+void Scene::relativeRemap(const QDir & oldDir, const QDir & newDir)
+{
+    background()->relativeRemap(oldDir, newDir);
+}
+
 // ----------------------- Drawing the scene -------------------------
 
-
+// XXX Refactor this: move it to View. Even better, have a Canvas and
+// CanvasRenderer class
 void Scene::drawCanvas(ViewSettings & /*viewSettings*/)
 {
     double x = left();
@@ -240,12 +311,14 @@ void Scene::drawCanvas(ViewSettings & /*viewSettings*/)
     double w = width();
     double h = height();
 
-    glClearColor(0.8, 0.8, 0.8, 1.0);
-    glClear(GL_COLOR_BUFFER_BIT);
-
     if(global()->showCanvas())
     {
-        glColor4d(0, 0, 0, 1.0);
+        // Out-of-canvas background color
+        glClearColor(0.8, 0.8, 0.8, 1.0);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        // Canvas border
+        glColor4d(0.0, 0.0, 0.0, 1.0);
         glLineWidth(3.0);
         glBegin(GL_LINE_LOOP);
         {
@@ -255,11 +328,34 @@ void Scene::drawCanvas(ViewSettings & /*viewSettings*/)
             glVertex2d(x,y+h);
         }
         glEnd();
+
+        // Canvas color
+        glColor4d(1.0, 1.0, 1.0, 1.0);
+        glBegin(GL_QUADS);
+        {
+            glVertex2d(x,y);
+            glVertex2d(x+w,y);
+            glVertex2d(x+w,y+h);
+            glVertex2d(x,y+h);
+        }
+        glEnd();
+    }
+    else
+    {
+        // Canvas color
+        glColor4d(1.0, 1.0, 1.0, 1.0);
+        glClear(GL_COLOR_BUFFER_BIT);
     }
 }
 
 void Scene::draw(Time time, ViewSettings & viewSettings)
 {
+    // Draw VAC
+    // XXX this was over-engineered. Should revert to something simpler:
+    //  vac_->draw(time, viewSettings);
+    // and later:
+    //   foreach(Layer * layer, layers_)
+    //     layer->draw(time, viewSettings);
     foreach(SceneObject *sceneObject, sceneObjects_)
     {
         sceneObject->draw(time, viewSettings);

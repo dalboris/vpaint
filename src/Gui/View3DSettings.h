@@ -25,15 +25,15 @@ public:
     void setTimeScale(double newValue);
     bool isTimeHorizontal() const;
     void setIsTimeHorizontal(bool newValue);
-    bool freezeSpaceRect() const;
-    void setFreezeSpaceRect(bool newValue);
+    bool freezeSpaceRect() const; // XXX to delete
+    void setFreezeSpaceRect(bool newValue); // XXX to delete
     bool cameraFollowActiveTime() const;
     void setCameraFollowActiveTime(bool newValue);
 
 
 
-    bool drawGrid() const;
-    void setDrawGrid(bool newValue);
+    bool drawGrid() const; // XXX to delete
+    void setDrawGrid(bool newValue); // XXX to delete
     bool drawTimePlane() const;
     void setDrawTimePlane(bool newValue);
     bool drawCurrentFrame() const;
@@ -73,28 +73,25 @@ public:
     int k2() const;
     void setK2(int newValue);
 
-
-
-
-
-
-    double xFromXScene(double xScene) const;
-    double yFromYScene(double yScene) const;
-
+    // Convert 2D scene coordinate and time to 3D coordinates for View3D
+    // XXX Refactor in one method:
+    //   Eigen::Vector3d to3DCoords(double x2D, double y2D, double time) const;
+    double xFromX2D(double xScene) const;
+    double yFromY2D(double yScene) const;
     double zFromT(double time) const;
     double zFromT(int time) const;
     double zFromT(Time time) const;
 
     // Scene settings
-    double xSceneMin() const;
-    double xSceneMax() const;
-    double ySceneMin() const;
-    double ySceneMax() const;
+    double xSceneMin() const; // XXX to delete
+    double xSceneMax() const; // XXX to delete
+    double ySceneMin() const; // XXX to delete
+    double ySceneMax() const; // XXX to delete
 
-    void setXSceneMin(double value);
-    void setXSceneMax(double value);
-    void setYSceneMin(double value);
-    void setYSceneMax(double value);
+    void setXSceneMin(double value); // XXX to delete
+    void setXSceneMax(double value); // XXX to delete
+    void setYSceneMin(double value); // XXX to delete
+    void setYSceneMax(double value); // XXX to delete
 
 
 private:

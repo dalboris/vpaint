@@ -6,18 +6,21 @@
 //   http://opensource.org/licenses/MIT
 
 #include "View.h"
+
 #include "Scene.h"
 #include "Timeline.h"
 #include "DevSettings.h"
 #include "Global.h"
-#include <QtDebug>
 #include "OpenGL.h"
+#include "Background/Background.h"
+#include "Background/BackgroundRenderer.h"
+#include "VectorAnimationComplex/VAC.h"
+#include "VectorAnimationComplex/Cell.h"
+
+#include <QtDebug>
 #include <QApplication>
 #include <QPushButton>
 #include <cmath>
-
-#include "VectorAnimationComplex/VAC.h"
-#include "VectorAnimationComplex/Cell.h"
 
 // define mouse actions
 
@@ -42,7 +45,7 @@
 
 #define  PAINT_ACTION                                       400
 
-View::View(Scene *scene, QWidget *parent) :
+View::View(Scene * scene, QWidget * parent) :
     GLWidget(parent, true),
     scene_(scene),
     pickingImg_(0),
@@ -50,13 +53,15 @@ View::View(Scene *scene, QWidget *parent) :
     currentAction_(0),
     vac_(0)
 {
+    // Make renderers
+    Background * bg = scene_->background();
+    backgroundRenderers_[bg] = new BackgroundRenderer(bg, context(), this);
+
     // View settings widget
     viewSettingsWidget_ = new ViewSettingsWidget(viewSettings_, this);
     connect(viewSettingsWidget_, SIGNAL(changed()), this, SLOT(update()));
     connect(viewSettingsWidget_, SIGNAL(changed()), this, SIGNAL(settingsChanged()));
     cameraTravellingIsEnabled_ = true;
-
-    // Mac OS X fix: view settings does not appear, so display it in a layout
 
     connect(this, SIGNAL(viewIsGoingToChange(int, int)), this, SLOT(updatePicking()));
     //connect(this, SIGNAL(viewIsGoingToChange(int, int)), this, SLOT(updateHighlightedObject(int, int)));
@@ -72,7 +77,7 @@ View::View(Scene *scene, QWidget *parent) :
     connect(this, SIGNAL(viewChanged(int, int)), this, SLOT(updateHoveredObject(int, int)));
     connect(this, SIGNAL(viewChanged(int, int)), this, SLOT(update()));
 
-    connect(global(),SIGNAL(keyboardModifiersChanged()),this,SLOT(handleNewKeyboardModifiers()));
+    connect(global(), SIGNAL(keyboardModifiersChanged()), this, SLOT(handleNewKeyboardModifiers()));
 }
 
 View::~View()
@@ -344,6 +349,11 @@ int View::decidePMRAction()
     return GLWidget::decidePMRAction();
 }
 
+int View::activeFrame() const
+{
+    return std::floor(viewSettings_.time().floatTime());
+}
+
 Time View::activeTime() const
 {
     return viewSettings_.time();
@@ -384,7 +394,14 @@ void View::ClicEvent(int action, double x, double y)
         vac_ = scene_->vectorAnimationComplex();
         if(vac_)
         {
-            vac_->paint(x, y, interactiveTime());
+            VectorAnimationComplex::Cell * paintedCell = vac_->paint(x, y, interactiveTime());
+            if (!paintedCell)
+            {
+                scene_->background()->setColor(global()->faceColor());
+                scene_->emitChanged();
+                scene_->emitCheckpoint();
+            }
+
             emit allViewsNeedToUpdatePicking();
             updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
             emit allViewsNeedToUpdate();
@@ -896,6 +913,14 @@ void View::PMRReleaseEvent(int action, double x, double y)
  *              DRAWING
  */
 
+void View::drawBackground_(Background * background, int frame)
+{
+    backgroundRenderers_[background]->draw(
+                frame,
+                global()->showCanvas(),
+                scene_->left(), scene_->top(), scene_->width(), scene_->height(),
+                xSceneMin(), xSceneMax(), ySceneMin(), ySceneMax());
+}
 
 void View::drawScene()
 {
@@ -920,38 +945,57 @@ void View::drawScene()
         }
     }
 
+    // Clear to white
     glClearColor(1.0,1.0,1.0,1.0);
     glClear(GL_COLOR_BUFFER_BIT);
 
+    // Note:
+    // It is the responsability of view to decide when to call scene()->drawCanvas
+    // draw a canvas, and layer backgrounds, and in which order,
+    // since this is dependent on onion skinning settings which only
+    // view should be aware of
+
+    // Draw canvas
+    // XXX Should be replaced by drawCanvas_(scene_->canvas());
     scene_->drawCanvas(viewSettings_);
 
-    viewSettings_.setDrawBackground(true);
-    viewSettings_.setMainDrawing(false);
+    // Draw background
+    drawBackground_(scene_->background(), activeFrame()); // later: drawBackground_(layer_->background())
 
+    // Loop over all onion skins. Draw in this order:
+    //   1. onion skins before
+    //   2. onion skins after
+    //   3. current frame
+    //
+    // Note 1: When layers will be implemented, then only the active layer has onion skins
+    // Note 2: Backgrounds are always ignored for onion skinning
+
+    viewSettings_.setMainDrawing(false);
     Time t = activeTime();
     {
         if(viewSettings_.onionSkinningIsEnabled())
         {
+            // Draw onion skins before
             Time tOnion = t;
             for(int i=0; i<viewSettings_.numOnionSkinsBefore(); ++i)
             {
-                glTranslated(-viewSettings_.onionSkinsXOffset(),-viewSettings_.onionSkinsYOffset(),0);
                 tOnion = tOnion - viewSettings_.onionSkinsTimeOffset();
-                scene_->draw(tOnion, viewSettings_);
-                viewSettings_.setDrawBackground(false);
+                glTranslated(-viewSettings_.onionSkinsXOffset(),-viewSettings_.onionSkinsYOffset(),0);
             }
             for(int i=0; i<viewSettings_.numOnionSkinsBefore(); ++i)
             {
+                scene_->draw(tOnion, viewSettings_); // XXX should be replaced by scene_->vectorAnimationComplex()->draw()
+                tOnion = tOnion + viewSettings_.onionSkinsTimeOffset();
                 glTranslated(viewSettings_.onionSkinsXOffset(),viewSettings_.onionSkinsYOffset(),0);
             }
 
+            // Draw onion skins after
             tOnion = t;
             for(int i=0; i<viewSettings_.numOnionSkinsAfter(); ++i)
             {
                 glTranslated(viewSettings_.onionSkinsXOffset(),viewSettings_.onionSkinsYOffset(),0);
                 tOnion = tOnion + viewSettings_.onionSkinsTimeOffset();
                 scene_->draw(tOnion, viewSettings_);
-                viewSettings_.setDrawBackground(false);
             }
             for(int i=0; i<viewSettings_.numOnionSkinsAfter(); ++i)
             {
@@ -1008,6 +1052,15 @@ double View::zoom() const
     return camera2D().zoom();
 }
 
+// Note: In the future, when rotation of the viewport is allowed,
+//       then it should be replaced by:
+//           xSceneMin = min(x1, x2, x3, x4);
+//           xSceneMax = max(x1, x2, x3, x4);
+//           ySceneMin = min(y1, y2, y3, y4);
+//           ySceneMax = max(y1, y2, y3, y4);
+//       where the (xi,yi)'s are the four corners of the viewport in
+//       scene coordinate, which in general will not be axis-aligned
+
 double  View::xSceneMin() const
 {
     return - camera2D().x() / zoom();
@@ -1060,12 +1113,13 @@ void View::drawPick()
             Time tOnion = t;
             for(int i=0; i<viewSettings_.numOnionSkinsBefore(); ++i)
             {
-                glTranslated(-viewSettings_.onionSkinsXOffset(),-viewSettings_.onionSkinsYOffset(),0);
                 tOnion = tOnion - viewSettings_.onionSkinsTimeOffset();
-                scene_->drawPick(tOnion, viewSettings_);
+                glTranslated(-viewSettings_.onionSkinsXOffset(),-viewSettings_.onionSkinsYOffset(),0);
             }
             for(int i=0; i<viewSettings_.numOnionSkinsBefore(); ++i)
             {
+                scene_->drawPick(tOnion, viewSettings_);
+                tOnion = tOnion + viewSettings_.onionSkinsTimeOffset();
                 glTranslated(viewSettings_.onionSkinsXOffset(),viewSettings_.onionSkinsYOffset(),0);
             }
 
@@ -1317,12 +1371,12 @@ void imageCleanupHandler(void * info)
 
 }
 
-QImage View::drawToImage(double x, double y, double w, double h, int imgW, int imgH, bool transparentBackground)
+QImage View::drawToImage(double x, double y, double w, double h, int imgW, int imgH)
 {
-    return drawToImage(activeTime(), x, y, w, h, imgW, imgH, transparentBackground);
+    return drawToImage(activeTime(), x, y, w, h, imgW, imgH);
 }
 
-QImage View::drawToImage(Time t, double x, double y, double w, double h, int imgW, int imgH, bool transparentBackground)
+QImage View::drawToImage(Time t, double x, double y, double w, double h, int imgW, int imgH)
 {
     // Test availability of OpenGL functionality
     if(!GLEW_VERSION_2_0) {
@@ -1421,8 +1475,8 @@ QImage View::drawToImage(Time t, double x, double y, double w, double h, int img
     viewportHeight_ = IMG_SIZE_Y;
     glViewport(0, 0, viewportWidth_, viewportHeight_);
 
-    // Clear buffers
-    glClearColor(0.0, 0.0, 0.0, 0.0); // Important: full black + transparency
+    // Clear FBO to fully transparent
+    glClearColor(0.0, 0.0, 0.0, 0.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Set projection matrix
@@ -1442,7 +1496,7 @@ QImage View::drawToImage(Time t, double x, double y, double w, double h, int img
     // Draw scene
     ViewSettings::DisplayMode oldDM = viewSettings_.displayMode();
     viewSettings_.setDisplayMode(ViewSettings::ILLUSTRATION);
-    viewSettings_.setDrawBackground(!transparentBackground);
+    drawBackground_(scene_->background(), t.frame());
     viewSettings_.setMainDrawing(false);
     viewSettings_.setDrawCursor(false);
     scene_->draw(t, viewSettings_);
@@ -1491,49 +1545,31 @@ QImage View::drawToImage(Time t, double x, double y, double w, double h, int img
     glDeleteTextures(1, &textureId);
 
 
-    // ------ Fix black border bleeding ---------
+    // ------ un-premultiply alpha ---------
 
-    // Notations:
-    //     RGBA_old:  RGBA value already stored in frame buffer
-    //     RGBA:      RGBA value of fragment incoming to frame buffer
-    //     RGBA_new:  RGBA value to be stored in frame buffer after blending RGBA_old and RGBA
+    // Once can notice that glBlendFuncSeparate(alpha, 1-alpha, 1, 1-alpha)
+    // performs the correct blending function with input:
+    //    Frame buffer color as pre-multiplied alpha
+    //    Input fragment color as post-multiplied alpha
+    // and output:
+    //    New frame buffer color as pre-multiplied alpha
     //
-    // The issue is caused by glBlendFunc which is kinda dumb. Indeed, when
-    // A_old (the alpha that's already in the frame buffer) is 0, i.e. no fragment
-    // have ever touched this pixel yet, then we don't want to use the equation:
-    //                     RGBA_new = RGBA*A + RGBA_old*(1-A)
-    // Instead, we really want:
-    //                     RGBA_new = RGBA
-    // since the RGB_old value is irrelevant (it's black because it has to be smth,
-    // but really, it is "undefined", and it shouldn't darken the source RGB). More
-    // Generally, the actual equations should be:
-    //                     RGB_new  = RGB*A + RGB_old*(1-A)*A_old
-    //                     A_new    = A     + (1-A)*A_old
-    // For some reasons that I cannot explain, these equations are not definable by
-    // glBlendFunc, while actually, it really should be the default. As a workaround,
-    // I fix this as a post-processing step, and it seems to work well.
+    // So by starting with glClearColor(0.0, 0.0, 0.0, 0.0), which is the
+    // correct pre-multiplied representation for fully transparent, then
+    // by specifying glColor() in post-multiplied alpha, we get the correct
+    // blending behaviour and simply have to un-premultiply the value obtained
+    // in the frame buffer at the very end
 
-    // How does the fix work?
-    //
-    // If a pixel has, say, a RGBA final value of   (0.8, 0, 0, 0.8), it is likely that
-    // it was originally a transparent red fragment (1  , 0, 0, 0.8) --or opaque red border
-    // fragment with anti-aliasing-- which has been blended with the "black" background (0,0,0,0).
-    // Therefore, I need to map back the red "0.8" to "1", i.e. multiply all RGB values by the
-    // inverse of the alpha value 0.8. Then we clamp it to [0,1] to make sure we don't overflow.
-
-    if(transparentBackground)
+    for(uint k=0; k<IMG_SIZE_X*IMG_SIZE_Y; ++k)
     {
-        for(uint k=0; k<IMG_SIZE_X*IMG_SIZE_Y; ++k)
+        uchar * pixel = &(img[4*k]);
+        double a = pixel[3];
+        if( 0 < a && a < 255 )
         {
-            uchar * pixel = &(img[4*k]);
-            double a = pixel[3];
-            if( 0 < a && a < 255 )
-            {
-                double s = 255.0 / a;
-                pixel[0] = (uchar) (std::min(255.0,std::floor(0.5+s*pixel[0])));
-                pixel[1] = (uchar) (std::min(255.0,std::floor(0.5+s*pixel[1])));
-                pixel[2] = (uchar) (std::min(255.0,std::floor(0.5+s*pixel[2])));
-            }
+            double s = 255.0 / a;
+            pixel[0] = (uchar) (std::min(255.0,std::floor(0.5+s*pixel[0])));
+            pixel[1] = (uchar) (std::min(255.0,std::floor(0.5+s*pixel[1])));
+            pixel[2] = (uchar) (std::min(255.0,std::floor(0.5+s*pixel[2])));
         }
     }
 

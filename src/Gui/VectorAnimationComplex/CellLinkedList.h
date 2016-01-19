@@ -25,12 +25,12 @@ public:
     typedef std::list<Cell*>::const_reverse_iterator ConstReverseIterator;
     Iterator begin();
     Iterator end();
-    ConstIterator cbegin();
-    ConstIterator cend();
     ReverseIterator rbegin();
     ReverseIterator rend();
-    ConstReverseIterator crbegin();
-    ConstReverseIterator crend();
+    ConstIterator cbegin() const;
+    ConstIterator cend() const;
+    ConstReverseIterator crbegin() const;
+    ConstReverseIterator crend() const;
 
     void clear();
     void append(Cell * cell);

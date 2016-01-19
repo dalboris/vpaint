@@ -167,9 +167,9 @@ void Triangles::draw3D(Time time, View3DSettings & viewSettings)
     glBegin(GL_TRIANGLES);
     for(unsigned int i=0; i<triangles_.size(); ++i)
     {
-        glVertex3d(viewSettings.xFromXScene(triangles_[i].a[0]), viewSettings.yFromYScene(triangles_[i].a[1]), z);
-        glVertex3d(viewSettings.xFromXScene(triangles_[i].b[0]), viewSettings.yFromYScene(triangles_[i].b[1]), z);
-        glVertex3d(viewSettings.xFromXScene(triangles_[i].c[0]), viewSettings.yFromYScene(triangles_[i].c[1]), z);
+        glVertex3d(viewSettings.xFromX2D(triangles_[i].a[0]), viewSettings.yFromY2D(triangles_[i].a[1]), z);
+        glVertex3d(viewSettings.xFromX2D(triangles_[i].b[0]), viewSettings.yFromY2D(triangles_[i].b[1]), z);
+        glVertex3d(viewSettings.xFromX2D(triangles_[i].c[0]), viewSettings.yFromY2D(triangles_[i].c[1]), z);
     }
     glEnd();
 }

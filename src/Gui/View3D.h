@@ -26,6 +26,8 @@
 
 class Scene;
 namespace VectorAnimationComplex { class VAC; }
+class Background;
+class BackgroundRenderer;
 
 class View3D: public GLWidget
 {
@@ -59,6 +61,10 @@ public:
 
     // Settings widget
     View3DSettingsWidget * view3DSettingsWidget() const;
+
+    // Time info
+    int activeFrame() const;
+    Time activeTime() const;
 
 public slots:
     void update();
@@ -115,6 +121,13 @@ struct MouseEvent
     // View Settings
     View3DSettings viewSettings_;
     View3DSettingsWidget * viewSettingsWidget_;
+
+    // Draw canvas
+    void drawCanvas_();
+
+    // Draw background
+    void drawBackground_(Background * background, double t);
+    QMap<Background *, BackgroundRenderer *> backgroundRenderers_;
 
 };
 

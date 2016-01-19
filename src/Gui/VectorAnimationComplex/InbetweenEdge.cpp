@@ -370,8 +370,8 @@ InbetweenEdge::InbetweenEdge(VAC * vac, XmlStreamReader & xml) :
             for(int i=0; i< geo2D.size(); ++i)
             {
                 Eigen::Vector3d pos(
-                        viewSettings.xFromXScene(geo2D[i][0]),
-                        viewSettings.yFromYScene(geo2D[i][1]),
+                        viewSettings.xFromX2D(geo2D[i][0]),
+                        viewSettings.yFromY2D(geo2D[i][1]),
                         viewSettings.zFromT(t));
                 geo3D << pos;
             }

@@ -9,22 +9,37 @@
 #define COLORSELECTOR_H
 
 #include <QToolButton>
-#include <QColor>
+
+#include "Color.h"
 
 class ColorSelector : public QToolButton
 {
     Q_OBJECT
-public:
-    explicit ColorSelector(const QColor & initialColor = Qt::black, QWidget *parent = 0);
 
-    QColor color();
+public:
+    explicit ColorSelector(const Color & initialColor = Qt::black, QWidget *parent = 0);
+
+    // Get/Set color
+    Color color() const;
+    void setColor(const Color & newColor);
+
+    // Set icon of QToolButton to match stored color.
+    //
+    // If clients change the icon size via setIconSize(), then they
+    // must call updateIcon() afterwards. Ideally setIconSize() should be
+    // overriden call this automatically, but unfortunately  setIconSize()
+    // isn't a virtual method.
     void updateIcon();
 
-public slots:
-    void changeColor();
+signals:
+    void colorChanged(const Color & newColor);
+
+private slots:
+    void processClick_();
 
 private:
-    QColor color_;
+    // Stored color
+    Color color_;
 };
 
 #endif // COLORSELECTOR_H

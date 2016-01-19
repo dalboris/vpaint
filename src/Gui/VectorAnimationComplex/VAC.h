@@ -69,11 +69,11 @@ public:
     // Drawing
     void draw(Time time, ViewSettings & viewSettings);
     void drawPick(Time time, ViewSettings & viewSettings);
-    void draw3D(View3DSettings & viewSettings);
-    void drawPick3D(View3DSettings & viewSettings);
+    void drawInbetweenCells3D(View3DSettings & viewSettings);
     void drawOneFrame3D(Time time, View3DSettings & viewSettings, ViewSettings & view2DSettings, bool drawAsTopo = false);
     void drawAllFrames3D(View3DSettings & viewSettings, ViewSettings & view2DSettings);
     void drawKeyCells3D(View3DSettings & viewSettings, ViewSettings & view2DSettings);
+    void drawPick3D(View3DSettings & viewSettings);
 
     // Selecting and Highlighting
     void setHoveredObject(Time time, int id);
@@ -124,6 +124,9 @@ public:
     EdgeCellList edges(Time time);
     KeyEdgeList instantEdges(Time time);
     KeyVertexList instantVertices(Time time);
+
+    // Get all cells, ordered
+    const ZOrderedCells & zOrdering() const;
 
     // Populate MainWindow toolbar (called once, when launching application)
     static void populateToolBar(QToolBar * toolBar, Scene * scene);
@@ -182,8 +185,10 @@ public:
     KeyVertex * split(double x, double y, Time time, bool interactive = true);
 
     // -- Paint Bucket tool --
+    // paint() returns the painted cell, if any. Might be an existing
+    // cell that has been re-colored, or a new face that has been created
     void updateToBePaintedFace(double x, double y, Time time);
-    KeyFace * paint(double x, double y, Time time);
+    Cell * paint(double x, double y, Time time);
 
     /////////////////////////////////////////////////////////////////
     //         SELECTION (MOUSE CLIC ACTIONS)                      //
@@ -403,19 +408,12 @@ private:
     // Cut-Copy-Paste
     Time timeCopy_;
 
-    // Background color
-    QColor backgroundColor_;
-
     // Selecting and highlighting
     Cell * hoveredCell_;
     QSet<Cell *> selectedCells_;
 
     // Z-layering
     ZOrderedCells zOrdering_;
-
-    // Draw3D
-    void drawInbetweenGrid(View3DSettings & viewSettings);
-    void drawTimePlane(View3DSettings & viewSettings);
 
     // Smart aggregation of signals
     void emitSelectionChanged_();
