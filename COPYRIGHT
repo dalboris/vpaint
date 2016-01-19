@@ -1,0 +1,14 @@
+All copyright notices related to the VPaint project are centralized
+in this file (the "COPYRIGHT file"). We use Git, a version control
+system, to track accurate authorship information. Please consult
+https://github.com/dalboris/vpaint to retrieve this information.
+
+The group of all individuals and organizations who have contributed
+to the source code of VPaint is referred to as "The VPaint Developers".
+By inserting your copyright notice under this category, you aknowledge
+that you have read the terms and conditions in the LICENSE.MIT file, and
+accept to license your source code contributions under these terms.
+
+The VPaint Developers:
+----------------------
+Copyright (C) 2012-2016 Boris Dalstein <dalboris@gmail.com>
