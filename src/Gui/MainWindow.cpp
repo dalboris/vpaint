@@ -1024,15 +1024,21 @@ bool MainWindow::doExportSVG(const QString & filename)
 
         QTextStream out(&data);
 
-        QString header =
+        QString header = QString(
                 "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n"
                 "<!-- Created with VPaint (http://www.vpaint.org/) -->\n\n"
 
                 "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\"\n"
                 "  \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n"
                 "<svg \n"
+                "  viewBox=\"%1 %2 %3 %4\"\n"
                 "  xmlns=\"http://www.w3.org/2000/svg\"\n"
-                "  xmlns:xlink=\"http://www.w3.org/1999/xlink\">\n";
+                "  xmlns:xlink=\"http://www.w3.org/1999/xlink\">\n")
+
+                .arg(scene_->left())
+                .arg(scene_->top())
+                .arg(scene_->width())
+                .arg(scene_->height());
 
         QString footer = "</svg>";
 
