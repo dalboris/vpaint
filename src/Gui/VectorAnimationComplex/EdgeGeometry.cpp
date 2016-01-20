@@ -64,14 +64,14 @@ EdgeGeometry * EdgeGeometry::clone()
 
  EdgeGeometry * EdgeGeometry::read(XmlStreamReader & xml)
  {
-     // Split at the first ':'
+     // Find curve type and data
      QStringRef str =  xml.attributes().value("curve");
-     int i = str.indexOf(':');
+     int i = str.indexOf('(');
      QStringRef curveType = str.left(i);
-     QStringRef curveData = str.right(str.length()-i-1);
+     QStringRef curveData = str.mid(i+1, str.length()-i-2);
 
      // Switch on type
-     if(curveType == "xyw-dense")
+     if(curveType == "xywdense")
          return new LinearSpline(curveData);
      else
          return 0;
@@ -862,7 +862,7 @@ void LinearSpline::write(XmlStreamWriter & xml) const
         if(i<n-1) d += " ";
     }
 
-    xml.writeAttribute("curve", "xyw-dense: " + d);
+    xml.writeAttribute("curve", "xywdense(" + d + ")");
 }
 
 

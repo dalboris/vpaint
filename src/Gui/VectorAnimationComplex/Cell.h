@@ -88,7 +88,6 @@
 #include "../TimeDef.h"
 #include "../ViewSettings.h"
 #include "../View3DSettings.h"
-#include "../CssStyle.h"
 #include "CellList.h"
 #include <QString>
 #include <QRect>
