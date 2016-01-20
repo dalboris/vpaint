@@ -31,8 +31,7 @@ either for non-commercial or commercial purposes. Curious why the MIT? [Check he
 
 Some libraries VPaint depends on are subject to different licenses
 (e.g., LGPL, MPL, BSD), but they are all compatible with the MIT.
-See [the LICENSE file](https://github.com/dalboris/vpaint/blob/master/LICENSE)
-for more details on which license applies to which part of the code.
+More details are given in [the LICENSE file](https://github.com/dalboris/vpaint/blob/master/LICENSE.md).
 
 
 # HOW TO CONTRIBUTE
