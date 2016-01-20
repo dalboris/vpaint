@@ -380,10 +380,13 @@ void PlaybackSettings::read(XmlStreamReader & xml)
 {
     setDefaultValues();
 
-    if(xml.attributes().hasAttribute("firstframe"))
-        setFirstFrame(xml.attributes().value("firstframe").toInt());
-    if(xml.attributes().hasAttribute("lastframe"))
-        setLastFrame(xml.attributes().value("lastframe").toInt());
+    if(xml.attributes().hasAttribute("framerange"))
+    {
+        QString stringRange = xml.attributes().value("framerange").toString();
+        QStringList list = stringRange.split(" ");
+        setFirstFrame(list[0].toInt());
+        setLastFrame(list[1].toInt());
+    }
     if(xml.attributes().hasAttribute("fps"))
         setFps(xml.attributes().value("fps").toInt());
     if(xml.attributes().hasAttribute("playmode"))
@@ -396,8 +399,7 @@ void PlaybackSettings::read(XmlStreamReader & xml)
 
 void PlaybackSettings::write(XmlStreamWriter & xml) const
 {
-    xml.writeAttribute("firstframe", QString().setNum(firstFrame()));
-    xml.writeAttribute("lastframe", QString().setNum(lastFrame()));
+    xml.writeAttribute("framerange", QString().setNum(firstFrame()) + " " + QString().setNum(lastFrame()));
     xml.writeAttribute("fps", QString().setNum(fps()));
     xml.writeAttribute("subframeinbetweening", subframeInbetweening() ? "on" : "off");
     xml.writeAttribute("playmode", playModeToString(playMode()));
