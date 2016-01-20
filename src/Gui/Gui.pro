@@ -146,7 +146,6 @@ HEADERS += MainWindow.h \
     VectorAnimationComplex/VAC.h \
     XmlStreamWriter.h \
     XmlStreamReader.h \
-    CssStyle.h \
     CssColor.h \
     TimeDef.h \
     EditCanvasSizeDialog.h \
@@ -228,7 +227,6 @@ SOURCES += main.cpp \
     VectorAnimationComplex/VAC.cpp \
     XmlStreamWriter.cpp \
     XmlStreamReader.cpp \
-    CssStyle.cpp \
     CssColor.cpp \
     TimeDef.cpp \
     EditCanvasSizeDialog.cpp \

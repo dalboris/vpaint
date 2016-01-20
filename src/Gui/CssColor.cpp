@@ -22,6 +22,11 @@ CssColor::CssColor(const QString & c) :
     fromString(c);
 }
 
+CssColor::CssColor(const double * c)
+{
+    setRgbaF(c[0], c[1], c[2], c[3]);
+}
+
 int CssColor::r() const { return r_; }
 int CssColor::g() const { return g_; }
 int CssColor::b() const { return b_; }

@@ -31,8 +31,6 @@ EdgeCell::EdgeCell(VAC * vac) :
     color_[1] = edgeColor.greenF();
     color_[2] = edgeColor.blueF();
     color_[3] = edgeColor.alphaF();
-    CssColor cssColor(edgeColor.red(),edgeColor.green(),edgeColor.blue(),edgeColor.alphaF());
-    style_.set("color",cssColor.toString());
 
     // highlighted/selected color
     colorSelected_[0] = 1;
