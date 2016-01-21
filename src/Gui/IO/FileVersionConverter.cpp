@@ -6,7 +6,7 @@
 // license terms and conditions in the LICENSE.MIT file found in the top-level
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
-#include "VecVersionConverter.h"
+#include "FileVersionConverter.h"
 
 #include "XmlStreamReader.h"
 

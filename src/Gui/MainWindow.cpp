@@ -33,7 +33,7 @@
 #include "VectorAnimationComplex/VAC.h"
 #include "VectorAnimationComplex/InbetweenFace.h"
 
-#include "IO/VecVersionConverter.h"
+#include "IO/FileVersionConverter.h"
 #include "XmlStreamWriter.h"
 #include "XmlStreamReader.h"
 #include "SaveAndLoad.h"

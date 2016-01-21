@@ -158,7 +158,7 @@ HEADERS += MainWindow.h \
     Background/BackgroundRenderer.h \
     Background/BackgroundWidget.h \
     Background/BackgroundUrlValidator.h \
-    IO/VecVersionConverter.h
+    IO/FileVersionConverter.h
 
 
 SOURCES += main.cpp \
@@ -240,7 +240,7 @@ SOURCES += main.cpp \
     Background/BackgroundRenderer.cpp \
     Background/BackgroundWidget.cpp \
     Background/BackgroundUrlValidator.cpp \
-    IO/VecVersionConverter.cpp
+    IO/FileVersionConverter.cpp
 
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../Third/GLEW/release/ -lGLEW
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../Third/GLEW/debug/ -lGLEW
