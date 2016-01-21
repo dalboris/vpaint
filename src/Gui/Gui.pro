@@ -19,8 +19,8 @@ TARGET = VPaint
 CONFIG += qt c++11
 QT += opengl network
 
-# Set the version and add the APP_VERSION macro for convenience
-VERSION = 1.5
+# Set app version and make it accessible in C++ code as the macro APP_VERSION
+VERSION = 1.6
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"
 
 # To create the icon on Windows
@@ -157,7 +157,8 @@ HEADERS += MainWindow.h \
     Background/BackgroundData.h \
     Background/BackgroundRenderer.h \
     Background/BackgroundWidget.h \
-    Background/BackgroundUrlValidator.h
+    Background/BackgroundUrlValidator.h \
+    IO/VecVersionConverter.h
 
 
 SOURCES += main.cpp \
@@ -238,7 +239,8 @@ SOURCES += main.cpp \
     Background/BackgroundData.cpp \
     Background/BackgroundRenderer.cpp \
     Background/BackgroundWidget.cpp \
-    Background/BackgroundUrlValidator.cpp
+    Background/BackgroundUrlValidator.cpp \
+    IO/VecVersionConverter.cpp
 
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../Third/GLEW/release/ -lGLEW
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../Third/GLEW/debug/ -lGLEW

@@ -15,25 +15,28 @@
 
 #include "MainWindow.h"
 
+#include "Global.h"
+
 #include "Scene.h"
 #include "View3D.h"
 #include "View.h"
 #include "MultiView.h"
 #include "Timeline.h"
-#include "SaveAndLoad.h"
-#include "Global.h"
 #include "DevSettings.h"
 #include "ObjectPropertiesWidget.h"
 #include "AnimatedCycleWidget.h"
-#include "Background/BackgroundWidget.h"
 #include "EditCanvasSizeDialog.h"
 #include "ExportPngDialog.h"
 #include "AboutDialog.h"
 #include "SelectionInfoWidget.h"
-#include "XmlStreamWriter.h"
-#include "XmlStreamReader.h"
+#include "Background/BackgroundWidget.h"
 #include "VectorAnimationComplex/VAC.h"
 #include "VectorAnimationComplex/InbetweenFace.h"
+
+#include "IO/VecVersionConverter.h"
+#include "XmlStreamWriter.h"
+#include "XmlStreamReader.h"
+#include "SaveAndLoad.h"
 
 #include <QCoreApplication>
 #include <QApplication>
@@ -59,13 +62,6 @@
 
 
 MainWindow::MainWindow() :
-    companyName_("VPaint"),
-    appName_("VPaint"),
-    appVersion_Major_(1),
-    appVersion_Minor_(5),
-    appVersion_Stage_("RTM"), // If shipped, must be "RTM"
-    appVersion_SubStage_(0),
-
     scene_(0),
     multiView_(0),
 
@@ -166,9 +162,7 @@ MainWindow::MainWindow() :
     //setFocusPolicy(Qt::ClickFocus);
 
     // Application name
-    QCoreApplication::setApplicationName(appName_);
     setWindowFilePath(tr("New Document"));
-    QGuiApplication::setApplicationDisplayName(appName_);
 
     // Application icon
     QGuiApplication::setWindowIcon(QIcon(":/images/icon-256.png"));
@@ -790,6 +784,13 @@ void MainWindow::setSaveFilename_(const QString & filename)
 
 bool MainWindow::doOpen(const QString & filename)
 {
+    // Convert to newest version if necessary
+    bool success = FileVersionConverter(filename).convertToVersion(qApp->applicationVersion(), this);
+    if (!success)
+    {
+        return false;
+    }
+
     // Open file
     QFile file(filename);
     if (!file.open(QFile::ReadOnly | QFile::Text))
@@ -799,31 +800,9 @@ bool MainWindow::doOpen(const QString & filename)
         return false;
     }
 
-    // Read first char to determine in which format the file is written
-    QTextStream in(&file);
-    QChar firstChar;
-    in >> firstChar;
-
-    // Re-open file to read from scratch
-    file.close();
-    if (!file.open(QFile::ReadOnly | QFile::Text))
-    {
-        qDebug() << "Error: cannot open file";
-        QMessageBox::warning(this, tr("Error"), tr("Error: couldn't open file %1").arg(filename));
-        return false;
-    }
-
-    // Determine file format and read accordingly
-    if (firstChar == '-') // Pre-2015 YAML-like deprecated format
-    {
-        QTextStream in(&file);
-        read_DEPRECATED(in);
-    }
-    else // 2015+ XML format
-    {
-        XmlStreamReader xml(&file);
-        read(xml);
-    }
+    // Create XML stream reader and proceed
+    XmlStreamReader xml(&file);
+    read(xml);
 
     // Close file
     file.close();
