@@ -9,6 +9,7 @@
 #include "FileVersionConverter.h"
 
 #include "XmlStreamReader.h"
+#include "XmlStreamWriter.h"
 
 #include <QPair>
 #include <QDir>
@@ -146,7 +147,7 @@ bool FileVersionConverter::convertToVersion(
 
         // Open file for reading
         QFile fromFile(backupPath);
-        if (!file.open(QFile::ReadOnly | QFile::Text))
+        if (!fromFile.open(QFile::ReadOnly | QFile::Text))
         {
             QMessageBox::warning(
                         popupParent, QObject::tr("Conversion failed"),
@@ -156,7 +157,7 @@ bool FileVersionConverter::convertToVersion(
 
         // Open file for writing
         QFile toFile(filePath_);
-        if (!file.open(QFile::WriteOnly | QFile::Text))
+        if (!toFile.open(QFile::WriteOnly | QFile::Text))
         {
             QMessageBox::warning(
                         popupParent, QObject::tr("Conversion failed"),
