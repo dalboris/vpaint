@@ -16,17 +16,26 @@
 #include "Application.h"
 #include "MainWindow.h"
 #include "Global.h"
+#include "UpdateCheckDialog.h"
 
 int main(int argc, char *argv[])
 {
     Application app(argc, argv);
     MainWindow mainWindow;
 
+    UpdateCheckDialog update(global()->settings().checkVersion());
+    update.setParent(&mainWindow, Qt::Dialog);
+    if(global()->settings().checkVersion() != Version()) {
+        update.checkForUpdates();
+    }
+
     // About window
     if(global()->settings().showAboutDialogAtStartup())
     {
         mainWindow.about();
     }
+
+    update.showWhenReady();
 
     // Main window
     QObject::connect(&app, SIGNAL(openFileRequested(QString)), &mainWindow, SLOT(doOpen(QString)));

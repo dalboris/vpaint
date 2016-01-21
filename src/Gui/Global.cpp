@@ -838,7 +838,7 @@ void Global::setSculptRadius(double newRadius)
 
 void Global::readSettings()
 {
-    QSettings qsettings("VPaint", "VPaint");
+    QSettings qsettings;
 
     // Geometry of the window
     QSize size = qsettings.value("size", QSize(400, 400)).toSize();
@@ -856,7 +856,7 @@ void Global::readSettings()
 
 void Global::writeSettings()
 {
-      QSettings qsettings("VPaint", "VPaint");
+      QSettings qsettings;
 
       // Geometry of the window
       qsettings.setValue("size", mainWindow()->size());
