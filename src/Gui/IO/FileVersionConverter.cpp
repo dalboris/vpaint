@@ -10,30 +10,34 @@
 
 #include "XmlStreamReader.h"
 
+#include <QPair>
+#include <QDir>
 #include <QFile>
+#include <QFileInfo>
+#include <QMessageBox>
 
 FileVersionConverter::FileVersionConverter(const QString & filePath) :
     filePath_(filePath),
-    version_(""),
-    majorVersion_(0),
-    minorVersion_(0)
+    fileVersion_(""),
+    fileMajor_(0),
+    fileMinor_(0)
 {
     readVersion_();
 }
 
-QString FileVersionConverter::version() const
+QString FileVersionConverter::fileVersion() const
 {
-    return version_;
+    return fileVersion_;
 }
 
-int FileVersionConverter::majorVersion() const
+int FileVersionConverter::fileMajor() const
 {
-    return majorVersion_;
+    return fileMajor_;
 }
 
-int FileVersionConverter::minorVersion() const
+int FileVersionConverter::fileMinor() const
 {
-    return minorVersion_;
+    return fileMinor_;
 }
 
 void FileVersionConverter::readVersion_()
@@ -50,16 +54,16 @@ void FileVersionConverter::readVersion_()
         xml.attributes().hasAttribute("version"))
     {
         // Get version as string
-        version_ = xml.attributes().value("version").toString();
+        fileVersion_ = xml.attributes().value("version").toString();
 
         // Split string version at dots and spaces
-        QStringList list = version_.split(QRegExp("\\.| "));
+        QStringList list = fileVersion_.split(QRegExp("\\.| "));
 
         // Extract major and minor integers
         if (list.size() >= 2)
         {
-            majorVersion_ = list[0].toInt();
-            minorVersion_ = list[1].toInt();
+            fileMajor_ = list[0].toInt();
+            fileMinor_ = list[1].toInt();
         }
     }
 
@@ -68,8 +72,121 @@ void FileVersionConverter::readVersion_()
 }
 
 bool FileVersionConverter::convertToVersion(
-        const QString & version,
+        const QString & targetVersion,
         QWidget * popupParent)
 {
-    return true;
+    // Get target minor and major
+    int targetMajor = 0;
+    int targetMinor = 0;
+    QStringList list = targetVersion.split(QRegExp("\\.| "));
+    if (list.size() >= 2)
+    {
+        targetMajor = list[0].toInt();
+        targetMinor = list[1].toInt();
+    }
+    else
+    {
+        return false;
+    }
+
+    // Store as pair for easy comparison
+    QPair<int,int> fromVersion = qMakePair(fileMajor(), fileMinor());
+    QPair<int,int> toVersion = qMakePair(targetMajor, targetMinor);
+
+    // Nothing to do if the versions match
+    if (fromVersion == toVersion)
+    {
+        return true;
+    }
+
+    // Fail if trying to convert from a newer version
+    // For now, we only support opening of old files with new versions of VPaint, not
+    // the other way around
+    else if (fromVersion > toVersion)
+    {
+        QMessageBox::warning(
+                    popupParent, QObject::tr("VPaint too old to read this file"),
+                    QObject::tr("This file was created with a newer version of VPaint and I can't open it! "
+                       "Please download the latest version of VPaint at http://www.vpaint.org"));
+        return false;
+    }
+
+    // Convert to new format if fromVersion == 1.0
+    else if (fromVersion == qMakePair(1,0))
+    {
+        // Get backup path
+        QFileInfo fileInfo(filePath_);
+        QString fileName = fileInfo.fileName();
+        QString backupFileName =
+                fileInfo.completeBaseName() +
+                ".old." +
+                fileInfo.suffix();
+        QString backupPath =
+                fileInfo.path() +
+                backupFileName;
+
+        // Show popup to warn that a conversion will happen
+        QMessageBox::warning(
+                    popupParent, QObject::tr("File format conversion required"),
+                    QObject::tr("The file %1 comes from an older version of VPaint and "
+                                "must be converted to a new *.vec version. Do you want "
+                                "to proceed? The old file will still be available at %2")
+                    .arg(fileName, backupFileName));
+
+        // Create backup
+        QDir dir = fileInfo.dir();
+        if (!dir.rename(fileName, backupFileName))
+        {
+            QMessageBox::warning(
+                        popupParent, QObject::tr("Conversion failed"),
+                        QObject::tr("Oops... I couldn't copy the file to %1, so I aborted "
+                                    "the operation. Maybe I don't have write access to this "
+                                    "directory? Or the file already exist?").arg(backupFileName));
+        }
+
+        // Open file for reading
+        QFile fromFile(backupPath);
+        if (!file.open(QFile::ReadOnly | QFile::Text))
+        {
+            QMessageBox::warning(
+                        popupParent, QObject::tr("Conversion failed"),
+                        QObject::tr("Oops... I couldn't read %1 to perform the conversion, "
+                                    "so I aborted the operation").arg(backupFileName));
+        }
+
+        // Open file for writing
+        QFile toFile(filePath_);
+        if (!file.open(QFile::WriteOnly | QFile::Text))
+        {
+            QMessageBox::warning(
+                        popupParent, QObject::tr("Conversion failed"),
+                        QObject::tr("Oops... I couldn't open %1 for writing the converted "
+                                    "file, so I aborted the operation. Maybe I don't have write "
+                                    "access to that file?").arg(filePath_));
+        }
+
+        // Perform the conversion
+        XmlStreamReader from(&fromFile);
+        XmlStreamWriter to(&toFile);
+        _1_0_to_current_(from, to);
+
+        // Close files
+        fromFile.close();
+        toFile.close();
+
+        // Success!
+        return false; //true; XXX wait till it's actually implemented to return true
+    }
+
+    // Nothing to do otherwise (e.g., fromVersion = 1.6 and toVersion == 1.7
+    // without a breaking change between 1.6 and 1.7)
+    else
+    {
+        return true;
+    }
+}
+
+void FileVersionConverter::_1_0_to_current_(XmlStreamReader & from, XmlStreamWriter &to)
+{
+    // XXX TODO
 }

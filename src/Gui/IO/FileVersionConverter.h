@@ -6,12 +6,14 @@
 // license terms and conditions in the LICENSE.MIT file found in the top-level
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
-#ifndef VEC_VERSION_CONVERTER_H
-#define VEC_VERSION_CONVERTER_H
+#ifndef FILE_VERSION_CONVERTER_H
+#define FILE_VERSION_CONVERTER_H
 
 #include <QString>
 
 class QWidget;
+class XmlStreamReader;
+class XmlStreamWriter;
 
 class FileVersionConverter
 {
@@ -19,9 +21,9 @@ public:
     FileVersionConverter(const QString & filePath);
 
     // Get version info about file
-    QString version() const;
-    int majorVersion() const;
-    int minorVersion() const;
+    QString fileVersion() const;
+    int fileMajor() const;
+    int fileMinor() const;
 
     // Converts file to new version if required.
     // If popupParent is non null, and conversion is required, then
@@ -30,16 +32,18 @@ public:
     // Returns true if no need to convert, or successfully converted.
     // Returns false if conversion failed, or aborted by user
     bool convertToVersion(
-            const QString & version,
+            const QString & targetVersion,
             QWidget * popupParent = 0);
 
 private:
     QString filePath_;
-    QString version_;
-    int majorVersion_;
-    int minorVersion_;
+    QString fileVersion_;
+    int fileMajor_;
+    int fileMinor_;
 
     void readVersion_();
+
+    void _1_0_to_current_(XmlStreamReader & from, XmlStreamWriter & to);
 };
 
 #endif
