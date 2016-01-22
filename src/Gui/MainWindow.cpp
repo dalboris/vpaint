@@ -896,7 +896,9 @@ void MainWindow::write(XmlStreamWriter &xml)
     // Document
     xml.writeStartElement("vec");
     {
-        xml.writeAttribute("version", qApp->applicationVersion());
+        Version version(qApp->applicationVersion());
+        bool ignorePatch = true;
+        xml.writeAttribute("version", version.toString(ignorePatch));
 
         // Metadata such as author and license? Different options:
         //   1) as comments in header (issue: not part of document or XML spec, cross-editor compatibility issues)

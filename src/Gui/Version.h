@@ -17,7 +17,7 @@ public:
     Version(short major = 0, short minor = 0, short patch = 0): major_(major), minor_(minor), patch_(patch) {}
     Version(const QString & str);
 
-    QString toString();
+    QString toString(bool ignorePatch = false);
 
     short getMajor() const;
     short getMinor() const;

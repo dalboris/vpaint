@@ -75,12 +75,14 @@ bool Version::operator< (const Version& other) const
     return false;
 }
 
-QString Version::toString()
+QString Version::toString(bool ignorePatch)
 {
-    if(getPatch() > 0) {
-        return QString("%1.%2.%3").arg(QString::number(getMajor()), QString::number(getMinor()), QString::number(getPatch()));
+    if (ignorePatch || getPatch() == 0)
+    {
+        return QString("%1.%2").arg(getMajor()).arg(getMinor());
     }
-    else {
-        return QString("%1.%2").arg(QString::number(getMajor()), QString::number(getMinor()));
+    else
+    {
+        return QString("%1.%2.%3").arg(getMajor()).arg(getMinor()).arg(getPatch());
     }
 }
