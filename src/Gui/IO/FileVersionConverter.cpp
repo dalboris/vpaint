@@ -8,8 +8,10 @@
 
 #include "FileVersionConverter.h"
 
+#include "FileVersionConverterDialog.h"
 #include "XmlStreamReader.h"
 #include "XmlStreamWriter.h"
+#include "Global.h"
 
 #include "XmlStreamConverters/XmlStreamConverter_1_0_to_1_6.h"
 
@@ -107,10 +109,14 @@ bool FileVersionConverter::convertToVersion(
     // the other way around
     else if (fromVersion > toVersion)
     {
-        QMessageBox::warning(
-                    popupParent, QObject::tr("VPaint too old to read this file"),
-                    QObject::tr("This file was created with a newer version of VPaint and I can't open it! "
-                       "Please download the latest version of VPaint at http://www.vpaint.org"));
+        QMessageBox msgBox(popupParent);
+        msgBox.setWindowTitle(QObject::tr("Upgrade required"));
+        msgBox.setTextFormat(Qt::RichText);
+        msgBox.setText(QObject::tr(
+            "This file was created with a newer version of VPaint and cannnot "
+            "be opened with your current version. Please download the latest "
+            "version of VPaint at <a href='http://www.vpaint.org'>http://www.vpaint.org</a>"));
+        msgBox.exec();
         return false;
     }
 
@@ -129,13 +135,16 @@ bool FileVersionConverter::convertToVersion(
                 "/" +
                 backupFileName;
 
-        // Show popup to warn that a conversion will happen
-        QMessageBox::warning(
-                    popupParent, QObject::tr("File format conversion required"),
-                    QObject::tr("The file %1 comes from an older version of VPaint and "
-                                "must be converted to a new *.vec version. Do you want "
-                                "to proceed? The old file will still be available at %2")
-                    .arg(fileName, backupFileName));
+        // Show popup to notify user that a conversion will happen
+        bool notifyUser = !global()->settings().dontNotifyConversion();
+        if (notifyUser)
+        {
+            FileVersionConverterDialog dialog(popupParent, fileName, backupFileName);
+            if (!dialog.exec())
+            {
+                return false;
+            }
+        }
 
         // Create backup
         QDir dir = fileInfo.dir();
@@ -177,6 +186,12 @@ bool FileVersionConverter::convertToVersion(
         // Close files
         inFile.close();
         outFile.close();
+
+        // Delete backup if necessary
+        if (!global()->settings().keepOldVersion())
+        {
+            dir.remove(backupFileName);
+        }
 
         // Success!
         return true;
