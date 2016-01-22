@@ -9,6 +9,9 @@
 #ifndef SETTINGS_H
 #define SETTINGS_H
 
+#include "UpdateCheckDialog.h"
+#include "Version.h"
+
 class SettingsDialog;
 class QSettings;
 
@@ -36,11 +39,16 @@ public:
     bool dontNotifyConversion() const;
     void setDontNotifyConversion(bool value);
 
+    // Check version
+    Version checkVersion() const;
+    void setCheckVersion(Version value);
+
 private:
     double edgeWidth_;
     bool showAboutDialogAtStartup_;
     bool keepOldVersion_;
     bool dontNotifyConversion_;
+    Version checkVersion_;
 };
 
 #endif

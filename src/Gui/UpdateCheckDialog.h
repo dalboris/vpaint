@@ -6,25 +6,27 @@
 // license terms and conditions in the LICENSE.MIT file found in the top-level
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
-#ifndef APPLICATION_H
-#define APPLICATION_H
+#ifndef UPDATECHECKDIALOG_H
+#define UPDATECHECKDIALOG_H
 
-#include <QApplication>
+#include <QDialog>
 
-class Application : public QApplication
+class QCheckBox;
+
+class UpdateCheckDialog: public QDialog
 {
     Q_OBJECT
 
 public:
-    Application(int &argc, char **argv);
+    UpdateCheckDialog(QString newVersion, QWidget *parent = 0, Qt::WindowFlags f = 0);
+    bool skipVersion();
+    bool stopChecking();
 
-    bool event(QEvent* event);
-    void emitOpenFileRequest();
-signals:
-    void openFileRequested(const QString & filename);
+private slots:
+    void stopCheckingChanged_();
 
 private:
-    QString startPath_;
+    QCheckBox * skipVersionCheckBox_, * stopCheckingCheckBox_;
 };
 
-#endif // APPLICATION_H
+#endif // UPDATECHECKDIALOG_H

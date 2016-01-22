@@ -6,27 +6,24 @@
 // license terms and conditions in the LICENSE.MIT file found in the top-level
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
-// This file is part of VPaint, a vector graphics editor.
-//
-// Copyright (C) 2015 Connor Deptuck (@scribblemaniac)
-//
-// The content of this file is MIT licensed. See COPYING.MIT, or this link:
-//   http://opensource.org/licenses/MIT
-
 #include "Application.h"
 #include "MainWindow.h"
 #include "Global.h"
+#include "UpdateCheck.h"
 
 int main(int argc, char *argv[])
 {
     Application app(argc, argv);
     MainWindow mainWindow;
+    UpdateCheck update(&mainWindow);
 
     // About window
     if(global()->settings().showAboutDialogAtStartup())
     {
         mainWindow.about();
     }
+
+    update.showWhenReady();
 
     // Main window
     QObject::connect(&app, SIGNAL(openFileRequested(QString)), &mainWindow, SLOT(doOpen(QString)));

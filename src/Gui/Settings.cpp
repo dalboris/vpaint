@@ -6,6 +6,7 @@
 // license terms and conditions in the LICENSE.MIT file found in the top-level
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
+#include "Application.h"
 #include "Settings.h"
 
 #include <QSettings>
@@ -20,6 +21,7 @@ void Settings::readFromDisk(QSettings & settings)
     showAboutDialogAtStartup_ = settings.value("general-showaboutdialogatstartup", true).toBool();
     keepOldVersion_ = settings.value("general-keepoldversion", true).toBool();
     dontNotifyConversion_ = settings.value("general-dontnotifyconversion", false).toBool();
+    checkVersion_ = Version(settings.value("general-checkversion", qApp->applicationVersion()).toString());
 }
 
 void Settings::writeToDisk(QSettings & settings)
@@ -28,6 +30,7 @@ void Settings::writeToDisk(QSettings & settings)
     settings.setValue("general-showaboutdialogatstartup", showAboutDialogAtStartup_);
     settings.setValue("general-keepoldversion", keepOldVersion_);
     settings.setValue("general-dontnotifyconversion", dontNotifyConversion_);
+    settings.setValue("general-checkversion", checkVersion_.toString());
 }
 
 // Edge width
@@ -44,3 +47,7 @@ void Settings::setKeepOldVersion(bool value) { keepOldVersion_ = value; }
 
 bool Settings::dontNotifyConversion() const { return dontNotifyConversion_; }
 void Settings::setDontNotifyConversion(bool value) { dontNotifyConversion_ = value; }
+
+// Check version
+Version Settings::checkVersion() const { return checkVersion_; }
+void Settings::setCheckVersion(Version value) { checkVersion_ = value; }
