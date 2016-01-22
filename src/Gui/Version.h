@@ -15,7 +15,7 @@ class Version
 {
 public:
     Version(short major = 0, short minor = 0, short patch = 0): major_(major), minor_(minor), patch_(patch) {}
-    Version(QString str);
+    Version(const QString & str);
 
     QString toString();
 

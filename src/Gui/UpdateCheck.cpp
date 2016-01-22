@@ -16,7 +16,8 @@
 #include "Global.h"
 #include "UpdateCheckDialog.h"
 
-UpdateCheck::UpdateCheck(QWidget * parent)
+UpdateCheck::UpdateCheck(QWidget * parent) :
+    reply_(0)
 {
     // Initialize variables
     versionToCheck_ = global()->settings().checkVersion();
@@ -26,7 +27,8 @@ UpdateCheck::UpdateCheck(QWidget * parent)
     checkForUpdates();
 }
 
-UpdateCheck::UpdateCheck(Version configVersion, QWidget * parent)
+UpdateCheck::UpdateCheck(Version configVersion, QWidget * parent) :
+    reply_(0)
 {
     // Initialize variables
     versionToCheck_ = configVersion;
@@ -54,9 +56,10 @@ Version UpdateCheck::latestVersion() const
 void UpdateCheck::checkForUpdates()
 {
     // Return if a request is already in progress
-    if(reply_ && !reply_) return;
+    if(reply_) return;
+
     // Return if the user has asked not to check for updates
-    if(global()->settings().checkVersion() == Version()) return;
+    if(versionToCheck_ == Version()) return;
 
     // Set query
     QUrl url = QUrl("http://vpaint.org/latestversion");

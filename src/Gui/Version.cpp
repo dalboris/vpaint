@@ -10,7 +10,7 @@
 
 #include <QStringList>
 
-Version::Version(QString str)
+Version::Version(const QString & str)
 {
     major_ = minor_ = patch_ = 0;
 
