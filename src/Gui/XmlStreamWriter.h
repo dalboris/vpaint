@@ -60,9 +60,8 @@ public:
 
     // Writes an element attributes
     void writeAttribute(const QString & qualifiedName, const QString & value);
-
-
-    // Return how many
+    void writeAttribute(const QXmlStreamAttribute & attribute);
+    void writeAttributes(const QXmlStreamAttributes & attributes);
 
 private:
     int indentLevel_;

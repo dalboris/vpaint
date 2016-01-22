@@ -11,6 +11,8 @@
 #include "XmlStreamReader.h"
 #include "XmlStreamWriter.h"
 
+#include "XmlStreamConverters/XmlStreamConverter_1_0_to_1_6.h"
+
 #include <QPair>
 #include <QDir>
 #include <QFile>
@@ -124,6 +126,7 @@ bool FileVersionConverter::convertToVersion(
                 fileInfo.suffix();
         QString backupPath =
                 fileInfo.path() +
+                "/" +
                 backupFileName;
 
         // Show popup to warn that a conversion will happen
@@ -146,8 +149,8 @@ bool FileVersionConverter::convertToVersion(
         }
 
         // Open file for reading
-        QFile fromFile(backupPath);
-        if (!fromFile.open(QFile::ReadOnly | QFile::Text))
+        QFile inFile(backupPath);
+        if (!inFile.open(QFile::ReadOnly | QFile::Text))
         {
             QMessageBox::warning(
                         popupParent, QObject::tr("Conversion failed"),
@@ -156,8 +159,8 @@ bool FileVersionConverter::convertToVersion(
         }
 
         // Open file for writing
-        QFile toFile(filePath_);
-        if (!toFile.open(QFile::WriteOnly | QFile::Text))
+        QFile outFile(filePath_);
+        if (!outFile.open(QFile::WriteOnly | QFile::Text))
         {
             QMessageBox::warning(
                         popupParent, QObject::tr("Conversion failed"),
@@ -167,16 +170,16 @@ bool FileVersionConverter::convertToVersion(
         }
 
         // Perform the conversion
-        XmlStreamReader from(&fromFile);
-        XmlStreamWriter to(&toFile);
-        _1_0_to_current_(from, to);
+        XmlStreamReader inXml(&inFile);
+        XmlStreamWriter outXml(&outFile);
+        XmlStreamConverter_1_0_to_1_6(inXml, outXml).traverse();
 
         // Close files
-        fromFile.close();
-        toFile.close();
+        inFile.close();
+        outFile.close();
 
         // Success!
-        return false; //true; XXX wait till it's actually implemented to return true
+        return true;
     }
 
     // Nothing to do otherwise (e.g., fromVersion = 1.6 and toVersion == 1.7
@@ -185,9 +188,4 @@ bool FileVersionConverter::convertToVersion(
     {
         return true;
     }
-}
-
-void FileVersionConverter::_1_0_to_current_(XmlStreamReader & from, XmlStreamWriter &to)
-{
-    // XXX TODO
 }

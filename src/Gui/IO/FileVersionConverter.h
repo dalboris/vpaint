@@ -42,8 +42,6 @@ private:
     int fileMinor_;
 
     void readVersion_();
-
-    void _1_0_to_current_(XmlStreamReader & from, XmlStreamWriter & to);
 };
 
 #endif

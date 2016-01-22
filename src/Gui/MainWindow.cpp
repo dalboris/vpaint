@@ -903,7 +903,7 @@ void MainWindow::write(XmlStreamWriter &xml)
     // Document
     xml.writeStartElement("vec");
     {
-        xml.writeAttribute("version", "1.0");
+        xml.writeAttribute("version", qApp->applicationVersion());
 
         // Metadata such as author and license? Different options:
         //   1) as comments in header (issue: not part of document or XML spec, cross-editor compatibility issues)
@@ -950,17 +950,6 @@ void MainWindow::read(XmlStreamReader & xml)
                 "Cannot open file",
                 "Sorry, the file you are trying to open is an invalid VEC file.");
             return;
-        }
-
-        if(xml.attributes().value("version") != "1.0")
-        {
-            QMessageBox::warning(this,
-                "File version more recent than VPaint",
-                "The file you are trying to open has been created with a "
-                "version of VPaint more recent than the one you are using. "
-                "We will still try to open it, but errors may occur, or it "
-                "may not be displayed at intended. We recommend to download "
-                "the latest version of VPaint at www.vpaint.org");
         }
 
         int numLayer = 0;

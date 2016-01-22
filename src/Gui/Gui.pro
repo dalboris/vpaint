@@ -158,7 +158,10 @@ HEADERS += MainWindow.h \
     Background/BackgroundRenderer.h \
     Background/BackgroundWidget.h \
     Background/BackgroundUrlValidator.h \
-    IO/FileVersionConverter.h
+    IO/FileVersionConverter.h \
+    IO/XmlStreamTraverser.h \
+    IO/XmlStreamConverter.h \
+    IO/XmlStreamConverters/XmlStreamConverter_1_0_to_1_6.h
 
 
 SOURCES += main.cpp \
@@ -240,7 +243,10 @@ SOURCES += main.cpp \
     Background/BackgroundRenderer.cpp \
     Background/BackgroundWidget.cpp \
     Background/BackgroundUrlValidator.cpp \
-    IO/FileVersionConverter.cpp
+    IO/FileVersionConverter.cpp \
+    IO/XmlStreamTraverser.cpp \
+    IO/XmlStreamConverter.cpp \
+    IO/XmlStreamConverters/XmlStreamConverter_1_0_to_1_6.cpp
 
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../Third/GLEW/release/ -lGLEW
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../Third/GLEW/debug/ -lGLEW
