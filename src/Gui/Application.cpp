@@ -6,13 +6,6 @@
 // license terms and conditions in the LICENSE.MIT file found in the top-level
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
-// This file is part of VPaint, a vector graphics editor.
-//
-// Copyright (C) 2015 Connor Deptuck (@scribblemaniac)
-//
-// The content of this file is MIT licensed. See COPYING.MIT, or this link:
-//   http://opensource.org/licenses/MIT
-
 #include <QFileOpenEvent>
 
 #include "Application.h"
@@ -22,6 +15,7 @@ Application::Application(int& argc, char** argv) :
 {
     // Set organization and application name
     setOrganizationName("VPaint");
+    setOrganizationDomain("vpaint.org");
     setApplicationName("VPaint");
     setApplicationDisplayName("VPaint");
 

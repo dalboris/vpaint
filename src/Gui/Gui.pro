@@ -162,7 +162,10 @@ HEADERS += MainWindow.h \
     IO/XmlStreamTraverser.h \
     IO/XmlStreamConverter.h \
     IO/XmlStreamConverters/XmlStreamConverter_1_0_to_1_6.h \
-    IO/FileVersionConverterDialog.h
+    IO/FileVersionConverterDialog.h \
+    UpdateCheckDialog.h \
+    Version.h \
+    UpdateCheck.h
 
 
 SOURCES += main.cpp \
@@ -248,7 +251,10 @@ SOURCES += main.cpp \
     IO/XmlStreamTraverser.cpp \
     IO/XmlStreamConverter.cpp \
     IO/XmlStreamConverters/XmlStreamConverter_1_0_to_1_6.cpp \
-    IO/FileVersionConverterDialog.cpp
+    IO/FileVersionConverterDialog.cpp \
+    UpdateCheckDialog.cpp \
+    Version.cpp \
+    UpdateCheck.cpp
 
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../Third/GLEW/release/ -lGLEW
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../Third/GLEW/debug/ -lGLEW
