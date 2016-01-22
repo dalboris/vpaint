@@ -19,8 +19,8 @@ TARGET = VPaint
 CONFIG += qt c++11
 QT += opengl network
 
-# Set the version and add the APP_VERSION macro for convenience
-VERSION = 1.5
+# Set app version and make it accessible in C++ code as the macro APP_VERSION
+VERSION = 1.6
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"
 
 # To create the icon on Windows
@@ -146,7 +146,6 @@ HEADERS += MainWindow.h \
     VectorAnimationComplex/VAC.h \
     XmlStreamWriter.h \
     XmlStreamReader.h \
-    CssStyle.h \
     CssColor.h \
     TimeDef.h \
     EditCanvasSizeDialog.h \
@@ -158,7 +157,12 @@ HEADERS += MainWindow.h \
     Background/BackgroundData.h \
     Background/BackgroundRenderer.h \
     Background/BackgroundWidget.h \
-    Background/BackgroundUrlValidator.h
+    Background/BackgroundUrlValidator.h \
+    IO/FileVersionConverter.h \
+    IO/XmlStreamTraverser.h \
+    IO/XmlStreamConverter.h \
+    IO/XmlStreamConverters/XmlStreamConverter_1_0_to_1_6.h \
+    IO/FileVersionConverterDialog.h
 
 
 SOURCES += main.cpp \
@@ -228,7 +232,6 @@ SOURCES += main.cpp \
     VectorAnimationComplex/VAC.cpp \
     XmlStreamWriter.cpp \
     XmlStreamReader.cpp \
-    CssStyle.cpp \
     CssColor.cpp \
     TimeDef.cpp \
     EditCanvasSizeDialog.cpp \
@@ -240,7 +243,12 @@ SOURCES += main.cpp \
     Background/BackgroundData.cpp \
     Background/BackgroundRenderer.cpp \
     Background/BackgroundWidget.cpp \
-    Background/BackgroundUrlValidator.cpp
+    Background/BackgroundUrlValidator.cpp \
+    IO/FileVersionConverter.cpp \
+    IO/XmlStreamTraverser.cpp \
+    IO/XmlStreamConverter.cpp \
+    IO/XmlStreamConverters/XmlStreamConverter_1_0_to_1_6.cpp \
+    IO/FileVersionConverterDialog.cpp
 
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../Third/GLEW/release/ -lGLEW
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../Third/GLEW/debug/ -lGLEW

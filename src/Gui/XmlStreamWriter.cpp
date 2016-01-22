@@ -38,7 +38,18 @@ void XmlStreamWriter::writeEndElement()
     QXmlStreamWriter::writeEndElement();
 }
 
-#include <QtDebug>
+void XmlStreamWriter::writeAttributes(const QXmlStreamAttributes & attributes)
+{
+    for (int i=0; i<attributes.size(); ++i)
+    {
+        writeAttribute(attributes[i]);
+    }
+}
+
+void XmlStreamWriter::writeAttribute(const QXmlStreamAttribute & attribute)
+{
+    writeAttribute(attribute.qualifiedName().toString(), attribute.value().toString());
+}
 
 void XmlStreamWriter::writeAttribute(const QString & qualifiedName, const QString & value)
 {

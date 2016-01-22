@@ -79,7 +79,7 @@ void KeyVertex::write_(XmlStreamWriter & xml) const
     VertexCell::write_(xml);
 
     // Position
-    xml.writeAttribute("position", QString().setNum(pos_[0]) + "," + QString().setNum(pos_[1]));
+    xml.writeAttribute("position", QString().setNum(pos_[0]) + " " + QString().setNum(pos_[1]));
 
     // Size // TODO, must be in style
     //out << Save::newField("Size") << size_;
@@ -99,7 +99,7 @@ KeyVertex::KeyVertex(VAC * vac, XmlStreamReader & xml) :
 
     // Position
     QString stringPos = xml.attributes().value("position").toString();
-    QStringList list = stringPos.split(",");
+    QStringList list = stringPos.split(" ");
     pos_[0] = list[0].toDouble();
     pos_[1] = list[1].toDouble();
 

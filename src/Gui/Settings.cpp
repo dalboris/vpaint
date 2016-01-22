@@ -18,12 +18,16 @@ void Settings::readFromDisk(QSettings & settings)
 {
     edgeWidth_ = settings.value("tools-sketch-edgewidth", 10.0).toDouble();
     showAboutDialogAtStartup_ = settings.value("general-showaboutdialogatstartup", true).toBool();
+    keepOldVersion_ = settings.value("general-keepoldversion", true).toBool();
+    dontNotifyConversion_ = settings.value("general-dontnotifyconversion", false).toBool();
 }
 
 void Settings::writeToDisk(QSettings & settings)
 {
     settings.setValue("tools-sketch-edgewidth", edgeWidth_);
     settings.setValue("general-showaboutdialogatstartup", showAboutDialogAtStartup_);
+    settings.setValue("general-keepoldversion", keepOldVersion_);
+    settings.setValue("general-dontnotifyconversion", dontNotifyConversion_);
 }
 
 // Edge width
@@ -33,3 +37,10 @@ void Settings::setEdgeWidth(double value) { edgeWidth_ = value; }
 // About dialog
 bool Settings::showAboutDialogAtStartup() const { return showAboutDialogAtStartup_; }
 void Settings::setShowAboutDialogAtStartup(bool value) { showAboutDialogAtStartup_ = value; }
+
+// File Version Conversion
+bool Settings::keepOldVersion() const { return keepOldVersion_; }
+void Settings::setKeepOldVersion(bool value) { keepOldVersion_ = value; }
+
+bool Settings::dontNotifyConversion() const { return dontNotifyConversion_; }
+void Settings::setDontNotifyConversion(bool value) { dontNotifyConversion_ = value; }

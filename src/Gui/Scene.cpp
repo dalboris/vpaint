@@ -272,28 +272,31 @@ void Scene::read(XmlStreamReader & xml)
 
 void Scene::readCanvas(XmlStreamReader & xml)
 {
-
     setCanvasDefaultValues();
 
     // Canvas
-    if(xml.attributes().hasAttribute("left"))
-        setLeft(xml.attributes().value("left").toDouble());
-    if(xml.attributes().hasAttribute("top"))
-        setTop(xml.attributes().value("top").toDouble());
-    if(xml.attributes().hasAttribute("width"))
-        setWidth(xml.attributes().value("width").toDouble());
-    if(xml.attributes().hasAttribute("height"))
-        setHeight(xml.attributes().value("height").toDouble());
+    if(xml.attributes().hasAttribute("position"))
+    {
+        QString stringPos = xml.attributes().value("position").toString();
+        QStringList list = stringPos.split(" ");
+        setLeft(list[0].toDouble());
+        setTop(list[1].toDouble());
+    }
+    if(xml.attributes().hasAttribute("size"))
+    {
+        QString stringsize = xml.attributes().value("size").toString();
+        QStringList list = stringsize.split(" ");
+        setWidth(list[0].toDouble());
+        setHeight(list[1].toDouble());
+    }
 
     xml.skipCurrentElement();
 }
 
 void Scene::writeCanvas(XmlStreamWriter & xml)
 {
-    xml.writeAttribute("left", QString().setNum(left()));
-    xml.writeAttribute("top", QString().setNum(top()));
-    xml.writeAttribute("width", QString().setNum(width()));
-    xml.writeAttribute("height", QString().setNum(height()));
+    xml.writeAttribute("position", QString().setNum(left()) + " " + QString().setNum(top()));
+    xml.writeAttribute("size", QString().setNum(width()) + " " + QString().setNum(height()));
 }
 
 void Scene::relativeRemap(const QDir & oldDir, const QDir & newDir)

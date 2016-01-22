@@ -88,7 +88,6 @@
 #include "../TimeDef.h"
 #include "../ViewSettings.h"
 #include "../View3DSettings.h"
-#include "../CssStyle.h"
 #include "CellList.h"
 #include <QString>
 #include <QRect>
@@ -219,7 +218,6 @@ public:
     // Change the color of the cell
     QColor color() const;
     void setColor(const QColor & c);
-    void setAutoColor();
 
     // Get the bounding box of this cell.
     BBox boundingBox() const;
@@ -315,9 +313,6 @@ protected:
     double colorHighlighted_[4];
     double colorSelected_[4];
     double color_[4];
-
-    // Styling
-    CssStyle style_;
 
     // Get the cell with ID id that belongs to the same VAC as this cell. Same as vac()->getCell(id).
     Cell * getCell(int id);

@@ -15,25 +15,28 @@
 
 #include "MainWindow.h"
 
+#include "Global.h"
+
 #include "Scene.h"
 #include "View3D.h"
 #include "View.h"
 #include "MultiView.h"
 #include "Timeline.h"
-#include "SaveAndLoad.h"
-#include "Global.h"
 #include "DevSettings.h"
 #include "ObjectPropertiesWidget.h"
 #include "AnimatedCycleWidget.h"
-#include "Background/BackgroundWidget.h"
 #include "EditCanvasSizeDialog.h"
 #include "ExportPngDialog.h"
 #include "AboutDialog.h"
 #include "SelectionInfoWidget.h"
-#include "XmlStreamWriter.h"
-#include "XmlStreamReader.h"
+#include "Background/BackgroundWidget.h"
 #include "VectorAnimationComplex/VAC.h"
 #include "VectorAnimationComplex/InbetweenFace.h"
+
+#include "IO/FileVersionConverter.h"
+#include "XmlStreamWriter.h"
+#include "XmlStreamReader.h"
+#include "SaveAndLoad.h"
 
 #include <QCoreApplication>
 #include <QApplication>
@@ -59,13 +62,6 @@
 
 
 MainWindow::MainWindow() :
-    companyName_("VPaint"),
-    appName_("VPaint"),
-    appVersion_Major_(1),
-    appVersion_Minor_(5),
-    appVersion_Stage_("RTM"), // If shipped, must be "RTM"
-    appVersion_SubStage_(0),
-
     scene_(0),
     multiView_(0),
 
@@ -166,9 +162,7 @@ MainWindow::MainWindow() :
     //setFocusPolicy(Qt::ClickFocus);
 
     // Application name
-    QCoreApplication::setApplicationName(appName_);
     setWindowFilePath(tr("New Document"));
-    QGuiApplication::setApplicationDisplayName(appName_);
 
     // Application icon
     QGuiApplication::setWindowIcon(QIcon(":/images/icon-256.png"));
@@ -790,6 +784,13 @@ void MainWindow::setSaveFilename_(const QString & filename)
 
 bool MainWindow::doOpen(const QString & filename)
 {
+    // Convert to newest version if necessary
+    bool success = FileVersionConverter(filename).convertToVersion(qApp->applicationVersion(), this);
+    if (!success)
+    {
+        return false;
+    }
+
     // Open file
     QFile file(filename);
     if (!file.open(QFile::ReadOnly | QFile::Text))
@@ -799,31 +800,9 @@ bool MainWindow::doOpen(const QString & filename)
         return false;
     }
 
-    // Read first char to determine in which format the file is written
-    QTextStream in(&file);
-    QChar firstChar;
-    in >> firstChar;
-
-    // Re-open file to read from scratch
-    file.close();
-    if (!file.open(QFile::ReadOnly | QFile::Text))
-    {
-        qDebug() << "Error: cannot open file";
-        QMessageBox::warning(this, tr("Error"), tr("Error: couldn't open file %1").arg(filename));
-        return false;
-    }
-
-    // Determine file format and read accordingly
-    if (firstChar == '-') // Pre-2015 YAML-like deprecated format
-    {
-        QTextStream in(&file);
-        read_DEPRECATED(in);
-    }
-    else // 2015+ XML format
-    {
-        XmlStreamReader xml(&file);
-        read(xml);
-    }
+    // Create XML stream reader and proceed
+    XmlStreamReader xml(&file);
+    read(xml);
 
     // Close file
     file.close();
@@ -924,7 +903,7 @@ void MainWindow::write(XmlStreamWriter &xml)
     // Document
     xml.writeStartElement("vec");
     {
-        xml.writeAttribute("version", "1.0");
+        xml.writeAttribute("version", qApp->applicationVersion());
 
         // Metadata such as author and license? Different options:
         //   1) as comments in header (issue: not part of document or XML spec, cross-editor compatibility issues)
@@ -971,17 +950,6 @@ void MainWindow::read(XmlStreamReader & xml)
                 "Cannot open file",
                 "Sorry, the file you are trying to open is an invalid VEC file.");
             return;
-        }
-
-        if(xml.attributes().value("version") != "1.0")
-        {
-            QMessageBox::warning(this,
-                "File version more recent than VPaint",
-                "The file you are trying to open has been created with a "
-                "version of VPaint more recent than the one you are using. "
-                "We will still try to open it, but errors may occur, or it "
-                "may not be displayed at intended. We recommend to download "
-                "the latest version of VPaint at www.vpaint.org");
         }
 
         int numLayer = 0;

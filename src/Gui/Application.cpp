@@ -20,6 +20,13 @@
 Application::Application(int& argc, char** argv) :
     QApplication(argc, argv)
 {
+    // Set organization and application name
+    setOrganizationName("VPaint");
+    setApplicationName("VPaint");
+    setApplicationDisplayName("VPaint");
+
+    // Set application version
+    setApplicationVersion(APP_VERSION);
 }
 
 bool Application::event(QEvent* event)

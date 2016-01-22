@@ -29,9 +29,18 @@ public:
     bool showAboutDialogAtStartup() const;
     void setShowAboutDialogAtStartup(bool value);
 
+    // File version conversion
+    bool keepOldVersion() const;
+    void setKeepOldVersion(bool value);
+
+    bool dontNotifyConversion() const;
+    void setDontNotifyConversion(bool value);
+
 private:
     double edgeWidth_;
     bool showAboutDialogAtStartup_;
+    bool keepOldVersion_;
+    bool dontNotifyConversion_;
 };
 
 #endif

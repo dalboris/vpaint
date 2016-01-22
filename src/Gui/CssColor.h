@@ -17,8 +17,9 @@ class CssColor
 {
 public:
     // Constructors
-    CssColor(int r=0, int g=0, int b=0, double a=1.0);
-    CssColor(const QString & c);
+    CssColor(int r=0, int g=0, int b=0, double a=1.0); // expects RGB in [0,255] and A in [0,1]
+    CssColor(const QString & c);                       // expects string of the form "rgba(r,b,b,a)", same ranges as above
+    CssColor(const double * c);                        // expects an array of size 4 with RGBA values all in [0,1]
 
     // Get
     int r() const;

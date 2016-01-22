@@ -158,7 +158,6 @@ Cell::Cell(Cell * other) :
 {
     vac_ = other->vac_;
     id_ = other->id_;
-    style_ = other->style_;
     //isHighlighted_ = other->isHighlighted_;
     isHovered_ = 0;
     isSelected_ = other->isSelected_;
@@ -229,15 +228,6 @@ void Cell::setColor(const QColor & c)
     color_[1] = c.greenF();
     color_[2] = c.blueF();
     color_[3] = c.alphaF();
-
-    CssColor cssColor(c.red(),c.green(),c.blue(),c.alphaF());
-    style_.set("color",cssColor.toString());
-}
-
-void Cell::setAutoColor()
-{
-
-    style_.remove("color");
 }
 
 bool Cell::isHighlighted() const
@@ -745,8 +735,8 @@ void Cell::write(XmlStreamWriter & xml) const
     xml.writeStartElement(xmlType_());
     xml.writeAttribute("id", QString().setNum(id()));
     write_(xml);
-    if(style_.size() > 0)
-        xml.writeAttribute("style", style_.toString());
+    CssColor cssColor(color_);
+    xml.writeAttribute("color", cssColor.toString());
     xml.writeEndElement();
 }
 
@@ -767,22 +757,10 @@ Cell::Cell(VAC * vac, XmlStreamReader & xml) :
     boundingBoxIsDirty_(true)
 {
     id_ = xml.attributes().value("id").toInt();
-    if(xml.attributes().hasAttribute("style"))
-        style_.fromString(xml.attributes().value("style").toString());
 
-    colorHighlighted_[0] = 1;
-    colorHighlighted_[1] = 0.7;
-    colorHighlighted_[2] = 0.7;
-    colorHighlighted_[3] = 1;
-
-    colorSelected_[0] = 1;
-    colorSelected_[1] = 0;
-    colorSelected_[2] = 0;
-    colorSelected_[3] = 1;
-
-    if(style_.contains("color"))
+    if(xml.attributes().hasAttribute("color"))
     {
-        CssColor c(style_.get("color"));
+        CssColor c(xml.attributes().value("color").toString());
         color_[0] = c.rF();
         color_[1] = c.gF();
         color_[2] = c.bF();
@@ -795,18 +773,17 @@ Cell::Cell(VAC * vac, XmlStreamReader & xml) :
         color_[2] = 0;
         color_[3] = 1;
     }
-}
 
-/*
-void Cell::split_callBoundaryChanged(Cell * cell, const SplitMap & splitMap)
-{
-    cell->split_boundaryChanged(splitMap);
-}
+    colorHighlighted_[0] = 1;
+    colorHighlighted_[1] = 0.7;
+    colorHighlighted_[2] = 0.7;
+    colorHighlighted_[3] = 1;
 
-void Cell::split_boundaryChanged(const SplitMap & splitMap)
-{
+    colorSelected_[0] = 1;
+    colorSelected_[1] = 0;
+    colorSelected_[2] = 0;
+    colorSelected_[3] = 1;
 }
-*/
 
 bool Cell::check() const
 {

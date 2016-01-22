@@ -148,14 +148,6 @@ private:
     void createDocks();
     void createMenus();
 
-    // ------- Application name and version ---------
-    QString companyName_;
-    QString appName_;
-    int appVersion_Major_;
-    int appVersion_Minor_;
-    QString appVersion_Stage_;
-    int appVersion_SubStage_;
-
     // --------- Other properties and widgets --------
     // Scene and View
     Scene * scene_;
