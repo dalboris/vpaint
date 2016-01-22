@@ -10,41 +10,23 @@
 #define UPDATECHECKDIALOG_H
 
 #include <QDialog>
-#include <QLabel>
 
-#include "Version.h"
-
-class QLineEdit;
 class QCheckBox;
-class QNetworkAccessManager;
-class QNetworkReply;
 
 class UpdateCheckDialog: public QDialog
 {
     Q_OBJECT
 
 public:
-    UpdateCheckDialog(Version configVersion);
-
-    Version versionChecked() const;
-    Version latestVersion() const;
-    void checkForUpdates();
-    void showWhenReady();
+    UpdateCheckDialog(QString newVersion, QWidget *parent = 0, Qt::WindowFlags f = 0);
+    bool skipVersion();
+    bool stopChecking();
 
 private slots:
-    void requestFinished_();
-    void stopCheckingChanged_(int state);
-    void updateSettings(int result);
+    void stopCheckingChanged_();
 
 private:
-    QLabel * mainDesc_;
     QCheckBox * skipVersionCheckBox_, * stopCheckingCheckBox_;
-
-    QNetworkAccessManager * networkManager_;
-    QNetworkReply * reply_;
-
-    Version versionToCheck_, latestVersion_;
-    bool isReady_;
 };
 
 #endif // UPDATECHECKDIALOG_H

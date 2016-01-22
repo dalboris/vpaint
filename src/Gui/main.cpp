@@ -9,18 +9,13 @@
 #include "Application.h"
 #include "MainWindow.h"
 #include "Global.h"
-#include "UpdateCheckDialog.h"
+#include "UpdateCheck.h"
 
 int main(int argc, char *argv[])
 {
     Application app(argc, argv);
     MainWindow mainWindow;
-
-    UpdateCheckDialog update(global()->settings().checkVersion());
-    update.setParent(&mainWindow, Qt::Dialog);
-    if(global()->settings().checkVersion() != Version()) {
-        update.checkForUpdates();
-    }
+    UpdateCheck update(&mainWindow);
 
     // About window
     if(global()->settings().showAboutDialogAtStartup())

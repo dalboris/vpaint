@@ -160,7 +160,8 @@ HEADERS += MainWindow.h \
     Background/BackgroundWidget.h \
     Background/BackgroundUrlValidator.h \
     UpdateCheckDialog.h \
-    Version.h
+    Version.h \
+    UpdateCheck.h
 
 
 SOURCES += main.cpp \
@@ -244,7 +245,8 @@ SOURCES += main.cpp \
     Background/BackgroundWidget.cpp \
     Background/BackgroundUrlValidator.cpp \
     UpdateCheckDialog.cpp \
-    Version.cpp
+    Version.cpp \
+    UpdateCheck.cpp
 
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../Third/GLEW/release/ -lGLEW
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../Third/GLEW/debug/ -lGLEW

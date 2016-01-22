@@ -28,12 +28,12 @@ public:
     void setPatch(short val);
 
     // Comparison operators
-    inline bool operator==(const Version& other) { return getMajor() == other.getMajor() && getMinor() == other.getMinor() && getPatch() == other.getPatch(); }
+    inline bool operator==(const Version& other) const { return getMajor() == other.getMajor() && getMinor() == other.getMinor() && getPatch() == other.getPatch(); }
     bool operator< (const Version& other) const;
-    bool operator!=(const Version& other) { return !((*this)==other); }
-    bool operator> (const Version& other) { return other<(*this); }
-    bool operator<=(const Version& other) { return !(other<(*this)); }
-    bool operator>=(const Version& other) { return !((*this)<other); }
+    inline bool operator!=(const Version& other) const { return !((*this)==other); }
+    inline bool operator> (const Version& other) const { return other<(*this); }
+    inline bool operator<=(const Version& other) const { return !(other<(*this)); }
+    inline bool operator>=(const Version& other) const { return !((*this)<other); }
 
 private:
     short major_, minor_, patch_;
