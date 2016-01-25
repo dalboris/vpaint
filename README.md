@@ -1,56 +1,38 @@
-#  ABOUT VPAINT
+![VPaint](https://github.com/dalboris/vpaint/blob/master/src/Gui/images/logobeta.png)
 
 [![Join the chat at https://gitter.im/dalboris/vpaint](https://badges.gitter.im/dalboris/vpaint.svg)](https://gitter.im/dalboris/vpaint?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-- Contact: Boris Dalstein <dalboris@gmail.com>
-- Website: http://www.vpaint.org
+VPaint is a vector graphics and 2D animation app based on the
+[Vector Animation Complex](http://www.dalboris.com/research/vac/) 
+technology. Visit [vpaint.org](http://vpaint.org) to learn more,
+or visit the [VPaint forum](http://www.vpaint.org/forum/). VPaint is proud to 
+be open source software licensed under 
+[the MIT license](https://github.com/dalboris/vpaint/blob/master/LICENSE.MIT).
 
-VPaint is an experimental vector graphics editor based on the
-Vector Animation Complex technology. It allows you to create
-resolution-independent illustrations and animations using 
-innovative techniques.
+Though, beware that VPaint is still in early development, and all VPaint 1.x versions are and will be labeled "BETA". The most unstable/incomplete features are marked with the text [Beta]. Please subscribe to the [mailing list](http://www.vpaint.org/#about) to be informed when VPaint 2.0 is released.
+
 
 # KNOWN ISSUES
 
-## General
-
-- VPaint 1.5 is considered a BETA version. It may crash unexpectedly, so it is recommended to save often. The most unstable features or still in development are marked with the text [Beta] in the menus.
-
-## Mac OS X
-
 - On Mac OS X 10.10 Yosemite and above, maximizing the window is poorly supported. If you want to exit maximizing, hide the toolbar and action bar with "View > Toolbar" and "View > Action Bar" so you can access the minimize button again.
 
-- If you have a retina display, then the pointer drawn by VPaint is not at the same location as your mouse cursor. It doesn't prevent using VPaint but it is quite inconvenient. See [#22](https://github.com/dalboris/vpaint/issues/22) for details.
-
-# LICENSE
-
-VPaint is licensed under [the MIT license](https://github.com/dalboris/vpaint/blob/master/LICENSE.MIT).
-
-This means that you are allowed to do pretty much whatever you want with the code
-either for non-commercial or commercial purposes. Curious why the MIT? [Check here](https://github.com/dalboris/vpaint/wiki/Why-the-MIT-license%3F).
-
-Some libraries VPaint depends on are subject to different licenses
-(e.g., LGPL, MPL, BSD), but they are all compatible with the MIT.
-More details are given in [the LICENSE file](https://github.com/dalboris/vpaint/blob/master/LICENSE.md).
+- On Mac OS X, if you have a retina display, then the pointer drawn by VPaint is not at the same location as your mouse cursor. It doesn't prevent using VPaint but it is quite inconvenient. See [#22](https://github.com/dalboris/vpaint/issues/22) for details.
 
 
 # HOW TO CONTRIBUTE
 
-The easiest way, and arguably the most helpful way to contribute is simply to spread the word about VPaint! Share it on Facebook, tweet about it, or write a blog post about it. Also, the documentation is still very limited, so if you figure out by yourself how to use a feature which is poorly documented, a good way to contribute is to document it [here](https://github.com/dalboris/vpaint/wiki/Documentation).
+One of the most helpful way to contribute is to spread the word about VPaint! Share it on Facebook, tweet about it, or write a blog post about it. Don't forget to join the [mailing list](http://www.vpaint.org/#about) so you don't miss out when new features are available. The more people are excited about VPaint, the more its developers work on it, the greater it becomes.
 
+If you are a developer and want to contribute code, this is awesome. We can't wait to see the improvements you will bring to VPaint. Below are a few guidelines for effective contributions:
 
-If you are a developer and want to contribute code, this is great! I'd be happy to collaborate with you :-) Below are a few guidelines:
-
-1. I only accept contributions which are licensed under the MIT. To do this, simply insert your copyright notice in [the COPYRIGHT file](https://github.com/dalboris/vpaint/blob/master/COPYRIGHT). The copyright notice must
+1. Only contributions licensed under the MIT will be accepted. To do this, simply insert your copyright notice in [the COPYRIGHT file](https://github.com/dalboris/vpaint/blob/master/COPYRIGHT). The copyright notice must
 include your full name.
 
-2. If you want to fix a bug, feel free to go ahead without prior approval: fork the repository, create a new branch fixing the bug, then submit a pull request. I might suggest a few modifications or ask clarifications before merging, but be confident that I will merge if it does fix a bug.
+2. If you want to fix a bug, feel free to go ahead without prior approval: fork the repository, create a new branch fixing the bug, then submit a pull request. We might suggest a few modifications or ask clarifications before merging, but be confident that it will be merged if it does fix a bug. Don't hesitate to ask for guidance and/or assistance at any time, either on the bug report or in the [dev chatroom](https://gitter.im/dalboris/vpaint).
 
-3. If you want to implement a new feature, please discuss it first (open a new feature request or reply to an existing one). This makes sure that we are on the same page on both the design and the implementation.
-If you don't, I may not accept the pull request.
+3. If you want to implement a new feature, please discuss it first (open a new feature request or reply to an existing one). This makes sure we are all on the same page, prevents software bloat, and allows us to provide guidance ahead of time.
 
-4. Please do not contribute code refactoring, I won't merge it or even look at it. Yes, the code of VPaint is a bit of a mess and requires refactoring, but I will do it myself, when the time is right.
-
+4. Please do not contribute code refactoring, it will be ignored. Yes, the code of VPaint is a bit of a mess and requires refactoring, but this is a task that will be done by your dedicated project lead, when the time is right.
 
 
 # HOW TO COMPILE
