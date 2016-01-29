@@ -165,7 +165,8 @@ HEADERS += MainWindow.h \
     IO/FileVersionConverterDialog.h \
     UpdateCheckDialog.h \
     Version.h \
-    UpdateCheck.h
+    UpdateCheck.h \
+    VectorAnimationComplex/BoundingBox.h
 
 
 SOURCES += main.cpp \
@@ -254,7 +255,8 @@ SOURCES += main.cpp \
     IO/FileVersionConverterDialog.cpp \
     UpdateCheckDialog.cpp \
     Version.cpp \
-    UpdateCheck.cpp
+    UpdateCheck.cpp \
+    VectorAnimationComplex/BoundingBox.cpp
 
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../Third/GLEW/release/ -lGLEW
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../Third/GLEW/debug/ -lGLEW
