@@ -219,10 +219,10 @@ public:
     bool isProper()     const;
 
     // Get boundaries
-    double xMin() const;
-    double xMax() const;
-    double yMin() const;
-    double yMax() const;
+    inline const double & xMin() const { return xMin_; }
+    inline const double & xMax() const { return xMax_; }
+    inline const double & yMin() const { return yMin_; }
+    inline const double & yMax() const { return yMax_; }
             
     // Compute width, height, and area
     double width()  const;

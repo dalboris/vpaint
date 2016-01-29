@@ -26,9 +26,6 @@ public:
     // Get sampling of the boundary
     virtual QList< QList<Eigen::Vector2d> > getSampling(Time time) const = 0;
 
-    // Intersection test
-    virtual bool intersectsRectangle(Time t, double x0, double x1, double y0, double y1);
-
     // Export SVG
     virtual void exportSVG(Time t, QTextStream & out);
 

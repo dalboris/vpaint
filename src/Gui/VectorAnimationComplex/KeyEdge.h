@@ -117,8 +117,8 @@ private:
     double remainingRadiusRight_;
 
     // Implementation of triangulate
-    void triangulate_(Time time, Triangles & out);
-    void triangulate_(double width, Time time, Triangles & out);
+    void triangulate_(Time time, Triangles & out) const;
+    void triangulate_(double width, Time time, Triangles & out) const;
 
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

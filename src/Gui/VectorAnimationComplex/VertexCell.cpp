@@ -241,7 +241,7 @@ Eigen::Vector2d circle_(const Eigen::Vector2d & center, double r, double theta)
 
 }
 
-void VertexCell::triangulate_(Time time, Triangles & out)
+void VertexCell::triangulate_(Time time, Triangles & out) const
 {
     out.clear();
 

@@ -276,12 +276,12 @@ void KeyEdge::drawRaw3D(View3DSettings & viewSettings)
     tri.draw3D(time(), viewSettings);
 }
 
-void KeyEdge::triangulate_(Time /*time*/, Triangles & out)
+void KeyEdge::triangulate_(Time /*time*/, Triangles & out) const
 {
     geometry()->triangulate(out);
 }
 
-void KeyEdge::triangulate_(double width, Time /*time*/, Triangles & out)
+void KeyEdge::triangulate_(double width, Time /*time*/, Triangles & out) const
 {
     geometry()->triangulate(width, out);
 }

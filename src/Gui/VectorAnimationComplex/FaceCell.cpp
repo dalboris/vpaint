@@ -65,11 +65,6 @@ bool FaceCell::isPickableCustom(Time /*time*/) const
         return false;
 }
 
-bool FaceCell::intersectsRectangle(Time t, double x0, double x1, double y0, double y1)
-{
-    return triangles(t).intersectsRectangle(x0, x1, y0, y1);
-}
-
 void FaceCell::exportSVG(Time t, QTextStream & out)
 {
     // Get polygon data

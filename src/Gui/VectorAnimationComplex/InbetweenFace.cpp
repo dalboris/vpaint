@@ -393,7 +393,7 @@ QSet<KeyFace*> InbetweenFace::afterFaces() const
     return afterFaces_;
 }
 
-void InbetweenFace::triangulate_(Time time, Triangles & out)
+void InbetweenFace::triangulate_(Time time, Triangles & out) const
 {
     computeTrianglesFromCycles(cycles_, out, time);
 }

@@ -53,7 +53,7 @@ private:
     bool isPickableCustom(Time time) const;
 
     // Implementation of triangulate for both KeyVertex and InbetweenVertex
-    void triangulate_(Time time, Triangles & out);
+    void triangulate_(Time time, Triangles & out) const;
 
 // --------- Cloning, Assigning, Copying, Serializing ----------
 

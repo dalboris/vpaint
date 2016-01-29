@@ -88,7 +88,7 @@ private:
     void clearCycles_();
 
     // Implementation of triangulate
-    void triangulate_(Time time, Triangles & out);
+    void triangulate_(Time time, Triangles & out) const;
 
 // --------- Cloning, Assigning, Copying, Serializing ----------
 

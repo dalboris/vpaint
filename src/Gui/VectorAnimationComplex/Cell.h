@@ -369,13 +369,18 @@ protected:
 
 public:
     // Get all the triangles to be rendered at given time
-    Triangles & triangles(Time time);
+    Triangles & triangles(Time t) const;
 
     // Get the bounding box of this cell at time t
     BoundingBox boundingBox(Time t) const;
 
     // Get the bounding box of this cell for all time t
     virtual BoundingBox boundingBox() const=0;
+
+    // Cell-BoundingBox intersection test. It uses the actual geometry of the
+    // cell, i.e. it is more expensive but more accurate than:
+    //     boundingBox(t).intersects(bb);
+    bool intersects(Time t, const BoundingBox & bb) const;
 
 protected:
     // Method to be called by derived classes when their geometry changes
@@ -386,11 +391,11 @@ protected:
 
 private:
     // Cached triangulations and bounding boxes (the integer represent a 1/60th of frame)
-    QMap<int,Triangles> triangles_;
-    QMap<int,BoundingBox> boundingBoxes_;
+    mutable QMap<int,Triangles> triangles_;
+    mutable QMap<int,BoundingBox> boundingBoxes_;
 
     // Compute triangulation for time t (must be implemented by derived classes)
-    virtual void triangulate_(Time t, Triangles & out)=0;
+    virtual void triangulate_(Time t, Triangles & out) const=0;
 
     // Return the list of cells whose geometry depends on this cell's geometry
     CellSet geometryDependentCells_();

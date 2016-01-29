@@ -391,7 +391,7 @@ void KeyFace::addCycle(const Cycle & cycle)
     processGeometryChanged_();
 }
 
-void KeyFace::triangulate_(Time /*time*/, Triangles & out)
+void KeyFace::triangulate_(Time /*time*/, Triangles & out) const
 {
     computeTrianglesFromCycles(cycles_, out);
 }

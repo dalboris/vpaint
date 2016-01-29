@@ -18,6 +18,8 @@ class View3DSettings;
 namespace VectorAnimationComplex
 {
 
+class BoundingBox;
+
 inline double cross(const Eigen::Vector2d & p, const Eigen::Vector2d & q)
 {
     return p[0]*q[1] - p[1]*q[0];
@@ -39,7 +41,7 @@ struct Triangle {
     bool intersects(const Eigen::Vector2d & p) const;
 
     // Check whether a rectangle intersects the triangle
-    bool intersectsRectangle(double r_minX, double r_maxX, double r_minY, double r_maxY) const;
+    bool intersects(const BoundingBox & bb) const;
 
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
@@ -77,24 +79,23 @@ public:
     inline int size() const {return triangles_.size();}
     inline Triangle & operator[] (int i) {return triangles_[i];}
 
-    // Access raw array of values: sizeof(*data) = 9 * sizeof(double) * triangleGeometry.size()
+    // Access raw data
     inline double * data() {return reinterpret_cast<double*>(triangles_.data());}
 
     // Check whether a point p is included is at least one triangle
     bool intersects(const Eigen::Vector2d & p) const;
 
     // Check whether a rectangle intersects at least one triangle
-    bool intersectsRectangle(double x0, double x1, double y0, double y1) const;
+    bool intersects(const BoundingBox & bb) const;
 
     // Draw
     void draw();
-    void draw3D(Time time, View3DSettings & viewSettings);
-
+    void draw3D(Time t, View3DSettings & viewSettings);
 
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-    std::vector<Triangle, Eigen::aligned_allocator<Triangle> > triangles_;
+    std::vector<Triangle, Eigen::aligned_allocator<Triangle>> triangles_;
 };
 
 }

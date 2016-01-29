@@ -784,13 +784,13 @@ bool Cell::check() const
 //                         GEOMETRY
 //###################################################################
 
-Triangles & Cell::triangles(Time time)
+Triangles & Cell::triangles(Time t) const
 {
-    int nSixtiethOfFrame = std::floor(time.floatTime() * 60 + 0.5);
+    int nSixtiethOfFrame = std::floor(t.floatTime() * 60 + 0.5);
     if(!triangles_.contains(nSixtiethOfFrame))
     {
         triangles_[nSixtiethOfFrame] = Triangles();
-        triangulate_(time, triangles_[nSixtiethOfFrame]);
+        triangulate_(t, triangles_[nSixtiethOfFrame]);
     }
 
     return triangles_[nSixtiethOfFrame];
@@ -800,6 +800,11 @@ BoundingBox Cell::boundingBox(Time t) const
 {
     // XXX TODO
     return BoundingBox();
+}
+
+bool Cell::intersects(Time t, const BoundingBox & bb) const
+{
+    return triangles(t).intersects(bb);
 }
 
 void Cell::processGeometryChanged_()

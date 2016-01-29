@@ -74,26 +74,6 @@ bool BoundingBox::isProper() const
 { 
     return !(isDegenerate() || isInfinite()); 
 }
-
-double BoundingBox::xMin() const
-{
-    return xMin_;
-}
-
-double BoundingBox::xMax() const
-{
-    return xMax_;
-}
-
-double BoundingBox::yMin() const
-{
-    return yMin_;
-}
-
-double BoundingBox::yMax() const
-{
-    return yMax_;
-}
             
 double BoundingBox::width() const 
 {

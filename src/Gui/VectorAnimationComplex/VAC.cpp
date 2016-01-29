@@ -1666,81 +1666,22 @@ void VAC::continueRectangleOfSelection(double x, double y)
     rectangleOfSelectionEndX_ = x;
     rectangleOfSelectionEndY_ = y;
 
-    // Compute clean positive rectangle
-    double x0 = rectangleOfSelectionStartX_;
-    double x1 = rectangleOfSelectionEndX_;
-    double y0 = rectangleOfSelectionStartY_;
-    double y1 = rectangleOfSelectionEndY_;
-    if(x1 < x0) std::swap(x0,x1);
-    if(y1 < y0) std::swap(y0,y1);
+    // Express rectangle of selection as bounding box
+    const BoundingBox bb(rectangleOfSelectionStartX_, rectangleOfSelectionEndX_,
+                         rectangleOfSelectionStartY_, rectangleOfSelectionEndY_);
 
-    // Compute cells in rectangle of selection
-    // Note: This should be factorized: intersectsRectangle() should be
-    // a virtual method of Cell
+    // Compute which cells intersect with bounding box
     cellsInRectangleOfSelection_.clear();
-    KeyVertexSet vertices = cells();
-    KeyEdgeSet edges = cells();
-    KeyFaceSet faces = cells();
-    InbetweenVertexSet ivertices = cells();
-    InbetweenEdgeSet iedges = cells();
-    InbetweenFaceSet ifaces = cells();
-    foreach(KeyVertex * v, vertices)
+    for(Cell * c: zOrdering_)
     {
-        if(v->isPickable(timeInteractivity_))
+        if (c->isPickable(timeInteractivity_) &&
+            c->intersects(timeInteractivity_, bb))
         {
-            Eigen::Vector2d p = v->pos();
-            if(x0 <= p[0] && p[0] <= x1
-                    && y0 <= p[1] && p[1] <= y1)
-            {
-                cellsInRectangleOfSelection_ << v;
-            }
-        }
-    }
-    foreach(KeyEdge * e, edges)
-    {
-        if(e->isPickable(timeInteractivity_))
-        {
-            if(e->intersectsRectangle(timeInteractivity_,x0,x1,y0,y1))
-                cellsInRectangleOfSelection_ << e;
-        }
-    }
-    foreach(KeyFace * f, faces)
-    {
-        if(f->isPickable(timeInteractivity_))
-        {
-            if(f->intersectsRectangle(timeInteractivity_,x0,x1,y0,y1))
-                cellsInRectangleOfSelection_ << f;
-        }
-    }
-    foreach(InbetweenVertex * v, ivertices)
-    {
-        if(v->isPickable(timeInteractivity_))
-        {
-            Eigen::Vector2d p = v->pos(timeInteractivity_);
-            if(x0 <= p[0] && p[0] <= x1
-                    && y0 <= p[1] && p[1] <= y1)
-            {
-                cellsInRectangleOfSelection_ << v;
-            }
-        }
-    }
-    foreach(InbetweenEdge * e, iedges)
-    {
-        if(e->isPickable(timeInteractivity_))
-        {
-            if(e->intersectsRectangle(timeInteractivity_,x0,x1,y0,y1))
-                cellsInRectangleOfSelection_ << e;
-        }
-    }
-    foreach(InbetweenFace * f, ifaces)
-    {
-        if(f->isPickable(timeInteractivity_))
-        {
-            if(f->intersectsRectangle(timeInteractivity_,x0,x1,y0,y1))
-                cellsInRectangleOfSelection_ << f;
+            cellsInRectangleOfSelection_ << c;
         }
     }
 
+    // Set result
     setSelectedCellsFromRectangleOfSelection();
 }
 

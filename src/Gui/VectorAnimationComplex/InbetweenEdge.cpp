@@ -604,7 +604,7 @@ InbetweenEdge::InbetweenEdge(VAC * vac, XmlStreamReader & xml) :
         return sampling;
     }
 
-    void InbetweenEdge::triangulate_(Time time, Triangles & out)
+    void InbetweenEdge::triangulate_(Time time, Triangles & out) const
     {
         QList<EdgeSample> samples = getSampling(time);
         LinearSpline ls(samples);
@@ -613,7 +613,7 @@ InbetweenEdge::InbetweenEdge(VAC * vac, XmlStreamReader & xml) :
         ls.triangulate(out);
     }
 
-    void InbetweenEdge::triangulate_(double width, Time time, Triangles & out)
+    void InbetweenEdge::triangulate_(double width, Time time, Triangles & out) const
     {
         QList<EdgeSample> samples = getSampling(time);
         LinearSpline ls(samples);
