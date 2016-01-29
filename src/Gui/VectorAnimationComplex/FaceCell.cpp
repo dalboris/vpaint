@@ -46,20 +46,11 @@ FaceCell::FaceCell(VAC * vac, QTextStream & in) :
     colorSelected_[3] = 1;
 }
 
-void FaceCell::drawRaw(Time time, ViewSettings & /*viewSettings*/)
-{
-    FaceCell::triangles(time).draw();
-}
-
 void FaceCell::drawRawTopology(Time time, ViewSettings & viewSettings)
 {
     if(viewSettings.drawTopologyFaces())
         triangles(time).draw();
 }
-
-
-
-
 
 bool FaceCell::isPickableCustom(Time /*time*/) const
 {

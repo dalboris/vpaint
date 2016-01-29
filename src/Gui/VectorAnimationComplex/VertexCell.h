@@ -33,7 +33,6 @@ public:
     //void draw(Time time, ViewSettings & viewSettings);
     void drawRaw(Time time, ViewSettings & viewSettings);
     void drawRawTopology(Time time, ViewSettings & viewSettings);
-    void drawEdgeJunction(Time time, ViewSettings & viewSettings);
 
     // Topology
     CellSet spatialBoundary() const;

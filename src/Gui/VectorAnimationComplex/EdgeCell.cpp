@@ -128,11 +128,6 @@ Triangles & EdgeCell::triangles(double width, Time time)
     return trianglesTopo_[pair];
 }
 
-void EdgeCell::drawRaw(Time time, ViewSettings & /*viewSettings*/)
-{
-    triangles(time).draw();
-}
-
 void EdgeCell::drawRawTopology(Time time, ViewSettings & viewSettings)
 {
     bool screenRelative = viewSettings.screenRelative();

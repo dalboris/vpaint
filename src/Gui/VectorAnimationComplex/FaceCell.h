@@ -21,7 +21,6 @@ public:
     FaceCell(VAC * vac);
 
     // Drawing
-    void drawRaw(Time time, ViewSettings & viewSettings);
     void drawRawTopology(Time time, ViewSettings & viewSettings);
 
     // Get sampling of the boundary
