@@ -89,6 +89,8 @@
 #include "../ViewSettings.h"
 #include "../View3DSettings.h"
 #include "CellList.h"
+#include "Triangles.h"
+#include "BoundingBox.h"
 #include <QString>
 #include <QRect>
 #include <QColor>
@@ -102,36 +104,65 @@ namespace VectorAnimationComplex
 class CellObserver;
 class KeyHalfedge;
 
-// Convenient struct to store the bounding box of a cell
-struct BBox
-{
-    // Members
-    double minX, maxX, minY, maxY;
-
-    // Convenient constructor
-    BBox(double minX, double maxX, double minY, double maxY) :
-        minX(minX), maxX(maxX), minY(minY), maxY(maxY) {}
-
-    // Returns true if the two bounding boxes intersect
-    bool intersects(const BBox & other) const;
-};
-
 // The abstract base class Cell
 class Cell
 {
+
+//###################################################################
+//                            CORE
+//###################################################################
+
 public:
-    // Constructor/Destructor are protected: it is the responsibility of VAC to create cells.
-
-    // Destroy the cell. Same as vac()->deleteCell(this).
-    void destroy();
-
-    // Get the VAC this cell belongs to.
+    // Get the VAC this cell belongs to, and the cell's id
     VAC * vac() const { return vac_; }
-
-    // Get the id of this cell.
     int id() const { return id_; }
 
-    // Casting or Type Checking
+    // Destroy the cell safely (syntactic sugar for vac()->deleteCell(this))
+    void destroy();
+
+    // Observers
+    void addObserver(CellObserver * observer);
+    void removeObserver(CellObserver * observer);
+
+protected:
+    // Protected constructor, so only VAC and derived classes can call it.
+    // It creates a cell with VAC `vac`. `vac` must be non null.
+    // It is not inserted in the VAC's containers. No valid ID is given.
+    // All the above must be done by the VAC right after its creation.
+    Cell(VAC * vac);
+
+    // Virtual protected destructor and helper methods for destruction.
+    // Note: These helper methods *must* be called before and outside
+    //       the actual Cell destructor since they rely on the virtual
+    //       method boundary().
+    virtual ~Cell()=0;
+    void destroyStar();
+    void informBoundaryImGettingDestroyed();
+
+    // Cloning (caution: it is the caller's responsibility to
+    //                   insert it in the appropriate vac)
+    Cell(Cell * other);
+    virtual Cell * clone()=0;
+    virtual void remapPointers(VAC * newVAC);
+
+    // Get cell from id (syntactic sugar for vac()->getCell(id))
+    Cell * getCell(int id);
+
+private:
+    // Embedding in VAC
+    friend class VAC;
+    VAC * vac_;
+    int id_;
+
+    // Observers
+    QSet<CellObserver*> observers_;
+
+
+//###################################################################
+//                          TYPE CASTING
+//###################################################################
+
+public:
     template <class CellClass> CellClass * to() { return dynamic_cast<CellClass*>(this); }
     Cell * toCell();
     KeyCell * toKeyCell();
@@ -146,9 +177,101 @@ public:
     InbetweenEdge * toInbetweenEdge();
     InbetweenFace * toInbetweenFace();
 
-    // Getting dimension
+
+//###################################################################
+//                           TIME
+//###################################################################
+
+public:
+    // Check if the cell exists at this time
+    virtual bool exists(Time /*time*/) const { return false; }
+    virtual bool isBefore(Time /*time*/) const { return false; } // true iff cell lifespan \in (-inf,t)
+    virtual bool isAfter(Time /*time*/) const { return false; } // true iff cell lifespan \in (t,+inf)
+    virtual bool isAt(Time /*time*/) const { return false; } // true iff cell lifespan \in { t }. Cannot return true for inbetween cells
+
+
+//###################################################################
+//                          TOPOLOGY
+//###################################################################
+
+public:
+    // Get cell dimension
     int dimension();
 
+    // Topological Navigation Information
+    // ------------ Boundary ------------
+    CellSet boundary() const;
+    virtual CellSet spatialBoundary() const;
+    CellSet spatialBoundary(Time t) const;
+    KeyCellSet temporalBoundary() const;
+    virtual KeyCellSet beforeCells() const;
+    virtual KeyCellSet afterCells() const;
+    // -------------- Star --------------
+    CellSet star() const;
+    CellSet spatialStar() const;
+    CellSet spatialStar(Time t) const;
+    CellSet temporalStar() const;
+    CellSet temporalStarBefore() const;
+    CellSet temporalStarAfter() const;
+    // ---------- Neighbourhood ---------
+    CellSet neighbourhood() const;
+    CellSet spatialNeighbourhood() const;
+    CellSet spatialNeighbourhood(Time t) const;
+    CellSet temporalNeighbourhood() const;
+    CellSet temporalNeighbourhoodBefore() const;
+    CellSet temporalNeighbourhoodAfter() const;
+
+    // Update cell boundary as a result of a split
+    void updateBoundary(KeyVertex * oldVertex, KeyVertex * newVertex);
+    void updateBoundary(const KeyHalfedge & oldHalfedge, const KeyHalfedge & newHalfedge);
+    void updateBoundary(KeyEdge * oldEdge, const KeyEdgeList & newEdges);
+
+    // Safety check
+    bool check() const;
+
+protected:
+    // --- Modifying star of boundary ---
+    void addMeToStarOfBoundary_();
+    void removeMeFromStarOfBoundary_();
+    void removeMeFromStarOf_(Cell * c);
+    // --- Modifying spatial star of boundary ---
+    void addMeToSpatialStarOf_(Cell * c);
+    void removeMeFromSpatialStarOf_(Cell * c);
+    // --- Modifying temporal star of boundary ---
+    void addMeToTemporalStarBeforeOf_(Cell *c);
+    void addMeToTemporalStarAfterOf_(Cell *c);
+    void removeMeFromTemporalStarBeforeOf_(Cell *c);
+    void removeMeFromTemporalStarAfterOf_(Cell *c);
+
+private:
+    // Trusting operators
+    friend class Operator;
+    virtual bool check_() const=0;
+
+    // Update boundary
+    void updateBoundary_preprocess();
+    void updateBoundary_postprocess();
+    virtual void updateBoundary_impl(KeyVertex * oldVertex, KeyVertex * newVertex);
+    virtual void updateBoundary_impl(const KeyHalfedge & oldHalfedge, const KeyHalfedge & newHalfedge);
+    virtual void updateBoundary_impl(KeyEdge * oldEdge, const KeyEdgeList & newEdges);
+
+    // Star: Those are the boundary's back-pointers needed for efficiency
+    //       (Otherwise, if implemented as a method, it would be necessary
+    //        to visit all the cells in the VAC to check those whose boundary
+    //        contains this cell)
+    CellSet spatialStar_;
+    CellSet temporalStarBefore_; // We know they are animated cells, but not enforced to be consistent
+    CellSet temporalStarAfter_;  // with spatial star (in which case we know they are either edges of faces)
+                                 // This emphasizes the idea that we do not store any semantics for the star,
+                                 // only for the boundary, and that the star is only stored to inform all of them
+                                 // consistently when a change happened to the boundary
+
+
+//###################################################################
+//                 HIGHLIGHTING / SELECTING / DRAWING
+//###################################################################
+
+public:
     // Drawing and Picking, default implementation is:
     //   - drawing: call glColor(color), then drawRaw()
 
@@ -178,127 +301,14 @@ public:
     virtual void drawRaw3D(View3DSettings & viewSettings);
     virtual void drawPick3D(View3DSettings & viewSettings);
 
-    // Check if the cell exists at this time
-    virtual bool exists(Time /*time*/) const { return false; }
-    virtual bool isBefore(Time /*time*/) const { return false; } // true iff cell lifespan \in (-infty,t)
-    virtual bool isAfter(Time /*time*/) const { return false; } // true iff cell lifespan \in (t,+infty)
-    virtual bool isAt(Time /*time*/) const { return false; } // true iff cell lifespan \in { t }. Cannot return true for inbetween cells
-
     // Highlighting and Selecting
     bool isHovered() const  { return isHovered_; }
     bool isSelected()    const  { return isSelected_;    }
     bool isHighlighted() const;
 
-    // Topological Navigation Information
-    // ------------ Boundary ------------
-    CellSet boundary() const;
-    virtual CellSet spatialBoundary() const;
-    CellSet spatialBoundary(Time t) const;
-    KeyCellSet temporalBoundary() const;
-    virtual KeyCellSet beforeCells() const;
-    virtual KeyCellSet afterCells() const;
-    // -------------- Star --------------
-    CellSet star() const;
-    CellSet spatialStar() const;
-    CellSet spatialStar(Time t) const;
-    CellSet temporalStar() const;
-    CellSet temporalStarBefore() const;
-    CellSet temporalStarAfter() const;
-    // ---------- Neighbourhood ---------
-    CellSet neighbourhood() const;
-    CellSet spatialNeighbourhood() const;
-    CellSet spatialNeighbourhood(Time t) const;
-    CellSet temporalNeighbourhood() const;
-    CellSet temporalNeighbourhoodBefore() const;
-    CellSet temporalNeighbourhoodAfter() const;
-
-    // Safety check
-    bool check() const;
-
     // Change the color of the cell
     QColor color() const;
     void setColor(const QColor & c);
-
-    // Get the bounding box of this cell.
-    BBox boundingBox() const;
-    // Check if the bounding box of this cell intersects the bounding box of the other cell.
-    bool boundingBoxIntersects(Cell * other) const;
-
-    // Update cell boundary
-    void updateBoundary(KeyVertex * oldVertex, KeyVertex * newVertex);
-    void updateBoundary(const KeyHalfedge & oldHalfedge, const KeyHalfedge & newHalfedge);
-    void updateBoundary(KeyEdge * oldEdge, const KeyEdgeList & newEdges);
-
-    // Observers management
-    void addObserver(CellObserver * observer);
-    void removeObserver(CellObserver * observer);
-
-
-protected:
-    // --- Modifying star of boundary ---
-    void addMeToStarOfBoundary_();
-    void removeMeFromStarOfBoundary_();
-    void removeMeFromStarOf_(Cell * c);
-    // --- Modifying spatial star of boundary ---
-    void addMeToSpatialStarOf_(Cell * c);
-    void removeMeFromSpatialStarOf_(Cell * c);
-    // --- Modifying temporal star of boundary ---
-    void addMeToTemporalStarBeforeOf_(Cell *c);
-    void addMeToTemporalStarAfterOf_(Cell *c);
-    void removeMeFromTemporalStarBeforeOf_(Cell *c);
-    void removeMeFromTemporalStarAfterOf_(Cell *c);
-
-    CellSet geometryDependentCells_();
-    virtual BBox computeBoundingBox_() const = 0;
-    void geometryChanged_(); // derived classes must call this when their geometry changes
-    virtual void clearCachedGeometry_();
-
-private:
-    // Embedding in VAC
-    friend class VAC;
-    VAC * vac_;
-    int id_;
-
-    // Trusting operators
-    friend class Operator;
-    virtual bool check_() const=0;
-
-    // highlighting and selecting
-    bool isHovered_;
-    bool isSelected_;
-    void setHovered(bool b) { isHovered_ = b;    }
-    void setSelected(bool b)    { isSelected_    = b;    }
-
-    // Observer management
-    QSet<CellObserver*> observers_;
-
-    // Non-Virtual Interface idiom
-    bool isPickable(Time time) const;
-    virtual bool isPickableCustom(Time time) const;
-    virtual void drawPickCustom(Time time, ViewSettings & viewSettings);
-    virtual void drawPickTopologyCustom(Time time, ViewSettings & viewSettings);
-
-    // Update boundary
-    void updateBoundary_preprocess();
-    void updateBoundary_postprocess();
-    virtual void updateBoundary_impl(KeyVertex * oldVertex, KeyVertex * newVertex);
-    virtual void updateBoundary_impl(const KeyHalfedge & oldHalfedge, const KeyHalfedge & newHalfedge);
-    virtual void updateBoundary_impl(KeyEdge * oldEdge, const KeyEdgeList & newEdges);
-
-    // Star: Those are the boundary's back-pointers needed for efficiency
-    //       (Otherwise, if implemented as a method, it would be necessary
-    //        to visit all the cells in the VAC to check those whose boundary
-    //        contains this cell)
-    CellSet spatialStar_;
-    CellSet temporalStarBefore_; // We know they are animated cells, but not enforced to be consistent
-    CellSet temporalStarAfter_;  // with spatial star (in which case we know they are either edges of faces)
-                                 // This emphasizes the idea that we do not store any semantics for the star,
-                                 // only for the boundary, and that the star is only stored to inform all of them
-                                 // consistently when a change happened to the boundary
-
-    // Bounding box
-    mutable BBox boundingBox_;
-    mutable bool boundingBoxIsDirty_;
 
 protected:
     // Make a call to  glColor, taking into account the member
@@ -314,47 +324,25 @@ protected:
     double colorSelected_[4];
     double color_[4];
 
-    // Get the cell with ID id that belongs to the same VAC as this cell. Same as vac()->getCell(id).
-    Cell * getCell(int id);
+private:
+    // highlighting and selecting
+    bool isHovered_;
+    bool isSelected_;
+    void setHovered(bool b) { isHovered_ = b;    }
+    void setSelected(bool b) { isSelected_    = b;    }
 
-    // Protected constructor, so only VAC and derived classes can call it.
-    // It creates a cell with VAC `vac`. `vac` must be non null.
-    // It is not inserted in the VAC's containers. No valid ID is given.
-    // All the above must be done by the VAC right after its creation.
-    Cell(VAC * vac);
-
-    // Virtual protected destructor and helper methods for destruction.
-    // Note: These helper methods *must* be called before and outside
-    //       the actual Cell destructor since they rely on the virtual
-    //       method boundary().
-    virtual ~Cell()=0;
-    void destroyStar();
-    void informBoundaryImGettingDestroyed();
+    // Non-Virtual Interface idiom
+    bool isPickable(Time time) const;
+    virtual bool isPickableCustom(Time time) const;
+    virtual void drawPickCustom(Time time, ViewSettings & viewSettings);
+    virtual void drawPickTopologyCustom(Time time, ViewSettings & viewSettings);
 
 
-    // Splitting
-    /*
-    void split_callBoundaryChanged(Cell * cell, const SplitMap & splitMap);
-    virtual void split_boundaryChanged(const SplitMap & splitMap);
-    */
-    // only need to be  inherited by potential star cells of
-    // cells  that can  be splitted.  Their dimension  is at
-    // least 2, and hence only includes:
-    //   - Key Face
-    //   - Animated Edge
-    //   - Animated Face (TODO)
-    //
-
-// --------- Cloning, Assigning, Copying, Serializing ----------
-
+//###################################################################
+//                            I/O
+//###################################################################
 
 protected:
-    // Cloning (caution: it is the caller's responsibility to
-    //                   insert it in the appropriate vac)
-    Cell(Cell * other);
-    virtual Cell * clone()=0;
-    virtual void remapPointers(VAC * newVAC);
-
     // Serializating
     void write(XmlStreamWriter & xml) const;
     virtual QString xmlType_() const;
@@ -373,8 +361,40 @@ protected:
 
     // Export
     virtual void exportSVG(Time t, QTextStream & out);
+
+
+//###################################################################
+//                         GEOMETRY
+//###################################################################
+
+public:
+    // Get all the triangles to be rendered at given time
+    Triangles & triangles(Time time);
+
+    // Get the bounding box of this cell at time t
+    BoundingBox boundingBox(Time t) const;
+
+    // Get the bounding box of this cell for all time t
+    virtual BoundingBox boundingBox() const=0;
+
+protected:
+    // Method to be called by derived classes when their geometry changes
+    void processGeometryChanged_();
+
+    // Clear cached geometry (derived classes caching more data may specialize it)
+    virtual void clearCachedGeometry_();
+
+private:
+    // Cached triangulations and bounding boxes (the integer represent a 1/60th of frame)
+    QMap<int,Triangles> triangles_;
+    QMap<int,BoundingBox> boundingBoxes_;
+
+    // Compute triangulation for time t (must be implemented by derived classes)
+    virtual void triangulate_(Time t, Triangles & out)=0;
+
+    // Return the list of cells whose geometry depends on this cell's geometry
+    CellSet geometryDependentCells_();
 };
-        
     
 }
 

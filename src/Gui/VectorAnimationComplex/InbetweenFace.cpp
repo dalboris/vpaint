@@ -324,7 +324,7 @@ void InbetweenFace::setCycle(int i, const AnimatedCycle & cycle) // must be vali
     removeMeFromStarOfBoundary_();
     cycles_[i] = cycle;
     addMeToStarOfBoundary_();
-    geometryChanged_();
+    processGeometryChanged_();
 }
 
 void InbetweenFace::removeCycle(int i)
@@ -332,7 +332,7 @@ void InbetweenFace::removeCycle(int i)
     removeMeFromStarOfBoundary_();
     cycles_.removeAt(i);
     addMeToStarOfBoundary_();
-    geometryChanged_();
+    processGeometryChanged_();
 }
 
 void InbetweenFace::setBeforeFaces(const QSet<KeyFace*> & beforeFaces)
@@ -393,7 +393,7 @@ QSet<KeyFace*> InbetweenFace::afterFaces() const
     return afterFaces_;
 }
 
-void InbetweenFace::triangulate(Time time, Triangles & out)
+void InbetweenFace::triangulate_(Time time, Triangles & out)
 {
     computeTrianglesFromCycles(cycles_, out, time);
 }

@@ -46,29 +46,6 @@ FaceCell::FaceCell(VAC * vac, QTextStream & in) :
     colorSelected_[3] = 1;
 }
 
-
-void FaceCell::triangulate(Time /*time*/, Triangles & out)
-{
-    out.clear();
-}
-
-void FaceCell::clearCachedGeometry_()
-{
-    triangles_.clear();
-}
-
-Triangles & FaceCell::triangles(Time time)
-{
-    int nSixtiethOfFrame = std::floor(time.floatTime() * 60 + 0.5);
-    if(!triangles_.contains(nSixtiethOfFrame))
-    {
-        triangles_[nSixtiethOfFrame] = Triangles();
-        triangulate(time, triangles_[nSixtiethOfFrame]);
-    }
-
-    return triangles_[nSixtiethOfFrame];
-}
-
 void FaceCell::drawRaw(Time time, ViewSettings & /*viewSettings*/)
 {
     FaceCell::triangles(time).draw();

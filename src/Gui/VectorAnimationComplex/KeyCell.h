@@ -44,6 +44,9 @@ public:
     KeyCellSet beforeCells() const;
     KeyCellSet afterCells() const;
 
+    // Bounding box
+    using Cell::boundingBox;
+    BoundingBox boundingBox() const;
 
 private:
     Time time_;

@@ -43,9 +43,7 @@ namespace VectorAnimationComplex
 
 Cell::Cell(VAC * vac) :
     vac_(vac), id_(-1),
-    isHovered_(0), isSelected_(0),
-    boundingBox_(0,0,0,0),
-    boundingBoxIsDirty_(true)
+    isHovered_(0), isSelected_(0)
 {
     colorHighlighted_[0] = 1;
     colorHighlighted_[1] = 0.7;
@@ -152,9 +150,7 @@ void Cell::updateBoundary_impl(const KeyHalfedge & , const KeyHalfedge & ) {}
 void Cell::updateBoundary_impl(KeyEdge * , const KeyEdgeList & ) {}
 
 
-Cell::Cell(Cell * other) :
-    boundingBox_(0,0,0,0),
-    boundingBoxIsDirty_(true)
+Cell::Cell(Cell * other)
 {
     vac_ = other->vac_;
     id_ = other->id_;
@@ -175,9 +171,6 @@ Cell::Cell(Cell * other) :
     spatialStar_ = other->spatialStar_;
     temporalStarBefore_ = other->temporalStarBefore_;
     temporalStarAfter_ = other->temporalStarAfter_;
-
-    boundingBox_ = other->boundingBox_;
-    boundingBoxIsDirty_ = other->boundingBoxIsDirty_;
 }
 
 void Cell::remapPointers(VAC * newVAC)
@@ -377,9 +370,9 @@ void Cell::draw(Time time, ViewSettings & viewSettings)
     drawRaw(time, viewSettings);
 }
 
-void Cell::drawRaw(Time /*time*/, ViewSettings & /*viewSettings*/)
+void Cell::drawRaw(Time time, ViewSettings & /*viewSettings*/)
 {
-
+    triangles(time).draw();
 }
 
 void Cell::drawPick(Time time, ViewSettings & viewSettings)
@@ -413,8 +406,9 @@ void Cell::drawTopology(Time time, ViewSettings & viewSettings)
     drawRawTopology(time, viewSettings);
 }
 
-void Cell::drawRawTopology(Time /*time*/, ViewSettings & /*viewSettings*/)
+void Cell::drawRawTopology(Time time, ViewSettings & /*viewSettings*/)
 {
+    triangles(time).draw();
 }
 
 void Cell::drawPickTopology(Time time, ViewSettings & viewSettings)
@@ -447,19 +441,11 @@ void Cell::draw3D(View3DSettings & viewSettings)
 
 void Cell::drawRaw3D(View3DSettings & /*viewSettings*/)
 {
-
 }
 
 void Cell::drawPick3D(View3DSettings & /*viewSettings*/)
 {
-    /*
-    Picking::glColor(id());
-    drawRaw3D();
-    */
 }
-
-
-
 
 bool Cell::isPickable(Time time) const
 {
@@ -703,9 +689,7 @@ void Cell::read2ndPass()
 // to insert it in its list of objects.
 Cell::Cell(VAC * vac, QTextStream & in) :
     vac_(vac), id_(-1),
-    isHovered_(0), isSelected_(0),
-    boundingBox_(0,0,0,0),
-    boundingBoxIsDirty_(true)
+    isHovered_(0), isSelected_(0)
 {
     Field field;
     in >> field >> id_;
@@ -752,9 +736,7 @@ QString Cell::xmlType_() const
 
 Cell::Cell(VAC * vac, XmlStreamReader & xml) :
     vac_(vac), id_(-1),
-    isHovered_(0), isSelected_(0),
-    boundingBox_(0,0,0,0),
-    boundingBoxIsDirty_(true)
+    isHovered_(0), isSelected_(0)
 {
     id_ = xml.attributes().value("id").toInt();
 
@@ -797,31 +779,43 @@ bool Cell::check() const
     return check_();
 }
 
-BBox Cell::boundingBox() const
+
+//###################################################################
+//                         GEOMETRY
+//###################################################################
+
+Triangles & Cell::triangles(Time time)
 {
-    if(boundingBoxIsDirty_)
+    int nSixtiethOfFrame = std::floor(time.floatTime() * 60 + 0.5);
+    if(!triangles_.contains(nSixtiethOfFrame))
     {
-        boundingBox_ = computeBoundingBox_();
-        boundingBoxIsDirty_ = false;
+        triangles_[nSixtiethOfFrame] = Triangles();
+        triangulate_(time, triangles_[nSixtiethOfFrame]);
     }
-    return boundingBox_;
+
+    return triangles_[nSixtiethOfFrame];
 }
 
-bool Cell::boundingBoxIntersects(Cell * other) const
+BoundingBox Cell::boundingBox(Time t) const
 {
-    BBox thisBBox = boundingBox();
-    BBox otherBBox = other->boundingBox();
-
-    return thisBBox.intersects(otherBBox);
+    // XXX TODO
+    return BoundingBox();
 }
 
-bool BBox::intersects(const BBox & other) const
+void Cell::processGeometryChanged_()
 {
-    return
-            minX <= other.maxX &&
-            maxX >= other.minX &&
-            minY <= other.maxY &&
-            maxY >= other.minY;
+    CellSet toClearCells = geometryDependentCells_();
+
+    // Cached geometry
+    foreach(Cell * cell, toClearCells)
+    {
+        cell->clearCachedGeometry_();
+    }
+}
+
+void Cell::clearCachedGeometry_()
+{
+    triangles_.clear();
 }
 
 CellSet Cell::geometryDependentCells_()
@@ -840,23 +834,6 @@ CellSet Cell::geometryDependentCells_()
     }
 
     return Algorithms::fullstar(res);
-}
-
-void Cell::geometryChanged_()
-{
-    CellSet toClearCells = geometryDependentCells_();
-
-    // Cached geometry
-    foreach(Cell * cell, toClearCells)
-    {
-        cell->clearCachedGeometry_();
-        cell->boundingBoxIsDirty_ = true;
-    }
-}
-
-void Cell::clearCachedGeometry_()
-{
-
 }
 
 }

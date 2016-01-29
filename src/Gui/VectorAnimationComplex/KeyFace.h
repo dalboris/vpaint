@@ -56,9 +56,6 @@ public:
     void setCycles(const QList<Cycle> & cycles);
 
     // Drawing
-    using FaceCell::triangles;
-    Triangles & triangles();
-    void triangulate(Time time, Triangles & out);
 
     // Get sampling of the boundary
     QList< QList<Eigen::Vector2d> > getSampling(Time time) const;
@@ -90,8 +87,8 @@ private:
     // Remove all cycles.
     void clearCycles_();
 
-
-    BBox computeBoundingBox_() const;
+    // Implementation of triangulate
+    void triangulate_(Time time, Triangles & out);
 
 // --------- Cloning, Assigning, Copying, Serializing ----------
 

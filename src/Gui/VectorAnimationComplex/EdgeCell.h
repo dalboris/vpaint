@@ -35,9 +35,7 @@ public:
     EdgeCellSet incidentEdges() const;
 
     // Drawing
-    virtual void triangulate(Time time, Triangles & out);
-    virtual void triangulate(double width, Time time, Triangles & out);
-    Triangles & triangles(Time time);
+    using Cell::triangles;
     Triangles & triangles(double width, Time time);
     void drawRaw(Time time, ViewSettings & viewSettings);
     void drawRawTopology(Time time, ViewSettings & viewSettings);
@@ -54,10 +52,11 @@ public:
     virtual void exportSVG(Time t, QTextStream & out);
 
 protected:
-    // Cached triangulations (the integer represent a 1/60th of frame)
-    QMap<int,Triangles> triangles_;
-    QMap< QPair<int,double>, Triangles> trianglesTopo_; // (int=time, double=width)
+    // Special handling to draw edges of fixed screen-width in topology mode
+    // (int=time, double=width)
+    QMap< QPair<int,double>, Triangles> trianglesTopo_;
     virtual void clearCachedGeometry_();
+    virtual void triangulate_(double width, Time time, Triangles & out)=0;
 
 private:
     // Trusting operators

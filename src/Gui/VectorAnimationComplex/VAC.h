@@ -41,6 +41,7 @@ class Path;
 class AnimatedVertex;
 class KeyHalfedge;
 class PreviewKeyFace;
+class BoundingBox;
 
 class VAC: public SceneObject
 {
@@ -422,6 +423,9 @@ private:
     void endAggregateSignals_();
     int signalCounter_;
     bool shouldEmitSelectionChanged_;
+
+    // Transform tool
+    BoundingBox selectionBoundingBox_;
 };
 
 }

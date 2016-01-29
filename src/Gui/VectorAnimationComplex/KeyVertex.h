@@ -67,9 +67,6 @@ private:
 
     void initColor();
 
-    // Bounding box
-    BBox computeBoundingBox_() const;
-
 
 // --------- Cloning, Assigning, Copying, Serializing ----------
 

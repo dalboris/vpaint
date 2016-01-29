@@ -21,8 +21,6 @@ public:
     FaceCell(VAC * vac);
 
     // Drawing
-    virtual void triangulate(Time time, Triangles & out);
-    Triangles & triangles(Time time);
     void drawRaw(Time time, ViewSettings & viewSettings);
     void drawRawTopology(Time time, ViewSettings & viewSettings);
 
@@ -39,10 +37,6 @@ protected:
     virtual ~FaceCell()=0;
 
 private:
-    // Cached triangulations (the integer represent a 1/60th of frame)
-    QMap<int,Triangles> triangles_;
-    void clearCachedGeometry_();
-
     // Trusting operators
     friend class Operator;
     bool checkFace_() const;

@@ -24,6 +24,15 @@ inline double cross(const Eigen::Vector2d & p, const Eigen::Vector2d & q)
 }
 
 struct Triangle {
+    Triangle() {}
+
+    Triangle(const Eigen::Vector2d & a_,
+             const Eigen::Vector2d & b_,
+             const Eigen::Vector2d & c_) :
+        a(a_), b(b_), c(c_)
+    {
+    }
+
     Eigen::Vector2d a, b, c;
 
     // Check whether a point p is inside the triangle

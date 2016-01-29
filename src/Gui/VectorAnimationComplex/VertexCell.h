@@ -53,6 +53,9 @@ private:
     void drawPickCustom(Time time, ViewSettings & viewSettings);
     bool isPickableCustom(Time time) const;
 
+    // Implementation of triangulate for both KeyVertex and InbetweenVertex
+    void triangulate_(Time time, Triangles & out);
+
 // --------- Cloning, Assigning, Copying, Serializing ----------
 
 protected:

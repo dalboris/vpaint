@@ -108,32 +108,10 @@ EdgeCellSet EdgeCell::incidentEdges() const
     return incidentCells;
 }
 
-void EdgeCell::triangulate(double /*width*/, Time /*time*/, Triangles & out)
-{
-    out.clear();
-}
-
-void EdgeCell::triangulate(Time /*time*/, Triangles & out)
-{
-    out.clear();
-}
-
 void EdgeCell::clearCachedGeometry_()
 {
-    triangles_.clear();
+    Cell::clearCachedGeometry_();
     trianglesTopo_.clear();
-}
-
-Triangles & EdgeCell::triangles(Time time)
-{
-    int nSixtiethOfFrame = std::floor(time.floatTime() * 60 + 0.5);
-    if(!triangles_.contains(nSixtiethOfFrame))
-    {
-        triangles_[nSixtiethOfFrame] = Triangles();
-        triangulate(time, triangles_[nSixtiethOfFrame]);
-    }
-
-    return triangles_[nSixtiethOfFrame];
 }
 
 Triangles & EdgeCell::triangles(double width, Time time)
@@ -144,7 +122,7 @@ Triangles & EdgeCell::triangles(double width, Time time)
     if(!trianglesTopo_.contains(pair))
     {
         trianglesTopo_[pair] = Triangles();
-        triangulate(width, time, trianglesTopo_[pair]);
+        triangulate_(width, time, trianglesTopo_[pair]);
     }
 
     return trianglesTopo_[pair];

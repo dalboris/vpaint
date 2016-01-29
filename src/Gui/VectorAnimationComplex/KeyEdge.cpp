@@ -220,7 +220,6 @@ KeyEdge::KeyEdge(KeyEdge * other) :
     startVertex_ = other->startVertex_;
     endVertex_ = other->endVertex_;
     geometry_ = other->geometry_->clone();
-    triangles_ = other->triangles_;
 }
 
 
@@ -277,12 +276,12 @@ void KeyEdge::drawRaw3D(View3DSettings & viewSettings)
     tri.draw3D(time(), viewSettings);
 }
 
-void KeyEdge::triangulate(Time /*time*/, Triangles & out)
+void KeyEdge::triangulate_(Time /*time*/, Triangles & out)
 {
     geometry()->triangulate(out);
 }
 
-void KeyEdge::triangulate(double width, Time /*time*/, Triangles & out)
+void KeyEdge::triangulate_(double width, Time /*time*/, Triangles & out)
 {
     geometry()->triangulate(width, out);
 }
@@ -308,14 +307,14 @@ void KeyEdge::correctGeometry()
             geometry()->setLeftRightPos(startVertex()->pos(), endVertex()->pos());
         }
 
-        geometryChanged_();
+        processGeometryChanged_();
     }
 }
 
 void KeyEdge::setWidth(double newWidth)
 {
     geometry()->setWidth(newWidth);
-    geometryChanged_();
+    processGeometryChanged_();
 }
 
 double KeyEdge::updateSculpt(double x, double y, double radius)
@@ -422,7 +421,7 @@ void KeyEdge::prepareSculptPreserveTangents_()
 void KeyEdge::continueSculptDeform(double x, double y)
 {
     geometry()->continueSculptDeform(x, y);
-    geometryChanged_();
+    processGeometryChanged_();
     continueSculptPreserveTangents_();
 }
 
@@ -454,7 +453,7 @@ void KeyEdge::continueSculptPreserveTangents_()
 void KeyEdge::endSculptDeform()
 {
     geometry()->endSculptDeform();
-    geometryChanged_();
+    processGeometryChanged_();
 }
 
 void KeyEdge::beginSculptEdgeWidth(double x, double y)
@@ -465,13 +464,13 @@ void KeyEdge::beginSculptEdgeWidth(double x, double y)
 void KeyEdge::continueSculptEdgeWidth(double x, double y)
 {
     geometry()->continueSculptEdgeWidth(x, y);
-    geometryChanged_();
+    processGeometryChanged_();
 }
 
 void KeyEdge::endSculptEdgeWidth()
 {
     geometry()->endSculptEdgeWidth();
-    geometryChanged_();
+    processGeometryChanged_();
 }
 
 void KeyEdge::beginSculptSmooth(double x, double y)
@@ -484,7 +483,7 @@ void KeyEdge::continueSculptSmooth(double x, double y)
 {
     prepareSculptPreserveTangents_();
     geometry()->continueSculptSmooth(x, y);
-    geometryChanged_();
+    processGeometryChanged_();
     //correctGeometry(); // now ensured by geometry()->continueSculptSmooth(x, y)
     continueSculptPreserveTangents_();
 }
@@ -492,38 +491,7 @@ void KeyEdge::continueSculptSmooth(double x, double y)
 void KeyEdge::endSculptSmooth()
 {
     geometry()->endSculptSmooth();
-    geometryChanged_();
-}
-
-Triangles & KeyEdge::triangles()
-{
-    return triangles(time());
-}
-
-BBox KeyEdge::computeBoundingBox_() const
-{
-    QList<Eigen::Vector2d> & sampling = geometry()->sampling();
-    if(sampling.size() == 0)
-        return BBox(0,0,0,0);
-
-    double minX = std::numeric_limits<double>::max();
-    double minY = std::numeric_limits<double>::max();
-    double maxX = std::numeric_limits<double>::min();
-    double maxY = std::numeric_limits<double>::min();
-
-    foreach(Eigen::Vector2d p, sampling)
-    {
-        if(p[0]<minX)
-            minX = p[0];
-        if(p[0]>maxX)
-            maxX = p[0];
-        if(p[1]<minY)
-            minY = p[1];
-        if(p[1]>maxY)
-            maxY = p[1];
-    }
-
-    return BBox(minX, maxX, minY, maxY);
+    processGeometryChanged_();
 }
 
 bool KeyEdge::check_() const

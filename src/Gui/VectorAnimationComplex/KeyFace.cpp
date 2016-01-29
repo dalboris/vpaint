@@ -368,7 +368,7 @@ void KeyFace::clearCycles_()
         removeMeFromSpatialStarOf_(cell);
 
     cycles_.clear();
-    geometryChanged_();
+    processGeometryChanged_();
 }
 
 void KeyFace::setCycles(const QList<Cycle> & cycles)
@@ -388,15 +388,10 @@ void KeyFace::addCycle(const Cycle & cycle)
     cycles_ << cycle;
     foreach(KeyCell * cell, cycle.cells())
         addMeToSpatialStarOf_(cell);
-    geometryChanged_();
+    processGeometryChanged_();
 }
 
-Triangles & KeyFace::triangles()
-{
-    return triangles(time());
-}
-
-void KeyFace::triangulate(Time /*time*/, Triangles & out)
+void KeyFace::triangulate_(Time /*time*/, Triangles & out)
 {
     computeTrianglesFromCycles(cycles_, out);
 }
@@ -416,44 +411,6 @@ QList<QList<Eigen::Vector2d> > KeyFace::getSampling(Time /*time*/) const
     }
 
     return res;
-}
-
-BBox KeyFace::computeBoundingBox_() const
-{
-    double minX = std::numeric_limits<double>::max();
-    double minY = std::numeric_limits<double>::max();
-    double maxX = std::numeric_limits<double>::min();
-    double maxY = std::numeric_limits<double>::min();
-
-    for(int i=0; i<cycles_.size(); ++i)
-    {
-        if(cycles_[i].type() == Cycle::SingleVertex)
-        {
-            BBox edgeBBox =  cycles_[i].singleVertex()->boundingBox();
-            if(edgeBBox.minX < minX)
-                minX = edgeBBox.minX;
-            if(edgeBBox.maxX > maxX)
-                maxX = edgeBBox.maxX;
-            if(edgeBBox.minY < minY)
-                minY = edgeBBox.minY;
-            if(edgeBBox.maxY > maxY)
-                maxY = edgeBBox.maxY;
-        }
-        else for(int j=0; j<cycles_[i].size(); ++j)
-        {
-            BBox edgeBBox =  cycles_[i][j].edge->boundingBox();
-            if(edgeBBox.minX < minX)
-                minX = edgeBBox.minX;
-            if(edgeBBox.maxX > maxX)
-                maxX = edgeBBox.maxX;
-            if(edgeBBox.minY < minY)
-                minY = edgeBBox.minY;
-            if(edgeBBox.maxY > maxY)
-                maxY = edgeBBox.maxY;
-        }
-    }
-
-    return BBox(minX, maxX, minY, maxY);
 }
 
 QString KeyFace::xmlType_() const

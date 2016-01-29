@@ -15,6 +15,7 @@ ViewSettings::ViewSettings() :
     outlineOnly_(false),
     drawBackground_(true),
     drawCursor_(true),
+    isMainDrawing_(true),
     vertexTopologySize_(5),
     edgeTopologyWidth_(3),
     drawTopologyFaces_(false),

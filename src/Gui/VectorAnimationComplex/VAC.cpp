@@ -780,6 +780,32 @@ void VAC::draw(Time time, ViewSettings & viewSettings)
         glEnd();
     }
 
+    // Transform tool
+    if(global()->toolMode() == Global::SELECT)
+    {
+        // Compute selection bounding box at current time
+        selectionBoundingBox_ = BoundingBox();
+        for (CellSet::Iterator it = selectedCells_.begin(); it != selectedCells_.end(); ++it)
+        {
+            selectionBoundingBox_.unite((*it)->boundingBox(time));
+        }
+
+        // Draw bounding box
+        if (selectionBoundingBox_.isProper())
+        {
+            glColor4d(0.5, 0.5, 0.5, 0.5);
+            glLineWidth(1);
+            glBegin(GL_LINE_LOOP);
+            {
+                glVertex2d(selectionBoundingBox_.xMin(), selectionBoundingBox_.yMin());
+                glVertex2d(selectionBoundingBox_.xMax(), selectionBoundingBox_.yMin());
+                glVertex2d(selectionBoundingBox_.xMax(), selectionBoundingBox_.yMax());
+                glVertex2d(selectionBoundingBox_.xMin(), selectionBoundingBox_.yMax());
+            }
+            glEnd();
+        }
+    }
+
     // Draw edge orientation
     if(DevSettings::getBool("draw edge orientation"))
     {
@@ -2066,7 +2092,7 @@ bool VAC::cutFace_(KeyFace * face, KeyEdge * edge, CutFaceFeedback * feedback)
             // Compute new cycles of f
             face->cycles_[i] = newCycle;
             face->addMeToSpatialStarOf_(edge);
-            face->geometryChanged_();
+            face->processGeometryChanged_();
         }
         else
         {
@@ -2306,7 +2332,7 @@ VAC::SplitInfo VAC::cutEdgeAtVertices_(KeyEdge * edgeToSplit, const std::vector<
     foreach(KeyFace * c, keyFaces)
     {
         c->updateBoundary(res.oldEdge, res.newEdges);
-        c->geometryChanged_();
+        c->processGeometryChanged_();
     }
     foreach(InbetweenEdge * c, inbetweenEdges)
     {
@@ -2406,7 +2432,7 @@ void VAC::glue_(KeyVertex * v1, KeyVertex * v2)
     {
         c->updateBoundary(v1,v3);
         c->updateBoundary(v2,v3);
-        c->geometryChanged_();
+        c->processGeometryChanged_();
     }
     foreach(InbetweenEdge * c, inbetweenEdges)
     {
@@ -2534,7 +2560,7 @@ void VAC::glue_(const KeyHalfedge &h1, const KeyHalfedge &h2)
     {
         c->updateBoundary(h1,h3);
         c->updateBoundary(h2,h3);
-        c->geometryChanged_();
+        c->processGeometryChanged_();
     }
     foreach(InbetweenEdge * c, inbetweenEdges)
     {
@@ -2716,7 +2742,7 @@ void VAC::unglue_(KeyVertex * v)
             }
 
             // Recompute geometry
-            f->geometryChanged_();
+            f->processGeometryChanged_();
         }
 
         foreach(KeyEdge * e, incidentEdges)
@@ -2799,7 +2825,7 @@ void VAC::unglue_(KeyEdge * e)
             }
 
             // Recompute geometry
-            f->geometryChanged_();
+            f->processGeometryChanged_();
         }
 
         // Delete original edge
@@ -2842,7 +2868,7 @@ bool VAC::uncut_(KeyVertex * v)
             }
 
             // Recompute geometry
-            f->geometryChanged_();
+            f->processGeometryChanged_();
         }
 
         if(found == true)
@@ -2949,7 +2975,7 @@ bool VAC::uncut_(KeyVertex * v)
         }
 
         // Recompute geometry
-        f->geometryChanged_();
+        f->processGeometryChanged_();
     }
 
     // We're OK now, just do it :-)
@@ -2977,7 +3003,7 @@ bool VAC::uncut_(KeyVertex * v)
             }
 
             // Recompute geometry
-            f->geometryChanged_();
+            f->processGeometryChanged_();
         }
 
         // delete vertex
@@ -3071,7 +3097,7 @@ bool VAC::uncut_(KeyVertex * v)
             }
 
             // Recompute geometry
-            f->geometryChanged_();
+            f->processGeometryChanged_();
         }
 
         // delete vertex
@@ -3118,7 +3144,7 @@ bool VAC::uncut_(KeyEdge * e)
             f->removeMeFromSpatialStarOf_(e);
 
             // Recompute geometry
-            f->geometryChanged_();
+            f->processGeometryChanged_();
 
             // and delete the edge
             deleteCell(e);
@@ -3159,7 +3185,7 @@ bool VAC::uncut_(KeyEdge * e)
                 f1->addMeToSpatialStarOf_(c);
 
             // Recompute geometry
-            f1->geometryChanged_();
+            f1->processGeometryChanged_();
 
             // delete e
             deleteCell(e);
@@ -3280,7 +3306,7 @@ bool VAC::uncut_(KeyEdge * e)
             }
 
             // Recompute geometry
-            f->geometryChanged_();
+            f->processGeometryChanged_();
         }
         else if (incidentFaces.size() == 2)
         {
@@ -3355,7 +3381,7 @@ bool VAC::uncut_(KeyEdge * e)
             deleteCell(f2);
 
             // Recompute geometry
-            f1->geometryChanged_();
+            f1->processGeometryChanged_();
         }
 
 
@@ -3446,7 +3472,7 @@ bool VAC::uncut_(KeyEdge * e)
         zOrdering_.insertCell(f);
 
         // Recompute geometry
-        f->geometryChanged_();
+        f->processGeometryChanged_();
 
         // delete e
         deleteCell(e);
@@ -4835,7 +4861,7 @@ KeyVertex * VAC::keyframe_(InbetweenVertex * svertex, Time time)
         sedge->addMeToSpatialStarOf_(keyVertex);
         sedge->addMeToSpatialStarOf_(inbetweenVertexAfter);
 
-        sedge->geometryChanged_();
+        sedge->processGeometryChanged_();
     }
     foreach(InbetweenFace * sface, inbetweenFacesToUpdate)
     {
@@ -4850,7 +4876,7 @@ KeyVertex * VAC::keyframe_(InbetweenVertex * svertex, Time time)
         sface->addMeToSpatialStarOf_(keyVertex);
         sface->addMeToSpatialStarOf_(inbetweenVertexAfter);
 
-        sface->geometryChanged_();
+        sface->processGeometryChanged_();
     }
 
     // Delete old cell
@@ -4979,7 +5005,7 @@ KeyEdge * VAC::keyframe_(InbetweenEdge * sedge, Time time)
         sface->addMeToSpatialStarOf_(keyEdge);
         sface->addMeToSpatialStarOf_(inbetweenEdgeAfter);
 
-        sface->geometryChanged_();
+        sface->processGeometryChanged_();
     }
 
     // Transfer properties
@@ -6201,7 +6227,7 @@ void VAC::performDragAndDrop(double x, double y)
     foreach(KeyEdge * iedge, draggedEdges_)
     {
         iedge->geometry()->performDragAndDrop( x-x0_ , y-y0_ );
-        iedge->geometryChanged_();
+        iedge->processGeometryChanged_();
     }
 
     foreach(KeyVertex * v, draggedVertices_)

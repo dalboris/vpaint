@@ -41,12 +41,6 @@ public:
     virtual void drawPickTopology(Time time, ViewSettings & viewSettings);
     void draw3DSmall();
     void drawRaw3D(View3DSettings & viewSettings);
-    void triangulate(Time time, Triangles & out);
-    void triangulate(double width, Time time, Triangles & out);
-
-    using EdgeCell::triangles;
-    Triangles & triangles();
-
 
     // Topology
     KeyVertex * startVertex() const { return startVertex_; }
@@ -102,9 +96,6 @@ private:
     // Update Boundary
     void updateBoundary_impl(KeyVertex * oldVertex, KeyVertex * newVertex);
 
-    // Bounding box
-    BBox computeBoundingBox_() const;
-
     // Note:  topFace  or  bottom  can be  either  instant  or
     // animated, at  the contrary of InbetweenEdge  where it is
     // necessarily animated, and  hence have a specific member
@@ -125,8 +116,9 @@ private:
     double remainingRadiusLeft_;
     double remainingRadiusRight_;
 
-    // Cached triangulation
-    Triangles triangles_;
+    // Implementation of triangulate
+    void triangulate_(Time time, Triangles & out);
+    void triangulate_(double width, Time time, Triangles & out);
 
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

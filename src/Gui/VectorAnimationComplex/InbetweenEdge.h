@@ -72,8 +72,6 @@ public:
     // Drawing
     void glColor3D_();
     void drawRaw3D(View3DSettings & viewSettings);
-    void triangulate(Time time, Triangles & out);
-    void triangulate(double width, Time time, Triangles & out);
     //void drawRaw(Time time);
     //void drawRawTopology(Time time, ViewSettings & viewSettings);
     //void resetSampling();
@@ -101,8 +99,6 @@ private:
     void updateBoundary_impl(const KeyHalfedge & oldHalfedge, const KeyHalfedge & newHalfedge);
     void updateBoundary_impl(KeyEdge * oldEdge, const KeyEdgeList & newEdges);
 
-    BBox computeBoundingBox_() const { return BBox(0,0,0,0); }
-
     // Interpolations
     //QList<Eigen::Vector2d> getCoon(Time time, int N);
     //QList<Eigen::Vector2d> getLinear(Time time, int N);
@@ -116,6 +112,10 @@ private:
     // -- Inbetween Closed Edge --
     Cycle beforeCycle_;
     Cycle afterCycle_;
+
+    // Implementation of triangulate
+    void triangulate_(Time time, Triangles & out);
+    void triangulate_(double width, Time time, Triangles & out);
 
 // --------- Cloning, Assigning, Copying, Serializing ----------
 
