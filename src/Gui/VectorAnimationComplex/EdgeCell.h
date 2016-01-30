@@ -36,7 +36,7 @@ public:
 
     // Drawing
     using Cell::triangles;
-    Triangles & triangles(double width, Time time) const;
+    const Triangles & triangles(double width, Time time) const;
     void drawRawTopology(Time time, ViewSettings & viewSettings);
 
     // Geometric getters

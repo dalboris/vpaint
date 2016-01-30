@@ -272,8 +272,7 @@ void KeyEdge::drawPickTopology(Time time, ViewSettings & /*viewSettings*/)
 
 void KeyEdge::drawRaw3D(View3DSettings & viewSettings)
 {
-    Triangles & tri = triangles(time());
-    tri.draw3D(time(), viewSettings);
+    triangles(time()).draw3D(time(), viewSettings);
 }
 
 void KeyEdge::triangulate_(Time time, Triangles & out) const

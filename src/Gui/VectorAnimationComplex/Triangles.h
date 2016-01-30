@@ -96,8 +96,8 @@ public:
     BoundingBox boundingBox() const;
 
     // Draw
-    void draw();
-    void draw3D(Time t, View3DSettings & viewSettings);
+    void draw() const;
+    void draw3D(Time t, View3DSettings & viewSettings) const;
 
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

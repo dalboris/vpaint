@@ -114,7 +114,7 @@ void EdgeCell::clearCachedGeometry_()
     trianglesTopo_.clear();
 }
 
-Triangles & EdgeCell::triangles(double width, Time time) const
+const Triangles & EdgeCell::triangles(double width, Time time) const
 {
     // Get cache key
     QPair<int,double> key = qMakePair(std::floor(time.floatTime() * 60 + 0.5), width);

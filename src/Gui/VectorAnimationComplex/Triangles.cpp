@@ -169,19 +169,19 @@ BoundingBox Triangles::boundingBox() const
     return bb;
 }
 
-void Triangles::draw()
+void Triangles::draw() const
 {
     glBegin(GL_TRIANGLES);
     for (unsigned int i=0; i<triangles_.size(); ++i)
     {
-        glVertex2d(triangles_[i].a[0],triangles_[i].a[1]);
-        glVertex2d(triangles_[i].b[0],triangles_[i].b[1]);
-        glVertex2d(triangles_[i].c[0],triangles_[i].c[1]);
+        glVertex2d(triangles_[i].a[0], triangles_[i].a[1]);
+        glVertex2d(triangles_[i].b[0], triangles_[i].b[1]);
+        glVertex2d(triangles_[i].c[0], triangles_[i].c[1]);
     }
     glEnd();
 }
 
-void Triangles::draw3D(Time t, View3DSettings & viewSettings)
+void Triangles::draw3D(Time t, View3DSettings & viewSettings) const
 {
     const double z = viewSettings.zFromT(t);
 

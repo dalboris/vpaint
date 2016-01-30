@@ -369,10 +369,10 @@ protected:
 
 public:
     // Get all the triangles to be rendered at given time
-    Triangles & triangles(Time t) const;
+    const Triangles & triangles(Time t) const;
 
     // Get the bounding box of this cell at time t
-    BoundingBox boundingBox(Time t) const;
+    const BoundingBox & boundingBox(Time t) const;
 
     // Get the bounding box of this cell for all time t
     virtual BoundingBox boundingBox() const=0;

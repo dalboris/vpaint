@@ -784,7 +784,7 @@ bool Cell::check() const
 //                         GEOMETRY
 //###################################################################
 
-Triangles & Cell::triangles(Time t) const
+const Triangles & Cell::triangles(Time t) const
 {
     // Get cache key
     int key = std::floor(t.floatTime() * 60 + 0.5);
@@ -797,7 +797,7 @@ Triangles & Cell::triangles(Time t) const
     return triangles_[key];
 }
 
-BoundingBox Cell::boundingBox(Time t) const
+const BoundingBox & Cell::boundingBox(Time t) const
 {
     // Get cache key
     int key = std::floor(t.floatTime() * 60 + 0.5);
