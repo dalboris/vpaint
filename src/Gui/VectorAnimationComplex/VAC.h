@@ -92,6 +92,9 @@ public:
     CellSet selectedCells() const;
     int numSelectedCells() const;
 
+    // Get hovered transform widget id
+    int hoveredTransformWidgetId() const;
+
     // Modify highligthed and seleted state
     void setHoveredCell(Cell * cell);
     void setNoHoveredCell();
@@ -140,6 +143,11 @@ public:
     void prepareDragAndDrop(double x0, double y0, Time time);
     void performDragAndDrop(double x, double y);
     void completeDragAndDrop();
+
+    // -- Transform selection --
+    void beginTransformSelection(double x0, double y0, Time time);
+    void continueTransformSelection(double x, double y);
+    void endTransformSelection();
 
     // -- Temporal Drag and drop --
     void prepareTemporalDragAndDrop(Time t0);
@@ -411,6 +419,7 @@ private:
     Time timeCopy_;
 
     // Selecting and highlighting
+    int hoveredTransformWidgetId_;
     Cell * hoveredCell_;
     QSet<Cell *> selectedCells_;
 

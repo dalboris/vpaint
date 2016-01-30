@@ -260,6 +260,7 @@ void VAC::initNonCopyable()
     sculptedEdge_ = 0;
     toBePaintedFace_ = 0;
     hoveredCell_ = 0;
+    hoveredTransformWidgetId_ = 0;
     deselectAll();
     signalCounter_ = 0;
 }
@@ -793,7 +794,11 @@ void VAC::draw(Time time, ViewSettings & viewSettings)
         // Draw bounding box
         if (selectionBoundingBox_.isProper())
         {
-            glColor4d(0.5, 0.5, 0.5, 0.5);
+            if (hoveredTransformWidgetId_)
+                glColor4d(1.0,0.0,0.0,1.0);
+            else
+                glColor4d(0.5, 0.5, 0.5, 0.5);
+
             glLineWidth(1);
             glBegin(GL_LINE_LOOP);
             {
@@ -875,6 +880,32 @@ void VAC::drawPick(Time time, ViewSettings & viewSettings)
                 c->drawPickTopology(time, viewSettings);
         }
     }
+
+    // Transform tool
+    if(global()->toolMode() == Global::SELECT)
+    {
+        // Compute selection bounding box at current time
+        selectionBoundingBox_ = BoundingBox();
+        for (CellSet::Iterator it = selectedCells_.begin(); it != selectedCells_.end(); ++it)
+        {
+            selectionBoundingBox_.unite((*it)->boundingBox(time));
+        }
+
+        // Draw bounding box
+        if (selectionBoundingBox_.isProper())
+        {
+            Picking::glColor(maxID_+1);
+            glLineWidth(3);
+            glBegin(GL_LINE_LOOP);
+            {
+                glVertex2d(selectionBoundingBox_.xMin(), selectionBoundingBox_.yMin());
+                glVertex2d(selectionBoundingBox_.xMax(), selectionBoundingBox_.yMin());
+                glVertex2d(selectionBoundingBox_.xMax(), selectionBoundingBox_.yMax());
+                glVertex2d(selectionBoundingBox_.xMin(), selectionBoundingBox_.yMax());
+            }
+            glEnd();
+        }
+    }
 }
 
 
@@ -921,11 +952,21 @@ void VAC::endAggregateSignals_()
 
 void VAC::setHoveredObject(Time /*time*/, int id)
 {
-    setHoveredCell(getCell(id));
+    if (id>maxID_)
+    {
+        hoveredTransformWidgetId_ = id;
+        setNoHoveredCell();
+    }
+    else
+    {
+        hoveredTransformWidgetId_ = 0;
+        setHoveredCell(getCell(id));
+    }
 }
 
 void VAC::setNoHoveredObject()
 {
+    hoveredTransformWidgetId_ = 0;
     setNoHoveredCell();
 }
 
@@ -980,6 +1021,11 @@ CellSet VAC::selectedCells() const
 int VAC::numSelectedCells() const
 {
     return selectedCells_.size();
+}
+
+int VAC::hoveredTransformWidgetId() const
+{
+    return hoveredTransformWidgetId_;
 }
 
 // ----------------------  Save & Load -------------------------
@@ -6185,6 +6231,22 @@ void VAC::completeDragAndDrop()
 {
     //emit changed();
     emit checkpoint();
+}
+
+void VAC::beginTransformSelection(double x0, double y0, Time time)
+{
+    qDebug() << "beginTransformSelection" << x0 << y0;
+}
+
+void VAC::continueTransformSelection(double x, double y)
+{
+    qDebug() << "continueTransformSelection" << x << y;
+
+}
+
+void VAC::endTransformSelection()
+{
+    qDebug() << "endTransformSelection";
 }
 
 void VAC::prepareTemporalDragAndDrop(Time t0)
