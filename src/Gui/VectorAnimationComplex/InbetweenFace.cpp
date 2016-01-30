@@ -395,7 +395,9 @@ QSet<KeyFace*> InbetweenFace::afterFaces() const
 
 void InbetweenFace::triangulate_(Time time, Triangles & out) const
 {
-    computeTrianglesFromCycles(cycles_, out, time);
+    out.clear();
+    if (exists(time))
+        computeTrianglesFromCycles(cycles_, out, time);
 }
 
 QList<QList<Eigen::Vector2d> > InbetweenFace::getSampling(Time time) const

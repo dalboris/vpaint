@@ -116,16 +116,15 @@ void EdgeCell::clearCachedGeometry_()
 
 Triangles & EdgeCell::triangles(double width, Time time) const
 {
-    int nSixtiethOfFrame = std::floor(time.floatTime() * 60 + 0.5);
-    QPair<int,double> pair = qMakePair(nSixtiethOfFrame, width);
+    // Get cache key
+    QPair<int,double> key = qMakePair(std::floor(time.floatTime() * 60 + 0.5), width);
 
-    if(!trianglesTopo_.contains(pair))
-    {
-        trianglesTopo_[pair] = Triangles();
-        triangulate_(width, time, trianglesTopo_[pair]);
-    }
+    // Compute triangles if not yet cached
+    if(!trianglesTopo_.contains(key))
+        triangulate_(width, time, trianglesTopo_[key]);
 
-    return trianglesTopo_[pair];
+    // Return cached triangles
+    return trianglesTopo_[key];
 }
 
 void EdgeCell::drawRawTopology(Time time, ViewSettings & viewSettings)

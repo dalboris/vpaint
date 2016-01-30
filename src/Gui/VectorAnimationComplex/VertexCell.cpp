@@ -244,25 +244,24 @@ Eigen::Vector2d circle_(const Eigen::Vector2d & center, double r, double theta)
 void VertexCell::triangulate_(Time time, Triangles & out) const
 {
     out.clear();
-
-    if(!exists(time))
-        return;
-
-    const Eigen::Vector2d center = pos(time);
-    const double r = 0.5 * size(time);
-
-    const int n = 50;
-    const double dTheta = 2 * 3.14159 / (double) n ;
-
-    double theta = 0;
-    Eigen::Vector2d a = circle_(center, r, theta);
-    Eigen::Vector2d b;
-    for(int i=0; i<n; ++i)
+    if (exists(time))
     {
-        theta += dTheta;
-        b = circle_(center, r, theta);
-        out << Triangle(center, a, b);
-        a = b;
+        const Eigen::Vector2d center = pos(time);
+        const double r = 0.5 * size(time);
+
+        const int n = 50;
+        const double dTheta = 2 * 3.14159 / (double) n ;
+
+        double theta = 0;
+        Eigen::Vector2d a = circle_(center, r, theta);
+        Eigen::Vector2d b;
+        for(int i=0; i<n; ++i)
+        {
+            theta += dTheta;
+            b = circle_(center, r, theta);
+            out << Triangle(center, a, b);
+            a = b;
+        }
     }
 }
 

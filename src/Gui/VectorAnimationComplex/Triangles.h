@@ -11,6 +11,7 @@
 
 #include "../TimeDef.h"
 #include "Eigen.h"
+#include "BoundingBox.h"
 #include <vector>
 
 class View3DSettings;
@@ -42,6 +43,9 @@ struct Triangle {
 
     // Check whether a rectangle intersects the triangle
     bool intersects(const BoundingBox & bb) const;
+
+    // Compute bounding box
+    BoundingBox boundingBox() const;
 
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
@@ -87,6 +91,9 @@ public:
 
     // Check whether a rectangle intersects at least one triangle
     bool intersects(const BoundingBox & bb) const;
+
+    // Compute bounding box
+    BoundingBox boundingBox() const;
 
     // Draw
     void draw();

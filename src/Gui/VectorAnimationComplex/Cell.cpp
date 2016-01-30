@@ -786,20 +786,28 @@ bool Cell::check() const
 
 Triangles & Cell::triangles(Time t) const
 {
-    int nSixtiethOfFrame = std::floor(t.floatTime() * 60 + 0.5);
-    if(!triangles_.contains(nSixtiethOfFrame))
-    {
-        triangles_[nSixtiethOfFrame] = Triangles();
-        triangulate_(t, triangles_[nSixtiethOfFrame]);
-    }
+    // Get cache key
+    int key = std::floor(t.floatTime() * 60 + 0.5);
 
-    return triangles_[nSixtiethOfFrame];
+    // Compute triangles if not yet cached
+    if(!triangles_.contains(key))
+        triangulate_(t, triangles_[key]);
+
+    // Return cached triangles
+    return triangles_[key];
 }
 
 BoundingBox Cell::boundingBox(Time t) const
 {
-    // XXX TODO
-    return BoundingBox();
+    // Get cache key
+    int key = std::floor(t.floatTime() * 60 + 0.5);
+
+    // Compute bounding box if not yet cached
+    if(!boundingBoxes_.contains(key))
+        boundingBoxes_[key] = triangles(t).boundingBox();
+
+    // Return cached bounding box
+    return boundingBoxes_[key];
 }
 
 bool Cell::intersects(Time t, const BoundingBox & bb) const
@@ -810,17 +818,14 @@ bool Cell::intersects(Time t, const BoundingBox & bb) const
 void Cell::processGeometryChanged_()
 {
     CellSet toClearCells = geometryDependentCells_();
-
-    // Cached geometry
     foreach(Cell * cell, toClearCells)
-    {
         cell->clearCachedGeometry_();
-    }
 }
 
 void Cell::clearCachedGeometry_()
 {
     triangles_.clear();
+    boundingBoxes_.clear();
 }
 
 CellSet Cell::geometryDependentCells_()
@@ -842,4 +847,3 @@ CellSet Cell::geometryDependentCells_()
 }
 
 }
-

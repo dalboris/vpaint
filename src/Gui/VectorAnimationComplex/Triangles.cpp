@@ -8,9 +8,9 @@
 
 #include "Triangles.h"
 
-#include "BoundingBox.h"
 #include "../OpenGL.h"
 #include "../View3DSettings.h"
+#include <limits>
 
 namespace VectorAnimationComplex
 {
@@ -151,6 +151,22 @@ bool Triangles::intersects(const BoundingBox & bb) const
             return true;
 
     return false;
+}
+
+BoundingBox Triangle::boundingBox() const
+{
+    double x1, x2, y1, y2;
+    threeWayMinMax(a[0], b[0], c[0], x1, x2);
+    threeWayMinMax(a[1], b[1], c[1], y1, y2);
+    return BoundingBox(x1, x2, y1, y2);
+}
+
+BoundingBox Triangles::boundingBox() const
+{
+    BoundingBox bb;
+    for (const Triangle & t : triangles_)
+        bb.unite(t.boundingBox());
+    return bb;
 }
 
 void Triangles::draw()

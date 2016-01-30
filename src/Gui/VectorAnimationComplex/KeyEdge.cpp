@@ -276,14 +276,18 @@ void KeyEdge::drawRaw3D(View3DSettings & viewSettings)
     tri.draw3D(time(), viewSettings);
 }
 
-void KeyEdge::triangulate_(Time /*time*/, Triangles & out) const
+void KeyEdge::triangulate_(Time time, Triangles & out) const
 {
-    geometry()->triangulate(out);
+    out.clear();
+    if (exists(time))
+        geometry()->triangulate(out);
 }
 
-void KeyEdge::triangulate_(double width, Time /*time*/, Triangles & out) const
+void KeyEdge::triangulate_(double width, Time time, Triangles & out) const
 {
-    geometry()->triangulate(width, out);
+    out.clear();
+    if (exists(time))
+        geometry()->triangulate(width, out);
 }
 
 QList<EdgeSample> KeyEdge::getSampling(Time /*time*/) const

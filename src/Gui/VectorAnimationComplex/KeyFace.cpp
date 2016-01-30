@@ -391,9 +391,11 @@ void KeyFace::addCycle(const Cycle & cycle)
     processGeometryChanged_();
 }
 
-void KeyFace::triangulate_(Time /*time*/, Triangles & out) const
+void KeyFace::triangulate_(Time time, Triangles & out) const
 {
-    computeTrianglesFromCycles(cycles_, out);
+    out.clear();
+    if (exists(time))
+        computeTrianglesFromCycles(cycles_, out);
 }
 
 QList<QList<Eigen::Vector2d> > KeyFace::getSampling(Time /*time*/) const
