@@ -9,6 +9,7 @@
 #include <QFileOpenEvent>
 
 #include "Application.h"
+#include "Global.h"
 
 Application::Application(int& argc, char** argv) :
     QApplication(argc, argv)
@@ -21,6 +22,7 @@ Application::Application(int& argc, char** argv) :
 
     // Set application version
     setApplicationVersion(APP_VERSION);
+    connect(this, SIGNAL(aboutToQuit()), this, SLOT(onQuit()));
 }
 
 bool Application::event(QEvent* event)
@@ -41,4 +43,9 @@ void Application::emitOpenFileRequest()
     {
         emit openFileRequested(startPath_);
     }
+}
+
+void Application::onQuit()
+{
+    global()->writeSettings();
 }
