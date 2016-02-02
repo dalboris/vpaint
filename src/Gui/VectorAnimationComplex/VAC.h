@@ -20,6 +20,7 @@
 #include "Cell.h"
 #include "ZOrderedCells.h"
 #include "Eigen.h"
+#include "TransformTool.h"
 
 #include "../View3DSettings.h"
 
@@ -89,7 +90,7 @@ public:
 
     // Get higlighted and selected state
     Cell * hoveredCell() const;
-    CellSet selectedCells() const;
+    const CellSet & selectedCells() const;
     int numSelectedCells() const;
 
     // Get hovered transform widget id
@@ -319,6 +320,7 @@ private:
     // Managing IDs
     int getAvailableID();
     void deleteAllCells();
+    void setMaxID_(int maxID);
     int maxID_;
 
     // User interactivity
@@ -421,7 +423,7 @@ private:
     // Selecting and highlighting
     int hoveredTransformWidgetId_;
     Cell * hoveredCell_;
-    QSet<Cell *> selectedCells_;
+    CellSet selectedCells_;
 
     // Z-layering
     ZOrderedCells zOrdering_;
@@ -434,7 +436,7 @@ private:
     bool shouldEmitSelectionChanged_;
 
     // Transform tool
-    BoundingBox selectionBoundingBox_;
+    TransformTool transformTool_;
 };
 
 }

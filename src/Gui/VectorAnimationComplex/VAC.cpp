@@ -260,7 +260,7 @@ void VAC::initNonCopyable()
     sculptedEdge_ = 0;
     toBePaintedFace_ = 0;
     hoveredCell_ = 0;
-    hoveredTransformWidgetId_ = 0;
+    transformTool_.setNoHoveredObject();
     deselectAll();
     signalCounter_ = 0;
 }
@@ -268,6 +268,7 @@ void VAC::initNonCopyable()
 void VAC::initCopyable()
 {
     maxID_ = -1;
+    transformTool_.setIdOffset(maxID_);
     ds_ = 5.0;
     cells_.clear();
     zOrdering_.clear();
@@ -298,7 +299,7 @@ VAC * VAC::clone()
     VAC * newVAC = new VAC();
 
     // Copy maxID
-    newVAC->maxID_ = maxID_;
+    newVAC->setMaxID_(maxID_);
 
     // Copy sampling precision
     newVAC->ds_ = ds_;
@@ -784,31 +785,7 @@ void VAC::draw(Time time, ViewSettings & viewSettings)
     // Transform tool
     if(global()->toolMode() == Global::SELECT)
     {
-        // Compute selection bounding box at current time
-        selectionBoundingBox_ = BoundingBox();
-        for (CellSet::Iterator it = selectedCells_.begin(); it != selectedCells_.end(); ++it)
-        {
-            selectionBoundingBox_.unite((*it)->boundingBox(time));
-        }
-
-        // Draw bounding box
-        if (selectionBoundingBox_.isProper())
-        {
-            if (hoveredTransformWidgetId_)
-                glColor4d(1.0,0.0,0.0,1.0);
-            else
-                glColor4d(0.5, 0.5, 0.5, 0.5);
-
-            glLineWidth(1);
-            glBegin(GL_LINE_LOOP);
-            {
-                glVertex2d(selectionBoundingBox_.xMin(), selectionBoundingBox_.yMin());
-                glVertex2d(selectionBoundingBox_.xMax(), selectionBoundingBox_.yMin());
-                glVertex2d(selectionBoundingBox_.xMax(), selectionBoundingBox_.yMax());
-                glVertex2d(selectionBoundingBox_.xMin(), selectionBoundingBox_.yMax());
-            }
-            glEnd();
-        }
+        transformTool_.draw(selectedCells_, time, viewSettings);
     }
 
     // Draw edge orientation
@@ -884,27 +861,7 @@ void VAC::drawPick(Time time, ViewSettings & viewSettings)
     // Transform tool
     if(global()->toolMode() == Global::SELECT)
     {
-        // Compute selection bounding box at current time
-        selectionBoundingBox_ = BoundingBox();
-        for (CellSet::Iterator it = selectedCells_.begin(); it != selectedCells_.end(); ++it)
-        {
-            selectionBoundingBox_.unite((*it)->boundingBox(time));
-        }
-
-        // Draw bounding box
-        if (selectionBoundingBox_.isProper())
-        {
-            Picking::glColor(maxID_+1);
-            glLineWidth(3);
-            glBegin(GL_LINE_LOOP);
-            {
-                glVertex2d(selectionBoundingBox_.xMin(), selectionBoundingBox_.yMin());
-                glVertex2d(selectionBoundingBox_.xMax(), selectionBoundingBox_.yMin());
-                glVertex2d(selectionBoundingBox_.xMax(), selectionBoundingBox_.yMax());
-                glVertex2d(selectionBoundingBox_.xMin(), selectionBoundingBox_.yMax());
-            }
-            glEnd();
-        }
+        transformTool_.drawPick(selectedCells_, time, viewSettings);
     }
 }
 
@@ -949,25 +906,16 @@ void VAC::endAggregateSignals_()
 
 // Should NOT emit changed(). View does it if necessary
 
-
 void VAC::setHoveredObject(Time /*time*/, int id)
 {
-    if (id>maxID_)
-    {
-        hoveredTransformWidgetId_ = id;
-        setNoHoveredCell();
-    }
-    else
-    {
-        hoveredTransformWidgetId_ = 0;
-        setHoveredCell(getCell(id));
-    }
+    setHoveredCell(getCell(id));
+    transformTool_.setHoveredObject(id);
 }
 
 void VAC::setNoHoveredObject()
 {
-    hoveredTransformWidgetId_ = 0;
     setNoHoveredCell();
+    transformTool_.setNoHoveredObject();
 }
 
 void VAC::select(Time /*time*/, int id)
@@ -994,7 +942,6 @@ void VAC::deselectAll(Time time)
     removeFromSelection(cellsToDeselect,false);
 }
 
-
 void VAC::deselectAll()
 {
     if(numSelectedCells() != 0)
@@ -1013,7 +960,7 @@ Cell * VAC::hoveredCell() const
     return hoveredCell_;
 }
 
-CellSet VAC::selectedCells() const
+const CellSet & VAC::selectedCells() const
 {
     return selectedCells_;
 }
@@ -1025,7 +972,7 @@ int VAC::numSelectedCells() const
 
 int VAC::hoveredTransformWidgetId() const
 {
-    return hoveredTransformWidgetId_;
+    return transformTool_.hovered();
 }
 
 // ----------------------  Save & Load -------------------------
@@ -1327,7 +1274,8 @@ KeyEdgeList VAC::instantEdges(Time time)
 
 int VAC::getAvailableID()
 {
-    return ++maxID_; // increments maxId_ then returns it
+    setMaxID_(maxID_+1);
+    return maxID_;
 }
 
 void VAC::insertCell_(Cell * cell)
@@ -1595,7 +1543,13 @@ void VAC::deleteAllCells()
         Cell * obj = *cells_.begin();
         deleteCell(obj);
     }
-    maxID_ = -1;
+    setMaxID_(-1);
+}
+
+void VAC::setMaxID_(int maxID)
+{
+    maxID_ = maxID;
+    transformTool_.setIdOffset(maxID_+1);
 }
 
 KeyVertex* VAC::newKeyVertex(Time time, const Eigen::Vector2d & pos)
@@ -5889,12 +5843,14 @@ void VAC::updateCellsToConsiderForCutting()
 
 void VAC::setHoveredCell(Cell * cell)
 {
-    setNoHoveredCell();
-
-    if(cell)
+    if (cell != hoveredCell_)
     {
-        hoveredCell_ = cell;
-        hoveredCell_->setHovered(true);
+        setNoHoveredCell();
+        if(cell)
+        {
+            hoveredCell_ = cell;
+            hoveredCell_->setHovered(true);
+        }
     }
 }
 
@@ -6235,18 +6191,17 @@ void VAC::completeDragAndDrop()
 
 void VAC::beginTransformSelection(double x0, double y0, Time time)
 {
-    qDebug() << "beginTransformSelection" << x0 << y0;
+    transformTool_.beginTransform(selectedCells(), x0, y0, time);
 }
 
 void VAC::continueTransformSelection(double x, double y)
 {
-    qDebug() << "continueTransformSelection" << x << y;
-
+    transformTool_.continueTransform(selectedCells(), x, y);
 }
 
 void VAC::endTransformSelection()
 {
-    qDebug() << "endTransformSelection";
+    transformTool_.endTransform(selectedCells());
 }
 
 void VAC::prepareTemporalDragAndDrop(Time t0)
