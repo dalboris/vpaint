@@ -267,8 +267,7 @@ void VAC::initNonCopyable()
 
 void VAC::initCopyable()
 {
-    maxID_ = -1;
-    transformTool_.setIdOffset(maxID_);
+    setMaxID_(-1);
     ds_ = 5.0;
     cells_.clear();
     zOrdering_.clear();
@@ -1017,7 +1016,7 @@ void VAC::read(XmlStreamReader & xml)
         {
             int id = cell->id();
             if(id > maxID_)
-                maxID_ = id;
+                setMaxID_(id);
             cells_.insert(id, cell);
             zOrdering_.insertLast(cell);
         }
@@ -1101,7 +1100,7 @@ VAC::VAC(QTextStream & in) :
         Cell * cell = Cell::read1stPass(this, in);
         int id = cell->id();
         if(id > maxID_)
-            maxID_ = id;
+            setMaxID_(id);
         cells_.insert(id, cell);
         zOrdering_.insertLast(cell);
         Read::skipBracket(in); // }

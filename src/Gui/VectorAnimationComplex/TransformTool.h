@@ -70,6 +70,10 @@ private:
     WidgetId hovered_;
 
     void glPickColor_(WidgetId id) const;
+    void drawScaleWidget_(double x, double y, double size,
+                          WidgetId id, ViewSettings & viewSettings) const;
+    void drawPickScaleWidget_(double x, double y, double size,
+                              WidgetId id, ViewSettings & viewSettings) const;
 };
 
 }

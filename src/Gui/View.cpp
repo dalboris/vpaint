@@ -907,6 +907,7 @@ void View::PMRReleaseEvent(int action, double x, double y)
     {
         vac_->endRectangleOfSelection();
 
+        emit allViewsNeedToUpdatePicking();
         updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
         emit allViewsNeedToUpdate();
     }
