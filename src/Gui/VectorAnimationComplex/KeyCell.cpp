@@ -210,6 +210,11 @@ BoundingBox KeyCell::boundingBox() const
     return boundingBox(time());
 }
 
+BoundingBox KeyCell::outlineBoundingBox() const
+{
+    return outlineBoundingBox(time());
+}
+
 void KeyCell::drawRaw3D(View3DSettings & /*viewSettings*/)
 {
     /*

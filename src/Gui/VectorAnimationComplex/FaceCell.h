@@ -39,6 +39,9 @@ private:
 
     virtual bool isPickableCustom(Time time) const;
 
+    // Implementation of outline bounding box for both KeyFace and InbetweenFace
+    void computeOutlineBoundingBox_(Time t, BoundingBox & out) const;
+
 // --------- Cloning, Assigning, Copying, Serializing ----------
 
 protected:

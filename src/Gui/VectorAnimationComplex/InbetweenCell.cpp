@@ -128,4 +128,17 @@ BoundingBox InbetweenCell::boundingBox() const
     return res;
 }
 
+BoundingBox InbetweenCell::outlineBoundingBox() const
+{
+    // Same as above
+    int beforeFrame = beforeTime().frame();
+    int afterFrame = beforeTime().frame();
+    BoundingBox res;
+    for (double t = beforeFrame + 0.5; t < afterFrame; t += 1.0)
+    {
+        res.unite(outlineBoundingBox(Time(t)));
+    }
+    return res;
+}
+
 }

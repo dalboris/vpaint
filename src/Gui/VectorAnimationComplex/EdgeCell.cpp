@@ -114,6 +114,15 @@ void EdgeCell::clearCachedGeometry_()
     trianglesTopo_.clear();
 }
 
+void EdgeCell::computeOutlineBoundingBox_(Time t, BoundingBox & out) const
+{
+    const QList<EdgeSample> samples = getSampling(t);
+
+    out = BoundingBox();
+    for (int i = 0; i<samples.size(); ++i)
+        out.unite(BoundingBox(samples[i].x(), samples[i].y()));
+}
+
 const Triangles & EdgeCell::triangles(double width, Time time) const
 {
     // Get cache key

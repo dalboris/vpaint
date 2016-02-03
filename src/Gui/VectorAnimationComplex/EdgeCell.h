@@ -61,6 +61,9 @@ private:
 
     virtual bool isPickableCustom(Time time) const;
 
+    // Implementation of outline bounding box for both KeyVertex and InbetweenVertex
+    void computeOutlineBoundingBox_(Time t, BoundingBox & out) const;
+
 protected:
     //void split_copySpatialStarTo(EdgeCell * cell);
     //void split_clearSpatialStar();

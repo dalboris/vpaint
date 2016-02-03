@@ -34,7 +34,9 @@ public:
 
     // Bounding box
     using Cell::boundingBox;
+    using Cell::outlineBoundingBox;
     BoundingBox boundingBox() const;
+    BoundingBox outlineBoundingBox() const;
 
 private:
     // Trusting operators

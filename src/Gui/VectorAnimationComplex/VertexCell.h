@@ -55,6 +55,9 @@ private:
     // Implementation of triangulate for both KeyVertex and InbetweenVertex
     void triangulate_(Time time, Triangles & out) const;
 
+    // Implementation of outline bounding box for both KeyVertex and InbetweenVertex
+    void computeOutlineBoundingBox_(Time t, BoundingBox & out) const;
+
 // --------- Cloning, Assigning, Copying, Serializing ----------
 
 protected:

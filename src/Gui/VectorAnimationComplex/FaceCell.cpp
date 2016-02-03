@@ -65,6 +65,11 @@ bool FaceCell::isPickableCustom(Time /*time*/) const
         return false;
 }
 
+void FaceCell::computeOutlineBoundingBox_(Time t, BoundingBox & out) const
+{
+    out = boundingBox(t);
+}
+
 void FaceCell::exportSVG(Time t, QTextStream & out)
 {
     // Get polygon data

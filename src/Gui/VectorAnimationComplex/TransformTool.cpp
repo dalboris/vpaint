@@ -36,6 +36,7 @@ const double PI = 3.14159;
 const double SQRT2 = 1.4142;
 
 // Widget colors
+const double outlineBoundingBoxColor[] = {0.5, 0.5, 0.5, 0.2};
 const double boundingBoxColor[] = {0.5, 0.5, 0.5, 0.5};
 const double fillColor[] = {0.8, 0.8, 0.8, 0.2};
 const double strokeColor[] = {0.5, 0.5, 0.5, 0.2};
@@ -328,17 +329,35 @@ void TransformTool::drawPickRotateWidget_(double x, double y, double midAngle,
 
 void TransformTool::draw(const CellSet & cells, Time time, ViewSettings & viewSettings) const
 {
-    // Compute selection bounding box at current time
+    // Compute bounding box at current time
     BoundingBox bb;
     for (CellSet::ConstIterator it = cells.begin(); it != cells.end(); ++it)
     {
         bb.unite((*it)->boundingBox(time));
     }
 
+    // Compute outline bounding box at current time
+    BoundingBox obb;
+    for (CellSet::ConstIterator it = cells.begin(); it != cells.end(); ++it)
+    {
+        obb.unite((*it)->outlineBoundingBox(time));
+    }
+
     // Draw bounding box and transform widgets
     if (bb.isProper())
     {
         glLineWidth(lineWidth);
+
+        // Outline bounding box
+        glColor4dv(outlineBoundingBoxColor);
+        glBegin(GL_LINE_LOOP);
+        {
+            glVertex2d(obb.xMin(), obb.yMin());
+            glVertex2d(obb.xMax(), obb.yMin());
+            glVertex2d(obb.xMax(), obb.yMax());
+            glVertex2d(obb.xMin(), obb.yMax());
+        }
+        glEnd();
 
         // Bounding box
         glColor4dv(boundingBoxColor);

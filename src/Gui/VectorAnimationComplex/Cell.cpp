@@ -810,6 +810,19 @@ const BoundingBox & Cell::boundingBox(Time t) const
     return boundingBoxes_[key];
 }
 
+const BoundingBox & Cell::outlineBoundingBox(Time t) const
+{
+    // Get cache key
+    int key = std::floor(t.floatTime() * 60 + 0.5);
+
+    // Compute bounding box if not yet cached
+    if(!outlineBoundingBoxes_.contains(key))
+        computeOutlineBoundingBox_(t, outlineBoundingBoxes_[key]);
+
+    // Return cached bounding box
+    return outlineBoundingBoxes_[key];
+}
+
 bool Cell::intersects(Time t, const BoundingBox & bb) const
 {
     return triangles(t).intersects(bb);
@@ -826,6 +839,7 @@ void Cell::clearCachedGeometry_()
 {
     triangles_.clear();
     boundingBoxes_.clear();
+    outlineBoundingBoxes_.clear();
 }
 
 // XXX this could be cached, it is called many times during
