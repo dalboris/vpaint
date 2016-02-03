@@ -613,6 +613,29 @@ public:
             return interpolatedVertex_(s);
     }
 
+    // -------- Apply affine transform --------
+
+
+    Curve<T> transformed(const Eigen::Affine2d & xf)
+    {
+        Curve<T> res(*this);
+        res.transform(xf);
+        return res;
+    }
+
+    void transform(const Eigen::Affine2d & xf)
+    {
+        for (int i=0; i<vertices_.size(); ++i)
+        {
+            Eigen::Vector2d p(vertices_[i].x(), vertices_[i].y());
+            p = xf*p;
+            vertices_[i].setX(p[0]);
+            vertices_[i].setY(p[1]);
+        }
+
+        setDirtyArclengths_();
+    }
+
     // -------- Sculpting --------
 
     void translate(double dx, double dy)

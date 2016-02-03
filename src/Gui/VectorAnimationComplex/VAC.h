@@ -437,6 +437,7 @@ private:
 
     // Transform tool
     TransformTool transformTool_;
+    friend class TransformTool;
 };
 
 }

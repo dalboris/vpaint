@@ -497,6 +497,17 @@ void KeyEdge::endSculptSmooth()
     processGeometryChanged_();
 }
 
+void KeyEdge::prepareAffineTransform()
+{
+    geometry()->prepareAffineTransform();
+}
+
+void KeyEdge::performAffineTransform(const Eigen::Affine2d & xf)
+{
+    geometry()->performAffineTransform(xf);
+    processGeometryChanged_();
+}
+
 bool KeyEdge::check_() const
 {
     // todo

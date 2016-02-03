@@ -39,6 +39,8 @@ public:
     // manipulation
     void prepareDragAndDrop();
     void performDragAndDrop(double dx, double dy);
+    void prepareAffineTransform();
+    void performAffineTransform(const Eigen::Affine2d & xf);
 
     // For cubic spline interpolation
     KeyVertexList beforeVertices() const;

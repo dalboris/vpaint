@@ -78,6 +78,11 @@ private:
                            WidgetId id, ViewSettings & viewSettings) const;
     void drawPickRotateWidget_(double x, double y, double midAngle,
                            WidgetId id, ViewSettings & viewSettings) const;
+
+    KeyVertexSet draggedVertices_;
+    KeyEdgeSet draggedEdges_;
+    double x0_, y0_;
+    double xPivot_, yPivot_;
 };
 
 }

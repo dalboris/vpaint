@@ -80,6 +80,9 @@ public:
     void beginSculptSmooth(double x, double y);
     void continueSculptSmooth(double x, double y);
     void endSculptSmooth();
+    // Affine transform
+    void prepareAffineTransform();
+    void performAffineTransform(const Eigen::Affine2d & xf);
 
 private:
     friend class VAC;

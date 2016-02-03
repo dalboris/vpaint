@@ -828,6 +828,8 @@ void Cell::clearCachedGeometry_()
     boundingBoxes_.clear();
 }
 
+// XXX this could be cached, it is called many times during
+// drag and drop and affine transform while not changing
 CellSet Cell::geometryDependentCells_()
 {
     CellSet res;

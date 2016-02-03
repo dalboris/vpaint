@@ -336,6 +336,16 @@ void KeyVertex::performDragAndDrop(double dx, double dy)
     //correctEdgesGeometry();
 }
 
+void KeyVertex::prepareAffineTransform()
+{
+    posBack_ = pos_;
+}
+
+void KeyVertex::performAffineTransform(const Eigen::Affine2d & xf)
+{
+    setPos(xf * posBack_);
+}
+
 bool KeyVertex::check_() const
 {
     // todo

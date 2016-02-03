@@ -12,6 +12,11 @@
 #include "OpenGL.h"
 #include "Picking.h"
 #include "Cell.h"
+#include "KeyVertex.h"
+#include "KeyEdge.h"
+#include "EdgeGeometry.h"
+#include "VAC.h"
+#include "Algorithms.h"
 
 #include "Eigen.h"
 #include <vector>
@@ -276,7 +281,7 @@ void TransformTool::drawRotateWidget_(double x, double y, double midAngle,
     }
     glBegin(GL_LINE_LOOP);
     {
-        for (int i=0; i<arrow.size(); ++i)
+        for (unsigned int i=0; i<arrow.size(); ++i)
         {
             glVertex2d(arrow[i][0], arrow[i][1]);
         }
@@ -285,7 +290,7 @@ void TransformTool::drawRotateWidget_(double x, double y, double midAngle,
 }
 
 void TransformTool::drawPickRotateWidget_(double x, double y, double midAngle,
-                                      WidgetId id, ViewSettings & viewSettings) const
+                                          WidgetId id, ViewSettings & viewSettings) const
 {
     const int & n = rotateWidgetNumSamples;
     const Vec2Vector arrow =
@@ -417,14 +422,158 @@ void TransformTool::setNoHoveredObject()
 
 void TransformTool::beginTransform(const CellSet & cells, double x0, double y0, Time time)
 {
+    // Clear cached values
+    draggedVertices_.clear();
+    draggedEdges_.clear();
+
+    // Return in trivial cases
+    if (hovered() == None || cells.isEmpty())
+        return;
+
+    // Keyframe inbetween cells
+    CellSet cellsNotToKeyframe;
+    CellSet cellsToKeyframe;
+    foreach(Cell * c, cells)
+    {
+        InbetweenCell * sc = c->toInbetweenCell();
+        if(sc)
+        {
+            if(sc->exists(time))
+            {
+                cellsToKeyframe << sc;
+            }
+            else
+            {
+                cellsNotToKeyframe << sc;
+            }
+        }
+        else
+        {
+            cellsNotToKeyframe << c;
+        }
+    }
+    VAC * vac = (*cells.begin())->vac();
+    KeyCellSet keyframedCells = vac->keyframe_(cellsToKeyframe,time);
+
+    // Determine which cells to transform
+    CellSet cellsToTransform = cellsNotToKeyframe;
+    foreach(KeyCell * c, keyframedCells)
+        cellsToTransform << c;
+    cellsToTransform = Algorithms::closure(cellsToTransform);
+
+    // Cache key vertices and edges
+    // XXX add the non-loop edges whose end vertices are dragged?
+    draggedVertices_ = KeyVertexSet(cellsToTransform);
+    draggedEdges_ = KeyEdgeSet(cellsToTransform);
+
+    // prepare for affine transform
+    foreach(KeyEdge * e, draggedEdges_)
+        e->prepareAffineTransform();
+    foreach(KeyVertex * v, draggedVertices_)
+        v->prepareAffineTransform();
+
+    // Compute selection bounding box at current time
+    BoundingBox bb;
+    for (CellSet::ConstIterator it = cells.begin(); it != cells.end(); ++it)
+    {
+        bb.unite((*it)->boundingBox(time));
+    }
+
+    // Cache start values to determine affine transformation
+    x0_ = x0;
+    y0_ = y0;
+    if (hovered() == TopLeftScale ||
+        hovered() == TopLeftRotate ||
+        hovered() == TopScale ||
+        hovered() == LeftScale)
+    {
+        xPivot_ = bb.xMax();
+        yPivot_ = bb.yMax();
+    }
+    else if (hovered() == TopRightScale ||
+             hovered() == TopRightRotate)
+    {
+        xPivot_ = bb.xMin();
+        yPivot_ = bb.yMax();
+    }
+    else if (hovered() == BottomRightScale ||
+             hovered() == BottomRightRotate ||
+             hovered() == BottomScale ||
+             hovered() == RightScale)
+    {
+        xPivot_ = bb.xMin();
+        yPivot_ = bb.yMin();
+    }
+    else if (hovered() == BottomLeftScale ||
+             hovered() == BottomLeftRotate)
+    {
+        xPivot_ = bb.xMax();
+        yPivot_ = bb.yMin();
+    }
 }
 
 void TransformTool::continueTransform(const CellSet & cells, double x, double y)
 {
+    // Return in trivial cases
+    if (hovered() == None || cells.isEmpty())
+        return;
+
+    // Determine affine transformation
+    Eigen::Affine2d xf;
+    if (hovered() == TopLeftScale ||
+        hovered() == TopRightScale ||
+        hovered() == BottomRightScale ||
+        hovered() == BottomLeftScale)
+    {
+        xf = Eigen::Scaling((x-xPivot_)/(x0_-xPivot_),
+                            (y-yPivot_)/(y0_-yPivot_));
+    }
+    else if (hovered() == TopScale ||
+             hovered() == BottomScale)
+    {
+        xf = Eigen::Scaling(1.0,
+                            (y-yPivot_)/(y0_-yPivot_));
+    }
+    else if (hovered() == RightScale ||
+             hovered() == LeftScale)
+    {
+        xf = Eigen::Scaling((x-xPivot_)/(x0_-xPivot_),
+                            1.0);
+    }
+    else if (hovered() == TopLeftRotate ||
+             hovered() == TopRightRotate ||
+             hovered() == BottomRightRotate ||
+             hovered() == BottomLeftRotate)
+    {
+        double theta0 = std::atan2(y0_ - yPivot_, x0_ - xPivot_);
+        double theta  = std::atan2(y   - yPivot_, x   - xPivot_);
+        double dTheta = theta - theta0;
+
+        xf = Eigen::Rotation2Dd(dTheta);
+    }
+    else
+    {
+        return;
+    }
+
+    // Make relative to pivot
+    Eigen::Translation2d pivot(xPivot_, yPivot_);
+    xf = pivot * xf * pivot.inverse();
+
+    // Apply affine transformation
+    foreach(KeyEdge * e, draggedEdges_)
+        e->performAffineTransform(xf);
+
+    foreach(KeyVertex * v, draggedVertices_)
+        v->performAffineTransform(xf);
+
+    foreach(KeyVertex * v, draggedVertices_)
+        v->correctEdgesGeometry();
 }
 
-void TransformTool::endTransform(const CellSet & cells)
+void TransformTool::endTransform(const CellSet & /*cells*/)
 {
+    // Nothing to do
 }
 
 }

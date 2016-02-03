@@ -90,6 +90,9 @@ public:
     // loop drag and drop
     virtual void prepareDragAndDrop();
     virtual void performDragAndDrop(double dx, double dy);
+    // affine transform
+    virtual void prepareAffineTransform();
+    virtual void performAffineTransform(const Eigen::Affine2d & xf);
 
 
     // Save and Load
@@ -187,6 +190,9 @@ public:
     // loop drag and drop
     void prepareDragAndDrop();
     void performDragAndDrop(double dx, double dy);
+    // affine transform
+    void prepareAffineTransform();
+    void performAffineTransform(const Eigen::Affine2d & xf);
     // Compute closest point on curve
     ClosestVertexInfo closestPoint(double x, double y);
 
@@ -218,6 +224,9 @@ private:
     //QList<Eigen::Vector2d> vertices_;
 
     SculptCurve::Curve<EdgeSample> curve_;
+
+    // Store initial curve for affine tranform
+    SculptCurve::Curve<EdgeSample> curveBeforeTransform_;
 
     // Others
     void makeLoop_();
