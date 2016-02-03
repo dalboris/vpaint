@@ -74,6 +74,10 @@ private:
                           WidgetId id, ViewSettings & viewSettings) const;
     void drawPickScaleWidget_(double x, double y, double size,
                               WidgetId id, ViewSettings & viewSettings) const;
+    void drawRotateWidget_(double x, double y, double midAngle,
+                           WidgetId id, ViewSettings & viewSettings) const;
+    void drawPickRotateWidget_(double x, double y, double midAngle,
+                           WidgetId id, ViewSettings & viewSettings) const;
 };
 
 }

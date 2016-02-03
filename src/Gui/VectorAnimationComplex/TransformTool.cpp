@@ -13,10 +13,45 @@
 #include "Picking.h"
 #include "Cell.h"
 
-#include <QtDebug>
+#include "Eigen.h"
+#include <vector>
+#include <cmath>
+
+typedef Eigen::Vector2d Vec2;
+typedef std::vector<Vec2, Eigen::aligned_allocator<Vec2>> Vec2Vector;
 
 namespace VectorAnimationComplex
 {
+
+namespace
+{
+
+// Math constants
+const double PI = 3.14159;
+const double SQRT2 = 1.4142;
+
+// Widget colors
+const double boundingBoxColor[] = {0.5, 0.5, 0.5, 0.5};
+const double fillColor[] = {0.8, 0.8, 0.8, 0.2};
+const double strokeColor[] = {0.5, 0.5, 0.5, 0.2};
+const double fillColorHighlighted[] = {1.0, 0.8, 0.8, 0.8};
+const double strokeColorHighlighted[] = {1.0, 0.5, 0.5, 0.8};
+
+// Scale widget params
+const double scaleWidgetCornerSize = 8;
+const double scaleWidgetEdgeSize = 5;
+const double lineWidth = 1.0;
+
+// Arrow params
+const double rotateWidgetSize = scaleWidgetCornerSize;
+const double rotateWidgetAngleRange = PI / 7;
+const double rotateWidgetCircleCenter = 5;
+const double rotateWidgetCircleRadius = 9;
+const double rotateWidgetBodyHalfWidth = 0.7;
+const double rotateWidgetHeadHalfWidth = SQRT2;
+const int rotateWidgetNumSamples = 20;
+
+}
 
 TransformTool::TransformTool() :
     idOffset_(0),
@@ -34,15 +69,14 @@ TransformTool::WidgetId TransformTool::hovered() const
     return hovered_;
 }
 
+void TransformTool::glPickColor_(WidgetId id) const
+{
+    Picking::glColor(idOffset_ + id - MIN_WIDGET_ID);
+}
+
 void TransformTool::drawScaleWidget_(double x, double y, double size, WidgetId id, ViewSettings & viewSettings) const
 {
     size = size / viewSettings.zoom();
-
-    const double fillColor[] = {0.8, 0.8, 0.8, 0.2};
-    const double strokeColor[] = {0.5, 0.5, 0.5, 0.2};
-
-    const double fillColorHighlighted[] = {1.0, 0.8, 0.8, 0.8};
-    const double strokeColorHighlighted[] = {1.0, 0.5, 0.5, 0.8};
 
     // Fill
     if(hovered_ == id)
@@ -96,18 +130,195 @@ void TransformTool::drawPickScaleWidget_(double x, double y, double size, Widget
     glEnd();
 }
 
-void TransformTool::glPickColor_(WidgetId id) const
-{
-    Picking::glColor(idOffset_ + id - MIN_WIDGET_ID);
-}
-
 namespace
 {
-const double scaleWidgetCornerSize = 10;
-const double scaleWidgetEdgeSize = 5;
-const double lineWidth = 1.0;
 
-const double boundingBoxColor[] = {0.5, 0.5, 0.5, 0.5};
+inline Vec2 u_(double theta)
+{
+    return Vec2(std::cos(theta), std::sin(theta));
+}
+
+inline Vec2 p_(const Vec2 & c, double r, double theta)
+{
+    return c + r * u_(theta);
+}
+
+inline Vec2 p_(const Vec2 & c, double r, const Vec2 & u)
+{
+    return c + r * u;
+}
+
+Vec2Vector rotateWidgetGeometry_(double x, double y, double midAngle, double size)
+{
+    // Returns a vector of points defining the arrow contour:
+    //   - 3 points at the beginning for the first arrow head
+    //   - 2*n points in the middle for the arrow body
+    //   - points at the end for the second arrow head
+    //
+    // So 2*n + 6 points in total. See diagram below indicating
+    // which indices correspond to which part of the arrow. Each '*'
+    // is one point, and the number next to it is its index.
+    //
+    //                                              r (distance to circle center)
+    //        0                     n+5             ^
+    //          *    [2n+5..n+6]    *               | rMaxHead
+    //    1     * * * * * * * * * * *               | rMaxBody
+    //     *                             * n+4      | rCenterline
+    //          * * * * * * * * * * *               | rMinBody
+    //          *      [3..n+2]     *               | rMinHead
+    //         2                     n+3            |
+
+    // Vector to return
+    const int & n = rotateWidgetNumSamples;
+    Vec2Vector res(2*n+6);
+
+    // Get circle center
+    const Vec2 corner(x, y);
+    const Vec2 center = p_(corner, -rotateWidgetCircleCenter*size, midAngle);
+
+    // Get radiuses
+    const double rCenterline = rotateWidgetCircleRadius*size;
+    const double rMaxHead = rCenterline + rotateWidgetHeadHalfWidth*size;
+    const double rMinHead = rCenterline - rotateWidgetHeadHalfWidth*size;
+    const double rMaxBody = rCenterline + rotateWidgetBodyHalfWidth*size;
+    const double rMinBody = rCenterline - rotateWidgetBodyHalfWidth*size;
+
+    // Get angles
+    const double startAngle = midAngle - 0.5 * rotateWidgetAngleRange;
+    const double endAngle = midAngle + 0.5 * rotateWidgetAngleRange;
+    const double deltaAngle = rotateWidgetAngleRange / (n-1);
+
+    // First arrow head
+    const Vec2 uStart = u_(startAngle);
+    const Vec2 vStart(-uStart[1], uStart[0]);
+    res[0] = p_(center, rMaxHead, uStart);
+    res[1] = p_(center, rCenterline, uStart) - rotateWidgetHeadHalfWidth*size*vStart;
+    res[2] = p_(center, rMinHead, uStart);
+
+    // Second arrow head
+    const Vec2 uEnd = u_(endAngle);
+    const Vec2 vEnd(-uEnd[1], uEnd[0]);
+    res[n+3] = p_(center, rMinHead, uEnd);
+    res[n+4] = p_(center, rCenterline, uEnd) + rotateWidgetHeadHalfWidth*size*vEnd;
+    res[n+5] = p_(center, rMaxHead, uEnd);
+
+    // Arrow body
+    int minBodyIndex = 3;
+    int maxBodyIndex = 2*n+5;
+    for (int i=0; i<n; ++i)
+    {
+        const Vec2 u = u_(startAngle + i * deltaAngle);
+
+        res[minBodyIndex] = p_(center, rMinBody, u);
+        res[maxBodyIndex] = p_(center, rMaxBody, u);
+
+        ++minBodyIndex;
+        --maxBodyIndex;
+    }
+
+    // Return
+    return res;
+}
+
+}
+
+void TransformTool::drawRotateWidget_(double x, double y, double midAngle,
+                                      WidgetId id, ViewSettings & viewSettings) const
+{
+    const int & n = rotateWidgetNumSamples;
+    const Vec2Vector arrow =
+            rotateWidgetGeometry_(x, y, midAngle, rotateWidgetSize / viewSettings.zoom());
+
+
+    // Fill
+    if(hovered_ == id)
+    {
+        glColor4dv(fillColorHighlighted);
+    }
+    else
+    {
+        glColor4dv(fillColor);
+    }
+    // Arrow body
+    glBegin(GL_TRIANGLE_STRIP);
+    {
+        int minBodyIndex = 3;
+        int maxBodyIndex = 2*n+5;
+        for (int i=0; i<n; ++i)
+        {
+            glVertex2d(arrow[minBodyIndex][0], arrow[minBodyIndex][1]);
+            glVertex2d(arrow[maxBodyIndex][0], arrow[maxBodyIndex][1]);
+            ++minBodyIndex;
+            --maxBodyIndex;
+        }
+    }
+    glEnd();
+    // Arrow heads
+    glBegin(GL_TRIANGLES);
+    {
+        glVertex2d(arrow[0][0], arrow[0][1]);
+        glVertex2d(arrow[1][0], arrow[1][1]);
+        glVertex2d(arrow[2][0], arrow[2][1]);
+        glVertex2d(arrow[n+3][0], arrow[n+3][1]);
+        glVertex2d(arrow[n+4][0], arrow[n+4][1]);
+        glVertex2d(arrow[n+5][0], arrow[n+5][1]);
+    }
+    glEnd();
+
+    // Stroke
+    if(hovered_ == id)
+    {
+        glColor4dv(strokeColorHighlighted);
+    }
+    else
+    {
+        glColor4dv(strokeColor);
+    }
+    glBegin(GL_LINE_LOOP);
+    {
+        for (int i=0; i<arrow.size(); ++i)
+        {
+            glVertex2d(arrow[i][0], arrow[i][1]);
+        }
+    }
+    glEnd();
+}
+
+void TransformTool::drawPickRotateWidget_(double x, double y, double midAngle,
+                                      WidgetId id, ViewSettings & viewSettings) const
+{
+    const int & n = rotateWidgetNumSamples;
+    const Vec2Vector arrow =
+            rotateWidgetGeometry_(x, y, midAngle, rotateWidgetSize / viewSettings.zoom());
+
+    glPickColor_(id);
+
+    // Arrow body
+    glBegin(GL_TRIANGLE_STRIP);
+    {
+        int minBodyIndex = 3;
+        int maxBodyIndex = 2*n+5;
+        for (int i=0; i<n; ++i)
+        {
+            glVertex2d(arrow[minBodyIndex][0], arrow[minBodyIndex][1]);
+            glVertex2d(arrow[maxBodyIndex][0], arrow[maxBodyIndex][1]);
+            ++minBodyIndex;
+            --maxBodyIndex;
+        }
+    }
+    glEnd();
+
+    // Arrow heads
+    glBegin(GL_TRIANGLES);
+    {
+        glVertex2d(arrow[0][0], arrow[0][1]);
+        glVertex2d(arrow[1][0], arrow[1][1]);
+        glVertex2d(arrow[2][0], arrow[2][1]);
+        glVertex2d(arrow[n+3][0], arrow[n+3][1]);
+        glVertex2d(arrow[n+4][0], arrow[n+4][1]);
+        glVertex2d(arrow[n+5][0], arrow[n+5][1]);
+    }
+    glEnd();
 }
 
 void TransformTool::draw(const CellSet & cells, Time time, ViewSettings & viewSettings) const
@@ -144,6 +355,12 @@ void TransformTool::draw(const CellSet & cells, Time time, ViewSettings & viewSe
         drawScaleWidget_(bb.xMax(), 0.5*(bb.yMin()+bb.yMax()), scaleWidgetEdgeSize, RightScale, viewSettings);
         drawScaleWidget_(0.5*(bb.xMin()+bb.xMax()), bb.yMax(), scaleWidgetEdgeSize, BottomScale, viewSettings);
         drawScaleWidget_(bb.xMin(), 0.5*(bb.yMin()+bb.yMax()), scaleWidgetEdgeSize, LeftScale, viewSettings);
+
+        // Rotate widgets
+        drawRotateWidget_(bb.xMin(), bb.yMin(), 5*PI/4, TopLeftRotate, viewSettings);
+        drawRotateWidget_(bb.xMax(), bb.yMin(), 7*PI/4, TopRightRotate, viewSettings);
+        drawRotateWidget_(bb.xMax(), bb.yMax(), 1*PI/4, BottomRightRotate, viewSettings);
+        drawRotateWidget_(bb.xMin(), bb.yMax(), 3*PI/4, BottomLeftRotate, viewSettings);
     }
 }
 
@@ -169,6 +386,12 @@ void TransformTool::drawPick(const CellSet & cells, Time time, ViewSettings & vi
         drawPickScaleWidget_(bb.xMax(), 0.5*(bb.yMin()+bb.yMax()), scaleWidgetEdgeSize, RightScale, viewSettings);
         drawPickScaleWidget_(0.5*(bb.xMin()+bb.xMax()), bb.yMax(), scaleWidgetEdgeSize, BottomScale, viewSettings);
         drawPickScaleWidget_(bb.xMin(), 0.5*(bb.yMin()+bb.yMax()), scaleWidgetEdgeSize, LeftScale, viewSettings);
+
+        // Rotate widgets
+        drawPickRotateWidget_(bb.xMin(), bb.yMin(), 5*PI/4, TopLeftRotate, viewSettings);
+        drawPickRotateWidget_(bb.xMax(), bb.yMin(), 7*PI/4, TopRightRotate, viewSettings);
+        drawPickRotateWidget_(bb.xMax(), bb.yMax(), 1*PI/4, BottomRightRotate, viewSettings);
+        drawPickRotateWidget_(bb.xMin(), bb.yMax(), 3*PI/4, BottomLeftRotate, viewSettings);
     }
 }
 
@@ -194,17 +417,14 @@ void TransformTool::setNoHoveredObject()
 
 void TransformTool::beginTransform(const CellSet & cells, double x0, double y0, Time time)
 {
-    qDebug() << "beginTransform";
 }
 
 void TransformTool::continueTransform(const CellSet & cells, double x, double y)
 {
-    qDebug() << "continueTransform";
 }
 
 void TransformTool::endTransform(const CellSet & cells)
 {
-    qDebug() << "endTransform";
 }
 
 }
