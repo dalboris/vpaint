@@ -54,8 +54,10 @@ public:
         BottomRightRotate,
         BottomLeftRotate,
 
+        Pivot,
+
         MIN_WIDGET_ID = TopLeftScale,
-        MAX_WIDGET_ID = BottomLeftRotate
+        MAX_WIDGET_ID = Pivot
     };
 
     // Get which widget is currently hovered, if any
@@ -79,18 +81,20 @@ private:
     int idOffset_;
     WidgetId hovered_;
 
+    void glFillColor_(WidgetId id) const;
+    void glStrokeColor_(WidgetId id) const;
     void glPickColor_(WidgetId id) const;
-    void drawScaleWidget_(WidgetId id, const BoundingBox & bb, double size,
-                          ViewSettings & viewSettings) const;
-    void drawPickScaleWidget_(WidgetId id, const BoundingBox & bb, double size,
-                              ViewSettings & viewSettings) const;
-    void drawRotateWidget_(WidgetId id, const BoundingBox & bb,
-                           ViewSettings & viewSettings) const;
-    void drawPickRotateWidget_(WidgetId id, const BoundingBox & bb,
-                               ViewSettings & viewSettings) const;
+
+    void drawScaleWidget_(WidgetId id, const BoundingBox & bb, double size, ViewSettings & viewSettings) const;
+    void drawPickScaleWidget_(WidgetId id, const BoundingBox & bb, double size, ViewSettings & viewSettings) const;
+
+    void drawRotateWidget_(WidgetId id, const BoundingBox & bb, ViewSettings & viewSettings) const;
+    void drawPickRotateWidget_(WidgetId id, const BoundingBox & bb, ViewSettings & viewSettings) const;
+
+    void drawPivot_(const BoundingBox & bb, ViewSettings & viewSettings) const;
+    void drawPickPivot_(const BoundingBox & bb, ViewSettings & viewSettings) const;
 
     bool manualPivot_;
-
 
     KeyVertexSet draggedVertices_;
     KeyEdgeSet draggedEdges_;

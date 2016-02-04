@@ -57,6 +57,10 @@ const double rotateWidgetBodyHalfWidth = 0.7;
 const double rotateWidgetHeadHalfWidth = SQRT2;
 const int rotateWidgetNumSamples = 20;
 
+// Pivot params
+const double pivotWidgetSize = 0.5*scaleWidgetCornerSize;
+const int pivotWidgetNumSamples = 20;
+
 // Widget position
 Vec2 widgetPos_(TransformTool::WidgetId id, const BoundingBox & bb)
 {
@@ -66,14 +70,18 @@ Vec2 widgetPos_(TransformTool::WidgetId id, const BoundingBox & bb)
     case TransformTool::TopRightScale:     return Vec2(bb.xMax(), bb.yMin());
     case TransformTool::BottomRightScale:  return Vec2(bb.xMax(), bb.yMax());
     case TransformTool::BottomLeftScale:   return Vec2(bb.xMin(), bb.yMax());
+
     case TransformTool::TopScale:          return Vec2(bb.xMid(), bb.yMin());
     case TransformTool::RightScale:        return Vec2(bb.xMax(), bb.yMid());
     case TransformTool::BottomScale:       return Vec2(bb.xMid(), bb.yMax());
     case TransformTool::LeftScale:         return Vec2(bb.xMin(), bb.yMid());
+
     case TransformTool::TopLeftRotate:     return Vec2(bb.xMin(), bb.yMin());
     case TransformTool::TopRightRotate:    return Vec2(bb.xMax(), bb.yMin());
     case TransformTool::BottomRightRotate: return Vec2(bb.xMax(), bb.yMax());
     case TransformTool::BottomLeftRotate:  return Vec2(bb.xMin(), bb.yMax());
+
+    case TransformTool::Pivot:             return Vec2(bb.xMid(), bb.yMid());
 
     // Silence warning
     default: return Vec2(0.0, 0.0);
@@ -89,14 +97,18 @@ Vec2 widgetOppositePos_(TransformTool::WidgetId id, const BoundingBox & bb)
     case TransformTool::TopRightScale:     return Vec2(bb.xMin(), bb.yMax());
     case TransformTool::BottomRightScale:  return Vec2(bb.xMin(), bb.yMin());
     case TransformTool::BottomLeftScale:   return Vec2(bb.xMax(), bb.yMin());
+
     case TransformTool::TopScale:          return Vec2(bb.xMid(), bb.yMax());
     case TransformTool::RightScale:        return Vec2(bb.xMin(), bb.yMid());
     case TransformTool::BottomScale:       return Vec2(bb.xMid(), bb.yMin());
     case TransformTool::LeftScale:         return Vec2(bb.xMax(), bb.yMid());
+
     case TransformTool::TopLeftRotate:     return Vec2(bb.xMax(), bb.yMax());
     case TransformTool::TopRightRotate:    return Vec2(bb.xMin(), bb.yMax());
     case TransformTool::BottomRightRotate: return Vec2(bb.xMin(), bb.yMin());
     case TransformTool::BottomLeftRotate:  return Vec2(bb.xMax(), bb.yMin());
+
+    case TransformTool::Pivot:             return Vec2(bb.xMid(), bb.yMid());
 
     // Silence warning
     default: return Vec2(0.0, 0.0);
@@ -289,6 +301,43 @@ void glFillArrow_(const Vec2Vector & arrow)
     glEnd();
 }
 
+void glStrokePivot_(const Vec2 & pos, double size)
+{
+    glBegin(GL_LINE_LOOP);
+    {
+        const int & n = pivotWidgetNumSamples;
+        for (int i=0; i<n; ++i)
+        {
+            const Vec2 p = p_(pos, size, 2*i*PI/n);
+            glVertex2d(p[0], p[1]);
+        }
+    }
+    glEnd();
+
+    glBegin(GL_LINES);
+    {
+        glVertex2d(pos[0] - 2*size, pos[1]);
+        glVertex2d(pos[0] + 2*size, pos[1]);
+        glVertex2d(pos[0], pos[1] - 2*size);
+        glVertex2d(pos[0], pos[1] + 2*size);
+    }
+    glEnd();
+}
+
+void glFillPivot_(const Vec2 & pos, double size)
+{
+    glBegin(GL_POLYGON);
+    {
+        const int & n = pivotWidgetNumSamples;
+        for (int i=0; i<n; ++i)
+        {
+            const Vec2 p = p_(pos, size, 2*i*PI/n);
+            glVertex2d(p[0], p[1]);
+        }
+    }
+    glEnd();
+}
+
 }
 
 TransformTool::TransformTool() :
@@ -318,6 +367,16 @@ TransformTool::WidgetId TransformTool::hovered() const
     return hovered_;
 }
 
+void TransformTool::glFillColor_(WidgetId id) const
+{
+    glColor4dv(hovered_ == id ? fillColorHighlighted : fillColor);
+}
+
+void TransformTool::glStrokeColor_(WidgetId id) const
+{
+    glColor4dv(hovered_ == id ? strokeColorHighlighted : strokeColor);
+}
+
 void TransformTool::glPickColor_(WidgetId id) const
 {
     Picking::glColor(idOffset_ + id - MIN_WIDGET_ID);
@@ -327,28 +386,28 @@ void TransformTool::drawScaleWidget_(WidgetId id, const BoundingBox & bb,
                                      double size, ViewSettings & viewSettings) const
 {
     // Compute rect
-    Vec2 p = widgetPos_(id, bb);
+    const Vec2 pos = widgetPos_(id, bb);
     size = size / viewSettings.zoom();
 
     // Fill
-    glColor4dv(hovered_ == id ? fillColorHighlighted : fillColor);
-    glFillRect_(p, size);
+    glFillColor_(id);
+    glFillRect_(pos, size);
 
     // Stroke
-    glColor4dv(hovered_ == id ? strokeColorHighlighted : strokeColor);
-    glStrokeRect_(p, size);
+    glStrokeColor_(id);
+    glStrokeRect_(pos, size);
 }
 
 void TransformTool::drawPickScaleWidget_(WidgetId id, const BoundingBox & bb,
                                          double size, ViewSettings &viewSettings) const
 {
-    // Compute rect
-    Vec2 p = widgetPos_(id, bb);
+    // Compute pos and size
+    const Vec2 pos = widgetPos_(id, bb);
     size = size / viewSettings.zoom();
 
     // Fill
     glPickColor_(id);
-    glFillRect_(p, size);
+    glFillRect_(pos, size);
 }
 
 void TransformTool::drawRotateWidget_(WidgetId id, const BoundingBox & bb,
@@ -358,11 +417,11 @@ void TransformTool::drawRotateWidget_(WidgetId id, const BoundingBox & bb,
     const Vec2Vector arrow = computeArrow_(id, bb, viewSettings);
 
     // Fill
-    glColor4dv(hovered_ == id ? fillColorHighlighted : fillColor);
+    glFillColor_(id);
     glFillArrow_(arrow);
 
     // Stroke
-    glColor4dv(hovered_ == id ? strokeColorHighlighted : strokeColor);
+    glStrokeColor_(id);
     glStrokeArrow_(arrow);
 }
 
@@ -375,6 +434,32 @@ void TransformTool::drawPickRotateWidget_(WidgetId id, const BoundingBox & bb,
     // Fill
     glPickColor_(id);
     glFillArrow_(arrow);
+}
+
+void TransformTool::drawPivot_(const BoundingBox & bb, ViewSettings & viewSettings) const
+{
+    // Compute pos and size
+    Vec2 pos = widgetPos_(Pivot, bb);
+    double size = pivotWidgetSize / viewSettings.zoom();
+
+    // Fill
+    glFillColor_(Pivot);
+    glFillPivot_(pos, size);
+
+    // Stroke
+    glStrokeColor_(Pivot);
+    glStrokePivot_(pos, size);
+}
+
+void TransformTool::drawPickPivot_(const BoundingBox & bb, ViewSettings & viewSettings) const
+{
+    // Compute pos and size
+    Vec2 pos = widgetPos_(Pivot, bb);
+    double size = pivotWidgetSize / viewSettings.zoom();
+
+    // Fill
+    glPickColor_(Pivot);
+    glFillPivot_(pos, size);
 }
 
 void TransformTool::draw(const CellSet & cells, Time time, ViewSettings & viewSettings) const
@@ -417,6 +502,9 @@ void TransformTool::draw(const CellSet & cells, Time time, ViewSettings & viewSe
         // Rotate widgets
         for (WidgetId id: {TopLeftRotate, TopRightRotate, BottomRightRotate, BottomLeftRotate})
             drawRotateWidget_(id, bb, viewSettings);
+
+        // Pivot
+        drawPivot_(bb, viewSettings);
     }
 }
 
@@ -443,6 +531,9 @@ void TransformTool::drawPick(const CellSet & cells, Time time, ViewSettings & vi
         // Rotate widgets
         for (WidgetId id: {TopLeftRotate, TopRightRotate, BottomRightRotate, BottomLeftRotate})
             drawPickRotateWidget_(id, bb, viewSettings);
+
+        // Pivot
+        drawPickPivot_(bb, viewSettings);
     }
 }
 
