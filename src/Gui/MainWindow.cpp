@@ -551,7 +551,6 @@ void MainWindow::closeEvent(QCloseEvent *event)
 {
       if (close())
       {
-        global()->writeSettings();
         event->accept();
         selectionInfo_->close();
       }
