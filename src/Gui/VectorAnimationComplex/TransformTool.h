@@ -18,6 +18,8 @@ class ViewSettings;
 namespace VectorAnimationComplex
 {
 
+class BoundingBox;
+
 class TransformTool
 {
 public:
@@ -70,18 +72,18 @@ private:
     WidgetId hovered_;
 
     void glPickColor_(WidgetId id) const;
-    void drawScaleWidget_(double x, double y, double size,
-                          WidgetId id, ViewSettings & viewSettings) const;
-    void drawPickScaleWidget_(double x, double y, double size,
-                              WidgetId id, ViewSettings & viewSettings) const;
-    void drawRotateWidget_(double x, double y, double midAngle,
-                           WidgetId id, ViewSettings & viewSettings) const;
-    void drawPickRotateWidget_(double x, double y, double midAngle,
-                           WidgetId id, ViewSettings & viewSettings) const;
+    void drawScaleWidget_(WidgetId id, const BoundingBox & bb, double size,
+                          ViewSettings & viewSettings) const;
+    void drawPickScaleWidget_(WidgetId id, const BoundingBox & bb, double size,
+                              ViewSettings & viewSettings) const;
+    void drawRotateWidget_(WidgetId id, const BoundingBox & bb,
+                           ViewSettings & viewSettings) const;
+    void drawPickRotateWidget_(WidgetId id, const BoundingBox & bb,
+                               ViewSettings & viewSettings) const;
 
     KeyVertexSet draggedVertices_;
     KeyEdgeSet draggedEdges_;
-    double x0_, y0_;
+    double x0_, y0_, dx_, dy_;
     double xPivot_, yPivot_;
 };
 

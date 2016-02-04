@@ -57,104 +57,87 @@ const double rotateWidgetBodyHalfWidth = 0.7;
 const double rotateWidgetHeadHalfWidth = SQRT2;
 const int rotateWidgetNumSamples = 20;
 
+// Widget position
+Vec2 widgetPos_(TransformTool::WidgetId id, const BoundingBox & bb)
+{
+    switch (id)
+    {
+    case TransformTool::TopLeftScale:      return Vec2(bb.xMin(), bb.yMin());
+    case TransformTool::TopRightScale:     return Vec2(bb.xMax(), bb.yMin());
+    case TransformTool::BottomRightScale:  return Vec2(bb.xMax(), bb.yMax());
+    case TransformTool::BottomLeftScale:   return Vec2(bb.xMin(), bb.yMax());
+    case TransformTool::TopScale:          return Vec2(0.5*(bb.xMin()+bb.xMax()), bb.yMin());
+    case TransformTool::RightScale:        return Vec2(bb.xMax(), 0.5*(bb.yMin()+bb.yMax()));
+    case TransformTool::BottomScale:       return Vec2(0.5*(bb.xMin()+bb.xMax()), bb.yMax());
+    case TransformTool::LeftScale:         return Vec2(bb.xMin(), 0.5*(bb.yMin()+bb.yMax()));
+    case TransformTool::TopLeftRotate:     return Vec2(bb.xMin(), bb.yMin());
+    case TransformTool::TopRightRotate:    return Vec2(bb.xMax(), bb.yMin());
+    case TransformTool::BottomRightRotate: return Vec2(bb.xMax(), bb.yMax());
+    case TransformTool::BottomLeftRotate:  return Vec2(bb.xMin(), bb.yMax());
+
+    // Silence warning
+    default: return Vec2(0.0, 0.0);
+    }
 }
 
-TransformTool::TransformTool() :
-    idOffset_(0),
-    hovered_(None)
+// Widget opposite position
+Vec2 widgetOppositePos_(TransformTool::WidgetId id, const BoundingBox & bb)
 {
+    switch (id)
+    {
+    case TransformTool::TopLeftScale:      return Vec2(bb.xMax(), bb.yMax());
+    case TransformTool::TopRightScale:     return Vec2(bb.xMin(), bb.yMax());
+    case TransformTool::BottomRightScale:  return Vec2(bb.xMin(), bb.yMin());
+    case TransformTool::BottomLeftScale:   return Vec2(bb.xMax(), bb.yMin());
+    case TransformTool::TopScale:          return Vec2(0.5*(bb.xMax()+bb.xMin()), bb.yMax());
+    case TransformTool::RightScale:        return Vec2(bb.xMin(), 0.5*(bb.yMax()+bb.yMin()));
+    case TransformTool::BottomScale:       return Vec2(0.5*(bb.xMax()+bb.xMin()), bb.yMin());
+    case TransformTool::LeftScale:         return Vec2(bb.xMax(), 0.5*(bb.yMax()+bb.yMin()));
+    case TransformTool::TopLeftRotate:     return Vec2(bb.xMax(), bb.yMax());
+    case TransformTool::TopRightRotate:    return Vec2(bb.xMin(), bb.yMax());
+    case TransformTool::BottomRightRotate: return Vec2(bb.xMin(), bb.yMin());
+    case TransformTool::BottomLeftRotate:  return Vec2(bb.xMax(), bb.yMin());
+
+    // Silence warning
+    default: return Vec2(0.0, 0.0);
+    }
 }
 
-void TransformTool::setIdOffset(int idOffset)
+// Widget angle
+double rotateWidgetMidAngle_(TransformTool::WidgetId id)
 {
-    idOffset_ = idOffset;
+    switch (id)
+    {
+    case TransformTool::TopLeftRotate:     return 5*PI/4;
+    case TransformTool::TopRightRotate:    return 7*PI/4;
+    case TransformTool::BottomRightRotate: return 1*PI/4;
+    case TransformTool::BottomLeftRotate:  return 3*PI/4;
+
+    // Silence warning
+    default: return 0.0;
+    }
 }
 
-TransformTool::WidgetId TransformTool::hovered() const
-{
-    return hovered_;
-}
-
-void TransformTool::glPickColor_(WidgetId id) const
-{
-    Picking::glColor(idOffset_ + id - MIN_WIDGET_ID);
-}
-
-void TransformTool::drawScaleWidget_(double x, double y, double size, WidgetId id, ViewSettings & viewSettings) const
-{
-    size = size / viewSettings.zoom();
-
-    // Fill
-    if(hovered_ == id)
-    {
-        glColor4dv(fillColorHighlighted);
-    }
-    else
-    {
-        glColor4dv(fillColor);
-    }
-    glBegin(GL_QUADS);
-    {
-        glVertex2d(x - size, y - size);
-        glVertex2d(x + size, y - size);
-        glVertex2d(x + size, y + size);
-        glVertex2d(x - size, y + size);
-    }
-    glEnd();
-
-    // Stroke
-    if(hovered_ == id)
-    {
-        glColor4dv(strokeColorHighlighted);
-    }
-    else
-    {
-        glColor4dv(strokeColor);
-    }
-    glBegin(GL_LINE_LOOP);
-    {
-        glVertex2d(x - size, y - size);
-        glVertex2d(x + size, y - size);
-        glVertex2d(x + size, y + size);
-        glVertex2d(x - size, y + size);
-    }
-    glEnd();
-}
-
-void TransformTool::drawPickScaleWidget_(double x, double y, double size, WidgetId id, ViewSettings &viewSettings) const
-{
-    size = size / viewSettings.zoom();
-
-    glPickColor_(id);
-    glBegin(GL_QUADS);
-    {
-        glVertex2d(x - size, y - size);
-        glVertex2d(x + size, y - size);
-        glVertex2d(x + size, y + size);
-        glVertex2d(x - size, y + size);
-    }
-    glEnd();
-}
-
-namespace
-{
-
+// Unit vector of angle theta
 inline Vec2 u_(double theta)
 {
     return Vec2(std::cos(theta), std::sin(theta));
 }
 
+// Point on circle of center c, radius r, at angle theta
 inline Vec2 p_(const Vec2 & c, double r, double theta)
 {
     return c + r * u_(theta);
 }
 
+// Point on circle of center c, radius r, along unit vector u
 inline Vec2 p_(const Vec2 & c, double r, const Vec2 & u)
 {
     return c + r * u;
 }
 
-Vec2Vector rotateWidgetGeometry_(double x, double y, double midAngle, double size)
+// Helper method for drawRotateWidget_ and drawPickRotateWidget_
+Vec2Vector rotateWidgetGeometry_(const Vec2 & corner, double midAngle, double size)
 {
     // Returns a vector of points defining the arrow contour:
     //   - 3 points at the beginning for the first arrow head
@@ -179,7 +162,6 @@ Vec2Vector rotateWidgetGeometry_(double x, double y, double midAngle, double siz
     Vec2Vector res(2*n+6);
 
     // Get circle center
-    const Vec2 corner(x, y);
     const Vec2 center = p_(corner, -rotateWidgetCircleCenter*size, midAngle);
 
     // Get radiuses
@@ -228,13 +210,95 @@ Vec2Vector rotateWidgetGeometry_(double x, double y, double midAngle, double siz
 
 }
 
-void TransformTool::drawRotateWidget_(double x, double y, double midAngle,
-                                      WidgetId id, ViewSettings & viewSettings) const
+TransformTool::TransformTool() :
+    idOffset_(0),
+    hovered_(None)
 {
+}
+
+void TransformTool::setIdOffset(int idOffset)
+{
+    idOffset_ = idOffset;
+}
+
+TransformTool::WidgetId TransformTool::hovered() const
+{
+    return hovered_;
+}
+
+void TransformTool::glPickColor_(WidgetId id) const
+{
+    Picking::glColor(idOffset_ + id - MIN_WIDGET_ID);
+}
+
+void TransformTool::drawScaleWidget_(WidgetId id, const BoundingBox & bb,
+                                     double size, ViewSettings & viewSettings) const
+{
+    Vec2 p = widgetPos_(id, bb);
+    size = size / viewSettings.zoom();
+
+    // Fill
+    if(hovered_ == id)
+    {
+        glColor4dv(fillColorHighlighted);
+    }
+    else
+    {
+        glColor4dv(fillColor);
+    }
+    glBegin(GL_QUADS);
+    {
+        glVertex2d(p[0] - size, p[1] - size);
+        glVertex2d(p[0] + size, p[1] - size);
+        glVertex2d(p[0] + size, p[1] + size);
+        glVertex2d(p[0] - size, p[1] + size);
+    }
+    glEnd();
+
+    // Stroke
+    if(hovered_ == id)
+    {
+        glColor4dv(strokeColorHighlighted);
+    }
+    else
+    {
+        glColor4dv(strokeColor);
+    }
+    glBegin(GL_LINE_LOOP);
+    {
+        glVertex2d(p[0] - size, p[1] - size);
+        glVertex2d(p[0] + size, p[1] - size);
+        glVertex2d(p[0] + size, p[1] + size);
+        glVertex2d(p[0] - size, p[1] + size);
+    }
+    glEnd();
+}
+
+void TransformTool::drawPickScaleWidget_(WidgetId id, const BoundingBox & bb,
+                                         double size, ViewSettings &viewSettings) const
+{
+    Vec2 p = widgetPos_(id, bb);
+    size = size / viewSettings.zoom();
+
+    glPickColor_(id);
+    glBegin(GL_QUADS);
+    {
+        glVertex2d(p[0] - size, p[1] - size);
+        glVertex2d(p[0] + size, p[1] - size);
+        glVertex2d(p[0] + size, p[1] + size);
+        glVertex2d(p[0] - size, p[1] + size);
+    }
+    glEnd();
+}
+
+void TransformTool::drawRotateWidget_(WidgetId id, const BoundingBox & bb,
+                                      ViewSettings & viewSettings) const
+{
+    Vec2 p = widgetPos_(id, bb);
+    double midAngle = rotateWidgetMidAngle_(id);
     const int & n = rotateWidgetNumSamples;
     const Vec2Vector arrow =
-            rotateWidgetGeometry_(x, y, midAngle, rotateWidgetSize / viewSettings.zoom());
-
+            rotateWidgetGeometry_(p, midAngle, rotateWidgetSize / viewSettings.zoom());
 
     // Fill
     if(hovered_ == id)
@@ -290,12 +354,14 @@ void TransformTool::drawRotateWidget_(double x, double y, double midAngle,
     glEnd();
 }
 
-void TransformTool::drawPickRotateWidget_(double x, double y, double midAngle,
-                                          WidgetId id, ViewSettings & viewSettings) const
+void TransformTool::drawPickRotateWidget_(WidgetId id, const BoundingBox & bb,
+                                          ViewSettings & viewSettings) const
 {
+    Vec2 p = widgetPos_(id, bb);
+    double midAngle = rotateWidgetMidAngle_(id);
     const int & n = rotateWidgetNumSamples;
     const Vec2Vector arrow =
-            rotateWidgetGeometry_(x, y, midAngle, rotateWidgetSize / viewSettings.zoom());
+            rotateWidgetGeometry_(p, midAngle, rotateWidgetSize / viewSettings.zoom());
 
     glPickColor_(id);
 
@@ -370,24 +436,19 @@ void TransformTool::draw(const CellSet & cells, Time time, ViewSettings & viewSe
         }
         glEnd();
 
-        // Scale widgets
-        drawScaleWidget_(bb.xMin(), bb.yMin(), scaleWidgetCornerSize, TopLeftScale, viewSettings);
-        drawScaleWidget_(bb.xMax(), bb.yMin(), scaleWidgetCornerSize, TopRightScale, viewSettings);
-        drawScaleWidget_(bb.xMax(), bb.yMax(), scaleWidgetCornerSize, BottomRightScale, viewSettings);
-        drawScaleWidget_(bb.xMin(), bb.yMax(), scaleWidgetCornerSize, BottomLeftScale, viewSettings);
-        drawScaleWidget_(0.5*(bb.xMin()+bb.xMax()), bb.yMin(), scaleWidgetEdgeSize, TopScale, viewSettings);
-        drawScaleWidget_(bb.xMax(), 0.5*(bb.yMin()+bb.yMax()), scaleWidgetEdgeSize, RightScale, viewSettings);
-        drawScaleWidget_(0.5*(bb.xMin()+bb.xMax()), bb.yMax(), scaleWidgetEdgeSize, BottomScale, viewSettings);
-        drawScaleWidget_(bb.xMin(), 0.5*(bb.yMin()+bb.yMax()), scaleWidgetEdgeSize, LeftScale, viewSettings);
+        // Scale widgets (corners)
+        for (WidgetId id: {TopLeftScale, TopRightScale, BottomRightScale, BottomLeftScale})
+            drawScaleWidget_(id, bb, scaleWidgetCornerSize, viewSettings);
+
+        // Scale widgets (edges)
+        for (WidgetId id: {TopScale, RightScale, BottomScale, LeftScale})
+            drawScaleWidget_(id, bb, scaleWidgetEdgeSize, viewSettings);
 
         // Rotate widgets
-        drawRotateWidget_(bb.xMin(), bb.yMin(), 5*PI/4, TopLeftRotate, viewSettings);
-        drawRotateWidget_(bb.xMax(), bb.yMin(), 7*PI/4, TopRightRotate, viewSettings);
-        drawRotateWidget_(bb.xMax(), bb.yMax(), 1*PI/4, BottomRightRotate, viewSettings);
-        drawRotateWidget_(bb.xMin(), bb.yMax(), 3*PI/4, BottomLeftRotate, viewSettings);
+        for (WidgetId id: {TopLeftRotate, TopRightRotate, BottomRightRotate, BottomLeftRotate})
+            drawRotateWidget_(id, bb, viewSettings);
     }
 }
-
 
 void TransformTool::drawPick(const CellSet & cells, Time time, ViewSettings & viewSettings) const
 {
@@ -398,24 +459,20 @@ void TransformTool::drawPick(const CellSet & cells, Time time, ViewSettings & vi
         bb.unite((*it)->boundingBox(time));
     }
 
-    // Draw bounding box
+    // Draw transform widgets
     if (bb.isProper())
     {
-        // Scale widgets
-        drawPickScaleWidget_(bb.xMin(), bb.yMin(), scaleWidgetCornerSize, TopLeftScale, viewSettings);
-        drawPickScaleWidget_(bb.xMax(), bb.yMin(), scaleWidgetCornerSize, TopRightScale, viewSettings);
-        drawPickScaleWidget_(bb.xMax(), bb.yMax(), scaleWidgetCornerSize, BottomRightScale, viewSettings);
-        drawPickScaleWidget_(bb.xMin(), bb.yMax(), scaleWidgetCornerSize, BottomLeftScale, viewSettings);
-        drawPickScaleWidget_(0.5*(bb.xMin()+bb.xMax()), bb.yMin(), scaleWidgetEdgeSize, TopScale, viewSettings);
-        drawPickScaleWidget_(bb.xMax(), 0.5*(bb.yMin()+bb.yMax()), scaleWidgetEdgeSize, RightScale, viewSettings);
-        drawPickScaleWidget_(0.5*(bb.xMin()+bb.xMax()), bb.yMax(), scaleWidgetEdgeSize, BottomScale, viewSettings);
-        drawPickScaleWidget_(bb.xMin(), 0.5*(bb.yMin()+bb.yMax()), scaleWidgetEdgeSize, LeftScale, viewSettings);
+        // Scale widgets (corners)
+        for (WidgetId id: {TopLeftScale, TopRightScale, BottomRightScale, BottomLeftScale})
+            drawPickScaleWidget_(id, bb, scaleWidgetCornerSize, viewSettings);
+
+        // Scale widgets (edges)
+        for (WidgetId id: {TopScale, RightScale, BottomScale, LeftScale})
+            drawPickScaleWidget_(id, bb, scaleWidgetEdgeSize, viewSettings);
 
         // Rotate widgets
-        drawPickRotateWidget_(bb.xMin(), bb.yMin(), 5*PI/4, TopLeftRotate, viewSettings);
-        drawPickRotateWidget_(bb.xMax(), bb.yMin(), 7*PI/4, TopRightRotate, viewSettings);
-        drawPickRotateWidget_(bb.xMax(), bb.yMax(), 1*PI/4, BottomRightRotate, viewSettings);
-        drawPickRotateWidget_(bb.xMin(), bb.yMax(), 3*PI/4, BottomLeftRotate, viewSettings);
+        for (WidgetId id: {TopLeftRotate, TopRightRotate, BottomRightRotate, BottomLeftRotate})
+            drawPickRotateWidget_(id, bb, viewSettings);
     }
 }
 
@@ -491,44 +548,29 @@ void TransformTool::beginTransform(const CellSet & cells, double x0, double y0, 
     foreach(KeyVertex * v, draggedVertices_)
         v->prepareAffineTransform();
 
-    // Compute selection bounding box at current time
-    BoundingBox bb;
+    // Compute outline bounding box at current time
+    BoundingBox obb;
     for (CellSet::ConstIterator it = cells.begin(); it != cells.end(); ++it)
     {
-        bb.unite((*it)->boundingBox(time));
+        obb.unite((*it)->outlineBoundingBox(time));
     }
 
-    // Cache start values to determine affine transformation
+    // Cache start values to determine affine transformation:
+    //   - x0_, y0_: start mouse position
+    //   - dx_, dy_: offset between mouse position and perfect position on obb
+    //   - xPivot_, yPivot_: position of the pivot point
+
+    Vec2 obbWidgetPos = widgetPos_(hovered(), obb);
+    Vec2 obbOppositeWidgetPos = widgetOppositePos_(hovered(), obb);
+
     x0_ = x0;
     y0_ = y0;
-    if (hovered() == TopLeftScale ||
-        hovered() == TopLeftRotate ||
-        hovered() == TopScale ||
-        hovered() == LeftScale)
-    {
-        xPivot_ = bb.xMax();
-        yPivot_ = bb.yMax();
-    }
-    else if (hovered() == TopRightScale ||
-             hovered() == TopRightRotate)
-    {
-        xPivot_ = bb.xMin();
-        yPivot_ = bb.yMax();
-    }
-    else if (hovered() == BottomRightScale ||
-             hovered() == BottomRightRotate ||
-             hovered() == BottomScale ||
-             hovered() == RightScale)
-    {
-        xPivot_ = bb.xMin();
-        yPivot_ = bb.yMin();
-    }
-    else if (hovered() == BottomLeftScale ||
-             hovered() == BottomLeftRotate)
-    {
-        xPivot_ = bb.xMax();
-        yPivot_ = bb.yMin();
-    }
+
+    dx_ = x0 - obbWidgetPos[0];
+    dy_ = y0 - obbWidgetPos[1];
+
+    xPivot_ = obbOppositeWidgetPos[0];
+    yPivot_ = obbOppositeWidgetPos[1];
 }
 
 void TransformTool::continueTransform(const CellSet & cells, double x, double y)
@@ -544,19 +586,19 @@ void TransformTool::continueTransform(const CellSet & cells, double x, double y)
         hovered() == BottomRightScale ||
         hovered() == BottomLeftScale)
     {
-        xf = Eigen::Scaling((x-xPivot_)/(x0_-xPivot_),
-                            (y-yPivot_)/(y0_-yPivot_));
+        xf = Eigen::Scaling((x-dx_-xPivot_)/(x0_-dx_-xPivot_),
+                            (y-dy_-yPivot_)/(y0_-dy_-yPivot_));
     }
     else if (hovered() == TopScale ||
              hovered() == BottomScale)
     {
         xf = Eigen::Scaling(1.0,
-                            (y-yPivot_)/(y0_-yPivot_));
+                            (y-dy_-yPivot_)/(y0_-dy_-yPivot_));
     }
     else if (hovered() == RightScale ||
              hovered() == LeftScale)
     {
-        xf = Eigen::Scaling((x-xPivot_)/(x0_-xPivot_),
+        xf = Eigen::Scaling((x-dx_-xPivot_)/(x0_-dx_-xPivot_),
                             1.0);
     }
     else if (hovered() == TopLeftRotate ||
