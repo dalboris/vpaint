@@ -151,10 +151,13 @@ void AboutDialog::processSubscribe_()
     urlQuery.addQueryItem("emailaddress", subscribeLineEdit_->text());
     QUrl url = QUrl("http://www.vpaint.org/subscribeext.php");
     QNetworkRequest networkRequest(url);
-    networkRequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
+    networkRequest.setHeader(QNetworkRequest::ContentTypeHeader,
+                             "application/x-www-form-urlencoded; charset=utf-8");
 
     // Send query
-    reply_ = networkManager_->post(networkRequest, urlQuery.toString(QUrl::FullyEncoded).toUtf8());
+    QString urlQueryString = urlQuery.toString(QUrl::FullyEncoded);
+    urlQueryString.replace('+', "%2B");
+    reply_ = networkManager_->post(networkRequest, urlQueryString.toUtf8());
 
     // Connection to process reply
     connect(reply_, SIGNAL(finished()), this, SLOT(processFinished_()));
