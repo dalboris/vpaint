@@ -23,6 +23,9 @@ public:
 signals:
     void openFileRequested(const QString & filename);
 
+private slots:
+    void onQuit();
+
 private:
     QString startPath_;
 };
