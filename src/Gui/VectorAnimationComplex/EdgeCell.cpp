@@ -116,11 +116,17 @@ void EdgeCell::clearCachedGeometry_()
 
 void EdgeCell::computeOutlineBoundingBox_(Time t, BoundingBox & out) const
 {
-    const QList<EdgeSample> samples = getSampling(t);
-
-    out = BoundingBox();
-    for (int i = 0; i<samples.size(); ++i)
-        out.unite(BoundingBox(samples[i].x(), samples[i].y()));
+    if (exists(t))
+    {
+        const QList<EdgeSample> samples = getSampling(t);
+        out = BoundingBox();
+        for (int i = 0; i<samples.size(); ++i)
+            out.unite(BoundingBox(samples[i].x(), samples[i].y()));
+    }
+    else
+    {
+        out = BoundingBox();
+    }
 }
 
 const Triangles & EdgeCell::triangles(double width, Time time) const

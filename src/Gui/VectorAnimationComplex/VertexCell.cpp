@@ -267,8 +267,15 @@ void VertexCell::triangulate_(Time time, Triangles & out) const
 
 void VertexCell::computeOutlineBoundingBox_(Time t, BoundingBox & out) const
 {
-    const Eigen::Vector2d center = pos(t);
-    out = BoundingBox(center[0], center[1]);
+    if (exists(t))
+    {
+        const Eigen::Vector2d center = pos(t);
+        out = BoundingBox(center[0], center[1]);
+    }
+    else
+    {
+        out = BoundingBox();
+    }
 }
 
 }
