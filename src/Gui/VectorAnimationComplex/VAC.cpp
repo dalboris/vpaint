@@ -6235,6 +6235,7 @@ void VAC::continueTransformSelection(double x, double y)
 void VAC::endTransformSelection()
 {
     transformTool_.endTransform(selectedCells());
+    emit checkpoint();
 }
 
 void VAC::prepareTemporalDragAndDrop(Time t0)
