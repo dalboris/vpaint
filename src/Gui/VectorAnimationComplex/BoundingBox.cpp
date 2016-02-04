@@ -10,7 +10,7 @@
 
 #include <limits>    // for infinity
 #include <algorithm> // for min/max
-#include <cmath>     // for abs
+#include <cmath>     // for abs and isnan
 
 namespace
 {
@@ -27,6 +27,19 @@ double distance_(double a, double b)
 {
     if (a == b) return 0.0; // infinity case, avoid inf-inf = NaN
     else        return std::abs(b-a);
+}
+
+double mid_(double min, double max)
+{
+    double res = 0.5*(min+max);
+
+    // What did the above compute?
+    //   * if min and max finite:                          the correct finite   mid-value
+    //   * if min finite and max infinite (or vice-versa): the correct infinite mid-value
+    //   * if min and max infinite, same sign:             the correct infinite mid-value
+    //   * if min and max infinite, different signs:       NaN
+
+    return std::isnan(res) ? 0.0 : res;
 }
 
 }
@@ -74,7 +87,17 @@ bool BoundingBox::isProper() const
 { 
     return !(isDegenerate() || isInfinite()); 
 }
-            
+
+double BoundingBox::xMid() const
+{
+    return mid_(xMin_, xMax_);
+}
+
+double BoundingBox::yMid() const
+{
+    return mid_(yMin_, yMax_);
+}
+
 double BoundingBox::width() const 
 {
     return isEmpty() ? 0.0 : distance_(xMin_, xMax_); 

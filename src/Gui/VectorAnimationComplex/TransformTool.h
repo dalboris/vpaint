@@ -25,6 +25,13 @@ class TransformTool
 public:
     // Constructor
     TransformTool();
+
+    // Disable copy and assignment
+    TransformTool(const TransformTool &) = delete;
+    TransformTool & operator=(const TransformTool &) = delete;
+
+    // Set state
+    void setCells(const CellSet & cells);
     void setIdOffset(int idOffset);
 
     // Enum of all transform widgets IDs
@@ -68,6 +75,7 @@ public:
     void endTransform(const CellSet & cells);
 
 private:
+    CellSet cells_;
     int idOffset_;
     WidgetId hovered_;
 
@@ -80,6 +88,9 @@ private:
                            ViewSettings & viewSettings) const;
     void drawPickRotateWidget_(WidgetId id, const BoundingBox & bb,
                                ViewSettings & viewSettings) const;
+
+    bool manualPivot_;
+
 
     KeyVertexSet draggedVertices_;
     KeyEdgeSet draggedEdges_;

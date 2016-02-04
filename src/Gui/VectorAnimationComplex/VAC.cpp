@@ -261,6 +261,7 @@ void VAC::initNonCopyable()
     toBePaintedFace_ = 0;
     hoveredCell_ = 0;
     transformTool_.setNoHoveredObject();
+    transformTool_.setCells(CellSet());
     deselectAll();
     signalCounter_ = 0;
 }
@@ -869,6 +870,7 @@ void VAC::emitSelectionChanged_()
 {
     if(signalCounter_ == 0)
     {
+        transformTool_.setCells(selectedCells());
         emit selectionChanged();
         informTimelineOfSelection();
     }
@@ -895,7 +897,10 @@ void VAC::endAggregateSignals_()
     if(signalCounter_ == 0)
     {
         if(shouldEmitSelectionChanged_)
+        {
+            transformTool_.setCells(selectedCells());
             emit selectionChanged();
+        }
     }
 }
 
@@ -6012,18 +6017,47 @@ void VAC::setSelectedCell(Cell * cell, bool emitSignal)
 
 void VAC::setSelectedCells(const CellSet & cells, bool emitSignal)
 {
-    foreach(Cell * cell, selectedCells_)
-        cell->setSelected(false);
+    bool changing = false;
 
+    // Detect if any new cell is added to the selection, and set
+    // all new cells as unselected.
+    foreach(Cell * cell, cells)
+    {
+        if (cell->isSelected())
+        {
+            cell->setSelected(false);
+        }
+        else
+        {
+            changing = true;
+        }
+    }
+
+    // Detect if any cell is removed from the selection, and set
+    // all old cells as unselected.
+    // This works due to the previous step: any cell in selectedCells_
+    // which is still selected is *not* in the new cells.
+    foreach(Cell * cell, selectedCells_)
+    {
+        if (cell->isSelected())
+        {
+            changing = true;
+            cell->setSelected(false);
+        }
+    }
+
+    // Set new cells as selected
     foreach(Cell * cell, cells)
         cell->setSelected(true);
-
     selectedCells_ = cells;
 
-    emitSelectionChanged_();
-    if(emitSignal)
+    if (changing)
     {
-        emit changed();
+        emitSelectionChanged_();
+        if(emitSignal)
+        {
+            emit changed();
+        }
     }
 }
 

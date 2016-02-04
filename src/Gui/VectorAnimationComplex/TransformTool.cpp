@@ -211,9 +211,20 @@ Vec2Vector rotateWidgetGeometry_(const Vec2 & corner, double midAngle, double si
 }
 
 TransformTool::TransformTool() :
+    cells_(),
     idOffset_(0),
-    hovered_(None)
+    hovered_(None),
+    manualPivot_(false)
 {
+}
+
+void TransformTool::setCells(const CellSet & cells)
+{
+    cells_ = cells;
+    manualPivot_ = false;
+
+    // Note: we can't pre-compute bounding boxes or pivot position here
+    //       since we don't know the time.
 }
 
 void TransformTool::setIdOffset(int idOffset)

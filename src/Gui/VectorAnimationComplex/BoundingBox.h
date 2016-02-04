@@ -224,6 +224,10 @@ public:
     inline const double & yMin() const { return yMin_; }
     inline const double & yMax() const { return yMax_; }
             
+    // Compute mid-points (0 if empty, or if min = -infinity and max = +infinity)
+    double xMid()  const;
+    double yMid() const;
+
     // Compute width, height, and area
     double width()  const;
     double height() const;
