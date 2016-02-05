@@ -340,13 +340,16 @@ void glFillPivot_(const Vec2 & pos, double size)
 
 }
 
-TransformTool::TransformTool() :
+TransformTool::TransformTool(QObject * parent) :
+    QObject(parent),
+
     cells_(),
     idOffset_(0),
     hovered_(None),
     manualPivot_(false),
     transformPivot_(false)
 {
+    connect(global(), SIGNAL(keyboardModifiersChanged()), this, SLOT(onKeyboardModifiersChanged()));
 }
 
 void TransformTool::setCells(const CellSet & cells)
@@ -637,14 +640,14 @@ void TransformTool::setNoHoveredObject()
     hovered_ = None;
 }
 
-void TransformTool::beginTransform(const CellSet & cells, double x0, double y0, Time time)
+void TransformTool::beginTransform(double x0, double y0, Time time)
 {
     // Clear cached values
     draggedVertices_.clear();
     draggedEdges_.clear();
 
     // Return in trivial cases
-    if (hovered() == None || cells.isEmpty())
+    if (hovered() == None || cells_.isEmpty())
         return;
 
     // Move pivot
@@ -665,7 +668,7 @@ void TransformTool::beginTransform(const CellSet & cells, double x0, double y0, 
     {
         // Compute outline bounding box at current time
         BoundingBox obb;
-        for (CellSet::ConstIterator it = cells.begin(); it != cells.end(); ++it)
+        for (CellSet::ConstIterator it = cells_.begin(); it != cells_.end(); ++it)
         {
             obb.unite((*it)->outlineBoundingBox(time));
         }
@@ -673,7 +676,7 @@ void TransformTool::beginTransform(const CellSet & cells, double x0, double y0, 
         // Keyframe inbetween cells
         CellSet cellsNotToKeyframe;
         CellSet cellsToKeyframe;
-        foreach(Cell * c, cells)
+        foreach(Cell * c, cells_)
         {
             InbetweenCell * sc = c->toInbetweenCell();
             if(sc)
@@ -692,7 +695,7 @@ void TransformTool::beginTransform(const CellSet & cells, double x0, double y0, 
                 cellsNotToKeyframe << c;
             }
         }
-        VAC * vac = (*cells.begin())->vac();
+        VAC * vac = (*cells_.begin())->vac();
         KeyCellSet keyframedCells = vac->keyframe_(cellsToKeyframe,time);
 
         // Determine which cells to transform
@@ -732,7 +735,6 @@ void TransformTool::beginTransform(const CellSet & cells, double x0, double y0, 
         yManualPivot0_ = currentPivotPos[1];
 
         // Set default and alternative transform pivot position
-        transformPivot_ = true;
         if (hovered() == TopLeftRotate ||
             hovered() == TopRightRotate ||
             hovered() == BottomRightRotate ||
@@ -753,10 +755,14 @@ void TransformTool::beginTransform(const CellSet & cells, double x0, double y0, 
     }
 }
 
-void TransformTool::continueTransform(const CellSet & cells, double x, double y)
+void TransformTool::continueTransform(double x, double y)
 {
+    // Cache values
+    x_ = x;
+    y_ = y;
+
     // Return in trivial cases
-    if (hovered() == None || cells.isEmpty())
+    if (hovered() == None || cells_.isEmpty())
         return;
 
     // Move pivot
@@ -770,6 +776,9 @@ void TransformTool::continueTransform(const CellSet & cells, double x, double y)
     // Transform selection
     else
     {
+        // Inform that we are currently transforming the selection
+        transformPivot_ = true;
+
         // Get pivot
         const Vec2 pivotPos = precomputedPivotPosition_();
         const double xPivot = pivotPos[0];
@@ -837,7 +846,7 @@ void TransformTool::continueTransform(const CellSet & cells, double x, double y)
     }
 }
 
-void TransformTool::endTransform(const CellSet & /*cells*/)
+void TransformTool::endTransform()
 {
     transformPivot_ = false;
 }
@@ -852,6 +861,14 @@ void TransformTool::performDragAndDrop(double dx, double dy)
 {
     xManualPivot_ = xManualPivot0_ + dx;
     yManualPivot_ = yManualPivot0_ + dy;
+}
+
+void TransformTool::onKeyboardModifiersChanged()
+{
+    if (transformPivot_)
+    {
+        continueTransform(x_, y_);
+    }
 }
 
 }

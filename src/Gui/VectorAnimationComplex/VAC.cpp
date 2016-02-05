@@ -6227,17 +6227,17 @@ void VAC::completeDragAndDrop()
 
 void VAC::beginTransformSelection(double x0, double y0, Time time)
 {
-    transformTool_.beginTransform(selectedCells(), x0, y0, time);
+    transformTool_.beginTransform(x0, y0, time);
 }
 
 void VAC::continueTransformSelection(double x, double y)
 {
-    transformTool_.continueTransform(selectedCells(), x, y);
+    transformTool_.continueTransform(x, y);
 }
 
 void VAC::endTransformSelection()
 {
-    transformTool_.endTransform(selectedCells());
+    transformTool_.endTransform();
     emit checkpoint();
 }
 

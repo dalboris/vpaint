@@ -9,6 +9,8 @@
 #ifndef TRANSFORMTOOL_H
 #define TRANSFORMTOOL_H
 
+#include <QObject>
+
 #include <QSet>
 #include "TimeDef.h"
 #include "CellList.h"
@@ -22,11 +24,13 @@ namespace VectorAnimationComplex
 
 class BoundingBox;
 
-class TransformTool
+class TransformTool: public QObject
 {
+    Q_OBJECT
+
 public:
     // Constructor
-    TransformTool();
+    TransformTool(QObject * parent = 0);
 
     // Disable copy and assignment
     TransformTool(const TransformTool &) = delete;
@@ -77,16 +81,18 @@ public:
     void setNoHoveredObject();
 
     // Transform selection
-    void beginTransform(const CellSet & cells, double x0, double y0, Time time);
-    void continueTransform(const CellSet & cells, double x, double y);
-    void endTransform(const CellSet & cells);
+    void beginTransform(double x0, double y0, Time time);
+    void continueTransform(double x, double y);
+    void endTransform();
 
     // Drag and drop transform tool
     void prepareDragAndDrop();
     void performDragAndDrop(double dx, double dy);
 
-private:
+private slots:
+    void onKeyboardModifiersChanged();
 
+private:
     CellSet cells_;
     int idOffset_;
     WidgetId hovered_;
@@ -120,7 +126,7 @@ private:
     // Affine transform cached info
     KeyVertexSet draggedVertices_;
     KeyEdgeSet draggedEdges_;
-    double x0_, y0_, dx_, dy_;
+    double x0_, y0_, dx_, dy_, x_, y_;
 };
 
 }
