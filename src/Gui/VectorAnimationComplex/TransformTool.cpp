@@ -17,6 +17,7 @@
 #include "EdgeGeometry.h"
 #include "VAC.h"
 #include "Algorithms.h"
+#include "Global.h"
 
 #include <cmath>
 #include <vector>
@@ -419,15 +420,13 @@ Eigen::Vector2d TransformTool::precomputedPivotPosition_() const
 {
     if (transformPivot_)
     {
-        // XXX TODO: inspect modifier keys to determine whether to use
-        //           default pivot or alternative pivot
-        if (true)
+        if (global()->keyboardModifiers().testFlag(Qt::AltModifier))
         {
-            return Vec2(xTransformPivot_, yTransformPivot_);
+            return Vec2(xTransformPivotAlt_, yTransformPivotAlt_);
         }
         else
         {
-            return Vec2(xTransformPivotAlt_, yTransformPivotAlt_);
+            return Vec2(xTransformPivot_, yTransformPivot_);
         }
     }
     else if (manualPivot_)
