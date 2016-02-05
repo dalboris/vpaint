@@ -13,6 +13,8 @@
 #include "TimeDef.h"
 #include "CellList.h"
 
+#include "Eigen.h"
+
 class ViewSettings;
 
 namespace VectorAnimationComplex
@@ -63,6 +65,9 @@ public:
     // Get which widget is currently hovered, if any
     WidgetId hovered() const;
 
+    // Get pivot position
+    Eigen::Vector2d pivotPosition(Time time) const;
+
     // Drawing
     void draw(const CellSet & cells, Time time, ViewSettings & viewSettings) const;
 
@@ -71,12 +76,17 @@ public:
     void setHoveredObject(int id);
     void setNoHoveredObject();
 
-    // Perform operation
+    // Transform selection
     void beginTransform(const CellSet & cells, double x0, double y0, Time time);
     void continueTransform(const CellSet & cells, double x, double y);
     void endTransform(const CellSet & cells);
 
+    // Drag and drop transform tool
+    void prepareDragAndDrop();
+    void performDragAndDrop(double dx, double dy);
+
 private:
+
     CellSet cells_;
     int idOffset_;
     WidgetId hovered_;
@@ -94,12 +104,23 @@ private:
     void drawPivot_(const BoundingBox & bb, ViewSettings & viewSettings) const;
     void drawPickPivot_(const BoundingBox & bb, ViewSettings & viewSettings) const;
 
+    // Pivot
+    bool isPivotPrecomputed_() const;
+    Eigen::Vector2d precomputedPivotPosition_() const;
+    Eigen::Vector2d computePivotPosition_(Time time) const;
+    Eigen::Vector2d computePivotPosition_(const BoundingBox & bb) const;
+    Eigen::Vector2d pivotPosition_(const BoundingBox & bb) const;
     bool manualPivot_;
+    double xManualPivot_, yManualPivot_;
+    double xManualPivot0_, yManualPivot0_;
+    bool transformPivot_;
+    double xTransformPivot_, yTransformPivot_;
+    double xTransformPivotAlt_, yTransformPivotAlt_;
 
+    // Affine transform cached info
     KeyVertexSet draggedVertices_;
     KeyEdgeSet draggedEdges_;
     double x0_, y0_, dx_, dy_;
-    double xPivot_, yPivot_;
 };
 
 }

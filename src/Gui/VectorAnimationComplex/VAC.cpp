@@ -6193,6 +6193,7 @@ void VAC::prepareDragAndDrop(double x0, double y0, Time time)
         iedge->geometry()->prepareDragAndDrop();
     foreach(KeyVertex * v, draggedVertices_)
         v->prepareDragAndDrop();
+    transformTool_.prepareDragAndDrop();
 
     x0_ = x0;
     y0_ = y0;
@@ -6202,16 +6203,18 @@ void VAC::performDragAndDrop(double x, double y)
 {
     foreach(KeyEdge * iedge, draggedEdges_)
     {
-        iedge->geometry()->performDragAndDrop( x-x0_ , y-y0_ );
+        iedge->geometry()->performDragAndDrop(x-x0_, y-y0_);
         iedge->processGeometryChanged_();
     }
 
     foreach(KeyVertex * v, draggedVertices_)
-        v->performDragAndDrop( x-x0_ , y-y0_ );
+        v->performDragAndDrop(x-x0_, y-y0_);
 
 
     foreach(KeyVertex * v, draggedVertices_)
         v->correctEdgesGeometry();
+
+    transformTool_.performDragAndDrop(x-x0_, y-y0_);
 
     //emit changed();
 }

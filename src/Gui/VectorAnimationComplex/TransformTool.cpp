@@ -18,9 +18,8 @@
 #include "VAC.h"
 #include "Algorithms.h"
 
-#include "Eigen.h"
-#include <vector>
 #include <cmath>
+#include <vector>
 
 typedef Eigen::Vector2d Vec2;
 typedef std::vector<Vec2, Eigen::aligned_allocator<Vec2>> Vec2Vector;
@@ -344,7 +343,8 @@ TransformTool::TransformTool() :
     cells_(),
     idOffset_(0),
     hovered_(None),
-    manualPivot_(false)
+    manualPivot_(false),
+    transformPivot_(false)
 {
 }
 
@@ -352,6 +352,7 @@ void TransformTool::setCells(const CellSet & cells)
 {
     cells_ = cells;
     manualPivot_ = false;
+    transformPivot_ = false;
 
     // Note: we can't pre-compute bounding boxes or pivot position here
     //       since we don't know the time.
@@ -365,6 +366,79 @@ void TransformTool::setIdOffset(int idOffset)
 TransformTool::WidgetId TransformTool::hovered() const
 {
     return hovered_;
+}
+
+Eigen::Vector2d TransformTool::pivotPosition(Time time) const
+{
+    if (isPivotPrecomputed_())
+    {
+        return precomputedPivotPosition_();
+    }
+    else
+    {
+        return computePivotPosition_(time);
+    }
+}
+
+Eigen::Vector2d TransformTool::pivotPosition_(const BoundingBox & bb) const
+{
+    if (isPivotPrecomputed_())
+    {
+        return precomputedPivotPosition_();
+    }
+    else
+    {
+        return computePivotPosition_(bb);
+    }
+}
+
+Eigen::Vector2d TransformTool::computePivotPosition_(Time time) const
+{
+    // Compute outline bounding box at current time
+    BoundingBox obb;
+    for (CellSet::ConstIterator it = cells_.begin(); it != cells_.end(); ++it)
+    {
+        obb.unite((*it)->outlineBoundingBox(time));
+    }
+
+    // Compute pivot position from bounding box
+    return computePivotPosition_(obb);
+}
+
+Eigen::Vector2d TransformTool::computePivotPosition_(const BoundingBox & bb) const
+{
+    return widgetPos_(Pivot, bb);
+}
+
+bool TransformTool::isPivotPrecomputed_() const
+{
+    return transformPivot_ || manualPivot_;
+}
+
+Eigen::Vector2d TransformTool::precomputedPivotPosition_() const
+{
+    if (transformPivot_)
+    {
+        // XXX TODO: inspect modifier keys to determine whether to use
+        //           default pivot or alternative pivot
+        if (true)
+        {
+            return Vec2(xTransformPivot_, yTransformPivot_);
+        }
+        else
+        {
+            return Vec2(xTransformPivotAlt_, yTransformPivotAlt_);
+        }
+    }
+    else if (manualPivot_)
+    {
+        return Vec2(xManualPivot_, yManualPivot_);
+    }
+    else
+    {
+        qDebug("Warning: calling precomputedPivotPosition_() while pivot is not precomputed.");
+        return Eigen::Vector2d(0.0, 0.0);
+    }
 }
 
 void TransformTool::glFillColor_(WidgetId id) const
@@ -439,8 +513,8 @@ void TransformTool::drawPickRotateWidget_(WidgetId id, const BoundingBox & bb,
 void TransformTool::drawPivot_(const BoundingBox & bb, ViewSettings & viewSettings) const
 {
     // Compute pos and size
-    Vec2 pos = widgetPos_(Pivot, bb);
-    double size = pivotWidgetSize / viewSettings.zoom();
+    const Vec2 pos = pivotPosition_(bb);
+    const double size = pivotWidgetSize / viewSettings.zoom();
 
     // Fill
     glFillColor_(Pivot);
@@ -454,8 +528,8 @@ void TransformTool::drawPivot_(const BoundingBox & bb, ViewSettings & viewSettin
 void TransformTool::drawPickPivot_(const BoundingBox & bb, ViewSettings & viewSettings) const
 {
     // Compute pos and size
-    Vec2 pos = widgetPos_(Pivot, bb);
-    double size = pivotWidgetSize / viewSettings.zoom();
+    const Vec2 pos = pivotPosition_(bb);
+    const double size = pivotWidgetSize / viewSettings.zoom();
 
     // Fill
     glPickColor_(Pivot);
@@ -504,7 +578,7 @@ void TransformTool::draw(const CellSet & cells, Time time, ViewSettings & viewSe
             drawRotateWidget_(id, bb, viewSettings);
 
         // Pivot
-        drawPivot_(bb, viewSettings);
+        drawPivot_(obb, viewSettings);
     }
 }
 
@@ -515,6 +589,13 @@ void TransformTool::drawPick(const CellSet & cells, Time time, ViewSettings & vi
     for (CellSet::ConstIterator it = cells.begin(); it != cells.end(); ++it)
     {
         bb.unite((*it)->boundingBox(time));
+    }
+
+    // Compute outline bounding box at current time
+    BoundingBox obb;
+    for (CellSet::ConstIterator it = cells.begin(); it != cells.end(); ++it)
+    {
+        obb.unite((*it)->outlineBoundingBox(time));
     }
 
     // Draw transform widgets
@@ -533,7 +614,7 @@ void TransformTool::drawPick(const CellSet & cells, Time time, ViewSettings & vi
             drawPickRotateWidget_(id, bb, viewSettings);
 
         // Pivot
-        drawPickPivot_(bb, viewSettings);
+        drawPickPivot_(obb, viewSettings);
     }
 }
 
@@ -567,71 +648,110 @@ void TransformTool::beginTransform(const CellSet & cells, double x0, double y0, 
     if (hovered() == None || cells.isEmpty())
         return;
 
-    // Keyframe inbetween cells
-    CellSet cellsNotToKeyframe;
-    CellSet cellsToKeyframe;
-    foreach(Cell * c, cells)
+    // Move pivot
+    if (hovered() == Pivot)
     {
-        InbetweenCell * sc = c->toInbetweenCell();
-        if(sc)
+        // Cache initial pivot position
+        const Vec2 pivotPos = pivotPosition(time);
+        xManualPivot0_ = pivotPos[0];
+        yManualPivot0_ = pivotPos[1];
+
+        // Cache initial mouse position
+        x0_ = x0;
+        y0_ = y0;
+    }
+
+    // Transform selection
+    else
+    {
+        // Compute outline bounding box at current time
+        BoundingBox obb;
+        for (CellSet::ConstIterator it = cells.begin(); it != cells.end(); ++it)
         {
-            if(sc->exists(time))
+            obb.unite((*it)->outlineBoundingBox(time));
+        }
+
+        // Keyframe inbetween cells
+        CellSet cellsNotToKeyframe;
+        CellSet cellsToKeyframe;
+        foreach(Cell * c, cells)
+        {
+            InbetweenCell * sc = c->toInbetweenCell();
+            if(sc)
             {
-                cellsToKeyframe << sc;
+                if(sc->exists(time))
+                {
+                    cellsToKeyframe << sc;
+                }
+                else
+                {
+                    cellsNotToKeyframe << sc;
+                }
             }
             else
             {
-                cellsNotToKeyframe << sc;
+                cellsNotToKeyframe << c;
             }
+        }
+        VAC * vac = (*cells.begin())->vac();
+        KeyCellSet keyframedCells = vac->keyframe_(cellsToKeyframe,time);
+
+        // Determine which cells to transform
+        CellSet cellsToTransform = cellsNotToKeyframe;
+        foreach(KeyCell * c, keyframedCells)
+            cellsToTransform << c;
+        cellsToTransform = Algorithms::closure(cellsToTransform);
+
+        // Cache key vertices and edges
+        // XXX add the non-loop edges whose end vertices are dragged?
+        draggedVertices_ = KeyVertexSet(cellsToTransform);
+        draggedEdges_ = KeyEdgeSet(cellsToTransform);
+
+        // prepare for affine transform
+        foreach(KeyEdge * e, draggedEdges_)
+            e->prepareAffineTransform();
+        foreach(KeyVertex * v, draggedVertices_)
+            v->prepareAffineTransform();
+
+        // Cache start values to determine affine transformation:
+        //   - x0_, y0_: start mouse position
+        //   - dx_, dy_: offset between mouse position and perfect position on obb
+        //   - xPivot_, yPivot_: position of the pivot point
+
+        const Vec2 currentPivotPos = pivotPosition_(obb);
+        const Vec2 obbWidgetPos = widgetPos_(hovered(), obb);
+        const Vec2 obbOppositeWidgetPos = widgetOppositePos_(hovered(), obb);
+
+        x0_ = x0;
+        y0_ = y0;
+
+        dx_ = x0 - obbWidgetPos[0];
+        dy_ = y0 - obbWidgetPos[1];
+
+        // Cache current manual pivot position
+        xManualPivot0_ = currentPivotPos[0];
+        yManualPivot0_ = currentPivotPos[1];
+
+        // Set default and alternative transform pivot position
+        transformPivot_ = true;
+        if (hovered() == TopLeftRotate ||
+            hovered() == TopRightRotate ||
+            hovered() == BottomRightRotate ||
+            hovered() == BottomLeftRotate)
+        {
+            xTransformPivot_ = currentPivotPos[0];
+            yTransformPivot_ = currentPivotPos[1];
+            xTransformPivotAlt_ = obbOppositeWidgetPos[0];
+            yTransformPivotAlt_ = obbOppositeWidgetPos[1];
         }
         else
         {
-            cellsNotToKeyframe << c;
+            xTransformPivot_ = obbOppositeWidgetPos[0];
+            yTransformPivot_ = obbOppositeWidgetPos[1];
+            xTransformPivotAlt_ = currentPivotPos[0];
+            yTransformPivotAlt_ = currentPivotPos[1];
         }
     }
-    VAC * vac = (*cells.begin())->vac();
-    KeyCellSet keyframedCells = vac->keyframe_(cellsToKeyframe,time);
-
-    // Determine which cells to transform
-    CellSet cellsToTransform = cellsNotToKeyframe;
-    foreach(KeyCell * c, keyframedCells)
-        cellsToTransform << c;
-    cellsToTransform = Algorithms::closure(cellsToTransform);
-
-    // Cache key vertices and edges
-    // XXX add the non-loop edges whose end vertices are dragged?
-    draggedVertices_ = KeyVertexSet(cellsToTransform);
-    draggedEdges_ = KeyEdgeSet(cellsToTransform);
-
-    // prepare for affine transform
-    foreach(KeyEdge * e, draggedEdges_)
-        e->prepareAffineTransform();
-    foreach(KeyVertex * v, draggedVertices_)
-        v->prepareAffineTransform();
-
-    // Compute outline bounding box at current time
-    BoundingBox obb;
-    for (CellSet::ConstIterator it = cells.begin(); it != cells.end(); ++it)
-    {
-        obb.unite((*it)->outlineBoundingBox(time));
-    }
-
-    // Cache start values to determine affine transformation:
-    //   - x0_, y0_: start mouse position
-    //   - dx_, dy_: offset between mouse position and perfect position on obb
-    //   - xPivot_, yPivot_: position of the pivot point
-
-    Vec2 obbWidgetPos = widgetPos_(hovered(), obb);
-    Vec2 obbOppositeWidgetPos = widgetOppositePos_(hovered(), obb);
-
-    x0_ = x0;
-    y0_ = y0;
-
-    dx_ = x0 - obbWidgetPos[0];
-    dy_ = y0 - obbWidgetPos[1];
-
-    xPivot_ = obbOppositeWidgetPos[0];
-    yPivot_ = obbOppositeWidgetPos[1];
 }
 
 void TransformTool::continueTransform(const CellSet & cells, double x, double y)
@@ -640,62 +760,99 @@ void TransformTool::continueTransform(const CellSet & cells, double x, double y)
     if (hovered() == None || cells.isEmpty())
         return;
 
-    // Determine affine transformation
-    Eigen::Affine2d xf;
-    if (hovered() == TopLeftScale ||
-        hovered() == TopRightScale ||
-        hovered() == BottomRightScale ||
-        hovered() == BottomLeftScale)
+    // Move pivot
+    if (hovered() == Pivot)
     {
-        xf = Eigen::Scaling((x-dx_-xPivot_)/(x0_-dx_-xPivot_),
-                            (y-dy_-yPivot_)/(y0_-dy_-yPivot_));
+        manualPivot_ = true;
+        xManualPivot_ = xManualPivot0_ + x - x0_;
+        yManualPivot_ = yManualPivot0_ + y - y0_;
     }
-    else if (hovered() == TopScale ||
-             hovered() == BottomScale)
-    {
-        xf = Eigen::Scaling(1.0,
-                            (y-dy_-yPivot_)/(y0_-dy_-yPivot_));
-    }
-    else if (hovered() == RightScale ||
-             hovered() == LeftScale)
-    {
-        xf = Eigen::Scaling((x-dx_-xPivot_)/(x0_-dx_-xPivot_),
-                            1.0);
-    }
-    else if (hovered() == TopLeftRotate ||
-             hovered() == TopRightRotate ||
-             hovered() == BottomRightRotate ||
-             hovered() == BottomLeftRotate)
-    {
-        double theta0 = std::atan2(y0_ - yPivot_, x0_ - xPivot_);
-        double theta  = std::atan2(y   - yPivot_, x   - xPivot_);
-        double dTheta = theta - theta0;
 
-        xf = Eigen::Rotation2Dd(dTheta);
-    }
+    // Transform selection
     else
     {
-        return;
+        // Get pivot
+        const Vec2 pivotPos = precomputedPivotPosition_();
+        const double xPivot = pivotPos[0];
+        const double yPivot = pivotPos[1];
+
+        // Determine affine transformation
+        Eigen::Affine2d xf;
+        if (hovered() == TopLeftScale ||
+            hovered() == TopRightScale ||
+            hovered() == BottomRightScale ||
+            hovered() == BottomLeftScale)
+        {
+            xf = Eigen::Scaling((x-dx_-xPivot)/(x0_-dx_-xPivot),
+                                (y-dy_-yPivot)/(y0_-dy_-yPivot));
+        }
+        else if (hovered() == TopScale ||
+                 hovered() == BottomScale)
+        {
+            xf = Eigen::Scaling(1.0,
+                                (y-dy_-yPivot)/(y0_-dy_-yPivot));
+        }
+        else if (hovered() == RightScale ||
+                 hovered() == LeftScale)
+        {
+            xf = Eigen::Scaling((x-dx_-xPivot)/(x0_-dx_-xPivot),
+                                1.0);
+        }
+        else if (hovered() == TopLeftRotate ||
+                 hovered() == TopRightRotate ||
+                 hovered() == BottomRightRotate ||
+                 hovered() == BottomLeftRotate)
+        {
+            double theta0 = std::atan2(y0_ - yPivot, x0_ - xPivot);
+            double theta  = std::atan2(y   - yPivot, x   - xPivot);
+            double dTheta = theta - theta0;
+
+            xf = Eigen::Rotation2Dd(dTheta);
+        }
+        else
+        {
+            return;
+        }
+
+        // Make pivot point invariant by transformation
+        Eigen::Translation2d pivot(xPivot, yPivot);
+        xf = pivot * xf * pivot.inverse();
+
+        // Apply affine transformation
+        foreach(KeyEdge * e, draggedEdges_)
+            e->performAffineTransform(xf);
+
+        foreach(KeyVertex * v, draggedVertices_)
+            v->performAffineTransform(xf);
+
+        foreach(KeyVertex * v, draggedVertices_)
+            v->correctEdgesGeometry();
+
+        // Apply transformation to manual pivot point
+        if (manualPivot_)
+        {
+            Vec2 manualPivot = xf * Vec2(xManualPivot0_, yManualPivot0_);
+            xManualPivot_ = manualPivot[0];
+            yManualPivot_ = manualPivot[1];
+        }
     }
-
-    // Make relative to pivot
-    Eigen::Translation2d pivot(xPivot_, yPivot_);
-    xf = pivot * xf * pivot.inverse();
-
-    // Apply affine transformation
-    foreach(KeyEdge * e, draggedEdges_)
-        e->performAffineTransform(xf);
-
-    foreach(KeyVertex * v, draggedVertices_)
-        v->performAffineTransform(xf);
-
-    foreach(KeyVertex * v, draggedVertices_)
-        v->correctEdgesGeometry();
 }
 
 void TransformTool::endTransform(const CellSet & /*cells*/)
 {
-    // Nothing to do
+    transformPivot_ = false;
+}
+
+void TransformTool::prepareDragAndDrop()
+{
+    xManualPivot0_ = xManualPivot_;
+    yManualPivot0_ = yManualPivot_;
+}
+
+void TransformTool::performDragAndDrop(double dx, double dy)
+{
+    xManualPivot_ = xManualPivot0_ + dx;
+    yManualPivot_ = yManualPivot0_ + dy;
 }
 
 }
