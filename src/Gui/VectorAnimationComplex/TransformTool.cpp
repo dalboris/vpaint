@@ -372,27 +372,112 @@ TransformTool::WidgetId TransformTool::hovered() const
     return hovered_;
 }
 
+bool TransformTool::useAltTransform_() const
+{
+    return global()->keyboardModifiers().testFlag(Qt::AltModifier);
+}
+
+Eigen::Vector2d TransformTool::manualPivotPosition_() const
+{
+    return Vec2(xManualPivot_, yManualPivot_);
+}
+
+Eigen::Vector2d TransformTool::noTransformPivotPosition_(const BoundingBox & bb) const
+{
+    return manualPivot_ ? manualPivotPosition_() : widgetPos_(Pivot, bb);
+}
+
+Eigen::Vector2d TransformTool::transformPivotPosition_(WidgetId id, const BoundingBox & bb) const
+{
+    return useAltTransform_() ? altTransformPivotPosition_(id, bb) : defaultTransformPivotPosition_(id, bb);
+}
+
+Eigen::Vector2d TransformTool::cachedTransformPivotPosition_() const
+{
+    return useAltTransform_() ? Vec2(xTransformPivotAlt_, yTransformPivotAlt_) : Vec2(xTransformPivot_, yTransformPivot_);
+}
+
+Eigen::Vector2d TransformTool::defaultTransformPivotPosition_(WidgetId id, const BoundingBox & bb) const
+{
+    switch (id)
+    {
+    case TopLeftScale:
+    case TopRightScale:
+    case BottomRightScale:
+    case BottomLeftScale:
+    case TopScale:
+    case RightScale:
+    case BottomScale:
+    case LeftScale:
+        return widgetOppositePos_(id, bb);
+
+    case TopLeftRotate:
+    case TopRightRotate:
+    case BottomRightRotate:
+    case BottomLeftRotate:
+        return noTransformPivotPosition_(bb);
+
+    case None:
+    case Pivot:
+        return noTransformPivotPosition_(bb);
+    }
+}
+
+Eigen::Vector2d TransformTool::altTransformPivotPosition_(WidgetId id, const BoundingBox & bb) const
+{
+    switch (id)
+    {
+    case TopLeftScale:
+    case TopRightScale:
+    case BottomRightScale:
+    case BottomLeftScale:
+    case TopScale:
+    case RightScale:
+    case BottomScale:
+    case LeftScale:
+        return noTransformPivotPosition_(bb);
+
+    case TopLeftRotate:
+    case TopRightRotate:
+    case BottomRightRotate:
+    case BottomLeftRotate:
+        return widgetOppositePos_(id, bb);
+
+    case None:
+    case Pivot:
+        return noTransformPivotPosition_(bb);
+    }
+}
+
 Eigen::Vector2d TransformTool::pivotPosition(Time time) const
 {
-    if (isPivotPrecomputed_())
-    {
-        return precomputedPivotPosition_();
-    }
-    else
-    {
-        return computePivotPosition_(time);
-    }
+    return isPivotCached_() ? cachedPivotPosition_() : computePivotPosition_(time);
 }
 
 Eigen::Vector2d TransformTool::pivotPosition_(const BoundingBox & bb) const
 {
-    if (isPivotPrecomputed_())
+    return isPivotCached_() ? cachedPivotPosition_() : computePivotPosition_(bb);
+}
+
+bool TransformTool::isPivotCached_() const
+{
+    return transformPivot_ || (manualPivot_ && !hovered());
+}
+
+Eigen::Vector2d TransformTool::cachedPivotPosition_() const
+{
+    if (transformPivot_)
     {
-        return precomputedPivotPosition_();
+        return cachedTransformPivotPosition_();
+    }
+    else if (manualPivot_)
+    {
+        return manualPivotPosition_();
     }
     else
     {
-        return computePivotPosition_(bb);
+        qDebug("Warning: calling cachedPivotPosition_() while pivot is not cached");
+        return Eigen::Vector2d(0.0, 0.0);
     }
 }
 
@@ -411,36 +496,7 @@ Eigen::Vector2d TransformTool::computePivotPosition_(Time time) const
 
 Eigen::Vector2d TransformTool::computePivotPosition_(const BoundingBox & bb) const
 {
-    return widgetPos_(Pivot, bb);
-}
-
-bool TransformTool::isPivotPrecomputed_() const
-{
-    return transformPivot_ || manualPivot_;
-}
-
-Eigen::Vector2d TransformTool::precomputedPivotPosition_() const
-{
-    if (transformPivot_)
-    {
-        if (global()->keyboardModifiers().testFlag(Qt::AltModifier))
-        {
-            return Vec2(xTransformPivotAlt_, yTransformPivotAlt_);
-        }
-        else
-        {
-            return Vec2(xTransformPivot_, yTransformPivot_);
-        }
-    }
-    else if (manualPivot_)
-    {
-        return Vec2(xManualPivot_, yManualPivot_);
-    }
-    else
-    {
-        qDebug("Warning: calling precomputedPivotPosition_() while pivot is not precomputed.");
-        return Eigen::Vector2d(0.0, 0.0);
-    }
+    return hovered() ? transformPivotPosition_(hovered(), bb) : noTransformPivotPosition_(bb);
 }
 
 void TransformTool::glFillColor_(WidgetId id) const
@@ -530,7 +586,7 @@ void TransformTool::drawPivot_(const BoundingBox & bb, ViewSettings & viewSettin
 void TransformTool::drawPickPivot_(const BoundingBox & bb, ViewSettings & viewSettings) const
 {
     // Compute pos and size
-    const Vec2 pos = pivotPosition_(bb);
+    const Vec2 pos = noTransformPivotPosition_(bb);
     const double size = pivotWidgetSize / viewSettings.zoom();
 
     // Fill
@@ -715,49 +771,39 @@ void TransformTool::beginTransform(double x0, double y0, Time time)
         foreach(KeyVertex * v, draggedVertices_)
             v->prepareAffineTransform();
 
-        // Cache start values to determine affine transformation:
-        //   - x0_, y0_: start mouse position
-        //   - dx_, dy_: offset between mouse position and perfect position on obb
-        //   - xPivot_, yPivot_: position of the pivot point
 
         const Vec2 currentPivotPos = pivotPosition_(obb);
-        const Vec2 obbWidgetPos = widgetPos_(hovered(), obb);
         const Vec2 obbOppositeWidgetPos = widgetOppositePos_(hovered(), obb);
 
+        // Cache initial mouse position
         x0_ = x0;
         y0_ = y0;
 
+        // Cache mouse offset with center of transform widget
+        const Vec2 obbWidgetPos = widgetPos_(hovered(), obb);
         dx_ = x0 - obbWidgetPos[0];
         dy_ = y0 - obbWidgetPos[1];
 
         // Cache current manual pivot position
-        xManualPivot0_ = currentPivotPos[0];
-        yManualPivot0_ = currentPivotPos[1];
+        if (manualPivot_)
+        {
+            xManualPivot0_ = xManualPivot_;
+            yManualPivot0_ = yManualPivot_;
+        }
 
-        // Set default and alternative transform pivot position
-        if (hovered() == TopLeftRotate ||
-            hovered() == TopRightRotate ||
-            hovered() == BottomRightRotate ||
-            hovered() == BottomLeftRotate)
-        {
-            xTransformPivot_ = currentPivotPos[0];
-            yTransformPivot_ = currentPivotPos[1];
-            xTransformPivotAlt_ = obbOppositeWidgetPos[0];
-            yTransformPivotAlt_ = obbOppositeWidgetPos[1];
-        }
-        else
-        {
-            xTransformPivot_ = obbOppositeWidgetPos[0];
-            yTransformPivot_ = obbOppositeWidgetPos[1];
-            xTransformPivotAlt_ = currentPivotPos[0];
-            yTransformPivotAlt_ = currentPivotPos[1];
-        }
+        // Cache default and alt transform pivot position
+        const Vec2 defaultTransformPivotPos = defaultTransformPivotPosition_(hovered(), obb);
+        const Vec2 altTransformPivotPos     = altTransformPivotPosition_    (hovered(), obb);
+        xTransformPivot_    = defaultTransformPivotPos[0];
+        yTransformPivot_    = defaultTransformPivotPos[1];
+        xTransformPivotAlt_ = altTransformPivotPos[0];
+        yTransformPivotAlt_ = altTransformPivotPos[1];
     }
 }
 
 void TransformTool::continueTransform(double x, double y)
 {
-    // Cache values
+    // Cache mouse position
     x_ = x;
     y_ = y;
 
@@ -780,7 +826,7 @@ void TransformTool::continueTransform(double x, double y)
         transformPivot_ = true;
 
         // Get pivot
-        const Vec2 pivotPos = precomputedPivotPosition_();
+        const Vec2 pivotPos = cachedTransformPivotPosition_();
         const double xPivot = pivotPos[0];
         const double yPivot = pivotPos[1];
 
@@ -814,7 +860,6 @@ void TransformTool::continueTransform(double x, double y)
             double theta0 = std::atan2(y0_ - yPivot, x0_ - xPivot);
             double theta  = std::atan2(y   - yPivot, x   - xPivot);
             double dTheta = theta - theta0;
-
             xf = Eigen::Rotation2Dd(dTheta);
         }
         else

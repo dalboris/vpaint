@@ -111,11 +111,23 @@ private:
     void drawPickPivot_(const BoundingBox & bb, ViewSettings & viewSettings) const;
 
     // Pivot
-    bool isPivotPrecomputed_() const;
-    Eigen::Vector2d precomputedPivotPosition_() const;
+    bool useAltTransform_() const;
+    bool isPivotCached_  () const;
+
+    Eigen::Vector2d manualPivotPosition_         () const;
+    Eigen::Vector2d cachedTransformPivotPosition_() const;
+    Eigen::Vector2d cachedPivotPosition_         () const;
+
     Eigen::Vector2d computePivotPosition_(Time time) const;
     Eigen::Vector2d computePivotPosition_(const BoundingBox & bb) const;
-    Eigen::Vector2d pivotPosition_(const BoundingBox & bb) const;
+
+    Eigen::Vector2d pivotPosition_           (const BoundingBox & bb) const;
+    Eigen::Vector2d noTransformPivotPosition_(const BoundingBox & bb) const;
+
+    Eigen::Vector2d transformPivotPosition_       (WidgetId id, const BoundingBox & bb) const;
+    Eigen::Vector2d defaultTransformPivotPosition_(WidgetId id, const BoundingBox & bb) const;
+    Eigen::Vector2d altTransformPivotPosition_    (WidgetId id, const BoundingBox & bb) const;
+
     bool manualPivot_;
     double xManualPivot_, yManualPivot_;
     double xManualPivot0_, yManualPivot0_;
