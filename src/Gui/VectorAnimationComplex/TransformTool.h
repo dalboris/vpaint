@@ -14,6 +14,7 @@
 #include <QSet>
 #include "TimeDef.h"
 #include "CellList.h"
+#include "BoundingBox.h"
 
 #include "Eigen.h"
 
@@ -21,8 +22,6 @@ class ViewSettings;
 
 namespace VectorAnimationComplex
 {
-
-class BoundingBox;
 
 class TransformTool: public QObject
 {
@@ -129,16 +128,20 @@ private:
     Eigen::Vector2d altTransformPivotPosition_    (WidgetId id, const BoundingBox & bb) const;
 
     bool manualPivot_;
+    bool draggingManualPivot_;
     double xManualPivot_, yManualPivot_;
     double xManualPivot0_, yManualPivot0_;
-    bool transformPivot_;
+
+    bool transforming_;
     double xTransformPivot_, yTransformPivot_;
     double xTransformPivotAlt_, yTransformPivotAlt_;
 
-    // Affine transform cached info
+    // Apply transformation
+    bool isTransformConstrained_() const;
     KeyVertexSet draggedVertices_;
     KeyEdgeSet draggedEdges_;
     double x0_, y0_, dx_, dy_, x_, y_;
+    BoundingBox obb0_;
 };
 
 }

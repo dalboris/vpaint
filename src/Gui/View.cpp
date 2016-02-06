@@ -268,8 +268,8 @@ int View::decidePMRAction()
         else if( vac_->hoveredTransformWidgetId() &&
                  mouse_LeftButton_ &&
                  /*!mouse_AltWasDown_ &&*/
-                 !mouse_ControlWasDown_ &&
-                 !mouse_ShiftWasDown_)
+                 !mouse_ControlWasDown_ /*&&
+                 !mouse_ShiftWasDown_*/)
         {
             return TRANSFORM_SELECTION_ACTION;
         }

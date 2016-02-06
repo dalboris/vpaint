@@ -62,6 +62,8 @@ namespace VectorAnimationComplex
 namespace
 {
 
+const double PI = 3.14159;
+
 bool isCycleContainedInFace(const Cycle & cycle, const PreviewKeyFace & face)
 {
     // Get edges involved in cycle
@@ -6201,20 +6203,39 @@ void VAC::prepareDragAndDrop(double x0, double y0, Time time)
 
 void VAC::performDragAndDrop(double x, double y)
 {
+    double dx = x-x0_;
+    double dy = y-y0_;
+
+    // Constrain along 45 degree axes
+    if (global()->keyboardModifiers().testFlag(Qt::ShiftModifier))
+    {
+        double d = 0.5*(std::abs(dx)+std::abs(dy));
+        const double theta = std::atan2(dy, dx); // in [-PI, PI]
+
+        if      (std::abs(theta)          > 7*PI/8) dy = 0;
+        else if (std::abs(theta)          <   PI/8) dy = 0;
+        else if (std::abs(theta -   PI/2) <   PI/8) dx = 0;
+        else if (std::abs(theta +   PI/2) <   PI/8) dx = 0;
+        else if (std::abs(theta - 3*PI/4) <   PI/8) { dx = -d; dy =  d; }
+        else if (std::abs(theta -   PI/4) <   PI/8) { dx =  d; dy =  d; }
+        else if (std::abs(theta +   PI/4) <   PI/8) { dx =  d; dy = -d; }
+        else if (std::abs(theta + 3*PI/4) <   PI/8) { dx = -d; dy = -d; }
+    }
+
     foreach(KeyEdge * iedge, draggedEdges_)
     {
-        iedge->geometry()->performDragAndDrop(x-x0_, y-y0_);
+        iedge->geometry()->performDragAndDrop(dx, dy);
         iedge->processGeometryChanged_();
     }
 
     foreach(KeyVertex * v, draggedVertices_)
-        v->performDragAndDrop(x-x0_, y-y0_);
+        v->performDragAndDrop(dx, dy);
 
 
     foreach(KeyVertex * v, draggedVertices_)
         v->correctEdgesGeometry();
 
-    transformTool_.performDragAndDrop(x-x0_, y-y0_);
+    transformTool_.performDragAndDrop(dx, dy);
 
     //emit changed();
 }

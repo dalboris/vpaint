@@ -8,7 +8,6 @@
 
 #include "TransformTool.h"
 
-#include "BoundingBox.h"
 #include "OpenGL.h"
 #include "Picking.h"
 #include "Cell.h"
@@ -34,6 +33,9 @@ namespace
 // Math constants
 const double PI = 3.14159;
 const double SQRT2 = 1.4142;
+
+// Epsilon for division by zeros
+const double EPS = 1e-6;
 
 // Widget colors
 const double outlineBoundingBoxColor[] = {0.5, 0.5, 0.5, 0.2};
@@ -347,7 +349,8 @@ TransformTool::TransformTool(QObject * parent) :
     idOffset_(0),
     hovered_(None),
     manualPivot_(false),
-    transformPivot_(false)
+    draggingManualPivot_(false),
+    transforming_(false)
 {
     connect(global(), SIGNAL(keyboardModifiersChanged()), this, SLOT(onKeyboardModifiersChanged()));
 }
@@ -356,7 +359,8 @@ void TransformTool::setCells(const CellSet & cells)
 {
     cells_ = cells;
     manualPivot_ = false;
-    transformPivot_ = false;
+    draggingManualPivot_ = false;
+    transforming_ = false;
 
     // Note: we can't pre-compute bounding boxes or pivot position here
     //       since we don't know the time.
@@ -421,6 +425,10 @@ Eigen::Vector2d TransformTool::defaultTransformPivotPosition_(WidgetId id, const
     case Pivot:
         return noTransformPivotPosition_(bb);
     }
+
+    // This should never happen
+    qDebug("Warning: WidgetId not handled in switch in altTransformPivotPosition_");
+    return noTransformPivotPosition_(bb);
 }
 
 Eigen::Vector2d TransformTool::altTransformPivotPosition_(WidgetId id, const BoundingBox & bb) const
@@ -447,6 +455,10 @@ Eigen::Vector2d TransformTool::altTransformPivotPosition_(WidgetId id, const Bou
     case Pivot:
         return noTransformPivotPosition_(bb);
     }
+
+    // This should never happen
+    qDebug("Warning: WidgetId not handled in switch in altTransformPivotPosition_");
+    return noTransformPivotPosition_(bb);
 }
 
 Eigen::Vector2d TransformTool::pivotPosition(Time time) const
@@ -461,12 +473,12 @@ Eigen::Vector2d TransformTool::pivotPosition_(const BoundingBox & bb) const
 
 bool TransformTool::isPivotCached_() const
 {
-    return transformPivot_ || (manualPivot_ && !hovered());
+    return transforming_ || (manualPivot_ && !hovered());
 }
 
 Eigen::Vector2d TransformTool::cachedPivotPosition_() const
 {
-    if (transformPivot_)
+    if (transforming_)
     {
         return cachedTransformPivotPosition_();
     }
@@ -696,6 +708,11 @@ void TransformTool::setNoHoveredObject()
     hovered_ = None;
 }
 
+bool TransformTool::isTransformConstrained_() const
+{
+    return global()->keyboardModifiers().testFlag(Qt::ShiftModifier);
+}
+
 void TransformTool::beginTransform(double x0, double y0, Time time)
 {
     // Clear cached values
@@ -705,6 +722,14 @@ void TransformTool::beginTransform(double x0, double y0, Time time)
     // Return in trivial cases
     if (hovered() == None || cells_.isEmpty())
         return;
+
+    // Compute outline bounding box at current time and cache it
+    BoundingBox obb;
+    for (CellSet::ConstIterator it = cells_.begin(); it != cells_.end(); ++it)
+    {
+        obb.unite((*it)->outlineBoundingBox(time));
+    }
+    obb0_ = obb;
 
     // Move pivot
     if (hovered() == Pivot)
@@ -722,12 +747,6 @@ void TransformTool::beginTransform(double x0, double y0, Time time)
     // Transform selection
     else
     {
-        // Compute outline bounding box at current time
-        BoundingBox obb;
-        for (CellSet::ConstIterator it = cells_.begin(); it != cells_.end(); ++it)
-        {
-            obb.unite((*it)->outlineBoundingBox(time));
-        }
 
         // Keyframe inbetween cells
         CellSet cellsNotToKeyframe;
@@ -771,10 +790,6 @@ void TransformTool::beginTransform(double x0, double y0, Time time)
         foreach(KeyVertex * v, draggedVertices_)
             v->prepareAffineTransform();
 
-
-        const Vec2 currentPivotPos = pivotPosition_(obb);
-        const Vec2 obbOppositeWidgetPos = widgetOppositePos_(hovered(), obb);
-
         // Cache initial mouse position
         x0_ = x0;
         y0_ = y0;
@@ -801,6 +816,23 @@ void TransformTool::beginTransform(double x0, double y0, Time time)
     }
 }
 
+namespace
+{
+
+double scaleFactor_(double x, double x0, double xPivot, double dx)
+{
+    if (std::abs(x0-dx-xPivot) > EPS)
+    {
+        return (x-dx-xPivot)/(x0-dx-xPivot);
+    }
+    else
+    {
+        return 1.0;
+    }
+}
+
+}
+
 void TransformTool::continueTransform(double x, double y)
 {
     // Cache mouse position
@@ -814,16 +846,30 @@ void TransformTool::continueTransform(double x, double y)
     // Move pivot
     if (hovered() == Pivot)
     {
+        draggingManualPivot_ = true;
         manualPivot_ = true;
         xManualPivot_ = xManualPivot0_ + x - x0_;
         yManualPivot_ = yManualPivot0_ + y - y0_;
+
+        if (isTransformConstrained_())
+        {
+            double xSnap = 0.1 * obb0_.width();
+            if      (std::abs(xManualPivot_-obb0_.xMin()) < xSnap) xManualPivot_ = obb0_.xMin();
+            else if (std::abs(xManualPivot_-obb0_.xMid()) < xSnap) xManualPivot_ = obb0_.xMid();
+            else if (std::abs(xManualPivot_-obb0_.xMax()) < xSnap) xManualPivot_ = obb0_.xMax();
+
+            double ySnap = 0.1 * obb0_.height();
+            if      (std::abs(yManualPivot_-obb0_.yMin()) < ySnap) yManualPivot_ = obb0_.yMin();
+            else if (std::abs(yManualPivot_-obb0_.yMid()) < ySnap) yManualPivot_ = obb0_.yMid();
+            else if (std::abs(yManualPivot_-obb0_.yMax()) < ySnap) yManualPivot_ = obb0_.yMax();
+        }
     }
 
     // Transform selection
     else
     {
         // Inform that we are currently transforming the selection
-        transformPivot_ = true;
+        transforming_ = true;
 
         // Get pivot
         const Vec2 pivotPos = cachedTransformPivotPosition_();
@@ -837,29 +883,55 @@ void TransformTool::continueTransform(double x, double y)
             hovered() == BottomRightScale ||
             hovered() == BottomLeftScale)
         {
-            xf = Eigen::Scaling((x-dx_-xPivot)/(x0_-dx_-xPivot),
-                                (y-dy_-yPivot)/(y0_-dy_-yPivot));
+            double sx = scaleFactor_(x, x0_, dx_, xPivot);
+            double sy = scaleFactor_(y, y0_, dy_, yPivot);
+            if (isTransformConstrained_())
+            {
+                sx = 0.5*(sx+sy);
+                sy = sx;
+            }
+            xf = Eigen::Scaling(sx, sy);
         }
         else if (hovered() == TopScale ||
                  hovered() == BottomScale)
         {
-            xf = Eigen::Scaling(1.0,
-                                (y-dy_-yPivot)/(y0_-dy_-yPivot));
+            xf = Eigen::Scaling(1.0, scaleFactor_(y, y0_, dy_, yPivot));
         }
         else if (hovered() == RightScale ||
                  hovered() == LeftScale)
         {
-            xf = Eigen::Scaling((x-dx_-xPivot)/(x0_-dx_-xPivot),
-                                1.0);
+            xf = Eigen::Scaling(scaleFactor_(x, x0_, dx_, xPivot), 1.0);
         }
         else if (hovered() == TopLeftRotate ||
                  hovered() == TopRightRotate ||
                  hovered() == BottomRightRotate ||
                  hovered() == BottomLeftRotate)
         {
-            double theta0 = std::atan2(y0_ - yPivot, x0_ - xPivot);
-            double theta  = std::atan2(y   - yPivot, x   - xPivot);
-            double dTheta = theta - theta0;
+            const double theta0 = std::atan2(y0_ - yPivot, x0_ - xPivot);
+            const double theta  = std::atan2(y   - yPivot, x   - xPivot);
+            double dTheta = theta - theta0; // in [-2*PI, 2*PI]
+            if (isTransformConstrained_())
+            {
+                for (int i=-8; i<10; ++i)
+                {
+                    const double phi_i = i*PI/4;
+                    if (dTheta - PI/8 < phi_i)
+                    {
+                        // If we are here, then
+                        //   1) dTheta <  phi_i     + PI/8 (above condition)
+                        //   2) dTheta >= phi_(i-1) + PI/8 (because we didn't break at previous loop iteration)
+                        //
+                        // And in addition, we have:
+                        //   3) phi_(i-1) + PI/8 = (i-1)*PI/4 + PI/8 = i*PI/4 - PI/8 = phi_i - PI/8
+                        //
+                        // Therefore:
+                        //   phi_i - PI/8 <= dTheta < phi_i + PI/8
+
+                        dTheta = phi_i;
+                        break;
+                    }
+                }
+            }
             xf = Eigen::Rotation2Dd(dTheta);
         }
         else
@@ -893,7 +965,8 @@ void TransformTool::continueTransform(double x, double y)
 
 void TransformTool::endTransform()
 {
-    transformPivot_ = false;
+    draggingManualPivot_ = false;
+    transforming_ = false;
 }
 
 void TransformTool::prepareDragAndDrop()
@@ -910,7 +983,7 @@ void TransformTool::performDragAndDrop(double dx, double dy)
 
 void TransformTool::onKeyboardModifiersChanged()
 {
-    if (transformPivot_)
+    if (draggingManualPivot_ || transforming_)
     {
         continueTransform(x_, y_);
     }
