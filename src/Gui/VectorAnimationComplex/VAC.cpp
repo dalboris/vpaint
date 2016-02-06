@@ -785,7 +785,7 @@ void VAC::draw(Time time, ViewSettings & viewSettings)
     }
 
     // Transform tool
-    if(global()->toolMode() == Global::SELECT)
+    if(global()->toolMode() == Global::SELECT && viewSettings.isMainDrawing())
     {
         transformTool_.draw(selectedCells_, time, viewSettings);
     }
@@ -861,7 +861,7 @@ void VAC::drawPick(Time time, ViewSettings & viewSettings)
     }
 
     // Transform tool
-    if(global()->toolMode() == Global::SELECT)
+    if(global()->toolMode() == Global::SELECT && viewSettings.isMainDrawing())
     {
         transformTool_.drawPick(selectedCells_, time, viewSettings);
     }
