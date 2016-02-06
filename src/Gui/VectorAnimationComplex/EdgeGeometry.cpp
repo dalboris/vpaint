@@ -326,6 +326,16 @@ void EdgeGeometry::performDragAndDrop(double /*dx*/, double /*dy*/)
 {
 }
 
+void EdgeGeometry::prepareAffineTransform()
+{
+
+}
+
+void EdgeGeometry::performAffineTransform(const Eigen::Affine2d & /*xf*/)
+{
+
+}
+
 EdgeGeometry::ClosestVertexInfo EdgeGeometry::closestPoint(double x, double y)
 {
     ClosestVertexInfo res;
@@ -1286,6 +1296,17 @@ void LinearSpline::performDragAndDrop(double dx, double dy)
     dragAndDrop_lastDx_ = dx;
     dragAndDrop_lastDy_ = dy;
 
+    clearSampling();
+}
+
+void LinearSpline::prepareAffineTransform()
+{
+    curveBeforeTransform_ = curve_;
+}
+
+void LinearSpline::performAffineTransform(const Eigen::Affine2d & xf)
+{
+    curve_ = curveBeforeTransform_.transformed(xf);
     clearSampling();
 }
 

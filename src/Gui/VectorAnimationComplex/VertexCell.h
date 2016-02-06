@@ -33,7 +33,6 @@ public:
     //void draw(Time time, ViewSettings & viewSettings);
     void drawRaw(Time time, ViewSettings & viewSettings);
     void drawRawTopology(Time time, ViewSettings & viewSettings);
-    void drawEdgeJunction(Time time, ViewSettings & viewSettings);
 
     // Topology
     CellSet spatialBoundary() const;
@@ -52,6 +51,12 @@ private:
 
     void drawPickCustom(Time time, ViewSettings & viewSettings);
     bool isPickableCustom(Time time) const;
+
+    // Implementation of triangulate for both KeyVertex and InbetweenVertex
+    void triangulate_(Time time, Triangles & out) const;
+
+    // Implementation of outline bounding box for both KeyVertex and InbetweenVertex
+    void computeOutlineBoundingBox_(Time t, BoundingBox & out) const;
 
 // --------- Cloning, Assigning, Copying, Serializing ----------
 

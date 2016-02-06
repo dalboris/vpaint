@@ -60,8 +60,6 @@ private:
     // Update Boundary
     void updateBoundary_impl(KeyVertex * oldVertex, KeyVertex * newVertex);
 
-    BBox computeBoundingBox_() const { return BBox(0,0,0,0); }
-
     KeyVertex * beforeVertex_;
     KeyVertex * afterVertex_;
 

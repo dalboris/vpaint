@@ -33,6 +33,7 @@
 #define  RECTANGLE_OF_SELECTION_ACTION                      105
 #define  DRAG_AND_DROP_ACTION                               106
 #define  SPLIT_ACTION                                       107
+#define  TRANSFORM_SELECTION_ACTION                         108
 
 #define  SKETCH_ACTION                                      200
 #define  SKETCH_CHANGE_PEN_WIDTH_ACTION                     203
@@ -174,6 +175,8 @@ void View::updateZoomFromView()
 
 int View::decideClicAction()
 {
+    vac_ = scene_->vectorAnimationComplex();
+
     // Selection
     if( (global()->toolMode() == Global::SELECT && mouse_LeftButton_) //||
         //(global()->toolMode() == Global::SKETCH && mouse_LeftButton_) ||
@@ -187,10 +190,10 @@ int View::decideClicAction()
            !mouse_ControlWasDown_ &&
            !mouse_ShiftWasDown_)
         {
-            if(hoveredObject_.isNull())
-                return DESELECTALL_ACTION;
-            else
+            if (vac_->hoveredCell())
                 return SELECT_ACTION;
+            else if (!vac_->hoveredTransformWidgetId())
+                return DESELECTALL_ACTION;
         }
         // Shift + Left = add to selection
         if(!mouse_AltWasDown_ &&
@@ -244,14 +247,31 @@ int View::decidePMRAction()
 
     if(global()->toolMode() == Global::SELECT)
     {
-        if( !hoveredObject_.isNull() &&
+        // Selection
+        if( (global()->toolMode() == Global::SELECT && mouse_LeftButton_) //||
+            //(global()->toolMode() == Global::SKETCH && mouse_LeftButton_) ||
+            //(global()->toolMode() == Global::SCULPT && mouse_LeftButton_) ||
+            //(global()->toolMode() == Global::CUT && mouse_LeftButton_) ||
+            //(mouse_RightButton_)
+            )
+        {
+
+        }
+        if( vac_->hoveredCell() &&
             mouse_LeftButton_ &&
             !mouse_AltWasDown_ &&
             !mouse_ControlWasDown_ &&
-            !mouse_ShiftWasDown_ &&
-            vac_)
+            !mouse_ShiftWasDown_)
         {
             return DRAG_AND_DROP_ACTION;
+        }
+        else if( vac_->hoveredTransformWidgetId() &&
+                 mouse_LeftButton_ &&
+                 /*!mouse_AltWasDown_ &&*/
+                 !mouse_ControlWasDown_ /*&&
+                 !mouse_ShiftWasDown_*/)
+        {
+            return TRANSFORM_SELECTION_ACTION;
         }
         else if (hoveredObject_.isNull() &&
                  mouse_LeftButton_ &&
@@ -417,12 +437,16 @@ void View::ClicEvent(int action, double x, double y)
             scene_->select(activeTime(),
                            hoveredObject_.index(),
                            hoveredObject_.id());
+            emit allViewsNeedToUpdatePicking(); // required because selection bbox pickable
+            updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
             emit allViewsNeedToUpdate();
         }
     }
     else if(action==DESELECTALL_ACTION)
     {
         scene_->deselectAll();
+        emit allViewsNeedToUpdatePicking();
+        updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
         emit allViewsNeedToUpdate();
     }
     else if(action==ADDSELECT_ACTION)
@@ -432,6 +456,8 @@ void View::ClicEvent(int action, double x, double y)
             scene_->select(activeTime(),
                            hoveredObject_.index(),
                            hoveredObject_.id());
+            emit allViewsNeedToUpdatePicking();
+            updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
             emit allViewsNeedToUpdate();
         }
     }
@@ -442,6 +468,8 @@ void View::ClicEvent(int action, double x, double y)
             scene_->deselect(activeTime(),
                              hoveredObject_.index(),
                              hoveredObject_.id());
+            emit allViewsNeedToUpdatePicking();
+            updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
             emit allViewsNeedToUpdate();
         }
     }
@@ -452,6 +480,8 @@ void View::ClicEvent(int action, double x, double y)
             scene_->toggle(activeTime(),
                            hoveredObject_.index(),
                            hoveredObject_.id());
+            emit allViewsNeedToUpdatePicking();
+            updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
             emit allViewsNeedToUpdate();
         }
     }
@@ -583,6 +613,10 @@ void View::PMRPressEvent(int action, double x, double y)
     {
         vac_->prepareDragAndDrop(mouse_PressEvent_XScene_, mouse_PressEvent_YScene_, interactiveTime());
     }
+    else if(action==TRANSFORM_SELECTION_ACTION)
+    {
+        vac_->beginTransformSelection(mouse_PressEvent_XScene_, mouse_PressEvent_YScene_, interactiveTime());
+    }
     else if(action==RECTANGLE_OF_SELECTION_ACTION)
     {
         vac_->beginRectangleOfSelection(x,y,interactiveTime());
@@ -707,6 +741,11 @@ void View::PMRMoveEvent(int action, double x, double y)
         //updateHighlightedObject(mouse_Event_X_, mouse_Event_Y_);
         emit allViewsNeedToUpdate();
 
+    }
+    else if(action==TRANSFORM_SELECTION_ACTION)
+    {
+        vac_->continueTransformSelection(x, y);
+        emit allViewsNeedToUpdate();
     }
     else if(action==RECTANGLE_OF_SELECTION_ACTION)
     {
@@ -857,10 +896,18 @@ void View::PMRReleaseEvent(int action, double x, double y)
         updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
         emit allViewsNeedToUpdate();
     }
+    else if(action==TRANSFORM_SELECTION_ACTION)
+    {
+        vac_->endTransformSelection();
+        emit allViewsNeedToUpdatePicking();
+        updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
+        emit allViewsNeedToUpdate();
+    }
     else if(action==RECTANGLE_OF_SELECTION_ACTION)
     {
         vac_->endRectangleOfSelection();
 
+        emit allViewsNeedToUpdatePicking();
         updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
         emit allViewsNeedToUpdate();
     }

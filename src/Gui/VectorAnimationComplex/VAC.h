@@ -20,6 +20,7 @@
 #include "Cell.h"
 #include "ZOrderedCells.h"
 #include "Eigen.h"
+#include "TransformTool.h"
 
 #include "../View3DSettings.h"
 
@@ -41,6 +42,7 @@ class Path;
 class AnimatedVertex;
 class KeyHalfedge;
 class PreviewKeyFace;
+class BoundingBox;
 
 class VAC: public SceneObject
 {
@@ -88,8 +90,11 @@ public:
 
     // Get higlighted and selected state
     Cell * hoveredCell() const;
-    CellSet selectedCells() const;
+    const CellSet & selectedCells() const;
     int numSelectedCells() const;
+
+    // Get hovered transform widget id
+    int hoveredTransformWidgetId() const;
 
     // Modify highligthed and seleted state
     void setHoveredCell(Cell * cell);
@@ -139,6 +144,11 @@ public:
     void prepareDragAndDrop(double x0, double y0, Time time);
     void performDragAndDrop(double x, double y);
     void completeDragAndDrop();
+
+    // -- Transform selection --
+    void beginTransformSelection(double x0, double y0, Time time);
+    void continueTransformSelection(double x, double y);
+    void endTransformSelection();
 
     // -- Temporal Drag and drop --
     void prepareTemporalDragAndDrop(Time t0);
@@ -310,6 +320,7 @@ private:
     // Managing IDs
     int getAvailableID();
     void deleteAllCells();
+    void setMaxID_(int maxID);
     int maxID_;
 
     // User interactivity
@@ -410,8 +421,9 @@ private:
     Time timeCopy_;
 
     // Selecting and highlighting
+    int hoveredTransformWidgetId_;
     Cell * hoveredCell_;
-    QSet<Cell *> selectedCells_;
+    CellSet selectedCells_;
 
     // Z-layering
     ZOrderedCells zOrdering_;
@@ -422,6 +434,10 @@ private:
     void endAggregateSignals_();
     int signalCounter_;
     bool shouldEmitSelectionChanged_;
+
+    // Transform tool
+    TransformTool transformTool_;
+    friend class TransformTool;
 };
 
 }

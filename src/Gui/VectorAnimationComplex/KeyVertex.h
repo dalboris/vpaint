@@ -39,6 +39,8 @@ public:
     // manipulation
     void prepareDragAndDrop();
     void performDragAndDrop(double dx, double dy);
+    void prepareAffineTransform();
+    void performAffineTransform(const Eigen::Affine2d & xf);
 
     // For cubic spline interpolation
     KeyVertexList beforeVertices() const;
@@ -66,9 +68,6 @@ private:
     Eigen::Vector2d posBack_;
 
     void initColor();
-
-    // Bounding box
-    BBox computeBoundingBox_() const;
 
 
 // --------- Cloning, Assigning, Copying, Serializing ----------

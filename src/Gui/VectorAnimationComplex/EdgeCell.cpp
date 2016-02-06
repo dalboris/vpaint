@@ -108,51 +108,38 @@ EdgeCellSet EdgeCell::incidentEdges() const
     return incidentCells;
 }
 
-void EdgeCell::triangulate(double /*width*/, Time /*time*/, Triangles & out)
-{
-    out.clear();
-}
-
-void EdgeCell::triangulate(Time /*time*/, Triangles & out)
-{
-    out.clear();
-}
-
 void EdgeCell::clearCachedGeometry_()
 {
-    triangles_.clear();
+    Cell::clearCachedGeometry_();
     trianglesTopo_.clear();
 }
 
-Triangles & EdgeCell::triangles(Time time)
+void EdgeCell::computeOutlineBoundingBox_(Time t, BoundingBox & out) const
 {
-    int nSixtiethOfFrame = std::floor(time.floatTime() * 60 + 0.5);
-    if(!triangles_.contains(nSixtiethOfFrame))
+    if (exists(t))
     {
-        triangles_[nSixtiethOfFrame] = Triangles();
-        triangulate(time, triangles_[nSixtiethOfFrame]);
+        const QList<EdgeSample> samples = getSampling(t);
+        out = BoundingBox();
+        for (int i = 0; i<samples.size(); ++i)
+            out.unite(BoundingBox(samples[i].x(), samples[i].y()));
     }
-
-    return triangles_[nSixtiethOfFrame];
+    else
+    {
+        out = BoundingBox();
+    }
 }
 
-Triangles & EdgeCell::triangles(double width, Time time)
+const Triangles & EdgeCell::triangles(double width, Time time) const
 {
-    int nSixtiethOfFrame = std::floor(time.floatTime() * 60 + 0.5);
-    QPair<int,double> pair = qMakePair(nSixtiethOfFrame, width);
+    // Get cache key
+    QPair<int,double> key = qMakePair(std::floor(time.floatTime() * 60 + 0.5), width);
 
-    if(!trianglesTopo_.contains(pair))
-    {
-        trianglesTopo_[pair] = Triangles();
-        triangulate(width, time, trianglesTopo_[pair]);
-    }
+    // Compute triangles if not yet cached
+    if(!trianglesTopo_.contains(key))
+        triangulate_(width, time, trianglesTopo_[key]);
 
-    return trianglesTopo_[pair];
-}
-
-void EdgeCell::drawRaw(Time time, ViewSettings & /*viewSettings*/)
-{
-    triangles(time).draw();
+    // Return cached triangles
+    return trianglesTopo_[key];
 }
 
 void EdgeCell::drawRawTopology(Time time, ViewSettings & viewSettings)
@@ -184,11 +171,6 @@ EdgeSample EdgeCell::endSample(Time time) const
         return EdgeSample();
     else
         return sampling.last();
-}
-
-bool EdgeCell::intersectsRectangle(Time t, double x0, double x1, double y0, double y1)
-{
-    return triangles(t).intersectsRectangle(x0, x1, y0, y1);
 }
 
 void EdgeCell::exportSVG(Time t, QTextStream & out)

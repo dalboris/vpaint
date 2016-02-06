@@ -40,13 +40,13 @@ bool InbetweenEdge::isClosed() const
 void InbetweenEdge::setBeforeCycleStartingPoint(double s0)
 {
     beforeCycle_.setStartingPoint(s0);
-    geometryChanged_();
+    processGeometryChanged_();
 }
 
 void InbetweenEdge::setAfterCycleStartingPoint(double s0)
 {
     afterCycle_.setStartingPoint(s0);
-    geometryChanged_();
+    processGeometryChanged_();
 }
 
 double InbetweenEdge::beforeCycleStartingPoint() const
@@ -604,22 +604,30 @@ InbetweenEdge::InbetweenEdge(VAC * vac, XmlStreamReader & xml) :
         return sampling;
     }
 
-    void InbetweenEdge::triangulate(Time time, Triangles & out)
+    void InbetweenEdge::triangulate_(Time time, Triangles & out) const
     {
-        QList<EdgeSample> samples = getSampling(time);
-        LinearSpline ls(samples);
-        if(isClosed())
-            ls.makeLoop();
-        ls.triangulate(out);
+        out.clear();
+        if (exists(time))
+        {
+            QList<EdgeSample> samples = getSampling(time);
+            LinearSpline ls(samples);
+            if(isClosed())
+                ls.makeLoop();
+            ls.triangulate(out);
+        }
     }
 
-    void InbetweenEdge::triangulate(double width, Time time, Triangles & out)
+    void InbetweenEdge::triangulate_(double width, Time time, Triangles & out) const
     {
-        QList<EdgeSample> samples = getSampling(time);
-        LinearSpline ls(samples);
-        if(isClosed())
-            ls.makeLoop();
-        ls.triangulate(width, out);
+        out.clear();
+        if (exists(time))
+        {
+            QList<EdgeSample> samples = getSampling(time);
+            LinearSpline ls(samples);
+            if(isClosed())
+                ls.makeLoop();
+            ls.triangulate(width, out);
+        }
     }
 
     KeyCellSet InbetweenEdge::beforeCells() const

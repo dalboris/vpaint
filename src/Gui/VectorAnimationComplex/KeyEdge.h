@@ -41,12 +41,6 @@ public:
     virtual void drawPickTopology(Time time, ViewSettings & viewSettings);
     void draw3DSmall();
     void drawRaw3D(View3DSettings & viewSettings);
-    void triangulate(Time time, Triangles & out);
-    void triangulate(double width, Time time, Triangles & out);
-
-    using EdgeCell::triangles;
-    Triangles & triangles();
-
 
     // Topology
     KeyVertex * startVertex() const { return startVertex_; }
@@ -86,6 +80,9 @@ public:
     void beginSculptSmooth(double x, double y);
     void continueSculptSmooth(double x, double y);
     void endSculptSmooth();
+    // Affine transform
+    void prepareAffineTransform();
+    void performAffineTransform(const Eigen::Affine2d & xf);
 
 private:
     friend class VAC;
@@ -101,9 +98,6 @@ private:
 
     // Update Boundary
     void updateBoundary_impl(KeyVertex * oldVertex, KeyVertex * newVertex);
-
-    // Bounding box
-    BBox computeBoundingBox_() const;
 
     // Note:  topFace  or  bottom  can be  either  instant  or
     // animated, at  the contrary of InbetweenEdge  where it is
@@ -125,8 +119,9 @@ private:
     double remainingRadiusLeft_;
     double remainingRadiusRight_;
 
-    // Cached triangulation
-    Triangles triangles_;
+    // Implementation of triangulate
+    void triangulate_(Time time, Triangles & out) const;
+    void triangulate_(double width, Time time, Triangles & out) const;
 
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

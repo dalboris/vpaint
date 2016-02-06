@@ -149,6 +149,12 @@ public slots:
     void toggleSnapping();
     void toggleStylusPressure();
 
+    void setScalingCorner(bool b);
+    void setScalingEdge(bool b);
+    void setRotating(bool b);
+    void setDragAndDropping(bool b);
+    void setDraggingPivot(bool b);
+
     // Open preference dialog
     void openPreferencesDialog();
 
@@ -185,6 +191,13 @@ private:
 
     // Tool options
     QToolBar * toolModeToolBar_;
+
+    // Is a selection being transformed?
+    bool isScalingCorner_;
+    bool isScalingEdge_;
+    bool isRotating_;
+    bool isDragAndDropping_;
+    bool isDraggingPivot_;
 
     // Select
     QAction * actionChangeColor_;

@@ -105,4 +105,40 @@ bool InbetweenCell::checkAnimated_() const
     return true;
 }
 
+BoundingBox InbetweenCell::boundingBox() const
+{
+    // Get before and after frame
+    int beforeFrame = beforeTime().frame();
+    int afterFrame = beforeTime().frame();
+
+    // Take the union of all bounding boxes in the middle
+    // of each frame.
+    //
+    // Examples:
+    // 1) beforeFrame = 12; afterFrame = 13
+    //    => returns boundingBox(Time(12.5))
+    //
+    // 2) beforeFrame = 12; afterFrame = 14
+    //    => returns boundingBox(Time(12.5)) UNION boundingBox(Time(13.5))
+    BoundingBox res;
+    for (double t = beforeFrame + 0.5; t < afterFrame; t += 1.0)
+    {
+        res.unite(boundingBox(Time(t)));
+    }
+    return res;
+}
+
+BoundingBox InbetweenCell::outlineBoundingBox() const
+{
+    // Same as above
+    int beforeFrame = beforeTime().frame();
+    int afterFrame = beforeTime().frame();
+    BoundingBox res;
+    for (double t = beforeFrame + 0.5; t < afterFrame; t += 1.0)
+    {
+        res.unite(outlineBoundingBox(Time(t)));
+    }
+    return res;
+}
+
 }
