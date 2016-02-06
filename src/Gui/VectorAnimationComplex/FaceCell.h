@@ -21,16 +21,10 @@ public:
     FaceCell(VAC * vac);
 
     // Drawing
-    virtual void triangulate(Time time, Triangles & out);
-    Triangles & triangles(Time time);
-    void drawRaw(Time time, ViewSettings & viewSettings);
     void drawRawTopology(Time time, ViewSettings & viewSettings);
 
     // Get sampling of the boundary
     virtual QList< QList<Eigen::Vector2d> > getSampling(Time time) const = 0;
-
-    // Intersection test
-    virtual bool intersectsRectangle(Time t, double x0, double x1, double y0, double y1);
 
     // Export SVG
     virtual void exportSVG(Time t, QTextStream & out);
@@ -39,15 +33,14 @@ protected:
     virtual ~FaceCell()=0;
 
 private:
-    // Cached triangulations (the integer represent a 1/60th of frame)
-    QMap<int,Triangles> triangles_;
-    void clearCachedGeometry_();
-
     // Trusting operators
     friend class Operator;
     bool checkFace_() const;
 
     virtual bool isPickableCustom(Time time) const;
+
+    // Implementation of outline bounding box for both KeyFace and InbetweenFace
+    void computeOutlineBoundingBox_(Time t, BoundingBox & out) const;
 
 // --------- Cloning, Assigning, Copying, Serializing ----------
 

@@ -75,7 +75,7 @@ void KeyCell::setTime(Time time)
     if(minTime < time_ && time_ < maxTime)
     {
         time_ = time;
-        geometryChanged_();
+        processGeometryChanged_();
     }
 }
 
@@ -203,6 +203,16 @@ KeyCellSet KeyCell::beforeCells() const
 KeyCellSet KeyCell::afterCells() const
 {
     return KeyCellSet();
+}
+
+BoundingBox KeyCell::boundingBox() const
+{
+    return boundingBox(time());
+}
+
+BoundingBox KeyCell::outlineBoundingBox() const
+{
+    return outlineBoundingBox(time());
 }
 
 void KeyCell::drawRaw3D(View3DSettings & /*viewSettings*/)

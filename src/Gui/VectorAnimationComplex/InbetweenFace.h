@@ -45,9 +45,6 @@ public:
     void removeBeforeFace(KeyFace * beforeFace);
     void removeAfterFace(KeyFace * afterFace);
 
-    // Drawing
-    void triangulate(Time time, Triangles & out);
-
     // Get sampling of the boundary
     QList< QList<Eigen::Vector2d> > getSampling(Time time) const;
 
@@ -75,7 +72,8 @@ private:
     QSet<KeyFace*> beforeFaces_;
     QSet<KeyFace*> afterFaces_;
 
-    BBox computeBoundingBox_() const { return BBox(0,0,0,0); }
+    // Implementation of triangulate
+    void triangulate_(Time time, Triangles & out) const;
 
 // --------- Cloning, Assigning, Copying, Serializing ----------
 

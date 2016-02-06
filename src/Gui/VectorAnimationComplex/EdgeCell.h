@@ -35,11 +35,8 @@ public:
     EdgeCellSet incidentEdges() const;
 
     // Drawing
-    virtual void triangulate(Time time, Triangles & out);
-    virtual void triangulate(double width, Time time, Triangles & out);
-    Triangles & triangles(Time time);
-    Triangles & triangles(double width, Time time);
-    void drawRaw(Time time, ViewSettings & viewSettings);
+    using Cell::triangles;
+    const Triangles & triangles(double width, Time time) const;
     void drawRawTopology(Time time, ViewSettings & viewSettings);
 
     // Geometric getters
@@ -47,17 +44,15 @@ public:
     virtual EdgeSample startSample(Time time) const;
     virtual EdgeSample endSample(Time time) const;
 
-    // Intersection test
-    virtual bool intersectsRectangle(Time time, double x0, double x1, double y0, double y1);
-
     // Export SVG
     virtual void exportSVG(Time t, QTextStream & out);
 
 protected:
-    // Cached triangulations (the integer represent a 1/60th of frame)
-    QMap<int,Triangles> triangles_;
-    QMap< QPair<int,double>, Triangles> trianglesTopo_; // (int=time, double=width)
+    // Special handling to draw edges of fixed screen-width in topology mode
+    // (int=time, double=width)
+    mutable QMap< QPair<int,double>, Triangles> trianglesTopo_;
     virtual void clearCachedGeometry_();
+    virtual void triangulate_(double width, Time time, Triangles & out) const=0;
 
 private:
     // Trusting operators
@@ -65,6 +60,9 @@ private:
     bool checkEdge_() const;
 
     virtual bool isPickableCustom(Time time) const;
+
+    // Implementation of outline bounding box for both KeyVertex and InbetweenVertex
+    void computeOutlineBoundingBox_(Time t, BoundingBox & out) const;
 
 protected:
     //void split_copySpatialStarTo(EdgeCell * cell);

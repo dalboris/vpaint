@@ -62,6 +62,8 @@ namespace VectorAnimationComplex
 namespace
 {
 
+const double PI = 3.14159;
+
 bool isCycleContainedInFace(const Cycle & cycle, const PreviewKeyFace & face)
 {
     // Get edges involved in cycle
@@ -260,13 +262,15 @@ void VAC::initNonCopyable()
     sculptedEdge_ = 0;
     toBePaintedFace_ = 0;
     hoveredCell_ = 0;
+    transformTool_.setNoHoveredObject();
+    transformTool_.setCells(CellSet());
     deselectAll();
     signalCounter_ = 0;
 }
 
 void VAC::initCopyable()
 {
-    maxID_ = -1;
+    setMaxID_(-1);
     ds_ = 5.0;
     cells_.clear();
     zOrdering_.clear();
@@ -297,7 +301,7 @@ VAC * VAC::clone()
     VAC * newVAC = new VAC();
 
     // Copy maxID
-    newVAC->maxID_ = maxID_;
+    newVAC->setMaxID_(maxID_);
 
     // Copy sampling precision
     newVAC->ds_ = ds_;
@@ -780,6 +784,12 @@ void VAC::draw(Time time, ViewSettings & viewSettings)
         glEnd();
     }
 
+    // Transform tool
+    if(global()->toolMode() == Global::SELECT && viewSettings.isMainDrawing())
+    {
+        transformTool_.draw(selectedCells_, time, viewSettings);
+    }
+
     // Draw edge orientation
     if(DevSettings::getBool("draw edge orientation"))
     {
@@ -849,6 +859,12 @@ void VAC::drawPick(Time time, ViewSettings & viewSettings)
                 c->drawPickTopology(time, viewSettings);
         }
     }
+
+    // Transform tool
+    if(global()->toolMode() == Global::SELECT && viewSettings.isMainDrawing())
+    {
+        transformTool_.drawPick(selectedCells_, time, viewSettings);
+    }
 }
 
 
@@ -856,6 +872,7 @@ void VAC::emitSelectionChanged_()
 {
     if(signalCounter_ == 0)
     {
+        transformTool_.setCells(selectedCells());
         emit selectionChanged();
         informTimelineOfSelection();
     }
@@ -882,7 +899,10 @@ void VAC::endAggregateSignals_()
     if(signalCounter_ == 0)
     {
         if(shouldEmitSelectionChanged_)
+        {
+            transformTool_.setCells(selectedCells());
             emit selectionChanged();
+        }
     }
 }
 
@@ -892,15 +912,16 @@ void VAC::endAggregateSignals_()
 
 // Should NOT emit changed(). View does it if necessary
 
-
 void VAC::setHoveredObject(Time /*time*/, int id)
 {
     setHoveredCell(getCell(id));
+    transformTool_.setHoveredObject(id);
 }
 
 void VAC::setNoHoveredObject()
 {
     setNoHoveredCell();
+    transformTool_.setNoHoveredObject();
 }
 
 void VAC::select(Time /*time*/, int id)
@@ -927,7 +948,6 @@ void VAC::deselectAll(Time time)
     removeFromSelection(cellsToDeselect,false);
 }
 
-
 void VAC::deselectAll()
 {
     if(numSelectedCells() != 0)
@@ -946,7 +966,7 @@ Cell * VAC::hoveredCell() const
     return hoveredCell_;
 }
 
-CellSet VAC::selectedCells() const
+const CellSet & VAC::selectedCells() const
 {
     return selectedCells_;
 }
@@ -954,6 +974,11 @@ CellSet VAC::selectedCells() const
 int VAC::numSelectedCells() const
 {
     return selectedCells_.size();
+}
+
+int VAC::hoveredTransformWidgetId() const
+{
+    return transformTool_.hovered();
 }
 
 // ----------------------  Save & Load -------------------------
@@ -998,7 +1023,7 @@ void VAC::read(XmlStreamReader & xml)
         {
             int id = cell->id();
             if(id > maxID_)
-                maxID_ = id;
+                setMaxID_(id);
             cells_.insert(id, cell);
             zOrdering_.insertLast(cell);
         }
@@ -1082,7 +1107,7 @@ VAC::VAC(QTextStream & in) :
         Cell * cell = Cell::read1stPass(this, in);
         int id = cell->id();
         if(id > maxID_)
-            maxID_ = id;
+            setMaxID_(id);
         cells_.insert(id, cell);
         zOrdering_.insertLast(cell);
         Read::skipBracket(in); // }
@@ -1255,7 +1280,8 @@ KeyEdgeList VAC::instantEdges(Time time)
 
 int VAC::getAvailableID()
 {
-    return ++maxID_; // increments maxId_ then returns it
+    setMaxID_(maxID_+1);
+    return maxID_;
 }
 
 void VAC::insertCell_(Cell * cell)
@@ -1523,7 +1549,13 @@ void VAC::deleteAllCells()
         Cell * obj = *cells_.begin();
         deleteCell(obj);
     }
-    maxID_ = -1;
+    setMaxID_(-1);
+}
+
+void VAC::setMaxID_(int maxID)
+{
+    maxID_ = maxID;
+    transformTool_.setIdOffset(maxID_+1);
 }
 
 KeyVertex* VAC::newKeyVertex(Time time, const Eigen::Vector2d & pos)
@@ -1640,81 +1672,22 @@ void VAC::continueRectangleOfSelection(double x, double y)
     rectangleOfSelectionEndX_ = x;
     rectangleOfSelectionEndY_ = y;
 
-    // Compute clean positive rectangle
-    double x0 = rectangleOfSelectionStartX_;
-    double x1 = rectangleOfSelectionEndX_;
-    double y0 = rectangleOfSelectionStartY_;
-    double y1 = rectangleOfSelectionEndY_;
-    if(x1 < x0) std::swap(x0,x1);
-    if(y1 < y0) std::swap(y0,y1);
+    // Express rectangle of selection as bounding box
+    const BoundingBox bb(rectangleOfSelectionStartX_, rectangleOfSelectionEndX_,
+                         rectangleOfSelectionStartY_, rectangleOfSelectionEndY_);
 
-    // Compute cells in rectangle of selection
-    // Note: This should be factorized: intersectsRectangle() should be
-    // a virtual method of Cell
+    // Compute which cells intersect with bounding box
     cellsInRectangleOfSelection_.clear();
-    KeyVertexSet vertices = cells();
-    KeyEdgeSet edges = cells();
-    KeyFaceSet faces = cells();
-    InbetweenVertexSet ivertices = cells();
-    InbetweenEdgeSet iedges = cells();
-    InbetweenFaceSet ifaces = cells();
-    foreach(KeyVertex * v, vertices)
+    for(Cell * c: zOrdering_)
     {
-        if(v->isPickable(timeInteractivity_))
+        if (c->isPickable(timeInteractivity_) &&
+            c->intersects(timeInteractivity_, bb))
         {
-            Eigen::Vector2d p = v->pos();
-            if(x0 <= p[0] && p[0] <= x1
-                    && y0 <= p[1] && p[1] <= y1)
-            {
-                cellsInRectangleOfSelection_ << v;
-            }
-        }
-    }
-    foreach(KeyEdge * e, edges)
-    {
-        if(e->isPickable(timeInteractivity_))
-        {
-            if(e->intersectsRectangle(timeInteractivity_,x0,x1,y0,y1))
-                cellsInRectangleOfSelection_ << e;
-        }
-    }
-    foreach(KeyFace * f, faces)
-    {
-        if(f->isPickable(timeInteractivity_))
-        {
-            if(f->intersectsRectangle(timeInteractivity_,x0,x1,y0,y1))
-                cellsInRectangleOfSelection_ << f;
-        }
-    }
-    foreach(InbetweenVertex * v, ivertices)
-    {
-        if(v->isPickable(timeInteractivity_))
-        {
-            Eigen::Vector2d p = v->pos(timeInteractivity_);
-            if(x0 <= p[0] && p[0] <= x1
-                    && y0 <= p[1] && p[1] <= y1)
-            {
-                cellsInRectangleOfSelection_ << v;
-            }
-        }
-    }
-    foreach(InbetweenEdge * e, iedges)
-    {
-        if(e->isPickable(timeInteractivity_))
-        {
-            if(e->intersectsRectangle(timeInteractivity_,x0,x1,y0,y1))
-                cellsInRectangleOfSelection_ << e;
-        }
-    }
-    foreach(InbetweenFace * f, ifaces)
-    {
-        if(f->isPickable(timeInteractivity_))
-        {
-            if(f->intersectsRectangle(timeInteractivity_,x0,x1,y0,y1))
-                cellsInRectangleOfSelection_ << f;
+            cellsInRectangleOfSelection_ << c;
         }
     }
 
+    // Set result
     setSelectedCellsFromRectangleOfSelection();
 }
 
@@ -2066,7 +2039,7 @@ bool VAC::cutFace_(KeyFace * face, KeyEdge * edge, CutFaceFeedback * feedback)
             // Compute new cycles of f
             face->cycles_[i] = newCycle;
             face->addMeToSpatialStarOf_(edge);
-            face->geometryChanged_();
+            face->processGeometryChanged_();
         }
         else
         {
@@ -2306,7 +2279,7 @@ VAC::SplitInfo VAC::cutEdgeAtVertices_(KeyEdge * edgeToSplit, const std::vector<
     foreach(KeyFace * c, keyFaces)
     {
         c->updateBoundary(res.oldEdge, res.newEdges);
-        c->geometryChanged_();
+        c->processGeometryChanged_();
     }
     foreach(InbetweenEdge * c, inbetweenEdges)
     {
@@ -2406,7 +2379,7 @@ void VAC::glue_(KeyVertex * v1, KeyVertex * v2)
     {
         c->updateBoundary(v1,v3);
         c->updateBoundary(v2,v3);
-        c->geometryChanged_();
+        c->processGeometryChanged_();
     }
     foreach(InbetweenEdge * c, inbetweenEdges)
     {
@@ -2534,7 +2507,7 @@ void VAC::glue_(const KeyHalfedge &h1, const KeyHalfedge &h2)
     {
         c->updateBoundary(h1,h3);
         c->updateBoundary(h2,h3);
-        c->geometryChanged_();
+        c->processGeometryChanged_();
     }
     foreach(InbetweenEdge * c, inbetweenEdges)
     {
@@ -2716,7 +2689,7 @@ void VAC::unglue_(KeyVertex * v)
             }
 
             // Recompute geometry
-            f->geometryChanged_();
+            f->processGeometryChanged_();
         }
 
         foreach(KeyEdge * e, incidentEdges)
@@ -2799,7 +2772,7 @@ void VAC::unglue_(KeyEdge * e)
             }
 
             // Recompute geometry
-            f->geometryChanged_();
+            f->processGeometryChanged_();
         }
 
         // Delete original edge
@@ -2842,7 +2815,7 @@ bool VAC::uncut_(KeyVertex * v)
             }
 
             // Recompute geometry
-            f->geometryChanged_();
+            f->processGeometryChanged_();
         }
 
         if(found == true)
@@ -2949,7 +2922,7 @@ bool VAC::uncut_(KeyVertex * v)
         }
 
         // Recompute geometry
-        f->geometryChanged_();
+        f->processGeometryChanged_();
     }
 
     // We're OK now, just do it :-)
@@ -2977,7 +2950,7 @@ bool VAC::uncut_(KeyVertex * v)
             }
 
             // Recompute geometry
-            f->geometryChanged_();
+            f->processGeometryChanged_();
         }
 
         // delete vertex
@@ -3071,7 +3044,7 @@ bool VAC::uncut_(KeyVertex * v)
             }
 
             // Recompute geometry
-            f->geometryChanged_();
+            f->processGeometryChanged_();
         }
 
         // delete vertex
@@ -3118,7 +3091,7 @@ bool VAC::uncut_(KeyEdge * e)
             f->removeMeFromSpatialStarOf_(e);
 
             // Recompute geometry
-            f->geometryChanged_();
+            f->processGeometryChanged_();
 
             // and delete the edge
             deleteCell(e);
@@ -3159,7 +3132,7 @@ bool VAC::uncut_(KeyEdge * e)
                 f1->addMeToSpatialStarOf_(c);
 
             // Recompute geometry
-            f1->geometryChanged_();
+            f1->processGeometryChanged_();
 
             // delete e
             deleteCell(e);
@@ -3280,7 +3253,7 @@ bool VAC::uncut_(KeyEdge * e)
             }
 
             // Recompute geometry
-            f->geometryChanged_();
+            f->processGeometryChanged_();
         }
         else if (incidentFaces.size() == 2)
         {
@@ -3355,7 +3328,7 @@ bool VAC::uncut_(KeyEdge * e)
             deleteCell(f2);
 
             // Recompute geometry
-            f1->geometryChanged_();
+            f1->processGeometryChanged_();
         }
 
 
@@ -3446,7 +3419,7 @@ bool VAC::uncut_(KeyEdge * e)
         zOrdering_.insertCell(f);
 
         // Recompute geometry
-        f->geometryChanged_();
+        f->processGeometryChanged_();
 
         // delete e
         deleteCell(e);
@@ -4835,7 +4808,7 @@ KeyVertex * VAC::keyframe_(InbetweenVertex * svertex, Time time)
         sedge->addMeToSpatialStarOf_(keyVertex);
         sedge->addMeToSpatialStarOf_(inbetweenVertexAfter);
 
-        sedge->geometryChanged_();
+        sedge->processGeometryChanged_();
     }
     foreach(InbetweenFace * sface, inbetweenFacesToUpdate)
     {
@@ -4850,7 +4823,7 @@ KeyVertex * VAC::keyframe_(InbetweenVertex * svertex, Time time)
         sface->addMeToSpatialStarOf_(keyVertex);
         sface->addMeToSpatialStarOf_(inbetweenVertexAfter);
 
-        sface->geometryChanged_();
+        sface->processGeometryChanged_();
     }
 
     // Delete old cell
@@ -4979,7 +4952,7 @@ KeyEdge * VAC::keyframe_(InbetweenEdge * sedge, Time time)
         sface->addMeToSpatialStarOf_(keyEdge);
         sface->addMeToSpatialStarOf_(inbetweenEdgeAfter);
 
-        sface->geometryChanged_();
+        sface->processGeometryChanged_();
     }
 
     // Transfer properties
@@ -5876,12 +5849,14 @@ void VAC::updateCellsToConsiderForCutting()
 
 void VAC::setHoveredCell(Cell * cell)
 {
-    setNoHoveredCell();
-
-    if(cell)
+    if (cell != hoveredCell_)
     {
-        hoveredCell_ = cell;
-        hoveredCell_->setHovered(true);
+        setNoHoveredCell();
+        if(cell)
+        {
+            hoveredCell_ = cell;
+            hoveredCell_->setHovered(true);
+        }
     }
 }
 
@@ -6044,18 +6019,47 @@ void VAC::setSelectedCell(Cell * cell, bool emitSignal)
 
 void VAC::setSelectedCells(const CellSet & cells, bool emitSignal)
 {
-    foreach(Cell * cell, selectedCells_)
-        cell->setSelected(false);
+    bool changing = false;
 
+    // Detect if any new cell is added to the selection, and set
+    // all new cells as unselected.
+    foreach(Cell * cell, cells)
+    {
+        if (cell->isSelected())
+        {
+            cell->setSelected(false);
+        }
+        else
+        {
+            changing = true;
+        }
+    }
+
+    // Detect if any cell is removed from the selection, and set
+    // all old cells as unselected.
+    // This works due to the previous step: any cell in selectedCells_
+    // which is still selected is *not* in the new cells.
+    foreach(Cell * cell, selectedCells_)
+    {
+        if (cell->isSelected())
+        {
+            changing = true;
+            cell->setSelected(false);
+        }
+    }
+
+    // Set new cells as selected
     foreach(Cell * cell, cells)
         cell->setSelected(true);
-
     selectedCells_ = cells;
 
-    emitSelectionChanged_();
-    if(emitSignal)
+    if (changing)
     {
-        emit changed();
+        emitSelectionChanged_();
+        if(emitSignal)
+        {
+            emit changed();
+        }
     }
 }
 
@@ -6143,6 +6147,13 @@ void VAC::prepareDragAndDrop(double x0, double y0, Time time)
     if(!hoveredCell_)
         return;
 
+    // Contextual help
+    global()->setDragAndDropping(true);
+
+    // Prepare drag and drop of transform tool first so it's aware
+    // of drag and drop before cells are keyframed
+    transformTool_.prepareDragAndDrop();
+
     // get which cells must be dragged
     CellSet cellsToDrag;
     if(hoveredCell_->isSelected() && global()->toolMode() == Global::SELECT)
@@ -6198,25 +6209,65 @@ void VAC::prepareDragAndDrop(double x0, double y0, Time time)
 
 void VAC::performDragAndDrop(double x, double y)
 {
+    double dx = x-x0_;
+    double dy = y-y0_;
+
+    // Constrain along 45 degree axes
+    if (global()->keyboardModifiers().testFlag(Qt::ShiftModifier))
+    {
+        double d = 0.5*(std::abs(dx)+std::abs(dy));
+        const double theta = std::atan2(dy, dx); // in [-PI, PI]
+
+        if      (std::abs(theta)          > 7*PI/8) dy = 0;
+        else if (std::abs(theta)          <   PI/8) dy = 0;
+        else if (std::abs(theta -   PI/2) <   PI/8) dx = 0;
+        else if (std::abs(theta +   PI/2) <   PI/8) dx = 0;
+        else if (std::abs(theta - 3*PI/4) <   PI/8) { dx = -d; dy =  d; }
+        else if (std::abs(theta -   PI/4) <   PI/8) { dx =  d; dy =  d; }
+        else if (std::abs(theta +   PI/4) <   PI/8) { dx =  d; dy = -d; }
+        else if (std::abs(theta + 3*PI/4) <   PI/8) { dx = -d; dy = -d; }
+    }
+
     foreach(KeyEdge * iedge, draggedEdges_)
     {
-        iedge->geometry()->performDragAndDrop( x-x0_ , y-y0_ );
-        iedge->geometryChanged_();
+        iedge->geometry()->performDragAndDrop(dx, dy);
+        iedge->processGeometryChanged_();
     }
 
     foreach(KeyVertex * v, draggedVertices_)
-        v->performDragAndDrop( x-x0_ , y-y0_ );
+        v->performDragAndDrop(dx, dy);
 
 
     foreach(KeyVertex * v, draggedVertices_)
         v->correctEdgesGeometry();
+
+    transformTool_.performDragAndDrop(dx, dy);
 
     //emit changed();
 }
 
 void VAC::completeDragAndDrop()
 {
+    transformTool_.endDragAndDrop();
+    global()->setDragAndDropping(false);
+
     //emit changed();
+    emit checkpoint();
+}
+
+void VAC::beginTransformSelection(double x0, double y0, Time time)
+{
+    transformTool_.beginTransform(x0, y0, time);
+}
+
+void VAC::continueTransformSelection(double x, double y)
+{
+    transformTool_.continueTransform(x, y);
+}
+
+void VAC::endTransformSelection()
+{
+    transformTool_.endTransform();
     emit checkpoint();
 }
 

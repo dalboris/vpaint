@@ -11,6 +11,7 @@
 
 #include "../TimeDef.h"
 #include "Eigen.h"
+#include "BoundingBox.h"
 #include <vector>
 
 class View3DSettings;
@@ -18,19 +19,33 @@ class View3DSettings;
 namespace VectorAnimationComplex
 {
 
+class BoundingBox;
+
 inline double cross(const Eigen::Vector2d & p, const Eigen::Vector2d & q)
 {
     return p[0]*q[1] - p[1]*q[0];
 }
 
 struct Triangle {
+    Triangle() {}
+
+    Triangle(const Eigen::Vector2d & a_,
+             const Eigen::Vector2d & b_,
+             const Eigen::Vector2d & c_) :
+        a(a_), b(b_), c(c_)
+    {
+    }
+
     Eigen::Vector2d a, b, c;
 
     // Check whether a point p is inside the triangle
     bool intersects(const Eigen::Vector2d & p) const;
 
     // Check whether a rectangle intersects the triangle
-    bool intersectsRectangle(double r_minX, double r_maxX, double r_minY, double r_maxY) const;
+    bool intersects(const BoundingBox & bb) const;
+
+    // Compute bounding box
+    BoundingBox boundingBox() const;
 
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
@@ -68,24 +83,26 @@ public:
     inline int size() const {return triangles_.size();}
     inline Triangle & operator[] (int i) {return triangles_[i];}
 
-    // Access raw array of values: sizeof(*data) = 9 * sizeof(double) * triangleGeometry.size()
+    // Access raw data
     inline double * data() {return reinterpret_cast<double*>(triangles_.data());}
 
     // Check whether a point p is included is at least one triangle
     bool intersects(const Eigen::Vector2d & p) const;
 
     // Check whether a rectangle intersects at least one triangle
-    bool intersectsRectangle(double x0, double x1, double y0, double y1) const;
+    bool intersects(const BoundingBox & bb) const;
+
+    // Compute bounding box
+    BoundingBox boundingBox() const;
 
     // Draw
-    void draw();
-    void draw3D(Time time, View3DSettings & viewSettings);
-
+    void draw() const;
+    void draw3D(Time t, View3DSettings & viewSettings) const;
 
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-    std::vector<Triangle, Eigen::aligned_allocator<Triangle> > triangles_;
+    std::vector<Triangle, Eigen::aligned_allocator<Triangle>> triangles_;
 };
 
 }

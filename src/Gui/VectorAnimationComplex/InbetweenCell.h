@@ -32,6 +32,12 @@ public:
     virtual KeyCellSet beforeCells() const=0;
     virtual KeyCellSet afterCells() const=0;
 
+    // Bounding box
+    using Cell::boundingBox;
+    using Cell::outlineBoundingBox;
+    BoundingBox boundingBox() const;
+    BoundingBox outlineBoundingBox() const;
+
 private:
     // Trusting operators
     friend class Operator;

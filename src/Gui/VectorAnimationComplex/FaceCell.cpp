@@ -46,43 +46,11 @@ FaceCell::FaceCell(VAC * vac, QTextStream & in) :
     colorSelected_[3] = 1;
 }
 
-
-void FaceCell::triangulate(Time /*time*/, Triangles & out)
-{
-    out.clear();
-}
-
-void FaceCell::clearCachedGeometry_()
-{
-    triangles_.clear();
-}
-
-Triangles & FaceCell::triangles(Time time)
-{
-    int nSixtiethOfFrame = std::floor(time.floatTime() * 60 + 0.5);
-    if(!triangles_.contains(nSixtiethOfFrame))
-    {
-        triangles_[nSixtiethOfFrame] = Triangles();
-        triangulate(time, triangles_[nSixtiethOfFrame]);
-    }
-
-    return triangles_[nSixtiethOfFrame];
-}
-
-void FaceCell::drawRaw(Time time, ViewSettings & /*viewSettings*/)
-{
-    FaceCell::triangles(time).draw();
-}
-
 void FaceCell::drawRawTopology(Time time, ViewSettings & viewSettings)
 {
     if(viewSettings.drawTopologyFaces())
         triangles(time).draw();
 }
-
-
-
-
 
 bool FaceCell::isPickableCustom(Time /*time*/) const
 {
@@ -97,9 +65,9 @@ bool FaceCell::isPickableCustom(Time /*time*/) const
         return false;
 }
 
-bool FaceCell::intersectsRectangle(Time t, double x0, double x1, double y0, double y1)
+void FaceCell::computeOutlineBoundingBox_(Time t, BoundingBox & out) const
 {
-    return triangles(t).intersectsRectangle(x0, x1, y0, y1);
+    out = boundingBox(t);
 }
 
 void FaceCell::exportSVG(Time t, QTextStream & out)

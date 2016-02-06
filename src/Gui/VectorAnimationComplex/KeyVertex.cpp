@@ -321,13 +321,7 @@ Eigen::Vector2d KeyVertex::dividedDifferencesTangent(bool slowInOut) const
 void KeyVertex::setPos(const Eigen::Vector2d & pos)
 {
     pos_ = pos;
-    geometryChanged_();
-}
-
-BBox KeyVertex::computeBoundingBox_() const
-{
-    return BBox(pos_[0] - 0.5*size_, pos_[0] + 0.5*size_,
-                pos_[1] - 0.5*size_, pos_[1] + 0.5*size_ );
+    processGeometryChanged_();
 }
 
 void KeyVertex::prepareDragAndDrop()
@@ -340,6 +334,16 @@ void KeyVertex::performDragAndDrop(double dx, double dy)
 {
     setPos(posBack_ + Eigen::Vector2d(dx,dy));
     //correctEdgesGeometry();
+}
+
+void KeyVertex::prepareAffineTransform()
+{
+    posBack_ = pos_;
+}
+
+void KeyVertex::performAffineTransform(const Eigen::Affine2d & xf)
+{
+    setPos(xf * posBack_);
 }
 
 bool KeyVertex::check_() const
