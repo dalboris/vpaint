@@ -6147,6 +6147,10 @@ void VAC::prepareDragAndDrop(double x0, double y0, Time time)
     if(!hoveredCell_)
         return;
 
+    // Prepare drag and drop of transform tool first so it's aware
+    // of drag and drop before cells are keyframed
+    transformTool_.prepareDragAndDrop();
+
     // get which cells must be dragged
     CellSet cellsToDrag;
     if(hoveredCell_->isSelected() && global()->toolMode() == Global::SELECT)
@@ -6195,7 +6199,6 @@ void VAC::prepareDragAndDrop(double x0, double y0, Time time)
         iedge->geometry()->prepareDragAndDrop();
     foreach(KeyVertex * v, draggedVertices_)
         v->prepareDragAndDrop();
-    transformTool_.prepareDragAndDrop();
 
     x0_ = x0;
     y0_ = y0;
@@ -6242,6 +6245,8 @@ void VAC::performDragAndDrop(double x, double y)
 
 void VAC::completeDragAndDrop()
 {
+    transformTool_.endDragAndDrop();
+
     //emit changed();
     emit checkpoint();
 }

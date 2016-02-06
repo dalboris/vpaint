@@ -350,6 +350,7 @@ TransformTool::TransformTool(QObject * parent) :
     hovered_(None),
     manualPivot_(false),
     draggingManualPivot_(false),
+    dragAndDropping_(false),
     transforming_(false)
 {
     connect(global(), SIGNAL(keyboardModifiersChanged()), this, SLOT(onKeyboardModifiersChanged()));
@@ -359,7 +360,7 @@ void TransformTool::setCells(const CellSet & cells)
 {
     cells_ = cells;
 
-    if (!transforming_)
+    if (!transforming_ && !dragAndDropping_)
     {
         manualPivot_ = false;
     }
@@ -979,6 +980,7 @@ void TransformTool::endTransform()
 
 void TransformTool::prepareDragAndDrop()
 {
+    dragAndDropping_ = true;
     xManualPivot0_ = xManualPivot_;
     yManualPivot0_ = yManualPivot_;
 }
@@ -987,6 +989,11 @@ void TransformTool::performDragAndDrop(double dx, double dy)
 {
     xManualPivot_ = xManualPivot0_ + dx;
     yManualPivot_ = yManualPivot0_ + dy;
+}
+
+void TransformTool::endDragAndDrop()
+{
+    dragAndDropping_ = false;
 }
 
 void TransformTool::onKeyboardModifiersChanged()

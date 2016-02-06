@@ -87,6 +87,7 @@ public:
     // Drag and drop transform tool
     void prepareDragAndDrop();
     void performDragAndDrop(double dx, double dy);
+    void endDragAndDrop();
 
 private slots:
     void onKeyboardModifiersChanged();
@@ -132,6 +133,7 @@ private:
     double xManualPivot_, yManualPivot_;
     double xManualPivot0_, yManualPivot0_;
 
+    bool dragAndDropping_;
     bool transforming_;
     double xTransformPivot_, yTransformPivot_;
     double xTransformPivotAlt_, yTransformPivotAlt_;
