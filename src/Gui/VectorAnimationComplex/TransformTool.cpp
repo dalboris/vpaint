@@ -358,12 +358,18 @@ TransformTool::TransformTool(QObject * parent) :
 void TransformTool::setCells(const CellSet & cells)
 {
     cells_ = cells;
-    manualPivot_ = false;
-    draggingManualPivot_ = false;
-    transforming_ = false;
+
+    if (!transforming_)
+    {
+        manualPivot_ = false;
+    }
 
     // Note: we can't pre-compute bounding boxes or pivot position here
-    //       since we don't know the time.
+    //       since we don't know the time. Some cells might be inbetween cells
+    //       therefore the bounding box is time-dependent in the general case.
+
+    // Note 2: this method might be indirectly called during beginTransform(), when
+    //         cells are keyframed.
 }
 
 void TransformTool::setIdOffset(int idOffset)
@@ -747,6 +753,8 @@ void TransformTool::beginTransform(double x0, double y0, Time time)
     // Transform selection
     else
     {
+        // Inform that we are currently transforming the selection
+        transforming_ = true;
 
         // Keyframe inbetween cells
         CellSet cellsNotToKeyframe;
@@ -772,6 +780,9 @@ void TransformTool::beginTransform(double x0, double y0, Time time)
         }
         VAC * vac = (*cells_.begin())->vac();
         KeyCellSet keyframedCells = vac->keyframe_(cellsToKeyframe,time);
+        // Note: the above causes the selection to change (new key cells are
+        // selected instead of old inbetween cells, and therefore setCells()
+        // is called)
 
         // Determine which cells to transform
         CellSet cellsToTransform = cellsNotToKeyframe;
@@ -868,9 +879,6 @@ void TransformTool::continueTransform(double x, double y)
     // Transform selection
     else
     {
-        // Inform that we are currently transforming the selection
-        transforming_ = true;
-
         // Get pivot
         const Vec2 pivotPos = cachedTransformPivotPosition_();
         const double xPivot = pivotPos[0];
