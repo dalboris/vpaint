@@ -39,6 +39,11 @@ Global::Global(MainWindow * w) :
     toolMode_(SELECT),
     toolBar_(0),
     toolModeToolBar_(0),
+    isScalingCorner_(false),
+    isScalingEdge_(false),
+    isRotating_(false),
+    isDragAndDropping_(false),
+    isDraggingPivot_(false),
     xSceneCursorPos_(0),
     ySceneCursorPos_(0),
     currentDisplayMode_(ILLUSTRATION),
@@ -545,6 +550,36 @@ void Global::toggleStylusPressure()
     // Nothing to do
 }
 
+void Global::setScalingCorner(bool b)
+{
+    isScalingCorner_ = b;
+    updateStatusBarHelp();
+}
+
+void Global::setScalingEdge(bool b)
+{
+    isScalingEdge_ = b;
+    updateStatusBarHelp();
+}
+
+void Global::setRotating(bool b)
+{
+    isRotating_ = b;
+    updateStatusBarHelp();
+}
+
+void Global::setDragAndDropping(bool b)
+{
+    isDragAndDropping_ = b;
+    updateStatusBarHelp();
+}
+
+void Global::setDraggingPivot(bool b)
+{
+    isDraggingPivot_ = b;
+    updateStatusBarHelp();
+}
+
 Global::ToolMode Global::toolMode() const
 {
     if(mainWindow()->isEditCanvasSizeVisible())
@@ -669,7 +704,36 @@ void Global::updateStatusBarHelp()
         message += "] ";
     }
 
-    if(toolMode() == SELECT)
+    if (isScalingCorner_)
+    {
+        if(!isShiftDown)
+            message += "Hold SHIFT to preserve proportions. ";
+        if(!isAltDown)
+            message += "Hold ALT to scale relative to center/pivot. ";
+    }
+    else if (isScalingEdge_)
+    {
+        if(!isAltDown)
+            message += "Hold ALT to scale relative to center/pivot. ";
+    }
+    else if (isRotating_)
+    {
+        if(!isShiftDown)
+            message += "Hold SHIFT to rotate by 45° only. ";
+        if(!isAltDown)
+            message += "Hold ALT to rotate relative to opposite corner. ";
+    }
+    else if (isDragAndDropping_)
+    {
+        if(!isShiftDown)
+            message += "Hold SHIFT to constrain translation along 45° axes. ";
+    }
+    else if (isDraggingPivot_)
+    {
+        if(!isShiftDown)
+            message += "Hold SHIFT to snap to center and corners of bounding box. ";
+    }
+    else if(toolMode() == SELECT)
     {
         if(!isCtrlDown && !isShiftDown && !isAltDown) {
             message += "Click to select highlighted object. Click on background to deselect all. Hold " + QString(ACTION_MODIFIER_NAME_SHORT).toUpper() + ", SHIFT, or ALT for more actions.";

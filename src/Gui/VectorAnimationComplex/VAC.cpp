@@ -6147,6 +6147,9 @@ void VAC::prepareDragAndDrop(double x0, double y0, Time time)
     if(!hoveredCell_)
         return;
 
+    // Contextual help
+    global()->setDragAndDropping(true);
+
     // Prepare drag and drop of transform tool first so it's aware
     // of drag and drop before cells are keyframed
     transformTool_.prepareDragAndDrop();
@@ -6246,6 +6249,7 @@ void VAC::performDragAndDrop(double x, double y)
 void VAC::completeDragAndDrop()
 {
     transformTool_.endDragAndDrop();
+    global()->setDragAndDropping(false);
 
     //emit changed();
     emit checkpoint();

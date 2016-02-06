@@ -132,6 +132,49 @@ double rotateWidgetMidAngle_(TransformTool::WidgetId id)
     }
 }
 
+// Display contextual help for users
+void informGlobalOfTransformation_(TransformTool::WidgetId id)
+{
+    switch (id)
+    {
+    case TransformTool::TopLeftScale:
+    case TransformTool::TopRightScale:
+    case TransformTool::BottomRightScale:
+    case TransformTool::BottomLeftScale:
+        global()->setScalingCorner(true);
+        break;
+
+    case TransformTool::TopScale:
+    case TransformTool::RightScale:
+    case TransformTool::BottomScale:
+    case TransformTool::LeftScale:
+        global()->setScalingEdge(true);
+        break;
+
+    case TransformTool::TopLeftRotate:
+    case TransformTool::TopRightRotate:
+    case TransformTool::BottomRightRotate:
+    case TransformTool::BottomLeftRotate:
+        global()->setRotating(true);
+        break;
+
+    case TransformTool::Pivot:
+        global()->setDraggingPivot(true);
+
+    default:
+        // Nothing to do
+        break;
+    }
+}
+
+void desinformGlobalOfTransformations_()
+{
+    global()->setScalingCorner(false);
+    global()->setScalingEdge(false);
+    global()->setRotating(false);
+    global()->setDraggingPivot(false);
+}
+
 // Unit vector of angle theta
 inline Vec2 u_(double theta)
 {
@@ -744,6 +787,10 @@ bool TransformTool::isTransformConstrained_() const
     return global()->keyboardModifiers().testFlag(Qt::ShiftModifier);
 }
 
+namespace
+{
+}
+
 void TransformTool::beginTransform(double x0, double y0, Time time)
 {
     // Clear cached values
@@ -753,6 +800,9 @@ void TransformTool::beginTransform(double x0, double y0, Time time)
     // Return in trivial cases
     if (hovered() == None || cells_.isEmpty())
         return;
+
+    // Contextual help for users
+    informGlobalOfTransformation_(hovered());
 
     // Compute bounding boxes at current time and cache them
     BoundingBox bb;
@@ -1010,6 +1060,9 @@ void TransformTool::endTransform()
     draggingManualPivot_ = false;
     transforming_ = false;
     rotating_ = false;
+
+    // Contextual help for users
+    desinformGlobalOfTransformations_();
 }
 
 void TransformTool::prepareDragAndDrop()
