@@ -351,7 +351,8 @@ TransformTool::TransformTool(QObject * parent) :
     manualPivot_(false),
     draggingManualPivot_(false),
     dragAndDropping_(false),
-    transforming_(false)
+    transforming_(false),
+    rotating_(false)
 {
     connect(global(), SIGNAL(keyboardModifiersChanged()), this, SLOT(onKeyboardModifiersChanged()));
 }
@@ -615,18 +616,35 @@ void TransformTool::drawPickPivot_(const BoundingBox & bb, ViewSettings & viewSe
 
 void TransformTool::draw(const CellSet & cells, Time time, ViewSettings & viewSettings) const
 {
-    // Compute bounding box at current time
+    // Compute bounding boxes at current time
     BoundingBox bb;
-    for (CellSet::ConstIterator it = cells.begin(); it != cells.end(); ++it)
+    BoundingBox obb;
+    if (rotating_)
     {
-        bb.unite((*it)->boundingBox(time));
+        bb = bb0_;
+        obb = obb0_;
+    }
+    else
+    {
+        for (CellSet::ConstIterator it = cells.begin(); it != cells.end(); ++it)
+        {
+            bb.unite((*it)->boundingBox(time));
+            obb.unite((*it)->outlineBoundingBox(time));
+        }
     }
 
-    // Compute outline bounding box at current time
-    BoundingBox obb;
-    for (CellSet::ConstIterator it = cells.begin(); it != cells.end(); ++it)
+    // Push transformation matrix in case of rotation
+    if (rotating_)
     {
-        obb.unite((*it)->outlineBoundingBox(time));
+        const Vec2 pivotPos = cachedTransformPivotPosition_();
+        const Eigen::Translation3d pivot(pivotPos[0], pivotPos[1], 0.0);
+        const Eigen::AngleAxisd rotation(dTheta_, Eigen::Vector3d(0.0, 0.0, 1.0));
+
+        Eigen::Affine3d xf;
+        xf = pivot * rotation * pivot.inverse();
+
+        glPushMatrix();
+        glMultMatrixd(xf.data());
     }
 
     // Draw bounding box and transform widgets
@@ -656,6 +674,12 @@ void TransformTool::draw(const CellSet & cells, Time time, ViewSettings & viewSe
 
         // Pivot
         drawPivot_(obb, viewSettings);
+    }
+
+    // Pop transformation matrix in case of rotation
+    if (rotating_)
+    {
+        glPopMatrix();
     }
 }
 
@@ -730,7 +754,13 @@ void TransformTool::beginTransform(double x0, double y0, Time time)
     if (hovered() == None || cells_.isEmpty())
         return;
 
-    // Compute outline bounding box at current time and cache it
+    // Compute bounding boxes at current time and cache them
+    BoundingBox bb;
+    for (CellSet::ConstIterator it = cells_.begin(); it != cells_.end(); ++it)
+    {
+        bb.unite((*it)->boundingBox(time));
+    }
+    bb0_ = bb;
     BoundingBox obb;
     for (CellSet::ConstIterator it = cells_.begin(); it != cells_.end(); ++it)
     {
@@ -916,6 +946,8 @@ void TransformTool::continueTransform(double x, double y)
                  hovered() == BottomRightRotate ||
                  hovered() == BottomLeftRotate)
         {
+            rotating_ = true;
+
             const double theta0 = std::atan2(y0_ - yPivot, x0_ - xPivot);
             const double theta  = std::atan2(y   - yPivot, x   - xPivot);
             double dTheta = theta - theta0; // in [-2*PI, 2*PI]
@@ -942,6 +974,7 @@ void TransformTool::continueTransform(double x, double y)
                 }
             }
             xf = Eigen::Rotation2Dd(dTheta);
+            dTheta_ = dTheta;
         }
         else
         {
@@ -976,6 +1009,7 @@ void TransformTool::endTransform()
 {
     draggingManualPivot_ = false;
     transforming_ = false;
+    rotating_ = false;
 }
 
 void TransformTool::prepareDragAndDrop()

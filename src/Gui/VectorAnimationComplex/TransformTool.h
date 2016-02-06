@@ -135,6 +135,7 @@ private:
 
     bool dragAndDropping_;
     bool transforming_;
+    bool rotating_;
     double xTransformPivot_, yTransformPivot_;
     double xTransformPivotAlt_, yTransformPivotAlt_;
 
@@ -143,7 +144,8 @@ private:
     KeyVertexSet draggedVertices_;
     KeyEdgeSet draggedEdges_;
     double x0_, y0_, dx_, dy_, x_, y_;
-    BoundingBox obb0_;
+    BoundingBox bb0_, obb0_;
+    double dTheta_;
 };
 
 }
