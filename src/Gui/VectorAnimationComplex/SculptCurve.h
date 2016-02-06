@@ -633,7 +633,7 @@ public:
             vertices_[i].setY(p[1]);
         }
 
-        setDirtyArclengths_();
+        resample(true);
     }
 
     // -------- Sculpting --------

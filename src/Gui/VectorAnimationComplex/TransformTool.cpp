@@ -52,7 +52,7 @@ const double lineWidth = 1.0;
 
 // Arrow params
 const double rotateWidgetSize = scaleWidgetCornerSize;
-const double rotateWidgetAngleRange = PI / 7;
+const double rotateWidgetAngleRange = PI/7;
 const double rotateWidgetCircleCenter = 5;
 const double rotateWidgetCircleRadius = 9;
 const double rotateWidgetBodyHalfWidth = 0.7;
@@ -865,7 +865,7 @@ double scaleFactor_(double x, double x0, double xPivot, double dx)
 {
     if (std::abs(x0-dx-xPivot) > EPS)
     {
-        return (x-dx-xPivot)/(x0-dx-xPivot);
+        return (x-dx-xPivot) / (x0-dx-xPivot);
     }
     else
     {
