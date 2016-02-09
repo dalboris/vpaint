@@ -86,7 +86,6 @@ private slots:
     bool exportPNG();
     bool acceptExportPNG();
     bool rejectExportPNG();
-    bool close();
 
     // ---- Edit ----
     void addToUndoStack();

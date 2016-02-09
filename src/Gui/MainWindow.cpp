@@ -552,6 +552,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
 {
     if (maybeSave_())
     {
+        global()->writeSettings();
         event->accept();
         selectionInfo_->close();
     }
@@ -559,11 +560,6 @@ void MainWindow::closeEvent(QCloseEvent *event)
     {
         event->ignore();
     }
-}
-
-bool MainWindow::close()
-{
-    return maybeSave_();
 }
 
 bool MainWindow::maybeSave_()
@@ -1365,7 +1361,7 @@ void MainWindow::createActions()
     actionQuit = new QAction(/*QIcon(":/iconQuit"),*/ tr("&Quit"), this);
     actionQuit->setStatusTip(tr("Quit VPaint."));
     actionQuit->setShortcut(QKeySequence::Quit);
-    connect(actionQuit, SIGNAL(triggered()), qApp, SLOT(quit()));
+    connect(actionQuit, SIGNAL(triggered()), this, SLOT(close()));
 
 
     ///////////////        EDIT        ///////////////
