@@ -73,6 +73,7 @@ public slots:
     void editAnimatedCycle(VectorAnimationComplex::InbetweenFace * inbetweenFace, int indexCycle);
 
     void about();
+    void open_(const QString & filePath); // XXX public because used in main.cpp. Should probably be refactored.
 
 private slots:
     // ---- File ----
@@ -170,7 +171,6 @@ private:
     void updateWindowTitle_();
     void setDocumentFilePath_(const QString & filePath);
     bool maybeSave_();
-    void open_(const QString & filePath);
     bool save_(const QString & filePath, bool relativeRemap = false);
     bool doExportSVG(const QString & filename);
     bool doExportPNG(const QString & filename);

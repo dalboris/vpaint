@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
     update.showWhenReady();
 
     // Main window
-    QObject::connect(&app, SIGNAL(openFileRequested(QString)), &mainWindow, SLOT(doOpen(QString)));
+    QObject::connect(&app, SIGNAL(openFileRequested(QString)), &mainWindow, SLOT(open_(QString)));
     app.emitOpenFileRequest();
     mainWindow.show();
 
