@@ -65,9 +65,10 @@ MainWindow::MainWindow() :
 
     undoStack_(),
     undoIndex_(-1),
+    savedUndoIndex_(-1),
 
     fileHeader_("---------- Vec File ----------"),
-    saveFilename_(),
+    documentFilePath_(),
     autosaveFilename_("0.vec"),
     autosaveTimer_(),
     autosaveIndex_(0),
@@ -148,16 +149,11 @@ MainWindow::MainWindow() :
     createMenus();
 
     // handle undo/redo
-    connect(scene_, SIGNAL(checkpoint()),
-          this, SLOT(addToUndoStack()));
+    connect(scene_, SIGNAL(checkpoint()), this, SLOT(addToUndoStack()));
     addToUndoStack();
+    setUnmodified_();
 
-    //setFocusPolicy(Qt::ClickFocus);
-
-    // Application name
-    setWindowFilePath(tr("New Document"));
-
-    // Application icon
+    // Window icon
     QGuiApplication::setWindowIcon(QIcon(":/images/icon-256.png"));
 
     // Help
@@ -340,6 +336,9 @@ void MainWindow::addToUndoStack()
     }
     undoStack_ << qMakePair(global()->documentDir(), new Scene());
     undoStack_[undoIndex_].second->copyFrom(scene_);
+
+    // Update window title
+    updateWindowTitle_();
 }
 
 void MainWindow::goToUndoIndex_(int undoIndex)
@@ -358,6 +357,9 @@ void MainWindow::goToUndoIndex_(int undoIndex)
 
     // Set scene data from undo history
     scene_->copyFrom(undoStack_[undoIndex].second);
+
+    // Update window title
+    updateWindowTitle_();
 }
 
 void MainWindow::undo()
@@ -546,7 +548,6 @@ bool MainWindow::eventFilter(QObject *object, QEvent *event)
  *                     Save / Load / Close
  */
 
-
 void MainWindow::closeEvent(QCloseEvent *event)
 {
       if (close())
@@ -573,12 +574,13 @@ bool MainWindow::newDocument()
         return false;
 
     // If success, proceed
-    setSaveFilename_(QString());
+    setDocumentFilePath_(QString());
     Scene * newScene = new Scene();
     scene_->copyFrom(newScene);
     addToUndoStack();
     delete newScene;
-    setWindowFilePath(tr("New Document"));
+    setUnmodified_();
+
     return true;
 }
 
@@ -591,53 +593,53 @@ bool MainWindow::open()
     }
 
     // Browse for a file to open
-    QString filename = QFileDialog::getOpenFileName(
+    QString filePath = QFileDialog::getOpenFileName(
         this, tr("Open"), QStandardPaths::writableLocation(QStandardPaths::PicturesLocation), tr("Vec files (*.vec)"));
 
-    // Set save filename.
+    // Set document file path
     //
     // This must be done *before* calling doOpen() because doOpen() will cause
     // the scene to change which will cause a redraw, which requires the save
     // filename to be set to resolve relative file paths
-    QString oldFilename = saveFilename_;
-    setSaveFilename_(filename);
+    QString oldFilePath = documentFilePath_;
+    setDocumentFilePath_(filePath);
 
     // Try to open file
-    bool success = doOpen(filename);
+    bool success = doOpen(filePath);
 
     // Set a few things depending on success
     if(success)
     {
-        setSaveFilename_(filename);
-        setWindowFilePath(filename);
+        setDocumentFilePath_(filePath);
+        setUnmodified_();
         return true;
     }
     else
     {
-        setSaveFilename_(oldFilename);
+        setDocumentFilePath_(oldFilePath);
         return false;
     }
 }
 
 bool MainWindow::save()
 {
-    if(saveFilename_.isEmpty())
+    if(isNewDocument_())
     {
         return saveAs();
     }
     else
     {
-        bool success = doSave(saveFilename_);
+        bool success = doSave(documentFilePath_);
 
         if(success)
         {
-            statusBar()->showMessage(tr("File %1 successfully saved.").arg(saveFilename_));
-            setWindowFilePath(saveFilename_);
+            statusBar()->showMessage(tr("File %1 successfully saved.").arg(documentFilePath_));
+            setUnmodified_();
             return true;
         }
         else
         {
-            QMessageBox::warning(this, tr("Error"), tr("File %1 not saved: couldn't write file").arg(saveFilename_));
+            QMessageBox::warning(this, tr("Error"), tr("File %1 not saved: couldn't write file").arg(documentFilePath_));
             return false;
         }
     }
@@ -659,8 +661,8 @@ bool MainWindow::saveAs()
     if(success)
     {
         statusBar()->showMessage(tr("File %1 successfully saved.").arg(filename));
-        setSaveFilename_(filename);
-        setWindowFilePath(filename);
+        setUnmodified_();
+        setDocumentFilePath_(filename);
         return true;
     }
     else
@@ -759,11 +761,11 @@ bool MainWindow::rejectExportPNG()
     return false;
 }
 
-void MainWindow::setSaveFilename_(const QString & filename)
+void MainWindow::setDocumentFilePath_(const QString & filePath)
 {
-    saveFilename_ = filename;
+    documentFilePath_ = filePath;
 
-    QFileInfo fileInfo(filename);
+    QFileInfo fileInfo(filePath);
     if (fileInfo.exists() && fileInfo.isFile())
     {
         global()->setDocumentDir(fileInfo.dir());
@@ -772,6 +774,30 @@ void MainWindow::setSaveFilename_(const QString & filename)
     {
         global()->setDocumentDir(QDir::home());
     }
+
+    updateWindowTitle_();
+}
+
+bool MainWindow::isNewDocument_() const
+{
+    return documentFilePath_.isEmpty();
+}
+
+void MainWindow::setUnmodified_()
+{
+    savedUndoIndex_ = undoIndex_;
+    updateWindowTitle_();
+}
+
+bool MainWindow::isModified_() const
+{
+    return savedUndoIndex_ != undoIndex_;
+}
+
+void MainWindow::updateWindowTitle_()
+{
+    setWindowFilePath(isNewDocument_() ? tr("New Document") : documentFilePath_);
+    setWindowModified(isModified_());
 }
 
 bool MainWindow::doOpen(const QString & filename)

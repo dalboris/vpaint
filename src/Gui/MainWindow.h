@@ -154,15 +154,20 @@ private:
     void goToUndoIndex_(int undoIndex);
     QList< QPair<QDir,Scene*> > undoStack_;
     int undoIndex_;
+    int savedUndoIndex_;
     // I/O
     QString fileHeader_;
-    QString saveFilename_;
+    QString documentFilePath_;
     QString autosaveFilename_;
     QTimer autosaveTimer_;
     int autosaveIndex_;
     bool autosaveOn_;
     QDir autosaveDir_;
-    void setSaveFilename_(const QString & filename);
+    bool isNewDocument_() const;
+    bool isModified_() const;
+    void setUnmodified_();
+    void updateWindowTitle_();
+    void setDocumentFilePath_(const QString & filePath);
     bool doSave(const QString & filename, bool relativeRemap = false);
     bool doExportSVG(const QString & filename);
     bool doExportPNG(const QString & filename);
