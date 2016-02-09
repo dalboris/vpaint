@@ -65,9 +65,10 @@ MainWindow::MainWindow() :
 
     undoStack_(),
     undoIndex_(-1),
+    savedUndoIndex_(-1),
 
     fileHeader_("---------- Vec File ----------"),
-    saveFilename_(),
+    documentFilePath_(),
     autosaveFilename_("0.vec"),
     autosaveTimer_(),
     autosaveIndex_(0),
@@ -148,16 +149,10 @@ MainWindow::MainWindow() :
     createMenus();
 
     // handle undo/redo
-    connect(scene_, SIGNAL(checkpoint()),
-          this, SLOT(addToUndoStack()));
-    addToUndoStack();
+    resetUndoStack_();
+    connect(scene_, SIGNAL(checkpoint()), this, SLOT(addToUndoStack()));
 
-    //setFocusPolicy(Qt::ClickFocus);
-
-    // Application name
-    setWindowFilePath(tr("New Document"));
-
-    // Application icon
+    // Window icon
     QGuiApplication::setWindowIcon(QIcon(":/images/icon-256.png"));
 
     // Help
@@ -207,7 +202,7 @@ bool MainWindow::isShowCanvasChecked() const
 }
 void MainWindow::autosave()
 {
-    doSave(autosaveDir_.absoluteFilePath(autosaveFilename_));
+    save_(autosaveDir_.absoluteFilePath(autosaveFilename_));
 }
 
 void MainWindow::autosaveBegin()
@@ -316,11 +311,7 @@ void MainWindow::autosaveEnd()
 
 MainWindow::~MainWindow()
 {
-    typedef QPair<QDir,Scene*> UndoItem;
-    foreach(UndoItem p, undoStack_)
-        delete p.second;
-    delete scene_;
-
+    clearUndoStack_();
     autosaveEnd();
 }
 
@@ -340,6 +331,25 @@ void MainWindow::addToUndoStack()
     }
     undoStack_ << qMakePair(global()->documentDir(), new Scene());
     undoStack_[undoIndex_].second->copyFrom(scene_);
+
+    // Update window title
+    updateWindowTitle_();
+}
+
+void MainWindow::clearUndoStack_()
+{
+    foreach(UndoItem p, undoStack_)
+        delete p.second;
+
+    undoStack_.clear();
+    undoIndex_ = -1;
+}
+
+void MainWindow::resetUndoStack_()
+{
+    clearUndoStack_();
+    addToUndoStack();
+    setUnmodified_();
 }
 
 void MainWindow::goToUndoIndex_(int undoIndex)
@@ -358,6 +368,9 @@ void MainWindow::goToUndoIndex_(int undoIndex)
 
     // Set scene data from undo history
     scene_->copyFrom(undoStack_[undoIndex].second);
+
+    // Update window title
+    updateWindowTitle_();
 }
 
 void MainWindow::undo()
@@ -546,98 +559,87 @@ bool MainWindow::eventFilter(QObject *object, QEvent *event)
  *                     Save / Load / Close
  */
 
-
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-      if (close())
-      {
+    if (maybeSave_())
+    {
+        global()->writeSettings();
         event->accept();
         selectionInfo_->close();
-      }
-      else
-      {
-          event->ignore();
-      }
-}
-
-bool MainWindow::close()
-{
-    // TODO: ask are you sure? for unsaved document
-    return true;
-}
-
-bool MainWindow::newDocument()
-{
-    // First, close the current document
-    if(!close())
-        return false;
-
-    // If success, proceed
-    setSaveFilename_(QString());
-    Scene * newScene = new Scene();
-    scene_->copyFrom(newScene);
-    addToUndoStack();
-    delete newScene;
-    setWindowFilePath(tr("New Document"));
-    return true;
-}
-
-bool MainWindow::open()
-{
-    //First, close the current document
-    if(!close())
-    {
-        return false;
-    }
-
-    // Browse for a file to open
-    QString filename = QFileDialog::getOpenFileName(
-        this, tr("Open"), QStandardPaths::writableLocation(QStandardPaths::PicturesLocation), tr("Vec files (*.vec)"));
-
-    // Set save filename.
-    //
-    // This must be done *before* calling doOpen() because doOpen() will cause
-    // the scene to change which will cause a redraw, which requires the save
-    // filename to be set to resolve relative file paths
-    QString oldFilename = saveFilename_;
-    setSaveFilename_(filename);
-
-    // Try to open file
-    bool success = doOpen(filename);
-
-    // Set a few things depending on success
-    if(success)
-    {
-        setSaveFilename_(filename);
-        setWindowFilePath(filename);
-        return true;
     }
     else
     {
-        setSaveFilename_(oldFilename);
-        return false;
+        event->ignore();
+    }
+}
+
+bool MainWindow::maybeSave_()
+{
+    if (isModified_())
+    {
+        QMessageBox::StandardButton ret;
+        ret = QMessageBox::warning(this, tr("Pending changes"),
+                                   tr("The document has been modified.\n"
+                                      "Do you want to save your changes?"),
+                                   QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
+        if (ret == QMessageBox::Save)
+            return save();
+        else if (ret == QMessageBox::Cancel)
+            return false;
+    }
+    return true;
+}
+
+void MainWindow::newDocument()
+{
+    if (maybeSave_())
+    {
+        // Set document file path
+        setDocumentFilePath_("");
+
+        // Set empty scene
+        Scene * newScene = new Scene();
+        scene_->copyFrom(newScene);
+        delete newScene;
+
+        // Add to undo stack
+        resetUndoStack_();
+    }
+}
+
+void MainWindow::open()
+{
+    if (maybeSave_())
+    {
+        // Browse for a file to open
+        QString filePath = QFileDialog::getOpenFileName(
+                               this, tr("Open"), QStandardPaths::writableLocation(QStandardPaths::PicturesLocation), tr("Vec files (*.vec)"));
+
+        // Open file
+        if (!filePath.isEmpty())
+            open_(filePath);
     }
 }
 
 bool MainWindow::save()
 {
-    if(saveFilename_.isEmpty())
+    if(isNewDocument_())
     {
         return saveAs();
     }
     else
     {
-        bool success = doSave(saveFilename_);
+        bool success = save_(documentFilePath_);
 
         if(success)
         {
-            statusBar()->showMessage(tr("File %1 successfully saved.").arg(saveFilename_));
-            setWindowFilePath(saveFilename_);
+            statusBar()->showMessage(tr("File %1 successfully saved.").arg(documentFilePath_));
+            setUnmodified_();
             return true;
         }
         else
         {
-            QMessageBox::warning(this, tr("Error"), tr("File %1 not saved: couldn't write file").arg(saveFilename_));
+            QMessageBox::warning(this, tr("Error"), tr("File %1 not saved: couldn't write file").arg(documentFilePath_));
             return false;
         }
     }
@@ -654,13 +656,13 @@ bool MainWindow::saveAs()
         filename.append(".vec");
 
     bool relativeRemap = true;
-    bool success = doSave(filename, relativeRemap);
+    bool success = save_(filename, relativeRemap);
 
     if(success)
     {
         statusBar()->showMessage(tr("File %1 successfully saved.").arg(filename));
-        setSaveFilename_(filename);
-        setWindowFilePath(filename);
+        setUnmodified_();
+        setDocumentFilePath_(filename);
         return true;
     }
     else
@@ -759,11 +761,11 @@ bool MainWindow::rejectExportPNG()
     return false;
 }
 
-void MainWindow::setSaveFilename_(const QString & filename)
+void MainWindow::setDocumentFilePath_(const QString & filePath)
 {
-    saveFilename_ = filename;
+    documentFilePath_ = filePath;
 
-    QFileInfo fileInfo(filename);
+    QFileInfo fileInfo(filePath);
     if (fileInfo.exists() && fileInfo.isFile())
     {
         global()->setDocumentDir(fileInfo.dir());
@@ -772,44 +774,69 @@ void MainWindow::setSaveFilename_(const QString & filename)
     {
         global()->setDocumentDir(QDir::home());
     }
+
+    updateWindowTitle_();
 }
 
-bool MainWindow::doOpen(const QString & filename)
+bool MainWindow::isNewDocument_() const
+{
+    return documentFilePath_.isEmpty();
+}
+
+void MainWindow::setUnmodified_()
+{
+    savedUndoIndex_ = undoIndex_;
+    updateWindowTitle_();
+}
+
+bool MainWindow::isModified_() const
+{
+    return savedUndoIndex_ != undoIndex_;
+}
+
+void MainWindow::updateWindowTitle_()
+{
+    setWindowFilePath(isNewDocument_() ? tr("New Document") : documentFilePath_);
+    setWindowModified(isModified_());
+}
+
+void MainWindow::open_(const QString & filePath)
 {
     // Convert to newest version if necessary
-    bool success = FileVersionConverter(filename).convertToVersion(qApp->applicationVersion(), this);
-    if (!success)
+    bool conversionSuccessful = FileVersionConverter(filePath).convertToVersion(qApp->applicationVersion(), this);
+
+    // Open (possibly converted) file
+    if (conversionSuccessful)
     {
-        return false;
+        QFile file(filePath);
+        if (!file.open(QFile::ReadOnly | QFile::Text))
+        {
+            qDebug() << "Error: cannot open file";
+            QMessageBox::warning(this, tr("Error"), tr("Error: couldn't open file %1").arg(filePath));
+            return;
+        }
+
+        // Set document file path. This must be done before read(xml) because
+        // read(xml) causes the scene to change, which causes a redraw, which
+        // requires a correct document file path to resolve relative file paths
+        setDocumentFilePath_(filePath);
+
+        // Create XML stream reader and proceed
+        XmlStreamReader xml(&file);
+        read(xml);
+
+        // Close file
+        file.close();
+
+        // Add to undo stack
+        resetUndoStack_();
     }
-
-    // Open file
-    QFile file(filename);
-    if (!file.open(QFile::ReadOnly | QFile::Text))
-    {
-        qDebug() << "Error: cannot open file";
-        QMessageBox::warning(this, tr("Error"), tr("Error: couldn't open file %1").arg(filename));
-        return false;
-    }
-
-    // Create XML stream reader and proceed
-    XmlStreamReader xml(&file);
-    read(xml);
-
-    // Close file
-    file.close();
-
-    // Add to undo stack
-    addToUndoStack();
-
-    // Success
-    return true;
 }
 
-bool MainWindow::doSave(const QString & filename, bool relativeRemap)
+bool MainWindow::save_(const QString & filePath, bool relativeRemap)
 {
     // Open file to save to
-    QFile file(filename);
+    QFile file(filePath);
     if (!file.open(QIODevice::WriteOnly | QFile::Truncate | QFile::Text))
     {
         qWarning("Couldn't write file.");
@@ -1336,7 +1363,7 @@ void MainWindow::createActions()
     actionQuit = new QAction(/*QIcon(":/iconQuit"),*/ tr("&Quit"), this);
     actionQuit->setStatusTip(tr("Quit VPaint."));
     actionQuit->setShortcut(QKeySequence::Quit);
-    connect(actionQuit, SIGNAL(triggered()), qApp, SLOT(quit()));
+    connect(actionQuit, SIGNAL(triggered()), this, SLOT(close()));
 
 
     ///////////////        EDIT        ///////////////

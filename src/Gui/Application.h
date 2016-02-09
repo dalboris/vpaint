@@ -20,11 +20,9 @@ public:
 
     bool event(QEvent* event);
     void emitOpenFileRequest();
+
 signals:
     void openFileRequested(const QString & filename);
-
-private slots:
-    void onQuit();
 
 private:
     QString startPath_;

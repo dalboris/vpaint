@@ -73,12 +73,11 @@ public slots:
     void editAnimatedCycle(VectorAnimationComplex::InbetweenFace * inbetweenFace, int indexCycle);
 
     void about();
-    bool doOpen(const QString & filename);
 
 private slots:
     // ---- File ----
-    bool newDocument();
-    bool open();
+    void newDocument();
+    void open();
     bool save();
     void autosave();
     bool saveAs();
@@ -86,7 +85,6 @@ private slots:
     bool exportPNG();
     bool acceptExportPNG();
     bool rejectExportPNG();
-    bool close();
 
     // ---- Edit ----
     void addToUndoStack();
@@ -151,19 +149,29 @@ private:
     QTextBrowser * gettingStarted_;
     QTextBrowser * userManual_;
     // Undo/Redo
+    void clearUndoStack_();
+    void resetUndoStack_();
     void goToUndoIndex_(int undoIndex);
-    QList< QPair<QDir,Scene*> > undoStack_;
+    typedef QPair<QDir,Scene*> UndoItem;
+    QList<UndoItem> undoStack_;
     int undoIndex_;
+    int savedUndoIndex_;
     // I/O
     QString fileHeader_;
-    QString saveFilename_;
+    QString documentFilePath_;
     QString autosaveFilename_;
     QTimer autosaveTimer_;
     int autosaveIndex_;
     bool autosaveOn_;
     QDir autosaveDir_;
-    void setSaveFilename_(const QString & filename);
-    bool doSave(const QString & filename, bool relativeRemap = false);
+    bool isNewDocument_() const;
+    bool isModified_() const;
+    void setUnmodified_();
+    void updateWindowTitle_();
+    void setDocumentFilePath_(const QString & filePath);
+    bool maybeSave_();
+    void open_(const QString & filePath);
+    bool save_(const QString & filePath, bool relativeRemap = false);
     bool doExportSVG(const QString & filename);
     bool doExportPNG(const QString & filename);
     void read_DEPRECATED(QTextStream & in);
