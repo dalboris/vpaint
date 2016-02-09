@@ -149,9 +149,8 @@ MainWindow::MainWindow() :
     createMenus();
 
     // handle undo/redo
+    resetUndoStack_();
     connect(scene_, SIGNAL(checkpoint()), this, SLOT(addToUndoStack()));
-    addToUndoStack();
-    setUnmodified_();
 
     // Window icon
     QGuiApplication::setWindowIcon(QIcon(":/images/icon-256.png"));
@@ -203,7 +202,7 @@ bool MainWindow::isShowCanvasChecked() const
 }
 void MainWindow::autosave()
 {
-    doSave(autosaveDir_.absoluteFilePath(autosaveFilename_));
+    save_(autosaveDir_.absoluteFilePath(autosaveFilename_));
 }
 
 void MainWindow::autosaveBegin()
@@ -312,11 +311,7 @@ void MainWindow::autosaveEnd()
 
 MainWindow::~MainWindow()
 {
-    typedef QPair<QDir,Scene*> UndoItem;
-    foreach(UndoItem p, undoStack_)
-        delete p.second;
-    delete scene_;
-
+    clearUndoStack_();
     autosaveEnd();
 }
 
@@ -339,6 +334,22 @@ void MainWindow::addToUndoStack()
 
     // Update window title
     updateWindowTitle_();
+}
+
+void MainWindow::clearUndoStack_()
+{
+    foreach(UndoItem p, undoStack_)
+        delete p.second;
+
+    undoStack_.clear();
+    undoIndex_ = -1;
+}
+
+void MainWindow::resetUndoStack_()
+{
+    clearUndoStack_();
+    addToUndoStack();
+    setUnmodified_();
 }
 
 void MainWindow::goToUndoIndex_(int undoIndex)
@@ -583,12 +594,16 @@ void MainWindow::newDocument()
 {
     if (maybeSave_())
     {
+        // Set document file path
         setDocumentFilePath_("");
+
+        // Set empty scene
         Scene * newScene = new Scene();
         scene_->copyFrom(newScene);
-        addToUndoStack();
         delete newScene;
-        setUnmodified_();
+
+        // Add to undo stack
+        resetUndoStack_();
     }
 }
 
@@ -600,23 +615,9 @@ void MainWindow::open()
         QString filePath = QFileDialog::getOpenFileName(
                                this, tr("Open"), QStandardPaths::writableLocation(QStandardPaths::PicturesLocation), tr("Vec files (*.vec)"));
 
-        // Set document file path
-        //
-        // This must be done *before* calling doOpen() because doOpen() will cause
-        // the scene to change which will cause a redraw, which requires the document
-        // file path to be set to resolve relative file paths
-        QString oldFilePath = documentFilePath_;
-        setDocumentFilePath_(filePath);
-
-        if(doOpen(filePath))
-        {
-            setDocumentFilePath_(filePath);
-            setUnmodified_();
-        }
-        else
-        {
-            setDocumentFilePath_(oldFilePath);
-        }
+        // Open file
+        if (!filePath.isEmpty())
+            open_(filePath);
     }
 }
 
@@ -628,7 +629,7 @@ bool MainWindow::save()
     }
     else
     {
-        bool success = doSave(documentFilePath_);
+        bool success = save_(documentFilePath_);
 
         if(success)
         {
@@ -655,7 +656,7 @@ bool MainWindow::saveAs()
         filename.append(".vec");
 
     bool relativeRemap = true;
-    bool success = doSave(filename, relativeRemap);
+    bool success = save_(filename, relativeRemap);
 
     if(success)
     {
@@ -799,42 +800,43 @@ void MainWindow::updateWindowTitle_()
     setWindowModified(isModified_());
 }
 
-bool MainWindow::doOpen(const QString & filename)
+void MainWindow::open_(const QString & filePath)
 {
     // Convert to newest version if necessary
-    bool success = FileVersionConverter(filename).convertToVersion(qApp->applicationVersion(), this);
-    if (!success)
+    bool conversionSuccessful = FileVersionConverter(filePath).convertToVersion(qApp->applicationVersion(), this);
+
+    // Open (possibly converted) file
+    if (conversionSuccessful)
     {
-        return false;
+        QFile file(filePath);
+        if (!file.open(QFile::ReadOnly | QFile::Text))
+        {
+            qDebug() << "Error: cannot open file";
+            QMessageBox::warning(this, tr("Error"), tr("Error: couldn't open file %1").arg(filePath));
+            return;
+        }
+
+        // Set document file path. This must be done before read(xml) because
+        // read(xml) causes the scene to change, which causes a redraw, which
+        // requires a correct document file path to resolve relative file paths
+        setDocumentFilePath_(filePath);
+
+        // Create XML stream reader and proceed
+        XmlStreamReader xml(&file);
+        read(xml);
+
+        // Close file
+        file.close();
+
+        // Add to undo stack
+        resetUndoStack_();
     }
-
-    // Open file
-    QFile file(filename);
-    if (!file.open(QFile::ReadOnly | QFile::Text))
-    {
-        qDebug() << "Error: cannot open file";
-        QMessageBox::warning(this, tr("Error"), tr("Error: couldn't open file %1").arg(filename));
-        return false;
-    }
-
-    // Create XML stream reader and proceed
-    XmlStreamReader xml(&file);
-    read(xml);
-
-    // Close file
-    file.close();
-
-    // Add to undo stack
-    addToUndoStack();
-
-    // Success
-    return true;
 }
 
-bool MainWindow::doSave(const QString & filename, bool relativeRemap)
+bool MainWindow::save_(const QString & filePath, bool relativeRemap)
 {
     // Open file to save to
-    QFile file(filename);
+    QFile file(filePath);
     if (!file.open(QIODevice::WriteOnly | QFile::Truncate | QFile::Text))
     {
         qWarning("Couldn't write file.");

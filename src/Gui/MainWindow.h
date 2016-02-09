@@ -73,7 +73,6 @@ public slots:
     void editAnimatedCycle(VectorAnimationComplex::InbetweenFace * inbetweenFace, int indexCycle);
 
     void about();
-    bool doOpen(const QString & filename);
 
 private slots:
     // ---- File ----
@@ -150,8 +149,11 @@ private:
     QTextBrowser * gettingStarted_;
     QTextBrowser * userManual_;
     // Undo/Redo
+    void clearUndoStack_();
+    void resetUndoStack_();
     void goToUndoIndex_(int undoIndex);
-    QList< QPair<QDir,Scene*> > undoStack_;
+    typedef QPair<QDir,Scene*> UndoItem;
+    QList<UndoItem> undoStack_;
     int undoIndex_;
     int savedUndoIndex_;
     // I/O
@@ -168,7 +170,8 @@ private:
     void updateWindowTitle_();
     void setDocumentFilePath_(const QString & filePath);
     bool maybeSave_();
-    bool doSave(const QString & filename, bool relativeRemap = false);
+    void open_(const QString & filePath);
+    bool save_(const QString & filePath, bool relativeRemap = false);
     bool doExportSVG(const QString & filename);
     bool doExportPNG(const QString & filename);
     void read_DEPRECATED(QTextStream & in);
