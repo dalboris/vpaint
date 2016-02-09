@@ -77,8 +77,8 @@ public slots:
 
 private slots:
     // ---- File ----
-    bool newDocument();
-    bool open();
+    void newDocument();
+    void open();
     bool save();
     void autosave();
     bool saveAs();
@@ -168,6 +168,7 @@ private:
     void setUnmodified_();
     void updateWindowTitle_();
     void setDocumentFilePath_(const QString & filePath);
+    bool maybeSave_();
     bool doSave(const QString & filename, bool relativeRemap = false);
     bool doExportSVG(const QString & filename);
     bool doExportPNG(const QString & filename);

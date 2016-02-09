@@ -550,74 +550,77 @@ bool MainWindow::eventFilter(QObject *object, QEvent *event)
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-      if (close())
-      {
+    if (maybeSave_())
+    {
         event->accept();
         selectionInfo_->close();
-      }
-      else
-      {
-          event->ignore();
-      }
+    }
+    else
+    {
+        event->ignore();
+    }
 }
 
 bool MainWindow::close()
 {
-    // TODO: ask are you sure? for unsaved document
-    return true;
+    return maybeSave_();
 }
 
-bool MainWindow::newDocument()
+bool MainWindow::maybeSave_()
 {
-    // First, close the current document
-    if(!close())
-        return false;
-
-    // If success, proceed
-    setDocumentFilePath_(QString());
-    Scene * newScene = new Scene();
-    scene_->copyFrom(newScene);
-    addToUndoStack();
-    delete newScene;
-    setUnmodified_();
-
-    return true;
-}
-
-bool MainWindow::open()
-{
-    //First, close the current document
-    if(!close())
+    if (isModified_())
     {
-        return false;
+        QMessageBox::StandardButton ret;
+        ret = QMessageBox::warning(this, tr("Pending changes"),
+                                   tr("The document has been modified.\n"
+                                      "Do you want to save your changes?"),
+                                   QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
+        if (ret == QMessageBox::Save)
+            return save();
+        else if (ret == QMessageBox::Cancel)
+            return false;
     }
+    return true;
+}
 
-    // Browse for a file to open
-    QString filePath = QFileDialog::getOpenFileName(
-        this, tr("Open"), QStandardPaths::writableLocation(QStandardPaths::PicturesLocation), tr("Vec files (*.vec)"));
-
-    // Set document file path
-    //
-    // This must be done *before* calling doOpen() because doOpen() will cause
-    // the scene to change which will cause a redraw, which requires the save
-    // filename to be set to resolve relative file paths
-    QString oldFilePath = documentFilePath_;
-    setDocumentFilePath_(filePath);
-
-    // Try to open file
-    bool success = doOpen(filePath);
-
-    // Set a few things depending on success
-    if(success)
+void MainWindow::newDocument()
+{
+    if (maybeSave_())
     {
-        setDocumentFilePath_(filePath);
+        setDocumentFilePath_("");
+        Scene * newScene = new Scene();
+        scene_->copyFrom(newScene);
+        addToUndoStack();
+        delete newScene;
         setUnmodified_();
-        return true;
     }
-    else
+}
+
+void MainWindow::open()
+{
+    if (maybeSave_())
     {
-        setDocumentFilePath_(oldFilePath);
-        return false;
+        // Browse for a file to open
+        QString filePath = QFileDialog::getOpenFileName(
+                               this, tr("Open"), QStandardPaths::writableLocation(QStandardPaths::PicturesLocation), tr("Vec files (*.vec)"));
+
+        // Set document file path
+        //
+        // This must be done *before* calling doOpen() because doOpen() will cause
+        // the scene to change which will cause a redraw, which requires the document
+        // file path to be set to resolve relative file paths
+        QString oldFilePath = documentFilePath_;
+        setDocumentFilePath_(filePath);
+
+        if(doOpen(filePath))
+        {
+            setDocumentFilePath_(filePath);
+            setUnmodified_();
+        }
+        else
+        {
+            setDocumentFilePath_(oldFilePath);
+        }
     }
 }
 
