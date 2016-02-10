@@ -32,19 +32,21 @@ AboutDialog::AboutDialog(bool showAtStartup)
             " allows you to create resolution-independent illustrations and animations using"
             " innovative techniques.<br><br>"
             " "
-            "<b>DISCLAIMER:</b> VPaint 1.5, or any upcoming 1.x release, is considered BETA. It"
+            "<b>DISCLAIMER:</b> VPaint %1, or any upcoming 1.x release, is considered BETA: it"
             " lacks plenty of useful features commonly found in other editors, and you"
             " should expect glitches and crashes once in a while. <b>It is distributed"
             " primarily for research purposes, and for curious artists interested in early"
             " testing of cutting-edge but unstable technology.</b><br><br>"
             " "
-            "New VPaint 1.x versions (1.6, 1.7, etc.) are expected every two months, with"
+            "New VPaint 1.x versions are expected every two months, with"
             " new features and increased stability. VPaint 2.0, full-featured and stable, is"
             " expected for 2017. <b>If you want to be notified when a new version is released,"
-            " just enter your email address below.</b>");
+            " just enter your email address below.</b>").arg(qApp->applicationVersion());
 
     QString licenseText = tr(
-            "Copyright (C) 2012-2015 Boris Dalstein.<br><br>"
+            "Copyright (C) 2012-2016 The VPaint Developers.<br>"
+            "See the COPYRIGHT file at <a href=\"https://github.com/dalboris/vpaint/blob/master/COPYRIGHT\">"
+            "https://github.com/dalboris/vpaint/blob/master/COPYRIGHT</a><br><br>"
             " "
             "Permission is hereby granted, free of charge, to any person obtaining a copy"
             " of this software and associated documentation files (the \"Software\"), to deal"
@@ -72,7 +74,7 @@ AboutDialog::AboutDialog(bool showAtStartup)
     QWidget * aboutWidget = new QWidget();
 
     QLabel * logoLabel = new QLabel();
-    logoLabel->setPixmap(QPixmap(":/images/logo_1-5.png"));
+    logoLabel->setPixmap(QPixmap(":/images/logo_currentversion.png"));
     logoLabel->setAlignment(Qt::AlignTop | Qt::AlignHCenter);
 
     QLabel * websiteLabel = new QLabel(websiteText);
@@ -116,6 +118,7 @@ AboutDialog::AboutDialog(bool showAtStartup)
     licenseLabel->setWordWrap(true);
     licenseLabel->setTextFormat(Qt::RichText);
     licenseLabel->setAlignment(Qt::AlignTop | Qt::AlignLeft);
+    licenseLabel->setOpenExternalLinks(true);
 
     QVBoxLayout * licenseWidgetLayout = new QVBoxLayout();
     licenseWidgetLayout->addWidget(licenseLabel);
