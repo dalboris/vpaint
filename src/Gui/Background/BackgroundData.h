@@ -18,6 +18,8 @@
 
 struct BackgroundData
 {
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
     enum class SizeType {
         Cover = 0,
         Manual = 1

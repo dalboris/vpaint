@@ -30,6 +30,8 @@ class Background: public QObject
     Q_OBJECT
 
 public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
     typedef BackgroundData Data;
     typedef Data::RepeatType RepeatType;
     typedef Data::SizeType SizeType;

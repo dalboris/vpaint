@@ -54,8 +54,9 @@ struct Intersection
 };
 
 // intersection between a stroke and an edge
-struct EdgeInter: public Intersection
+class EdgeInter: public Intersection
 {
+public:
     EdgeInter(KeyEdge * e0, double s0, double t0) :
         Intersection(s0,t0), edge(e0) { type = EDGE; }
 

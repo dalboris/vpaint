@@ -318,7 +318,7 @@ void Scene::drawCanvas(ViewSettings & /*viewSettings*/)
     if(global()->showCanvas())
     {
         // Out-of-canvas background color
-        glClearColor(0.8, 0.8, 0.8, 1.0);
+        glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         // Canvas border

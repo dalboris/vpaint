@@ -1098,26 +1098,26 @@ void GLWidget::drawGrid()
 
       glLineWidth(1.0);
     glBegin(GL_LINES);    
-      glColor3f(0.5, 0.5, 0.5);
+      glColor3d(0.5, 0.5, 0.5);
       for(int i=-10; i<= 10; i++){
         if(i!=0){
           // if(xOy)
-          glVertex3f(i/10.0, -1, -1);
-          glVertex3f(i/10.0, 1, -1);
-          glVertex3f(-1, i/10.0, -1);
-          glVertex3f(1, i/10.0, -1);
+          glVertex3d(i/10.0, -1, -1);
+          glVertex3d(i/10.0, 1, -1);
+          glVertex3d(-1, i/10.0, -1);
+          glVertex3d(1, i/10.0, -1);
           
           // if(xOz)
-          glVertex3f(i/10.0, -1, -1);
-          glVertex3f(i/10.0, -1, 1);
-          glVertex3f(-1, -1, i/10.0);
-          glVertex3f(1, -1, i/10.0);
+          glVertex3d(i/10.0, -1, -1);
+          glVertex3d(i/10.0, -1, 1);
+          glVertex3d(-1, -1, i/10.0);
+          glVertex3d(1, -1, i/10.0);
           
           // if(yOz)
-          glVertex3f(-1, i/10.0, -1);
-          glVertex3f(-1, i/10.0, 1);
-          glVertex3f(-1, -1, i/10.0);
-          glVertex3f(-1, 1, i/10.0);
+          glVertex3d(-1, i/10.0, -1);
+          glVertex3d(-1, i/10.0, 1);
+          glVertex3d(-1, -1, i/10.0);
+          glVertex3d(-1, 1, i/10.0);
         }
       }
       glEnd();
@@ -1126,25 +1126,25 @@ void GLWidget::drawGrid()
     glBegin(GL_LINES);    
       
       // if(xOy)
-      glColor3f(0, 0, 1);
-      glVertex3f(0, -1, -1);
-      glVertex3f(0, 1, -1);
-      glVertex3f(-1, 0, -1);
-      glVertex3f(1, 0, -1);
+      glColor3d(0, 0, 1);
+      glVertex3d(0, -1, -1);
+      glVertex3d(0, 1, -1);
+      glVertex3d(-1, 0, -1);
+      glVertex3d(1, 0, -1);
       
       // if(xOz)
-      glColor3f(0, 0.9, 0);
-      glVertex3f(0, -1, -1);
-      glVertex3f(0, -1, 1);
-      glVertex3f(-1, -1, 0);
-      glVertex3f(1, -1, 0);
+      glColor3d(0, 0.9, 0);
+      glVertex3d(0, -1, -1);
+      glVertex3d(0, -1, 1);
+      glVertex3d(-1, -1, 0);
+      glVertex3d(1, -1, 0);
       
       // if(yOz)
-      glColor3f(1, 0, 0);
-      glVertex3f(-1, 0, -1);
-      glVertex3f(-1, 0, 1);
-      glVertex3f(-1, -1, 0);
-      glVertex3f(-1, 1, 0);
+      glColor3d(1, 0, 0);
+      glVertex3d(-1, 0, -1);
+      glVertex3d(-1, 0, 1);
+      glVertex3d(-1, -1, 0);
+      glVertex3d(-1, 1, 0);
       
       glEnd();
       glLineWidth(1.0);

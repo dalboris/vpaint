@@ -199,7 +199,7 @@
 namespace VectorAnimationComplex
 {
     
-struct BoundingBox
+class BoundingBox
 {      
 public:
     // Empty bounding box

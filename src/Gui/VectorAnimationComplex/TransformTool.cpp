@@ -704,16 +704,19 @@ void TransformTool::draw(const CellSet & cells, Time time, ViewSettings & viewSe
         glStrokeBoundingBox_(bb);
 
         // Scale widgets (corners)
-        for (WidgetId id: {TopLeftScale, TopRightScale, BottomRightScale, BottomLeftScale})
-            drawScaleWidget_(id, bb, scaleWidgetCornerSize, viewSettings);
+        WidgetId scaleCornerIds[] = {TopLeftScale, TopRightScale, BottomRightScale, BottomLeftScale};
+        for (int i=0; i<4; ++i)
+            drawScaleWidget_(scaleCornerIds[i], bb, scaleWidgetCornerSize, viewSettings);
 
         // Scale widgets (edges)
-        for (WidgetId id: {TopScale, RightScale, BottomScale, LeftScale})
-            drawScaleWidget_(id, bb, scaleWidgetEdgeSize, viewSettings);
+        WidgetId scaleEdgeIds[] = {TopScale, RightScale, BottomScale, LeftScale};
+        for (int i=0; i<4; ++i)
+            drawScaleWidget_(scaleEdgeIds[i], bb, scaleWidgetEdgeSize, viewSettings);
 
         // Rotate widgets
-        for (WidgetId id: {TopLeftRotate, TopRightRotate, BottomRightRotate, BottomLeftRotate})
-            drawRotateWidget_(id, bb, viewSettings);
+        WidgetId rotateIds[] = {TopLeftRotate, TopRightRotate, BottomRightRotate, BottomLeftRotate};
+        for (int i=0; i<4; ++i)
+            drawRotateWidget_(rotateIds[i], bb, viewSettings);
 
         // Pivot
         drawPivot_(obb, viewSettings);
@@ -746,16 +749,19 @@ void TransformTool::drawPick(const CellSet & cells, Time time, ViewSettings & vi
     if (bb.isProper())
     {
         // Scale widgets (corners)
-        for (WidgetId id: {TopLeftScale, TopRightScale, BottomRightScale, BottomLeftScale})
-            drawPickScaleWidget_(id, bb, scaleWidgetCornerSize, viewSettings);
+        WidgetId scaleCornerIds[] = {TopLeftScale, TopRightScale, BottomRightScale, BottomLeftScale};
+        for (int i=0; i<4; ++i)
+            drawPickScaleWidget_(scaleCornerIds[i], bb, scaleWidgetCornerSize, viewSettings);
 
         // Scale widgets (edges)
-        for (WidgetId id: {TopScale, RightScale, BottomScale, LeftScale})
-            drawPickScaleWidget_(id, bb, scaleWidgetEdgeSize, viewSettings);
+        WidgetId scaleEdgeIds[] = {TopScale, RightScale, BottomScale, LeftScale};
+        for (int i=0; i<4; ++i)
+            drawPickScaleWidget_(scaleEdgeIds[i], bb, scaleWidgetEdgeSize, viewSettings);
 
         // Rotate widgets
-        for (WidgetId id: {TopLeftRotate, TopRightRotate, BottomRightRotate, BottomLeftRotate})
-            drawPickRotateWidget_(id, bb, viewSettings);
+        WidgetId rotateIds[] = {TopLeftRotate, TopRightRotate, BottomRightRotate, BottomLeftRotate};
+        for (int i=0; i<4; ++i)
+            drawPickRotateWidget_(rotateIds[i], bb, viewSettings);
 
         // Pivot
         drawPickPivot_(obb, viewSettings);

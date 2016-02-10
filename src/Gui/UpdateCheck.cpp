@@ -17,7 +17,8 @@
 #include "UpdateCheckDialog.h"
 
 UpdateCheck::UpdateCheck(QWidget * parent) :
-    reply_(0)
+    reply_(0),
+    isReady_(false)
 {
     // Initialize variables
     versionToCheck_ = global()->settings().checkVersion();
@@ -28,7 +29,8 @@ UpdateCheck::UpdateCheck(QWidget * parent) :
 }
 
 UpdateCheck::UpdateCheck(Version configVersion, QWidget * parent) :
-    reply_(0)
+    reply_(0),
+    isReady_(false)
 {
     // Initialize variables
     versionToCheck_ = configVersion;

@@ -31,10 +31,6 @@ public:
     // Constructor
     TransformTool(QObject * parent = 0);
 
-    // Disable copy and assignment
-    TransformTool(const TransformTool &) = delete;
-    TransformTool & operator=(const TransformTool &) = delete;
-
     // Set state
     void setCells(const CellSet & cells);
     void setIdOffset(int idOffset);
@@ -93,6 +89,10 @@ private slots:
     void onKeyboardModifiersChanged();
 
 private:
+    // Disable copy and assignment
+    TransformTool(const TransformTool &);
+    TransformTool & operator=(const TransformTool &);
+
     CellSet cells_;
     int idOffset_;
     WidgetId hovered_;

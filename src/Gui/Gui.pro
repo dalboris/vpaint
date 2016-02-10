@@ -13,62 +13,83 @@
 # The content of this file is MIT licensed. See COPYING.MIT, or this link:
 #   http://opensource.org/licenses/MIT
 
-# Basic Qt configuration
+# Qt configuration
 TEMPLATE = app
 TARGET = VPaint
 CONFIG += qt c++11
 QT += opengl network
 
-# Set app version and make it accessible in C++ code as the macro APP_VERSION
-VERSION = 1.6
+# App version
+MYVAR = 1.6
+VERSION = $$MYVAR
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"
 
-# To create the icon on Windows
-win32: RC_ICONS += images/VPaint.ico
+# App resources
+RESOURCES += resources.qrc
 
-# To create the icon on MacOS X
-macx: ICON = images/vpaint.icns
-
-QMAKE_CXXFLAGS += $$QMAKE_CFLAGS_ISYSTEM $$PWD/../Third
-
-# Compiler flags for Linux
-unix:!macx {
-  # Link to GLU
-  LIBS += -lGLU
-  # Use dwarf debug dymbols
-  CONFIG(debug, debug|release) {
-    QMAKE_CXXFLAGS += -gdwarf-2
-  }
-}
-
-# Compiler flags for Mac OS X
-macx {
-  # Use a custom Info.plist
-  QMAKE_INFO_PLIST = Info.plist
-
-  # Add file icons into the application bundle resources
-  FILE_ICONS.files = images/vec.icns
-  FILE_ICONS.path = Contents/Resources
-  QMAKE_BUNDLE_DATA += FILE_ICONS
-
-  # Names for control/command modifier key
-  DEFINES += ACTION_MODIFIER_NAME_SHORT=\\\"Cmd\\\" ACTION_MODIFIER_NAME=\\\"Command\\\"
-}
-else {
-  # Names for control/command modifier key
-  DEFINES += ACTION_MODIFIER_NAME_SHORT=\\\"Ctrl\\\" ACTION_MODIFIER_NAME=\\\"Control\\\"
-}
-
-# Compiler flags for Windows
+# App icon
 win32 {
-  # Embed the manifest file into the dll binary
-  CONFIG += embed_manifest_exe
+    # Set icon
+    RC_ICONS += images/VPaint.ico
+}
+else:macx {
+    # Set icon
+    ICON = images/vpaint.icns
+
+    # Use a custom Info.plist
+    QMAKE_INFO_PLIST = Info.plist
+
+    # Add file icons into the application bundle resources
+    FILE_ICONS.files = images/vec.icns
+    FILE_ICONS.path = Contents/Resources
+    QMAKE_BUNDLE_DATA += FILE_ICONS
 }
 
-# App resources to include in binary (images, etc.)
-RESOURCES 	+= resources.qrc
+# Names for control/command modifier key
+macx: DEFINES += ACTION_MODIFIER_NAME_SHORT=\\\"Cmd\\\" ACTION_MODIFIER_NAME=\\\"Command\\\"
+else: DEFINES += ACTION_MODIFIER_NAME_SHORT=\\\"Ctrl\\\" ACTION_MODIFIER_NAME=\\\"Control\\\"
 
-# Input
+# Debug symbols
+unix:!macx:CONFIG(debug, debug|release): QMAKE_CXXFLAGS += -gdwarf-2
+
+# Windows only: embed manifest file
+win32: CONFIG += embed_manifest_exe
+
+
+###############################################################################
+#                     UNSHIPPED EXTERNAL LIBRARIES
+
+# GLU
+unix:!macx: LIBS += -lGLU
+
+
+###############################################################################
+#                      SHIPPED EXTERNAL LIBRARIES
+
+# Add shipped external libraries to includepath and dependpath
+INCLUDEPATH += $$PWD/../Third/
+DEPENDPATH += $$PWD/../Third/
+!win32: QMAKE_CXXFLAGS += $$QMAKE_CFLAGS_ISYSTEM $$PWD/../Third/
+
+# Define RELEASE_OR_DEBUG convenient variable
+CONFIG(release, debug|release): RELEASE_OR_DEBUG = release
+CONFIG(debug,   debug|release): RELEASE_OR_DEBUG = debug
+
+# GLEW
+win32 {
+    LIBS += -L$$OUT_PWD/../Third/GLEW/$$RELEASE_OR_DEBUG/ -lGLEW
+    win32-g++: PRE_TARGETDEPS += $$OUT_PWD/../Third/GLEW/$$RELEASE_OR_DEBUG/libGLEW.a
+    else:      PRE_TARGETDEPS += $$OUT_PWD/../Third/GLEW/$$RELEASE_OR_DEBUG/GLEW.lib
+}
+else:unix {
+    LIBS += -L$$OUT_PWD/../Third/GLEW/ -lGLEW
+    PRE_TARGETDEPS += $$OUT_PWD/../Third/GLEW/libGLEW.a
+}
+
+
+###############################################################################
+#                            APP SOURCE FILES
+
 HEADERS += MainWindow.h \
     SaveAndLoad.h \
     Picking.h \
@@ -169,7 +190,6 @@ HEADERS += MainWindow.h \
     VectorAnimationComplex/BoundingBox.h \
     VectorAnimationComplex/TransformTool.h
 
-
 SOURCES += main.cpp \
     SaveAndLoad.cpp \
     Picking.cpp \
@@ -259,15 +279,3 @@ SOURCES += main.cpp \
     UpdateCheck.cpp \
     VectorAnimationComplex/BoundingBox.cpp \
     VectorAnimationComplex/TransformTool.cpp
-
-win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../Third/GLEW/release/ -lGLEW
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../Third/GLEW/debug/ -lGLEW
-else:unix: LIBS += -L$$OUT_PWD/../Third/GLEW/ -lGLEW
-
-DEPENDPATH += $$PWD/../Third/GLEW
-
-win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../Third/GLEW/release/libGLEW.a
-else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../Third/GLEW/debug/libGLEW.a
-else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../Third/GLEW/release/GLEW.lib
-else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../Third/GLEW/debug/GLEW.lib
-else:unix: PRE_TARGETDEPS += $$OUT_PWD/../Third/GLEW/libGLEW.a

@@ -625,7 +625,7 @@ public:
 
     void transform(const Eigen::Affine2d & xf)
     {
-        for (int i=0; i<vertices_.size(); ++i)
+        for (unsigned int i=0; i<vertices_.size(); ++i)
         {
             Eigen::Vector2d p(vertices_[i].x(), vertices_[i].y());
             p = xf*p;
@@ -2101,19 +2101,18 @@ private:
 
     // Create a new Fitter object (call the appropriate derived constructor)
     // It is caller's responsability to call "delete" to free the memory
-    static Fitter * fitter(FitterType type, const std::vector<Input,Eigen::aligned_allocator<Input> > & p, int j, int N, double ds)
+    static Fitter * fitter(FitterType /*type*/, const std::vector<Input,Eigen::aligned_allocator<Input> > & p, int j, int N, double ds)
     {
+        /*
         switch(type)
         {
-        /*
         case CUBIC_BEZIER_FITTER:
             return new CubicBezierFitter(p, j, N, ds);
         case QUARTIC_BEZIER_FITTER:
             return new QuarticBezierFitter(p, j, N, ds);
-            */
-        default:
-            return new CubicBezierFitter(p, j, N, ds);
         }
+        */
+        return new CubicBezierFitter(p, j, N, ds);
     }
 
     // Sampling

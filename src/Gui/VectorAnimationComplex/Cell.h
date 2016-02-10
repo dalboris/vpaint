@@ -9,6 +9,11 @@
 #ifndef VAC_CELL_H
 #define VAC_CELL_H
 
+// Remove C4250 warning in MSVC ('class1' : inherits 'class2::member' via dominance)
+#if _MSC_VER && !__INTEL_COMPILER
+#pragma warning(disable:4250)
+#endif
+
 /*
  * Here is defined the base class for any Cell  of the VAC.
  *

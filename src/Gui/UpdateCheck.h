@@ -44,7 +44,7 @@ private:
     UpdateCheckDialog * dialog_;
 
     Version versionToCheck_, latestVersion_;
-    bool isReady_ = false;
+    bool isReady_;
 };
 
 #endif // UPDATECHECK_H

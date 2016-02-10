@@ -18,6 +18,15 @@ namespace
 const double INF = std::numeric_limits<double>::infinity(); 
 const double EPS = 1e-10;
 
+inline bool isnan_(double x)
+{
+#ifdef WIN32
+    return x != x;
+#else
+    return std::isnan(res);
+#endif
+}
+
 bool inverted_(double min, double max)
 {
     return min > max + EPS;
@@ -39,7 +48,7 @@ double mid_(double min, double max)
     //   * if min and max infinite, same sign:             the correct infinite mid-value
     //   * if min and max infinite, different signs:       NaN
 
-    return std::isnan(res) ? 0.0 : res;
+    return isnan_(res) ? 0.0 : res;
 }
 
 }

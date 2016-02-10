@@ -39,6 +39,8 @@ class BackgroundWidget: public QWidget
     Q_OBJECT
 
 public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
     // Constructor
     BackgroundWidget(QWidget * parent = 0);
 
