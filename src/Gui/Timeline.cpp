@@ -474,6 +474,21 @@ void Timeline::write(XmlStreamWriter & xml) const
     settings_.write(xml);
 }
 
+namespace
+{
+
+QPushButton * makeButton_(const QString & iconPath, QAction * action)
+{
+    QPushButton * button = new QPushButton(QIcon(iconPath), "");
+    button->setMaximumSize(32,32);
+    button->setToolTip(action->toolTip());
+    button->setStatusTip(action->statusTip());
+    QObject::connect(button, SIGNAL(clicked()), action, SLOT(trigger()));
+    return button;
+}
+
+}
+
 Timeline::Timeline(Scene *scene, QWidget *parent) :
     QWidget(parent),
     scene_(scene)
@@ -495,60 +510,55 @@ Timeline::Timeline(Scene *scene, QWidget *parent) :
 
     actionGoToFirstFrame_ = new QAction(tr("Go to first frame"), this);
     actionGoToFirstFrame_->setStatusTip(tr("Set frame of active view to be the first frame in playback range."));
-    actionGoToFirstFrame_->setShortcut(QKeySequence(Qt::Key_Home));
+    actionGoToFirstFrame_->setToolTip(QString(ACTION_MODIFIER_NAME_SHORT).toUpper() + tr(" + Left"));
+    actionGoToFirstFrame_->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Left));
     actionGoToFirstFrame_->setShortcutContext(Qt::ApplicationShortcut);
     connect(actionGoToFirstFrame_, SIGNAL(triggered()), this, SLOT(goToFirstFrame()));
 
     actionGoToPreviousFrame_ = new QAction(tr("Go to previous frame"), this);
     actionGoToPreviousFrame_->setStatusTip(tr("Set frame of active view to be the previous frame."));
+    actionGoToPreviousFrame_->setToolTip(tr("Left"));
     actionGoToPreviousFrame_->setShortcut(QKeySequence(Qt::Key_Left));
     actionGoToPreviousFrame_->setShortcutContext(Qt::ApplicationShortcut);
     connect(actionGoToPreviousFrame_, SIGNAL(triggered()), this, SLOT(goToPreviousFrame()));
 
     actionPlayPause_ = new QAction(tr("Play/Pause"), this);
     actionPlayPause_->setStatusTip(tr("Toggle between play and pause"));
+    actionPlayPause_->setToolTip(tr("Space"));
     actionPlayPause_->setShortcut(QKeySequence(Qt::Key_Space));
     actionPlayPause_->setShortcutContext(Qt::ApplicationShortcut);
     connect(actionPlayPause_, SIGNAL(triggered()), this, SLOT(playPause()));
 
     actionGoToNextFrame_ = new QAction(tr("Go to next frame"), this);
     actionGoToNextFrame_->setStatusTip(tr("Set frame of active view to be the next frame."));
+    actionGoToNextFrame_->setToolTip(tr("Right"));
     actionGoToNextFrame_->setShortcut(QKeySequence(Qt::Key_Right));
     actionGoToNextFrame_->setShortcutContext(Qt::ApplicationShortcut);
     connect(actionGoToNextFrame_, SIGNAL(triggered()), this, SLOT(goToNextFrame()));
 
     actionGoToLastFrame_ = new QAction(tr("Go to last frame"), this);
     actionGoToLastFrame_->setStatusTip(tr("Set frame of active view to be the last frame in playback range."));
-    actionGoToLastFrame_->setShortcut(QKeySequence(Qt::Key_End));
+    actionGoToLastFrame_->setToolTip(QString(ACTION_MODIFIER_NAME_SHORT).toUpper() + tr(" + Right"));
+    actionGoToLastFrame_->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Right));
     actionGoToLastFrame_->setShortcutContext(Qt::WindowShortcut);
     connect(actionGoToLastFrame_, SIGNAL(triggered()), this, SLOT(goToLastFrame()));
 
     // ----- Create buttons -----
 
     // Go to first frame
-    firstFrameButton_ = new QPushButton(QIcon(":/images/go-previous.png"), tr(""));
-    firstFrameButton_->setMaximumSize(32,32);
-    connect(firstFrameButton_, SIGNAL(clicked()), actionGoToFirstFrame_, SLOT(trigger()));
+    firstFrameButton_ = makeButton_(":/images/go-previous.png", actionGoToFirstFrame_);
 
     // Go to previous frame
-    previousFrameButton_ = new QPushButton(QIcon(":/images/go-first-view.png"), tr(""));
-    previousFrameButton_->setMaximumSize(32,32);
-    connect(previousFrameButton_, SIGNAL(clicked()), actionGoToPreviousFrame_, SLOT(trigger()));
+    previousFrameButton_ = makeButton_(":/images/go-first-view.png", actionGoToPreviousFrame_);
 
     // Play/pause
-    playPauseButton_ = new QPushButton(QIcon(":/images/go-play.png"), tr(""));
-    playPauseButton_->setMaximumSize(32,32);
-    connect(playPauseButton_, SIGNAL(clicked()), actionPlayPause_, SLOT(trigger()));
+    playPauseButton_ = makeButton_(":/images/go-play.png", actionPlayPause_);
 
     // Go to next frame
-    nextFrameButton_ = new QPushButton(QIcon(":/images/go-last-view.png"), tr(""));
-    nextFrameButton_->setMaximumSize(32,32);
-    connect(nextFrameButton_, SIGNAL(clicked()), actionGoToNextFrame_, SLOT(trigger()));
+    nextFrameButton_ = makeButton_(":/images/go-last-view.png", actionGoToNextFrame_);
 
     // Go to last frame
-    lastFrameButton_ = new QPushButton(QIcon(":/images/go-next.png"), tr(""));
-    lastFrameButton_->setMaximumSize(32,32);
-    connect(lastFrameButton_, SIGNAL(clicked()), actionGoToLastFrame_, SLOT(trigger()));
+    lastFrameButton_ = makeButton_(":/images/go-next.png", actionGoToLastFrame_);
 
     // Set first frame
     firstFrameSpinBox_ = new QSpinBox();

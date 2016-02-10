@@ -186,14 +186,7 @@ bool Global::eventFilter(QObject * /*watched*/, QEvent * event)
 
 void Global::resolveAmbiguousShortcuts(const QKeySequence & key)
 {
-    if(key == QKeySequence(Qt::Key_Home))
-    {
-        timeline()->goToFirstFrame();
-    }
-    else if(key == QKeySequence(Qt::Key_End))
-    {
-        timeline()->goToLastFrame();
-    }
+    qDebug() << "Ambiguous shortcut:" << key;
 }
 
 Eigen::Vector2d Global::sceneCursorPos() const
