@@ -62,11 +62,16 @@ void UpdateCheck::checkForUpdates()
     if(versionToCheck_ == Version()) return;
 
     // Set query
-    QUrl url = QUrl("http://vpaint.org/latestversion");
+    QUrlQuery urlQuery;
+    QUrl url = QUrl("http://vpaint.org/latestversion.php");
     QNetworkRequest networkRequest(url);
+    networkRequest.setHeader(QNetworkRequest::ContentTypeHeader,
+                             "application/x-www-form-urlencoded; charset=utf-8");
 
     // Send query
-    reply_ = networkManager_->get(networkRequest);
+    QString urlQueryString = urlQuery.toString(QUrl::FullyEncoded);
+    urlQueryString.replace('+', "%2B");
+    reply_ = networkManager_->post(networkRequest, urlQueryString.toUtf8());
 
     // Connection to process reply
     connect(reply_, SIGNAL(finished()), this, SLOT(requestFinished_()));

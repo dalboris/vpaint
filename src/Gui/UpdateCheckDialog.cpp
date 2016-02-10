@@ -31,13 +31,16 @@ UpdateCheckDialog::UpdateCheckDialog(QString newVersion, QWidget *parent, Qt::Wi
 
     // Insert the os specific download link into updateText
 #ifdef Q_OS_WIN32
-    updateText.replace(QString("$DOWNLOAD_LINK"), QString("https://github.com/dalboris/vpaint/releases/download/v$NEW_VERSION/VPaint$NEW_VERSION.Setup.msi"));
+    updateText.replace(QString("$DOWNLOAD_LINK"), QString("https://github.com/dalboris/vpaint/releases/download/v$NEW_VERSION/VPaint.$NEW_VERSION.Setup.msi"));
 #endif
 #ifdef Q_OS_MAC
-    updateText.replace(QString("$DOWNLOAD_LINK"), QString("https://github.com/dalboris/vpaint/releases/download/v$NEW_VERSION/vpaint.dmg"));
+    updateText.replace(QString("$DOWNLOAD_LINK"), QString("https://github.com/dalboris/vpaint/releases/download/v$NEW_VERSION/VPaint.$NEW_VERSION.dmg"));
 #else
     updateText.replace(QString("$DOWNLOAD_LINK"), QString("https://github.com/dalboris/vpaint/releases/tag/v$NEW_VERSION"));
 #endif
+
+    // Set version in download link
+    updateText.replace(QString("$NEW_VERSION"), newVersion);
 
     // Main description
     QLabel * mainDesc = new QLabel(updateText);
