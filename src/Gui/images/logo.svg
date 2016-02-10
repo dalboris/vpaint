@@ -14,7 +14,7 @@
    height="227.68839"
    id="svg2"
    version="1.1"
-   inkscape:version="0.91 r13725"
+   inkscape:version="0.48.4 r9939"
    sodipodi:docname="logo.svg">
   <defs
      id="defs4">
@@ -100,16 +100,16 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="5.6568544"
-     inkscape:cx="160.95722"
-     inkscape:cy="61.812435"
+     inkscape:zoom="2.8284272"
+     inkscape:cx="256.58726"
+     inkscape:cy="121.0912"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
      inkscape:window-width="1920"
-     inkscape:window-height="1021"
-     inkscape:window-x="-4"
-     inkscape:window-y="0"
+     inkscape:window-height="1060"
+     inkscape:window-x="1917"
+     inkscape:window-y="-3"
      inkscape:window-maximized="1"
      fit-margin-top="0"
      fit-margin-left="0"
@@ -123,7 +123,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -150,103 +150,109 @@
          id="g4216"
          style="font-size:59.45565033px;font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:-3px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;stroke:none;font-family:Open Sans;-inkscape-font-specification:Open Sans Semi-Bold" />
     </g>
-    <text
-       xml:space="preserve"
-       style="font-size:59.45565033px;font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:-3px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#1b5faa;fill-opacity:1;stroke:none;font-family:Open Sans;-inkscape-font-specification:Open Sans Semi-Bold"
-       x="457.16653"
-       y="749.90247"
-       id="text4230"
-       sodipodi:linespacing="125%"
-       inkscape:export-filename="/home/boris/Documents/VPaint/src/images/logo.png"
-       inkscape:export-xdpi="170.58521"
-       inkscape:export-ydpi="170.58521"><tspan
-         sodipodi:role="line"
-         id="tspan4232"
-         x="457.16653"
-         y="749.90247">aint</tspan></text>
-    <text
-       inkscape:export-ydpi="170.58521"
-       inkscape:export-xdpi="170.58521"
-       inkscape:export-filename="/home/boris/Documents/VPaint/src/images/logo.png"
-       sodipodi:linespacing="125%"
-       id="text4234"
-       y="749.90247"
-       x="425.60587"
-       style="font-size:59.45565033px;font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:-3px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#1b5faa;fill-opacity:1;stroke:none;font-family:Open Sans;-inkscape-font-specification:Open Sans Semi-Bold"
-       xml:space="preserve"><tspan
-         y="749.90247"
-         x="425.60587"
-         id="tspan4236"
-         sodipodi:role="line">P</tspan></text>
     <g
-       id="g4290"
-       transform="translate(0.32084444,-2.5784149)">
-      <rect
-         style="color:#000000;fill:#1b5faa;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:2;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate"
-         id="rect3933"
-         width="52.164776"
-         height="52.682602"
-         x="371.94214"
-         y="704.32916"
-         rx="7.7781744"
-         ry="7.7781744" />
+       id="g3024"
+       inkscape:export-filename="/home/boris/Documents/vpaint-dev/src/Gui/images/logo_currentversion.png"
+       inkscape:export-xdpi="109.33401"
+       inkscape:export-ydpi="109.33401">
+      <text
+         inkscape:export-ydpi="170.58521"
+         inkscape:export-xdpi="170.58521"
+         inkscape:export-filename="/home/boris/Documents/VPaint/src/images/logo.png"
+         sodipodi:linespacing="125%"
+         id="text4230"
+         y="749.90247"
+         x="457.16653"
+         style="font-size:59.45565033px;font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:-3px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#1b5faa;fill-opacity:1;stroke:none;font-family:Open Sans;-inkscape-font-specification:Open Sans Semi-Bold"
+         xml:space="preserve"><tspan
+           y="749.90247"
+           x="457.16653"
+           id="tspan4232"
+           sodipodi:role="line">aint</tspan></text>
+      <text
+         xml:space="preserve"
+         style="font-size:59.45565033px;font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:-3px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#1b5faa;fill-opacity:1;stroke:none;font-family:Open Sans;-inkscape-font-specification:Open Sans Semi-Bold"
+         x="425.60587"
+         y="749.90247"
+         id="text4234"
+         sodipodi:linespacing="125%"
+         inkscape:export-filename="/home/boris/Documents/VPaint/src/images/logo.png"
+         inkscape:export-xdpi="170.58521"
+         inkscape:export-ydpi="170.58521"><tspan
+           sodipodi:role="line"
+           id="tspan4236"
+           x="425.60587"
+           y="749.90247">P</tspan></text>
       <g
-         id="g3094">
-        <path
-           id="path3092"
-           d="m 412.84182,708.9294 c -1.16672,0.0937 -1.83203,0.59958 -1.83203,0.59958 l -0.27525,1.84967 c 1.23842,-0.19431 2.39593,-0.10324 3.47497,0.27372 1.08949,0.38063 2.09117,1.06059 3.00975,2.00221 l 0.9039,-1.67482 c 0,0 -0.3822,-1.78162 -3.05548,-2.72018 -0.6283,-0.22059 -1.19707,-0.32474 -1.69472,-0.34089 -0.18662,-0.006 -0.36447,-0.003 -0.53114,0.0107 z"
-           style="fill:#ffffff;fill-opacity:1;stroke:none"
-           inkscape:connector-curvature="0" />
-        <path
-           id="path3090"
-           d="m 410.65152,711.91169 c 0,0 -0.87661,0.43384 -1.34573,1.46494 -0.39288,0.86352 -0.0958,1.80051 0.011,2.09395 1.23885,-0.19456 2.42684,-0.10397 3.50622,0.27309 1.08517,0.37912 2.06233,1.03587 2.97787,1.97159 0.005,0.005 0.0261,-0.006 0.0312,-6.3e-4 0.29028,-0.22035 0.91169,-0.78289 1.21697,-1.64988 0.40666,-1.1561 -0.0709,-1.96772 -0.0709,-1.96772 -2.0696,-1.79441 -3.72531,-2.41307 -6.32661,-2.18534 z"
-           style="fill:#ffffff;fill-opacity:1;stroke:none"
-           inkscape:connector-curvature="0" />
-        <path
-           id="path3088"
-           d="m 409.20252,716.00424 -9.31597,26.88183 c 2.75252,-0.43682 4.62519,0.22783 6.35723,2.15343 l 9.31659,-26.85059 c -2.08076,-1.78811 -3.72495,-2.35363 -6.35786,-2.18472 z"
-           style="fill:#ffffff;fill-opacity:1;stroke:none"
-           inkscape:connector-curvature="0" />
-        <path
-           id="path3086"
-           d="m 399.7879,743.57473 0.36583,8.83817 5.8033,-6.71216 c -1.44474,-2.12672 -4.2837,-2.50439 -6.16913,-2.12601 z"
-           style="fill:#ffffff;fill-opacity:1;stroke:none"
-           inkscape:connector-curvature="0" />
-        <path
-           id="path4277"
-           d="m 400.04759,752.42523 -7.31583,0 -14.80585,-42.44344 7.14164,0"
-           style="fill:#ffffff;fill-opacity:1;stroke:none"
-           inkscape:connector-curvature="0" />
+         transform="translate(0.32084444,-2.5784149)"
+         id="g4290">
+        <rect
+           ry="7.7781744"
+           rx="7.7781744"
+           y="704.32916"
+           x="371.94214"
+           height="52.682602"
+           width="52.164776"
+           id="rect3933"
+           style="color:#000000;fill:#1b5faa;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:2;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate" />
+        <g
+           id="g3094">
+          <path
+             inkscape:connector-curvature="0"
+             style="fill:#ffffff;fill-opacity:1;stroke:none"
+             d="m 412.84182,708.9294 c -1.16672,0.0937 -1.83203,0.59958 -1.83203,0.59958 l -0.27525,1.84967 c 1.23842,-0.19431 2.39593,-0.10324 3.47497,0.27372 1.08949,0.38063 2.09117,1.06059 3.00975,2.00221 l 0.9039,-1.67482 c 0,0 -0.3822,-1.78162 -3.05548,-2.72018 -0.6283,-0.22059 -1.19707,-0.32474 -1.69472,-0.34089 -0.18662,-0.006 -0.36447,-0.003 -0.53114,0.0107 z"
+             id="path3092" />
+          <path
+             inkscape:connector-curvature="0"
+             style="fill:#ffffff;fill-opacity:1;stroke:none"
+             d="m 410.65152,711.91169 c 0,0 -0.87661,0.43384 -1.34573,1.46494 -0.39288,0.86352 -0.0958,1.80051 0.011,2.09395 1.23885,-0.19456 2.42684,-0.10397 3.50622,0.27309 1.08517,0.37912 2.06233,1.03587 2.97787,1.97159 0.005,0.005 0.0261,-0.006 0.0312,-6.3e-4 0.29028,-0.22035 0.91169,-0.78289 1.21697,-1.64988 0.40666,-1.1561 -0.0709,-1.96772 -0.0709,-1.96772 -2.0696,-1.79441 -3.72531,-2.41307 -6.32661,-2.18534 z"
+             id="path3090" />
+          <path
+             inkscape:connector-curvature="0"
+             style="fill:#ffffff;fill-opacity:1;stroke:none"
+             d="m 409.20252,716.00424 -9.31597,26.88183 c 2.75252,-0.43682 4.62519,0.22783 6.35723,2.15343 l 9.31659,-26.85059 c -2.08076,-1.78811 -3.72495,-2.35363 -6.35786,-2.18472 z"
+             id="path3088" />
+          <path
+             inkscape:connector-curvature="0"
+             style="fill:#ffffff;fill-opacity:1;stroke:none"
+             d="m 399.7879,743.57473 0.36583,8.83817 5.8033,-6.71216 c -1.44474,-2.12672 -4.2837,-2.50439 -6.16913,-2.12601 z"
+             id="path3086" />
+          <path
+             inkscape:connector-curvature="0"
+             style="fill:#ffffff;fill-opacity:1;stroke:none"
+             d="m 400.04759,752.42523 -7.31583,0 -14.80585,-42.44344 7.14164,0"
+             id="path4277" />
+        </g>
       </g>
-    </g>
-    <text
-       inkscape:export-ydpi="170.58521"
-       inkscape:export-xdpi="170.58521"
-       inkscape:export-filename="/home/boris/Documents/VPaint/src/images/logo.png"
-       sodipodi:linespacing="125%"
-       id="text3059"
-       y="753.43799"
-       x="625.47443"
-       style="font-size:59.45565033px;font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:-3px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#1b5faa;fill-opacity:1;stroke:none;font-family:Open Sans;-inkscape-font-specification:Open Sans Semi-Bold"
-       xml:space="preserve"><tspan
-         y="753.43799"
+      <text
+         xml:space="preserve"
+         style="font-size:59.45565033px;font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:-3px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#1b5faa;fill-opacity:1;stroke:none;font-family:Open Sans;-inkscape-font-specification:Open Sans Semi-Bold"
          x="625.47443"
-         id="tspan3061"
-         sodipodi:role="line">1.5</tspan></text>
-    <text
-       xml:space="preserve"
-       style="font-size:30.81348801px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:-1.55478001px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#679fe5;fill-opacity:1;stroke:none;font-family:Dancing Script;-inkscape-font-specification:Dancing Script Bold"
-       x="563.87189"
-       y="726.69592"
-       id="text3063"
-       sodipodi:linespacing="125%"
-       inkscape:export-filename="/home/boris/Documents/VPaint/src/images/logo.png"
-       inkscape:export-xdpi="170.58521"
-       inkscape:export-ydpi="170.58521"><tspan
-         sodipodi:role="line"
-         id="tspan3065"
+         y="753.43799"
+         id="text3059"
+         sodipodi:linespacing="125%"
+         inkscape:export-filename="/home/boris/Documents/VPaint/src/images/logo.png"
+         inkscape:export-xdpi="170.58521"
+         inkscape:export-ydpi="170.58521"><tspan
+           sodipodi:role="line"
+           id="tspan3061"
+           x="625.47443"
+           y="753.43799">1.6</tspan></text>
+      <text
+         inkscape:export-ydpi="170.58521"
+         inkscape:export-xdpi="170.58521"
+         inkscape:export-filename="/home/boris/Documents/VPaint/src/images/logo.png"
+         sodipodi:linespacing="125%"
+         id="text3063"
+         y="726.69592"
          x="563.87189"
-         y="726.69592">Beta</tspan></text>
+         style="font-size:30.81348801px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:-1.55478001px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#679fe5;fill-opacity:1;stroke:none;font-family:Dancing Script;-inkscape-font-specification:Dancing Script Bold"
+         xml:space="preserve"><tspan
+           y="726.69592"
+           x="563.87189"
+           id="tspan3065"
+           sodipodi:role="line">Beta</tspan></text>
+    </g>
     <text
        sodipodi:linespacing="125%"
        id="text3064"
