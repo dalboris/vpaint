@@ -22,6 +22,10 @@ UpdateCheck::UpdateCheck(QWidget * parent) :
 {
     // Initialize variables
     versionToCheck_ = global()->settings().checkVersion();
+    if(versionToCheck_ < Version(qApp->applicationVersion()) && versionToCheck_ != Version()) {
+        global()->settings().setCheckVersion(Version(qApp->applicationVersion()));
+        versionToCheck_ = global()->settings().checkVersion();
+    }
     networkManager_ = new QNetworkAccessManager();
     parent_ = parent;
 
@@ -97,6 +101,7 @@ void UpdateCheck::requestFinished_()
     // Compare versions
     if(versionToCheck_ < latestVersion_)
     {
+        qDebug() << versionToCheck_.toString() << " - " << latestVersion_.toString();
         // Create dialog with latest version
         dialog_ = new UpdateCheckDialog(latestVersion_.toString(), parent_, Qt::Dialog);
         dialog_->setAttribute(Qt::WA_DeleteOnClose);
