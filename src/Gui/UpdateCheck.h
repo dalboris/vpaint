@@ -24,7 +24,6 @@ class UpdateCheck: public QObject
 
 public:
     UpdateCheck(QWidget * parent = 0);
-    UpdateCheck(Version configVersion, QWidget * parent = 0);
     virtual ~UpdateCheck();
 
     Version versionChecked() const;

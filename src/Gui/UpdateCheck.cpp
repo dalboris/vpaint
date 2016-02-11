@@ -32,18 +32,6 @@ UpdateCheck::UpdateCheck(QWidget * parent) :
     checkForUpdates();
 }
 
-UpdateCheck::UpdateCheck(Version configVersion, QWidget * parent) :
-    reply_(0),
-    isReady_(false)
-{
-    // Initialize variables
-    versionToCheck_ = configVersion;
-    networkManager_ = new QNetworkAccessManager();
-    parent_ = parent;
-
-    checkForUpdates();
-}
-
 UpdateCheck::~UpdateCheck()
 {
     delete networkManager_;
@@ -101,7 +89,6 @@ void UpdateCheck::requestFinished_()
     // Compare versions
     if(versionToCheck_ < latestVersion_)
     {
-        qDebug() << versionToCheck_.toString() << " - " << latestVersion_.toString();
         // Create dialog with latest version
         dialog_ = new UpdateCheckDialog(latestVersion_.toString(), parent_, Qt::Dialog);
         dialog_->setAttribute(Qt::WA_DeleteOnClose);
