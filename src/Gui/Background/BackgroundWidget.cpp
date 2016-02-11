@@ -66,7 +66,11 @@ BackgroundWidget::BackgroundWidget(QWidget * parent) :
     imageRefreshButton_->setStatusTip(tr("Reload background image(s) to reflect changes on disk."));
     imageRefreshButton_->setMaximumWidth(30);
     QHBoxLayout * imagesLayout = new QHBoxLayout();
+#ifdef Q_OS_MAC
+    imagesLayout->setSpacing(10);
+#else
     imagesLayout->setSpacing(0);
+#endif
     imagesLayout->addWidget(imageLineEdit_);
     imagesLayout->addWidget(imageBrowseButton_);
     imagesLayout->addWidget(imageRefreshButton_);
