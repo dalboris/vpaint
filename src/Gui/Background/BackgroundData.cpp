@@ -16,7 +16,8 @@ BackgroundData::BackgroundData() :
     size(1280.0, 720.0),
     repeatType(RepeatType::NoRepeat),
     opacity(1.0),
-    hold(true)
+    hold(true),
+    repeat(true)
 {
 }
 
@@ -29,7 +30,8 @@ bool BackgroundData::operator==(const BackgroundData & other) const
            (size == other.size) &&
            (repeatType == other.repeatType) &&
            (opacity == other.opacity) &&
-           (hold == other.hold);
+           (hold == other.hold) &&
+           (repeat == other.repeat);
 }
 
 bool BackgroundData::operator!=(const BackgroundData & other) const

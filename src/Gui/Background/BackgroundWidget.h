@@ -77,6 +77,8 @@ private slots:
     void processOpacitySpinBoxEditingFinished_();
     // Hold
     void processHoldCheckBoxToggled_(bool newHold);
+    // Repeat
+    void processRepeatCheckBoxToggled_(bool newRepeat);
 
 private:
     // Background operated by BackgroundWidget
@@ -102,6 +104,8 @@ private:
     QDoubleSpinBox * opacitySpinBox_;
     // Hold
     QCheckBox * holdCheckBox_;
+    // Repeat
+    QCheckBox * repeatCheckBox_;
 
     // Guard needed for updateFromBackground_()
     // It is needed is to avoid modifying back 'this->background_' when

@@ -172,6 +172,10 @@ BackgroundWidget::BackgroundWidget(QWidget * parent) :
     connect(opacitySpinBox_, SIGNAL(editingFinished()),
             this, SLOT(processOpacitySpinBoxEditingFinished_()));
 
+    // Sequence Label
+    QLabel * sequenceLabel = new QLabel("Sequence Options");
+    layout->addRow(sequenceLabel);
+
     // Hold
     holdCheckBox_ = new QCheckBox();
     holdCheckBox_->setToolTip(tr("Hold background image(s)"));
@@ -180,10 +184,22 @@ BackgroundWidget::BackgroundWidget(QWidget * parent) :
                                    "frame 2, if hold is checked, 'image01.png' appears. If hold is "
                                    "not checked, no image appears, unless 'image.png' exists in which "
                                    "case it is used as a fallback value."));
-    holdCheckBox_->setChecked(true );
+    holdCheckBox_->setChecked(true);
     layout->addRow(tr("Hold:"), holdCheckBox_);
     connect(holdCheckBox_, SIGNAL(toggled(bool)),
             this, SLOT(processHoldCheckBoxToggled_(bool)));
+
+    // Repeat
+    repeatCheckBox_ = new QCheckBox();
+    repeatCheckBox_->setToolTip(tr("Repeat background image(s)"));
+    repeatCheckBox_->setStatusTip(tr("Set whether to repeat background image(s). Example: 'image*.png'"
+                                   " with only 'image01.png' to 'image03.png' inclusive on disk. At "
+                                   "frame 4, if repeat is checked, 'image01.png' appears. If repeat is "
+                                   "not checked, the image displayed depends on the value of hold."));
+    repeatCheckBox_->setChecked(true);
+    layout->addRow(tr("Repeat:"), repeatCheckBox_);
+    connect(repeatCheckBox_, SIGNAL(toggled(bool)),
+            this, SLOT(processRepeatCheckBoxToggled_(bool)));
 
     // Set no background
     setBackground(0);
@@ -257,6 +273,9 @@ void BackgroundWidget::updateFromBackground_()
 
         // Hold
         holdCheckBox_->setChecked(background_->hold());
+
+        // Repeat
+        repeatCheckBox_->setChecked(background_->repeat());
 
         // Cache value before editing
         if (!isBeingEdited_)
@@ -625,6 +644,17 @@ void BackgroundWidget::processHoldCheckBoxToggled_(bool newHold)
     {
         isBeingEdited_ = true;
         background_->setHold(newHold);
+        isBeingEdited_ = false;
+        emitCheckpoint_();
+    }
+}
+
+void BackgroundWidget::processRepeatCheckBoxToggled_(bool newRepeat)
+{
+    if (background_ && !isUpdatingFromBackground_)
+    {
+        isBeingEdited_ = true;
+        background_->setRepeat(newRepeat);
         isBeingEdited_ = false;
         emitCheckpoint_();
     }

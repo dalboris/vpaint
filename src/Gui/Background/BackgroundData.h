@@ -40,6 +40,7 @@ struct BackgroundData
     RepeatType repeatType;
     double opacity;
     bool hold;
+    bool repeat;
 
     // Default background data values
     BackgroundData();

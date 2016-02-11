@@ -105,6 +105,10 @@ public:
     bool hold() const;
     void setHold(bool newHold);
 
+    // Repeat
+    bool repeat() const;
+    void setRepeat(bool newRepeat);
+
     // Cache
     void clearCache();
 
@@ -151,6 +155,7 @@ signals:
     void repeatTypeChanged(RepeatType newRepeatType);
     void opacityChanged(double newOpacity);
     void holdChanged(bool newHold);
+    void repeatChanged(bool newRepeat);
 
     // Signal emitted when the cache is cleared.
     // Clients performing further caching of images should listen to this

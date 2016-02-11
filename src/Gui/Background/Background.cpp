@@ -301,7 +301,9 @@ int Background::referenceFrame(int frame) const
     {
         if (frame < minFrame_)
         {
-            if (hold())
+            if (repeat())
+                return referenceFrames_[(referenceFrames_.size() - (referenceFrames_.size() - (frame - minFrame_)) % referenceFrames_.size()) % referenceFrames_.size()]; // There's got to be a better way to do this
+            else if (hold())
                 return referenceFrames_.first();
             else
                 return minFrame_ - 1;
@@ -312,6 +314,8 @@ int Background::referenceFrame(int frame) const
         }
         else
         {
+            if (repeat())
+                return referenceFrames_[(frame - minFrame_) % referenceFrames_.size()];
             if (hold())
                 return referenceFrames_.last();
             else
@@ -332,7 +336,9 @@ QString Background::resolvedImageFilePath(int frame) const
     {
         if (frame < minFrame_)
         {
-            if (hold())
+            if (repeat())
+                return filePathsWildcards_[(filePathsWildcards_.size() - (filePathsWildcards_.size() - (frame - minFrame_)) % filePathsWildcards_.size()) % filePathsWildcards_.size()]; // There's got to be a better way to do this
+            else if (hold())
                 filePath += filePathsWildcards_.first();
         }
         else if (frame < minFrame_ + filePathsWildcards_.size())
@@ -341,7 +347,9 @@ QString Background::resolvedImageFilePath(int frame) const
         }
         else
         {
-            if (hold())
+            if (repeat())
+                filePath += filePathsWildcards_[(frame - minFrame_) % filePathsWildcards_.size()];
+            else if (hold())
                 filePath += filePathsWildcards_.last();
         }
     }
@@ -502,6 +510,23 @@ void Background::setHold(bool newHold)
         data_.hold = newHold;
         clearCache_();
         emit holdChanged(data_.hold);
+        emit changed();
+    }
+}
+
+// Repeat
+bool Background::repeat() const
+{
+    return data_.repeat;
+}
+
+void Background::setRepeat(bool newRepeat)
+{
+    if (data_.repeat != newRepeat)
+    {
+        data_.repeat = newRepeat;
+        clearCache_();
+        emit repeatChanged(data_.repeat);
         emit changed();
     }
 }
