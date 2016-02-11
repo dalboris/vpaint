@@ -381,9 +381,6 @@ void Background::setPosition(const Eigen::Vector2d & newPosition)
     if (data_.position != newPosition)
     {
         data_.position = newPosition;
-        if (data_.position[0] < -2.0) {
-            data_.position[0] = -2.0;
-        }
         emit positionChanged(data_.position);
         emit changed();
     }
