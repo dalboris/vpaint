@@ -588,6 +588,9 @@ void Background::write(XmlStreamWriter & xml)
 
     // Hold
     xml.writeAttribute("hold", hold() ? "yes" : "no");
+
+    // Sequence Repeat
+    xml.writeAttribute("sequencerepeat", repeat() ? "normal" : "none");
 }
 
 void Background::read(XmlStreamReader & xml)
@@ -670,6 +673,20 @@ void Background::read(XmlStreamReader & xml)
         else if (holdString == "no")
         {
             data.hold = false;
+        }
+    }
+
+    // Repeat sequence
+    if(xml.attributes().hasAttribute("sequencerepeat"))
+    {
+        QString repeatString =  xml.attributes().value("sequencerepeat").toString();
+        if (repeatString == "none")
+        {
+            data.repeat = false;
+        }
+        else
+        {
+            data.repeat = true;
         }
     }
 
