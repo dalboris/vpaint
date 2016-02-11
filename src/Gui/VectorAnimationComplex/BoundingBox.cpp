@@ -23,7 +23,7 @@ inline bool isnan_(double x)
 #ifdef WIN32
     return x != x;
 #else
-    return std::isnan(res);
+    return std::isnan(x);
 #endif
 }
 

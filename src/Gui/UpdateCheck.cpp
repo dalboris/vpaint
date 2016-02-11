@@ -22,18 +22,10 @@ UpdateCheck::UpdateCheck(QWidget * parent) :
 {
     // Initialize variables
     versionToCheck_ = global()->settings().checkVersion();
-    networkManager_ = new QNetworkAccessManager();
-    parent_ = parent;
-
-    checkForUpdates();
-}
-
-UpdateCheck::UpdateCheck(Version configVersion, QWidget * parent) :
-    reply_(0),
-    isReady_(false)
-{
-    // Initialize variables
-    versionToCheck_ = configVersion;
+    if(versionToCheck_ < Version(qApp->applicationVersion()) && versionToCheck_ != Version()) {
+        global()->settings().setCheckVersion(Version(qApp->applicationVersion()));
+        versionToCheck_ = global()->settings().checkVersion();
+    }
     networkManager_ = new QNetworkAccessManager();
     parent_ = parent;
 
