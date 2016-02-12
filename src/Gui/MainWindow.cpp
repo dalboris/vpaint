@@ -84,6 +84,12 @@ MainWindow::MainWindow() :
     editCanvasSizeDialog_(0),
     exportingPng_(false)
 {
+
+
+
+
+
+    /* FACTORED_OUT
     // Global object
     Global::initialize(this);
 
@@ -173,6 +179,7 @@ MainWindow::MainWindow() :
 
     // Autosave
     autosaveBegin();
+    */
 }
 
 void MainWindow::updateObjectProperties()
@@ -561,6 +568,9 @@ bool MainWindow::eventFilter(QObject *object, QEvent *event)
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
+    event->accept();
+
+    /* FACTORED_OUT
     if (maybeSave_())
     {
         global()->writeSettings();
@@ -571,6 +581,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
     {
         event->ignore();
     }
+    */
 }
 
 bool MainWindow::maybeSave_()

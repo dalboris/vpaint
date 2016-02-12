@@ -15,6 +15,8 @@ int main(int argc, char *argv[])
 {
     Application app(argc, argv);
     MainWindow mainWindow;
+
+    /* FACTORED_OUT
     UpdateCheck update(&mainWindow);
 
     // About window
@@ -28,6 +30,7 @@ int main(int argc, char *argv[])
     // Main window
     QObject::connect(&app, SIGNAL(openFileRequested(QString)), &mainWindow, SLOT(open_(QString)));
     app.emitOpenFileRequest();
+    */
     mainWindow.show();
 
     return app.exec();
