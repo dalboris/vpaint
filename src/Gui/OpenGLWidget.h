@@ -12,15 +12,46 @@
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions>
 
+#include <QOpenGLShaderProgram>
+#include <QOpenGLVertexArrayObject>
+#include <QOpenGLBuffer>
+#include <QMatrix4x4>
+
+#include <vector>
+#include <glm/vec2.hpp>
+
 class OpenGLWidget: public QOpenGLWidget, protected QOpenGLFunctions
 {
+    Q_OBJECT
+
 public:
     OpenGLWidget(QWidget * parent);
+    ~OpenGLWidget();
+
+public slots:
+    void cleanup();
 
 protected:
     void initializeGL();
     void resizeGL(int w, int h);
     void paintGL();
+
+private:
+    // Data to render
+    std::vector<glm::vec2> data_;
+
+    // Projection and view matrices
+    QMatrix4x4 projMatrix_;
+    QMatrix4x4 viewMatrix_;
+
+    // GPU resources
+    QOpenGLVertexArrayObject vao_;
+    QOpenGLBuffer vbo_;
+    QOpenGLShaderProgram *shaderProgram_;
+
+    // Shader uniform locations
+    int projMatrixLoc_;
+    int viewMatrixLoc_;
 };
 
 #endif // OPENGLWIDGET_H
