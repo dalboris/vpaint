@@ -48,6 +48,7 @@
 #include <QDesktopServices>
 #include <QShortcut>
 
+#include <OpenGLWidget.h>
 
 /*********************************************************************
  *                             Constructor
@@ -84,9 +85,8 @@ MainWindow::MainWindow() :
     editCanvasSizeDialog_(0),
     exportingPng_(false)
 {
-
-
-
+    OpenGLWidget * openGLWidget = new OpenGLWidget(this);
+    setCentralWidget(openGLWidget);
 
 
     /* FACTORED_OUT

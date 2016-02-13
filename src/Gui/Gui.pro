@@ -188,7 +188,8 @@ HEADERS += MainWindow.h \
     Version.h \
     UpdateCheck.h \
     VectorAnimationComplex/BoundingBox.h \
-    VectorAnimationComplex/TransformTool.h
+    VectorAnimationComplex/TransformTool.h \
+    OpenGLWidget.h
 
 SOURCES += main.cpp \
     SaveAndLoad.cpp \
@@ -278,4 +279,5 @@ SOURCES += main.cpp \
     Version.cpp \
     UpdateCheck.cpp \
     VectorAnimationComplex/BoundingBox.cpp \
-    VectorAnimationComplex/TransformTool.cpp
+    VectorAnimationComplex/TransformTool.cpp \
+    OpenGLWidget.cpp
