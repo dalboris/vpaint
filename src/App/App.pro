@@ -57,11 +57,35 @@ win32: CONFIG += embed_manifest_exe
 
 
 ###############################################################################
-#                     UNSHIPPED EXTERNAL LIBRARIES
+#                           LIBRARIES UTIL
 
-# GLU
-unix:!macx: LIBS += -lGLU
+# Define RELEASE_OR_DEBUG convenient variable
+CONFIG(release, debug|release): RELEASE_OR_DEBUG = release
+CONFIG(debug,   debug|release): RELEASE_OR_DEBUG = debug
 
+
+###############################################################################
+#                      SHIPPED INTERNAL LIBRARIES
+
+# OpenVAC
+
+OPENVAC_SRC       = $$PWD/../OpenVAC/src
+OPENVAC_OUT_UNIX  = $$OUT_PWD/../OpenVAC
+OPENVAC_OUT_WIN32 = $$OUT_PWD/../OpenVAC/$$RELEASE_OR_DEBUG
+
+INCLUDEPATH += $$OPENVAC_SRC/
+DEPENDPATH += $$OPENVAC_SRC/
+!win32: QMAKE_CXXFLAGS += $$QMAKE_CFLAGS_ISYSTEM $$OPENVAC_SRC/
+
+win32 {
+    LIBS += -L$$OPENVAC_OUT_WIN32/
+    win32-g++: PRE_TARGETDEPS += $$OPENVAC_OUT_WIN32/libOpenVAC.a
+    else:      PRE_TARGETDEPS += $$OPENVAC_OUT_WIN32/OpenVAC.lib
+}
+else:unix {
+    LIBS += -L$$OPENVAC_OUT_UNIX/ -lOpenVAC
+    PRE_TARGETDEPS += $$OPENVAC_OUT_UNIX/libOpenVAC.a
+}
 
 ###############################################################################
 #                      SHIPPED EXTERNAL LIBRARIES
@@ -70,10 +94,6 @@ unix:!macx: LIBS += -lGLU
 INCLUDEPATH += $$PWD/../Third/
 DEPENDPATH += $$PWD/../Third/
 !win32: QMAKE_CXXFLAGS += $$QMAKE_CFLAGS_ISYSTEM $$PWD/../Third/
-
-# Define RELEASE_OR_DEBUG convenient variable
-CONFIG(release, debug|release): RELEASE_OR_DEBUG = release
-CONFIG(debug,   debug|release): RELEASE_OR_DEBUG = debug
 
 # GLEW
 win32 {
@@ -85,6 +105,14 @@ else:unix {
     LIBS += -L$$OUT_PWD/../Third/GLEW/ -lGLEW
     PRE_TARGETDEPS += $$OUT_PWD/../Third/GLEW/libGLEW.a
 }
+
+
+###############################################################################
+#                     UNSHIPPED EXTERNAL LIBRARIES
+
+# GLU
+unix:!macx: LIBS += -lGLU
+
 
 
 ###############################################################################

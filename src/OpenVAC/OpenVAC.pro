@@ -6,16 +6,13 @@
 # license terms and conditions in the LICENSE.MIT file found in the top-level
 # directory of this distribution and at http://opensource.org/licenses/MIT
 
-# Basic Qt configuration
 TEMPLATE = subdirs
 
 SUBDIRS += \
-    GLEW \
     OpenVAC \
-    App
+    UnitTests
 
-GLEW.subdir    = Third/GLEW
-OpenVAC.subdir = OpenVAC
-App.subdir     = App
+OpenVAC.subdir = src/OpenVAC
+UnitTests.subdir = tests/UnitTests
 
-App.depends = GLEW OpenVAC
+UnitTests.depends = OpenVAC

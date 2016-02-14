@@ -6,16 +6,19 @@
 # license terms and conditions in the LICENSE.MIT file found in the top-level
 # directory of this distribution and at http://opensource.org/licenses/MIT
 
-# Basic Qt configuration
-TEMPLATE = subdirs
+QT -= core gui
 
-SUBDIRS += \
-    GLEW \
-    OpenVAC \
-    App
+TARGET = ../../OpenVAC
+TEMPLATE = lib
+CONFIG += staticlib
 
-GLEW.subdir    = Third/GLEW
-OpenVAC.subdir = OpenVAC
-App.subdir     = App
+SOURCES += \
+    Core/Frame.cpp
 
-App.depends = GLEW OpenVAC
+HEADERS += \
+    Core/Frame.h
+
+unix {
+    target.path = /usr/lib
+    INSTALLS += target
+}
