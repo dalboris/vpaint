@@ -10,13 +10,51 @@ QT -= core gui
 
 TARGET = ../../OpenVAC
 TEMPLATE = lib
-CONFIG += staticlib
+CONFIG += staticlib c++11
+
+OPENVAC_SRC = ..
+INCLUDEPATH += $$OPENVAC_SRC
+DEPENDPATH += $$OPENVAC_SRC
+unix: QMAKE_CXXFLAGS += $$QMAKE_CFLAGS_ISYSTEM $$OPENVAC_SRC
 
 SOURCES += \
-    Core/Frame.cpp
+    VAC.cpp \
+    Core/Frame.cpp \
+    Topology/CellType.cpp \
+    Topology/Cell.cpp \
+    Topology/KeyCell.cpp \
+    Topology/VertexCell.cpp \
+    Topology/EdgeCell.cpp \
+    Topology/KeyVertex.cpp \
+    Topology/KeyEdge.cpp \
+    Operators/Operator.cpp \
+    Operators/OpMakeKeyVertex.cpp \
+    Geometry/GManager.cpp \
+    DefaultGeometry/DGManager.cpp
 
 HEADERS += \
-    Core/Frame.h
+    VAC.h \
+    Core/Memory.h \
+    Core/Frame.h \
+    Core/IdManager.h \
+    Topology/TCellData/DefineCellData.h \
+    Topology/TCellData/TCellData.h \
+    Topology/TCellData/TKeyVertexData.h \
+    Topology/TCellData/TKeyEdgeData.h \
+    Topology/CellType.h \
+    Topology/CellData.h \
+    Topology/CellId.h \
+    Topology/CellHandle.h \
+    Topology/Cell.h \
+    Topology/KeyCell.h \
+    Topology/VertexCell.h \
+    Topology/EdgeCell.h \
+    Topology/KeyVertex.h \
+    Topology/KeyEdge.h \
+    Operators/Operator.h \
+    Operators/OpMakeKeyVertex.h \
+    Geometry/GManager.h \
+    DefaultGeometry/DGManager.h
 
 unix {
     target.path = /usr/lib

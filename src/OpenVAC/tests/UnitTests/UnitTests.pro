@@ -8,6 +8,7 @@
 
 QT -= core gui
 QT += testlib
+CONFIG += c++11
 
 OPENVAC_SRC       = $$PWD/../../src
 OPENVAC_OUT_UNIX  = $$OUT_PWD/../..
@@ -28,4 +29,15 @@ else:unix {
 }
 
 SOURCES = \
-    TestFrame.cpp
+    main.cpp \
+    TestFrame.cpp \
+    TestTCellData.cpp \
+    TestMemory.cpp \
+    TestCell.cpp
+
+HEADERS += \
+    Test.h \
+    TestFrame.h \
+    TestTCellData.h \
+    TestMemory.h \
+    TestCell.h

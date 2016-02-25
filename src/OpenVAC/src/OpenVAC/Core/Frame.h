@@ -250,4 +250,4 @@ inline Frame   operator--(Frame & f, int) { Frame res = f; f.value_ -= 1.0; retu
 
 }
 
-#endif // FRAME_H
+#endif // OPENVAC_FRAME_H

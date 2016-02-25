@@ -6,23 +6,11 @@
 // license terms and conditions in the LICENSE.MIT file found in the top-level
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
-#include <QtTest/QtTest>
+#include "TestFrame.h"
 
 #include <OpenVAC/Core/Frame.h>
 
 using OpenVAC::Frame;
-
-class TestFrame: public QObject
-{
-    Q_OBJECT
-
-private slots:
-    void createFrames();
-    void compareFrames();
-    void roundFrames();
-    void frameArithmetic();
-    void frameToTime();
-};
 
 void TestFrame::createFrames()
 {
@@ -277,6 +265,3 @@ void TestFrame::frameToTime()
     QVERIFY(Frame::fromSeconds(2.0, fps) == 48);
     QVERIFY(Frame::fromSeconds(-1.0, fps) == -24);
 }
-
-QTEST_MAIN(TestFrame)
-#include "TestFrame.moc"

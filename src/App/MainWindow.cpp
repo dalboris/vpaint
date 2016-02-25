@@ -50,6 +50,7 @@
 
 #include <OpenGLWidget.h>
 
+
 /*********************************************************************
  *                             Constructor
  */
@@ -87,7 +88,6 @@ MainWindow::MainWindow() :
 {
     OpenGLWidget * openGLWidget = new OpenGLWidget(this);
     setCentralWidget(openGLWidget);
-
 
     /* FACTORED_OUT
     // Global object
