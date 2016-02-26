@@ -12,6 +12,7 @@ namespace OpenVAC
 {
 
 VAC::VAC(GManager * gManager) :
+    cellManager_(),
     gManager_(gManager)
 {
 }

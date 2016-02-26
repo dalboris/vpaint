@@ -9,6 +9,8 @@
 #ifndef OPENVAC_VAC_H
 #define OPENVAC_VAC_H
 
+#include <OpenVAC/Core/IdManager.h>
+#include <OpenVAC/Topology/Cell.h>
 #include <OpenVAC/Geometry/GManager.h>
 
 #include <memory>
@@ -23,8 +25,14 @@ public:
     VAC(GManager * gManager = nullptr);
 
 private:
+    // Topological data
+    IdManager<CellSharedPtr> cellManager_;
+
     // Geometric data
     std::unique_ptr<GManager> gManager_;
+
+    // Befriend Operator
+    friend class Operator;
 };
 
 }
