@@ -19,7 +19,7 @@ class KeyVertex: public KeyCell, public VertexCell
 {
 public:
     // Constructor
-    KeyVertex(VAC * vac, CellId id, const KeyVertexData & data);
+    KeyVertex(VAC * vac, CellId id, const KeyVertexData & data = KeyVertexData());
 
     // Cell type
     CellType type() const { return CellType::KeyVertex; }
@@ -33,6 +33,7 @@ public:
 private:
     // Data
     KeyVertexData data_;
+    KeyVertexData & data();
 
     // Befriend Operator
     friend class Operator;

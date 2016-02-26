@@ -33,11 +33,13 @@ SOURCES = \
     TestFrame.cpp \
     TestTCellData.cpp \
     TestMemory.cpp \
-    TestCell.cpp
+    TestCell.cpp \
+    TestOperators.cpp
 
 HEADERS += \
     Test.h \
     TestFrame.h \
     TestTCellData.h \
     TestMemory.h \
-    TestCell.h
+    TestCell.h \
+    TestOperators.h

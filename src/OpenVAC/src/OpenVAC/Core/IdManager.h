@@ -24,6 +24,7 @@ class IdManager
 {
 public:
     typedef unsigned int Id;
+    typedef std::map<Id, T> map_type;
 
     IdManager() : map_() {}
 
@@ -89,6 +90,10 @@ public:
     /// exists, an exception of type std::out_of_range is thrown.
     T & operator[](Id id) { return map_.at(id); }
     const T & operator[](Id id) const { return map_.at(id); }
+
+    /// Returns the number of elements in the container
+    ///
+    size_t size() const { return map_.size(); }
 
 private:
     std::map<Id, T> map_;

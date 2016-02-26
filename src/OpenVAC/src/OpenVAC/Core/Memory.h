@@ -92,12 +92,18 @@ void swap(WeakPtr<T> & lhs, WeakPtr<T> & rhs )
 
 }
 
-#define OPENVAC_DECLARE_SHARED_PTR(T) \
+#define OPENVAC_FORWARD_DECLARE_SHARED_PTR(T) \
     class T; \
     typedef OpenVAC::SharedPtr<T> T##SharedPtr;
 
-#define OPENVAC_DECLARE_PTR(T) \
+#define OPENVAC_FORWARD_DECLARE_PTR(T) \
     class T; \
+    typedef OpenVAC::WeakPtr<T> T##Ptr;
+
+#define OPENVAC_DECLARE_SHARED_PTR(T) \
+    typedef OpenVAC::SharedPtr<T> T##SharedPtr;
+
+#define OPENVAC_DECLARE_PTR(T) \
     typedef OpenVAC::WeakPtr<T> T##Ptr;
 
 #endif // OPENVAC_MEMORY_H

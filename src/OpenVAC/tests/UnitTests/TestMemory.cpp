@@ -11,8 +11,8 @@
 #include <OpenVAC/Core/Memory.h>
 #include <iostream>
 
-OPENVAC_DECLARE_SHARED_PTR(Foo)
-OPENVAC_DECLARE_PTR(Foo)
+OPENVAC_FORWARD_DECLARE_SHARED_PTR(Foo)
+OPENVAC_FORWARD_DECLARE_PTR(Foo)
 
 class Foo
 {

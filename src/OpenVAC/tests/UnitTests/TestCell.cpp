@@ -54,12 +54,6 @@ void TestCell::testAllocatingAndCasting()
 
         QVERIFY(scell1->type() == CellType::KeyVertex);
         QVERIFY(scell2->type() == CellType::KeyEdge);
-
-        QVERIFY(scell1->data().toKeyVertexData()->frame == keyVertexData.frame);
-        QVERIFY(scell2->data().toKeyEdgeData()->frame == keyEdgeData.frame);
-
-        keyVertexData.frame = 44;
-        QVERIFY(scell1->data().toKeyVertexData()->frame != keyVertexData.frame);
     }
 
     // Get cell handles from upcasted cell shared pointers

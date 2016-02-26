@@ -17,11 +17,13 @@ namespace OpenVAC
 class OpMakeKeyVertex: public Operator
 {
 public:
-    OpMakeKeyVertex(VAC * vac);
+    OpMakeKeyVertex(VAC * vac, Frame frame);
 
 private:
     bool isValid_();
     void compute_();
+
+    Frame frame_;
 };
 
 }

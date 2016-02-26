@@ -24,6 +24,12 @@ public:
     // Construct a VAC. The VAC takes ownership of gManager.
     VAC(GManager * gManager = nullptr);
 
+    // Number of cells
+    size_t numCells() const;
+
+    // Get cell from ID
+    CellHandle cell(CellId id) const;
+
 private:
     // Topological data
     IdManager<CellSharedPtr> cellManager_;

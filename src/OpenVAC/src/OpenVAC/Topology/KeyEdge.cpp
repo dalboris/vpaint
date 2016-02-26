@@ -25,6 +25,11 @@ const KeyEdgeData & KeyEdge::data() const
     return data_;
 }
 
+KeyEdgeData & KeyEdge::data()
+{
+    return data_;
+}
+
 Frame KeyEdge::frame() const
 {
     return data().frame;

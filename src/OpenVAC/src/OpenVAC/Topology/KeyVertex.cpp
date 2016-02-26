@@ -25,6 +25,11 @@ const KeyVertexData & KeyVertex::data() const
     return data_;
 }
 
+KeyVertexData & KeyVertex::data()
+{
+    return data_;
+}
+
 Frame KeyVertex::frame() const
 {
     return data().frame;

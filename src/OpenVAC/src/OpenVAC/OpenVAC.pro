@@ -30,7 +30,8 @@ SOURCES += \
     Operators/Operator.cpp \
     Operators/OpMakeKeyVertex.cpp \
     Geometry/GManager.cpp \
-    DefaultGeometry/DGManager.cpp
+    DefaultGeometry/DGManager.cpp \
+    Operators/CellDataConverter.cpp
 
 HEADERS += \
     VAC.h \
@@ -54,7 +55,9 @@ HEADERS += \
     Operators/Operator.h \
     Operators/OpMakeKeyVertex.h \
     Geometry/GManager.h \
-    DefaultGeometry/DGManager.h
+    DefaultGeometry/DGManager.h \
+    Operators/OpCellData.h \
+    Operators/CellDataConverter.h
 
 unix {
     target.path = /usr/lib

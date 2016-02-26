@@ -6,28 +6,19 @@
 // license terms and conditions in the LICENSE.MIT file found in the top-level
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
-#include "VAC.h"
+#ifndef TESTOPERATORS_H
+#define TESTOPERATORS_H
 
-namespace OpenVAC
+#include "Test.h"
+
+class TestOperators: public QObject
 {
+    Q_OBJECT
 
-VAC::VAC(GManager * gManager) :
-    cellManager_(),
-    gManager_(gManager)
-{
-}
+private slots:
+    void opMakeKeyVertex();
+};
 
-size_t VAC::numCells() const
-{
-    return cellManager_.size();
-}
+REGISTER_TEST(TestOperators)
 
-CellHandle VAC::cell(CellId id) const
-{
-    if (cellManager_.contains(id))
-        return cellManager_[id];
-    else
-        return CellHandle();
-}
-
-}
+#endif

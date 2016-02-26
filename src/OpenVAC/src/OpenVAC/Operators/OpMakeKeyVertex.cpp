@@ -11,10 +11,10 @@
 namespace OpenVAC
 {
 
-OpMakeKeyVertex::OpMakeKeyVertex(VAC * vac) :
-    Operator(vac)
+OpMakeKeyVertex::OpMakeKeyVertex(VAC * vac, Frame frame) :
+    Operator(vac),
+    frame_(frame)
 {
-
 }
 
 bool OpMakeKeyVertex::isValid_()
@@ -24,7 +24,9 @@ bool OpMakeKeyVertex::isValid_()
 
 void OpMakeKeyVertex::compute_()
 {
-    // XXX TODO
+    CellId id = getAvailableId();
+    OpKeyVertexDataPtr keyVertex = newKeyVertex(id);
+    keyVertex->frame = frame_;
 }
 
 }

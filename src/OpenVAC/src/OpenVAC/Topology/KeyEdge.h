@@ -19,7 +19,7 @@ class KeyEdge: public KeyCell, public EdgeCell
 {
 public:
     // Constructor
-    KeyEdge(VAC * vac, CellId id, const KeyEdgeData & data);
+    KeyEdge(VAC * vac, CellId id, const KeyEdgeData & data = KeyEdgeData());
 
     // Cell type
     CellType type() const { return CellType::KeyEdge; }
@@ -39,6 +39,7 @@ public:
 private:
     // Data
     KeyEdgeData data_;
+    KeyEdgeData & data();
 
     // Befriend Operator
     friend class Operator;

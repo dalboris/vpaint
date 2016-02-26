@@ -43,6 +43,9 @@ private:
     VAC * vac_;
     CellId id_;
 
+    // Non-const data access
+    virtual CellData & data()=0;
+
     // Befriend Operator
     friend class Operator;
 
