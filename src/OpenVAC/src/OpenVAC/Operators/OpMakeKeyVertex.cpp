@@ -6,7 +6,11 @@
 // license terms and conditions in the LICENSE.MIT file found in the top-level
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
-#include "OpMakeKeyVertex.h"
+#include <OpenVAC/Operators/OpMakeKeyVertex.h>
+#include <OpenVAC/Topology/KeyVertex.h>
+#include <OpenVAC/VAC.h>
+
+#include <cassert>
 
 namespace OpenVAC
 {
@@ -22,10 +26,21 @@ bool OpMakeKeyVertex::isValid_()
     return true;
 }
 
+KeyVertexId OpMakeKeyVertex::keyVertexId() const
+{
+    assert(isComputed());
+    return keyVertexId_;
+}
+
+KeyVertexHandle OpMakeKeyVertex::keyVertex() const
+{
+    assert(isApplied());
+    return vac()->cell(keyVertexId());
+}
+
 void OpMakeKeyVertex::compute_()
 {
-    CellId id = getAvailableId();
-    OpKeyVertexDataPtr keyVertex = newKeyVertex(id);
+    auto keyVertex = newKeyVertex(&keyVertexId_);
     keyVertex->frame = frame_;
 }
 

@@ -32,7 +32,7 @@ public:
         CellType type = fromData.type();
         if (type == CellType::KeyVertex)
             convert(*fromData.toKeyVertexData(), *toData.toKeyVertexData());
-        else if (type == CellType::KeyVertex)
+        else if (type == CellType::KeyEdge)
             convert(*fromData.toKeyEdgeData(), *toData.toKeyEdgeData());
         else
         {

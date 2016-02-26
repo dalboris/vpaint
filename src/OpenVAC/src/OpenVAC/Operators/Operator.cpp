@@ -20,6 +20,7 @@ Operator::Operator(VAC * vac) :
     vac_(vac),
     isValidated_(false),
     isComputed_(false),
+    isApplied_(false),
     numIdRequested_(0)
 {
 }
@@ -39,35 +40,34 @@ bool Operator::isValid()
     return valid_;
 }
 
-bool Operator::compute()
+Operator & Operator::compute()
 {
-    if (isValid())
+    assert(isValid());
+    if (!isComputed_)
     {
-        if (!isComputed_)
-        {
-            compute_();
-            isComputed_ = true;
-        }
-        return true;
+        compute_();
+        isComputed_ = true;
     }
-    else
-    {
-        return false;
-    }
-
+    return *this;
 }
 
-bool Operator::apply()
+bool Operator::isComputed() const
 {
-    if (compute())
-    {
-        apply_();
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+    return isComputed_;
+}
+
+Operator & Operator::apply()
+{
+    assert(!isApplied());
+    compute();
+    apply_();
+    isApplied_ = true;
+    return *this;
+}
+
+bool Operator::isApplied() const
+{
+    return isApplied_;
 }
 
 const std::vector<CellId> & Operator::newCells()
@@ -107,7 +107,41 @@ void Operator::apply_()
     }
 }
 
-CellId Operator::getAvailableId() const
+template <class OpCellDataType>
+WeakPtr<OpCellDataType> Operator_newCell_(Operator & self, CellId * outId)
+{
+    // Get available ID
+    CellId id = self.getAvailableId_();
+    if (outId)
+        *outId = id;
+
+    // Allocate OpCellData
+    auto opCellData = std::make_shared<OpCellDataType>();
+
+    // Insert in cellsAfter_
+    auto res = self.cellsAfter_.insert(std::make_pair(id, opCellData));
+
+    // Abort if ID already taken
+    assert(res.second);
+
+    // Tag this ID as a cell created by the operator
+    self.newCells_.push_back(id);
+
+    // Return the allocated OpCellData
+    return opCellData;
+}
+
+OpKeyVertexDataPtr Operator::newKeyVertex(KeyVertexId * outId)
+{
+    return Operator_newCell_<OpKeyVertexData>(*this, outId);
+}
+
+OpKeyEdgeDataPtr Operator::newKeyEdge(KeyEdgeId * outId)
+{
+    return Operator_newCell_<OpKeyEdgeData>(*this, outId);
+}
+
+CellId Operator::getAvailableId_() const
 {
     // Note: calling vac_->cellManager_.getAvailableId() repeatedly would always
     // give the same ID (since we're not inserting a cell after the call).
@@ -119,40 +153,13 @@ CellId Operator::getAvailableId() const
     return ids[numIdRequested_-1];
 }
 
-std::vector<CellId> Operator::getAvailableIds(unsigned int numIds) const
+std::vector<CellId> Operator::getAvailableIds_(unsigned int numIds) const
 {
     // Same as above: we re-generate previously generated IDs, but only return
     // the new ones
     numIdRequested_ += numIds;
     std::vector<CellId> ids = vac_->cellManager_.getAvailableIds(numIdRequested_);
     return std::vector<CellId>(&ids[numIdRequested_-numIds], &ids[numIdRequested_]);
-}
-
-namespace
-{
-template <class OpCellDataType>
-WeakPtr<OpCellDataType> newCell_(std::map<CellId, OpCellDataSharedPtr> & cellsAfter_, std::vector<CellId> & newCells_, CellId id)
-{
-    // Allocate OpCellData
-    auto opCellData = std::make_shared<OpCellDataType>();
-
-    // Insert in cellsAfter_
-    auto res = cellsAfter_.insert(std::make_pair(id, opCellData));
-
-    // Abort if ID already taken
-    assert(res.second);
-
-    // Tag this ID as a cell created by the operator
-    newCells_.push_back(id);
-
-    // Return the allocated OpCellData
-    return opCellData;
-}
-}
-
-OpKeyVertexDataPtr Operator::newKeyVertex(CellId id)
-{
-    return newCell_<OpKeyVertexData>(cellsAfter_, newCells_, id);
 }
 
 CellSharedPtr Operator::make_shared(CellType type, CellId id) const

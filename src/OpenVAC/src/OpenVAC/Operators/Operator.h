@@ -25,19 +25,23 @@ class Operator
 {
 public:
     // Constructor
-    Operator(VAC * vac);
+    Operator(VAC * vac = nullptr);
 
-    // Returns the VAC this operator is bound to
+    // Returns the VAC this operator is bound to.
     VAC * vac() const;
 
-    // Checks whether the operation is valid
+    // Checks whether the operation is valid.
     bool isValid();
 
-    // Compute operation
-    bool compute();
+    // Computes operation. Does nothing if already computed.
+    // Aborts if not valid. Returns this Operator.
+    Operator & compute();
+    bool isComputed() const;
 
-    // Applies operation to VAC
-    bool apply();
+    // Computes operation if not computed yet, then applies operation to VAC.
+    // Aborts if not valid or already applied. Returns this Operator.
+    Operator & apply();
+    bool isApplied() const;
 
     // Get info about operation (compute and/or apply must have been called)
     const std::vector<CellId> & newCells();
@@ -49,9 +53,8 @@ protected:
     virtual void compute_()=0;
 
     // Methods to be used by derived classes
-    CellId getAvailableId() const;
-    std::vector<CellId> getAvailableIds(unsigned int numIds) const;
-    OpKeyVertexDataPtr newKeyVertex(CellId id);
+    OpKeyVertexDataPtr newKeyVertex(KeyVertexId * outId = nullptr);
+    OpKeyEdgeDataPtr   newKeyEdge  (KeyEdgeId *   outId = nullptr);
 
 private:
     VAC * vac_;
@@ -69,13 +72,25 @@ private:
 
     // Application
     void apply_();
+    bool isApplied_;
 
     // Keep track of requested IDs
     mutable unsigned int numIdRequested_;
 
     // Private methods
+    CellId getAvailableId_() const;
+    std::vector<CellId> getAvailableIds_(unsigned int numIds) const;
     CellSharedPtr make_shared(CellType type, CellId id) const;
+    template <class OpCellDataType>
+    friend WeakPtr<OpCellDataType> Operator_newCell_(Operator & self, CellId * outId);
 };
+
+// Convenient macros for derived operators. It defines an override of
+// Operator::compute() and Operator::apply() to return a reference to an
+// OpDerivedType instead of a reference to an Operator
+#define OPENVAC_OPERATOR_OVERRIDE_COMPUTE_AND_APPLY(OpType) \
+    OpType & compute() { Operator::compute(); return *this;} \
+    OpType & apply()   { Operator::apply();   return *this;}
 
 }
 

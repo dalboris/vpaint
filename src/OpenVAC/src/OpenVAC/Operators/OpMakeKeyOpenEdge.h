@@ -6,37 +6,37 @@
 // license terms and conditions in the LICENSE.MIT file found in the top-level
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
-#ifndef OPENVAC_OPMAKEKEYVERTEX_H
-#define OPENVAC_OPMAKEKEYVERTEX_H
+#ifndef OPENVAC_OPMAKEKEYEDGE_H
+#define OPENVAC_OPMAKEKEYEDGE_H
 
 #include <OpenVAC/Operators/Operator.h>
 
 namespace OpenVAC
 {
 
-class OpMakeKeyVertex: public Operator
+class OpMakeKeyOpenEdge: public Operator
 {
 public:
-    OpMakeKeyVertex(VAC * vac, Frame frame);
+    OpMakeKeyOpenEdge(KeyVertexHandle startVertex, KeyVertexHandle endVertex);
 
     // Overrides compute() and apply() to return the derived type
-    OPENVAC_OPERATOR_OVERRIDE_COMPUTE_AND_APPLY(OpMakeKeyVertex)
+    OPENVAC_OPERATOR_OVERRIDE_COMPUTE_AND_APPLY(OpMakeKeyOpenEdge)
 
     // Post-computation info. Aborts if not computed.
-    KeyVertexId keyVertexId() const;
+    KeyEdgeId keyEdgeId() const;
 
     // Post-application info. Aborts if not applied.
-    KeyVertexHandle keyVertex() const;
+    KeyEdgeHandle keyEdge() const;
 
 private:
     bool isValid_();
     void compute_();
 
     // In
-    Frame frame_;
+    KeyVertexHandle startVertex_, endVertex_;
 
     // Out
-    KeyVertexId keyVertexId_;
+    KeyEdgeId keyEdgeId_;
 };
 
 }

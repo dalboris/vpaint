@@ -17,6 +17,7 @@ class TestOperators: public QObject
 
 private slots:
     void opMakeKeyVertex();
+    void opMakeKeyOpenEdge();
 };
 
 REGISTER_TEST(TestOperators)
