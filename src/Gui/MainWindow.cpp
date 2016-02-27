@@ -858,8 +858,8 @@ void MainWindow::doImportSVG(const QString & filePath)
     // Close file
     file.close();
 
-    // Add to undo stack
-    resetUndoStack_();
+    scene_->emitChanged();
+    scene_->emitCheckpoint();
 }
 
 bool MainWindow::save_(const QString & filePath, bool relativeRemap)
