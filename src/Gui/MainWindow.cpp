@@ -25,6 +25,7 @@
 #include "Background/BackgroundWidget.h"
 #include "VectorAnimationComplex/VAC.h"
 #include "VectorAnimationComplex/InbetweenFace.h"
+#include "SVGParser.h"
 
 #include "IO/FileVersionConverter.h"
 #include "XmlStreamWriter.h"
@@ -620,6 +621,14 @@ void MainWindow::open()
     }
 }
 
+void MainWindow::importSVG()
+{
+    QString filePath = QFileDialog::getOpenFileName(this, tr("Import as SVG"), global()->documentDir().path(), tr("SVG files (*.svg)"));
+    // Open file
+    if (!filePath.isEmpty())
+        doImportSVG(filePath);
+}
+
 bool MainWindow::save()
 {
     if(isNewDocument_())
@@ -670,6 +679,7 @@ bool MainWindow::saveAs()
         return false;
     }
 }
+
 
 bool MainWindow::exportSVG()
 {
@@ -830,6 +840,26 @@ void MainWindow::open_(const QString & filePath)
         // Add to undo stack
         resetUndoStack_();
     }
+}
+
+void MainWindow::doImportSVG(const QString & filePath)
+{
+    SVGParser parser;
+    QFile file(filePath);
+    if (!file.open(QFile::ReadOnly | QFile::Text))
+    {
+        qDebug() << "Error: cannot open file";
+        return;
+    }
+
+    XmlStreamReader xml(&file);
+    parser.readSVG_(xml);
+
+    // Close file
+    file.close();
+
+    // Add to undo stack
+    resetUndoStack_();
 }
 
 bool MainWindow::save_(const QString & filePath, bool relativeRemap)
@@ -1284,6 +1314,11 @@ void MainWindow::createActions()
     actionOpen->setShortcut(QKeySequence::Open);
     connect(actionOpen, SIGNAL(triggered()), this, SLOT(open()));
 
+    // Import SVG
+    actionImportSVG = new QAction(/*QIcon(":/iconLoad"),*/ tr("SVG [Beta]"), this);
+    actionImportSVG->setStatusTip(tr("Import an existing SVG file."));
+    connect(actionImportSVG, SIGNAL(triggered()), this, SLOT(importSVG()));
+
     // Save
     actionSave = new QAction(/*QIcon(":/iconSave"),*/ tr("&Save"), this);
     actionSave->setStatusTip(tr("Save current illustration."));
@@ -1723,6 +1758,9 @@ void MainWindow::createMenus()
     menuFile = new QMenu(tr("&File"));
     menuFile->addAction(actionNew);
     menuFile->addAction(actionOpen);
+    QMenu * importMenu = menuFile->addMenu(tr("Import")); {
+        importMenu->addAction(actionImportSVG);
+    }
     menuFile->addSeparator();
     menuFile->addAction(actionSave);
     menuFile->addAction(actionSaveAs);

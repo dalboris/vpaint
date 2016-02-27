@@ -79,6 +79,7 @@ private slots:
     // ---- File ----
     void newDocument();
     void open();
+    void importSVG();
     bool save();
     void autosave();
     bool saveAs();
@@ -172,6 +173,7 @@ private:
     void setDocumentFilePath_(const QString & filePath);
     bool maybeSave_();
     bool save_(const QString & filePath, bool relativeRemap = false);
+    void doImportSVG(const QString & filename);
     bool doExportSVG(const QString & filename);
     bool doExportPNG(const QString & filename);
     void read_DEPRECATED(QTextStream & in);
@@ -200,6 +202,7 @@ private:
     QMenu * menuFile;
       QAction * actionNew;
       QAction * actionOpen;
+      QAction * actionImportSVG;
       QAction * actionSave;
       QAction * actionSaveAs;
       QAction * actionPreferences;
