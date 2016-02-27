@@ -257,18 +257,38 @@ bool SVGParser::readRect_(XmlStreamReader & xml)
     {
         rx = ry;
     }
-    rx = qMin(rx, width / 2);
-    ry = qMin(ry, height / 2);
+    rx = qBound(0.0, rx, width / 2);
+    ry = qBound(0.0, ry, height / 2);
 
     // Get presentation attributes (some of them anyway)
 
     // Stroke width
-    double strokeWidth = xml.attributes().hasAttribute("stroke-width") ? xml.attributes().value("stroke-width").toDouble(&okay) : 1;
+    double strokeWidth = xml.attributes().hasAttribute("stroke-width") ? qMax(0.0, xml.attributes().value("stroke-width").toDouble(&okay)) : 1;
     if(!okay) strokeWidth = 1;
 
     // Fill (color)
     QColor fill = xml.attributes().hasAttribute("fill") ? parseColor_(xml.attributes().value("fill").toString()) : QColor("black");
     if(!fill.isValid()) fill = QColor("black");
+
+    // Stroke (color)
+    QColor stroke = xml.attributes().hasAttribute("stroke") ? parseColor_(xml.attributes().value("stroke").toString()) : QColor("black");
+    if(!stroke.isValid()) fill = QColor("black");
+
+    // Fill opacity
+    double fillOpacity = xml.attributes().hasAttribute("fill-opacity") ? qBound(0.0, xml.attributes().value("fill-opacity").toDouble(&okay), 1.0) : 1;
+    if(!okay) fillOpacity = 1;
+
+    // Stroke opacity
+    double strokeOpacity = xml.attributes().hasAttribute("stroke-opacity") ? qBound(0.0, xml.attributes().value("stroke-opacity").toDouble(&okay), 1.0) : 1;
+    if(!okay) strokeOpacity = 1;
+
+    // Opacity (whole object)
+    double opacity = xml.attributes().hasAttribute("opacity") ? qBound(0.0, xml.attributes().value("opacity").toDouble(&okay), 1.0) : 1;
+    if(!okay) opacity = 1;
+
+    // Opacities appear to stack
+    fill.setAlphaF(fill.alphaF() * fillOpacity * opacity);
+    stroke.setAlphaF(stroke.alphaF() * strokeOpacity * opacity);
 
     VectorAnimationComplex::KeyVertex * v1 = global()->currentVAC()->newKeyVertex(global()->activeTime(), Eigen::Vector2d(x, y));
     VectorAnimationComplex::KeyVertex * v2 = global()->currentVAC()->newKeyVertex(global()->activeTime(), Eigen::Vector2d(x + width, y));
@@ -278,13 +298,34 @@ bool SVGParser::readRect_(XmlStreamReader & xml)
     SculptCurve::Curve<VectorAnimationComplex::EdgeSample> c2(VectorAnimationComplex::EdgeSample(v2->pos()[0], v2->pos()[1], strokeWidth), VectorAnimationComplex::EdgeSample(v3->pos()[0], v3->pos()[1], strokeWidth));
     SculptCurve::Curve<VectorAnimationComplex::EdgeSample> c3(VectorAnimationComplex::EdgeSample(v3->pos()[0], v3->pos()[1], strokeWidth), VectorAnimationComplex::EdgeSample(v4->pos()[0], v4->pos()[1], strokeWidth));
     SculptCurve::Curve<VectorAnimationComplex::EdgeSample> c4(VectorAnimationComplex::EdgeSample(v4->pos()[0], v4->pos()[1], strokeWidth), VectorAnimationComplex::EdgeSample(v1->pos()[0], v1->pos()[1], strokeWidth));
-    QList<VectorAnimationComplex::KeyHalfedge> edges;
-    edges.append(VectorAnimationComplex::KeyHalfedge(global()->currentVAC()->newKeyEdge(global()->activeTime(), v1, v2, (new VectorAnimationComplex::LinearSpline(c1)), strokeWidth), true));
-    edges.append(VectorAnimationComplex::KeyHalfedge(global()->currentVAC()->newKeyEdge(global()->activeTime(), v2, v3, (new VectorAnimationComplex::LinearSpline(c2)), strokeWidth), true));
-    edges.append(VectorAnimationComplex::KeyHalfedge(global()->currentVAC()->newKeyEdge(global()->activeTime(), v3, v4, (new VectorAnimationComplex::LinearSpline(c3)), strokeWidth), true));
-    edges.append(VectorAnimationComplex::KeyHalfedge(global()->currentVAC()->newKeyEdge(global()->activeTime(), v4, v1, (new VectorAnimationComplex::LinearSpline(c4)), strokeWidth), true));
+    VectorAnimationComplex::KeyEdge * e1 = global()->currentVAC()->newKeyEdge(global()->activeTime(), v1, v2, (new VectorAnimationComplex::LinearSpline(c1)), strokeWidth);
+    VectorAnimationComplex::KeyEdge * e2 = global()->currentVAC()->newKeyEdge(global()->activeTime(), v2, v3, (new VectorAnimationComplex::LinearSpline(c2)), strokeWidth);
+    VectorAnimationComplex::KeyEdge * e3 = global()->currentVAC()->newKeyEdge(global()->activeTime(), v3, v4, (new VectorAnimationComplex::LinearSpline(c3)), strokeWidth);
+    VectorAnimationComplex::KeyEdge * e4 = global()->currentVAC()->newKeyEdge(global()->activeTime(), v4, v1, (new VectorAnimationComplex::LinearSpline(c4)), strokeWidth);
+
+    // If stroke is none, then just set stroke opacity to 0
+    if(xml.attributes().value("stroke").trimmed().compare("none", Qt::CaseInsensitive) == 0)
+    {
+        stroke.setAlphaF(0);
+    }
+
+    v1->setColor(stroke);
+    v2->setColor(stroke);
+    v3->setColor(stroke);
+    v4->setColor(stroke);
+    e1->setColor(stroke);
+    e2->setColor(stroke);
+    e3->setColor(stroke);
+    e4->setColor(stroke);
+
+    // Add fill
     if(xml.attributes().value("fill").trimmed().compare("none", Qt::CaseInsensitive) != 0)
     {
+        QList<VectorAnimationComplex::KeyHalfedge> edges;
+        edges.append(VectorAnimationComplex::KeyHalfedge(e1, true));
+        edges.append(VectorAnimationComplex::KeyHalfedge(e2, true));
+        edges.append(VectorAnimationComplex::KeyHalfedge(e3, true));
+        edges.append(VectorAnimationComplex::KeyHalfedge(e4, true));
         VectorAnimationComplex::Cycle cycle(edges);
         VectorAnimationComplex::KeyFace * face = global()->currentVAC()->newKeyFace(cycle);
         face->setColor(fill);
