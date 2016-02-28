@@ -14,6 +14,7 @@
 #include <VectorAnimationComplex/EdgeGeometry.h>
 #include <View.h>
 #include <Global.h>
+#include <QRegExp>
 
 SVGParser::SVGParser()
 {
@@ -343,6 +344,50 @@ bool SVGParser::readLine_(XmlStreamReader & xml) {
     return true;
 }
 
+bool SVGParser::readPolyline_(XmlStreamReader &xml) {
+    // Check to make sure we are reading a line object
+    if(xml.name() != "polyline" || !xml.attributes().hasAttribute("points")) return true;
+
+    bool okay;
+
+    // Get presentation attributes
+    SVGPresentationAttributes pa(xml, *this);
+
+    // Read and split points
+    // Technically the parsing of separators is a bit more complicated,
+    // but this will suffice as it correctly handles all standard-conforming svgs
+    QStringList points = xml.attributes().value("points").toString().split(QRegExp("[\\s,]+"), QString::SkipEmptyParts);
+
+    // Fail if there are less than two points
+    if(points.size() < 4) return false;
+
+    QVector<VectorAnimationComplex::KeyVertex *> verticies(points.size() / 2);
+
+    // Parse points
+    for(int i = 0; i < verticies.size(); i++) {
+        //qDebug() << points[i * 2] << ", " << points[i * 2 + 1];
+        // X
+        double x = points[i * 2].toDouble(&okay);
+        if(!okay) return false;
+
+        // Y
+        double y = points[i * 2 + 1].toDouble(&okay);
+        if(!okay) return false;
+
+        //qDebug() << x << ", " << y;
+
+        verticies[i] = global()->currentVAC()->newKeyVertex(global()->activeTime(), Eigen::Vector2d(x, y));
+        verticies[i]->setColor(pa.stroke);
+    }
+
+    for(int i = 1; i < verticies.size(); i++) {
+        VectorAnimationComplex::KeyEdge * e = global()->currentVAC()->newKeyEdge(global()->activeTime(), verticies[i-1], verticies[i], (new VectorAnimationComplex::LinearSpline(SculptCurve::Curve<VectorAnimationComplex::EdgeSample>(VectorAnimationComplex::EdgeSample(verticies[i-1]->pos()[0], verticies[i-1]->pos()[1], pa.strokeWidth), VectorAnimationComplex::EdgeSample(verticies[i]->pos()[0], verticies[i]->pos()[1], pa.strokeWidth)))), pa.strokeWidth);
+        e->setColor(pa.stroke);
+    }
+
+    return true;
+}
+
 void SVGParser::readSVG_(XmlStreamReader & xml)
 {
     while (xml.readNextStartElement())
@@ -352,11 +397,15 @@ void SVGParser::readSVG_(XmlStreamReader & xml)
             {
                 if(xml.name() == "rect")
                 {
-                    readRect_(xml);
+                    if(!readRect_(xml)) return;
                 }
                 else if(xml.name() == "line")
                 {
-                    readLine_(xml);
+                    if(!readLine_(xml)) return;
+                }
+                else if(xml.name() == "polyline")
+                {
+                    if(!readPolyline_(xml)) return;
                 }
 
                 xml.skipCurrentElement();
@@ -368,8 +417,6 @@ void SVGParser::readSVG_(XmlStreamReader & xml)
 
         xml.skipCurrentElement();
     }
-
-    global()->activeView()->updateGL();
 }
 
 SVGPresentationAttributes::SVGPresentationAttributes(XmlStreamReader &xml, SVGParser & parser) {
@@ -384,8 +431,8 @@ SVGPresentationAttributes::SVGPresentationAttributes(XmlStreamReader &xml, SVGPa
     if(!fill.isValid()) fill = QColor("black");
 
     // Stroke (color)
-    stroke = xml.attributes().hasAttribute("stroke") ? parser.parseColor_(xml.attributes().value("stroke").toString()) : QColor("black");
-    if(!stroke.isValid()) fill = QColor("black");
+    stroke = xml.attributes().hasAttribute("stroke") ? parser.parseColor_(xml.attributes().value("stroke").toString()) : QColor("none");
+    if(!stroke.isValid()) fill = QColor("none");
 
     // Fill opacity
     double fillOpacity = xml.attributes().hasAttribute("fill-opacity") ? qBound(0.0, xml.attributes().value("fill-opacity").toDouble(&okay), 1.0) : 1;
