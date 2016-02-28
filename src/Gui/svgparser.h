@@ -16,6 +16,7 @@ public:
     bool readRect_(XmlStreamReader & xml);
     bool readLine_(XmlStreamReader & xml);
     bool readPolyline_(XmlStreamReader & xml);
+    bool readPolygon_(XmlStreamReader & xml);
     void readSVG_(XmlStreamReader & xml);
 };
 

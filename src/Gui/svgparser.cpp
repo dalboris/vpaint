@@ -345,7 +345,7 @@ bool SVGParser::readLine_(XmlStreamReader & xml) {
 }
 
 bool SVGParser::readPolyline_(XmlStreamReader &xml) {
-    // Check to make sure we are reading a line object
+    // Check to make sure we are reading a polyline object
     if(xml.name() != "polyline" || !xml.attributes().hasAttribute("points")) return true;
 
     bool okay;
@@ -358,14 +358,13 @@ bool SVGParser::readPolyline_(XmlStreamReader &xml) {
     // but this will suffice as it correctly handles all standard-conforming svgs
     QStringList points = xml.attributes().value("points").toString().split(QRegExp("[\\s,]+"), QString::SkipEmptyParts);
 
-    // Fail if there are less than two points
-    if(points.size() < 4) return false;
+    // Fail if there isn't at least one complete coordinate
+    if(points.size() < 2) return false;
 
     QVector<VectorAnimationComplex::KeyVertex *> verticies(points.size() / 2);
 
     // Parse points
     for(int i = 0; i < verticies.size(); i++) {
-        //qDebug() << points[i * 2] << ", " << points[i * 2 + 1];
         // X
         double x = points[i * 2].toDouble(&okay);
         if(!okay) return false;
@@ -374,15 +373,77 @@ bool SVGParser::readPolyline_(XmlStreamReader &xml) {
         double y = points[i * 2 + 1].toDouble(&okay);
         if(!okay) return false;
 
-        //qDebug() << x << ", " << y;
+        verticies[i] = global()->currentVAC()->newKeyVertex(global()->activeTime(), Eigen::Vector2d(x, y));
+        verticies[i]->setColor(pa.stroke);
+    }
+
+    // Create edges
+    for(int i = 1; i < verticies.size(); i++) {
+        VectorAnimationComplex::KeyEdge * e = global()->currentVAC()->newKeyEdge(global()->activeTime(), verticies[i-1], verticies[i], (new VectorAnimationComplex::LinearSpline(SculptCurve::Curve<VectorAnimationComplex::EdgeSample>(VectorAnimationComplex::EdgeSample(verticies[i-1]->pos()[0], verticies[i-1]->pos()[1], pa.strokeWidth), VectorAnimationComplex::EdgeSample(verticies[i]->pos()[0], verticies[i]->pos()[1], pa.strokeWidth)))), pa.strokeWidth);
+        e->setColor(pa.stroke);
+    }
+
+    return true;
+}
+
+bool SVGParser::readPolygon_(XmlStreamReader &xml) {
+    // Check to make sure we are reading a polygon object
+    if(xml.name() != "polygon" || !xml.attributes().hasAttribute("points")) return true;
+
+    bool okay;
+
+    // Get presentation attributes
+    SVGPresentationAttributes pa(xml, *this);
+
+    // Read and split points
+    // Technically the parsing of separators is a bit more complicated,
+    // but this will suffice as it correctly handles all standard-conforming svgs
+    QStringList points = xml.attributes().value("points").toString().split(QRegExp("[\\s,]+"), QString::SkipEmptyParts);
+
+    // Fail if there isn't at least one complete coordinate
+    if(points.size() < 2) return false;
+
+    QVector<VectorAnimationComplex::KeyVertex *> verticies(points.size() / 2);
+
+    // Parse points
+    for(int i = 0; i < verticies.size(); i++) {
+        // X
+        double x = points[i * 2].toDouble(&okay);
+        if(!okay) return false;
+
+        // Y
+        double y = points[i * 2 + 1].toDouble(&okay);
+        if(!okay) return false;
 
         verticies[i] = global()->currentVAC()->newKeyVertex(global()->activeTime(), Eigen::Vector2d(x, y));
         verticies[i]->setColor(pa.stroke);
     }
 
+    // Create Edges
+    QVector<VectorAnimationComplex::KeyEdge *> edges(verticies.size() - 1);
     for(int i = 1; i < verticies.size(); i++) {
         VectorAnimationComplex::KeyEdge * e = global()->currentVAC()->newKeyEdge(global()->activeTime(), verticies[i-1], verticies[i], (new VectorAnimationComplex::LinearSpline(SculptCurve::Curve<VectorAnimationComplex::EdgeSample>(VectorAnimationComplex::EdgeSample(verticies[i-1]->pos()[0], verticies[i-1]->pos()[1], pa.strokeWidth), VectorAnimationComplex::EdgeSample(verticies[i]->pos()[0], verticies[i]->pos()[1], pa.strokeWidth)))), pa.strokeWidth);
         e->setColor(pa.stroke);
+        edges[i-1] = e;
+    }
+
+    // Close the loop if it isn't yet closed
+    if(verticies.first()->pos() != verticies.last()->pos()) {
+        VectorAnimationComplex::KeyEdge * e = global()->currentVAC()->newKeyEdge(global()->activeTime(), verticies.last(), verticies[0], (new VectorAnimationComplex::LinearSpline(SculptCurve::Curve<VectorAnimationComplex::EdgeSample>(VectorAnimationComplex::EdgeSample(verticies.last()->pos()[0], verticies.last()->pos()[1], pa.strokeWidth), VectorAnimationComplex::EdgeSample(verticies[0]->pos()[0], verticies[0]->pos()[1], pa.strokeWidth)))), pa.strokeWidth);
+        e->setColor(pa.stroke);
+        edges.push_back(e);
+    }
+
+    // Add fill
+    if(xml.attributes().value("fill").trimmed() != "none")
+    {
+        QList<VectorAnimationComplex::KeyHalfedge> halfEdges;
+        for(int i = 0; i < edges.size(); i++) {
+            halfEdges.append(VectorAnimationComplex::KeyHalfedge(edges[i], true));
+        }
+        VectorAnimationComplex::Cycle cycle(halfEdges);
+        VectorAnimationComplex::KeyFace * face = global()->currentVAC()->newKeyFace(cycle);
+        face->setColor(pa.fill);
     }
 
     return true;
@@ -406,6 +467,10 @@ void SVGParser::readSVG_(XmlStreamReader & xml)
                 else if(xml.name() == "polyline")
                 {
                     if(!readPolyline_(xml)) return;
+                }
+                else if(xml.name() == "polygon")
+                {
+                    if(!readPolygon_(xml)) return;
                 }
 
                 xml.skipCurrentElement();
