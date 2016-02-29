@@ -14,30 +14,48 @@
 namespace OpenVAC
 {
 
-class OpMakeKeyVertex: public Operator
+template <class Geometry>
+class OpMakeKeyVertex: public Operator<Geometry>
 {
 public:
-    OpMakeKeyVertex(VAC * vac, Frame frame);
+    OPENVAC_OPERATOR(OpMakeKeyVertex)
 
-    // Overrides compute() and apply() to return the derived type
-    OPENVAC_OPERATOR_OVERRIDE_COMPUTE_AND_APPLY(OpMakeKeyVertex)
+    // Constructor
+    OpMakeKeyVertex(VAC * vac, Frame frame) :
+        Operator(vac),
+        frame_(frame) {}
 
     // Post-computation info. Aborts if not computed.
-    KeyVertexId keyVertexId() const;
+    KeyVertexId keyVertexId() const { assert(isComputed()); return keyVertexId_; }
 
     // Post-application info. Aborts if not applied.
-    KeyVertexHandle keyVertex() const;
+    KeyVertexHandle keyVertex() const { assert(isApplied()); return vac()->cell(keyVertexId()); }
 
 private:
-    bool isValid_();
-    void compute_();
-
-    // In
     Frame frame_;
+    bool isValid_() { return true; }
 
-    // Out
     KeyVertexId keyVertexId_;
+    void compute_()
+    {
+        auto keyVertex = newKeyVertex(&keyVertexId_);
+        keyVertex->frame = frame_;
+    }
 };
+
+namespace Operators
+{
+template <class Geometry>
+KeyVertexHandle<Geometry> makeKeyVertex(VAC<Geometry> * vac, Frame frame)
+{
+    return OpMakeKeyVertex<Geometry>(vac, frame).apply().keyVertex();
+}
+template <class Geometry>
+OpMakeKeyVertex<Geometry> MakeKeyVertex(VAC<Geometry> * vac, Frame frame)
+{
+    return OpMakeKeyVertex<Geometry>(vac, frame);
+}
+}
 
 }
 

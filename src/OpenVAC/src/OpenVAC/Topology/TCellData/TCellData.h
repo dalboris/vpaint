@@ -9,17 +9,29 @@
 #ifndef OPENVAC_TCELLDATA_H
 #define OPENVAC_TCELLDATA_H
 
+#include <OpenVAC/Core/ForeachCellType.h>
 #include <OpenVAC/Topology/CellType.h>
+
+#define OPENVAC_FORWARD_DECLARE_TCELL_DATA_(CellType) \
+    template <class T, class Geometry> class T##CellType##Data;
+
+#define OPENVAC_DEFINE_CELLDATA_CAST_BASE_(CellType) \
+    virtual T##CellType##Data<T, Geometry> * to##CellType##Data() { return nullptr; } \
+    virtual const T##CellType##Data<T, Geometry> * to##CellType##Data() const { return nullptr; }
+
+#define OPENVAC_DEFINE_CELLDATA_CAST_BASE \
+    OPENVAC_FOREACH_FINAL_CELL_TYPE(OPENVAC_DEFINE_CELLDATA_CAST_BASE_)
+
+#define OPENVAC_DEFINE_CELLDATA_CAST(CellType) \
+    T##CellType##Data<T, Geometry> * to##CellType##Data() { return this; } \
+    const T##CellType##Data<T, Geometry> * to##CellType##Data() const { return this; } \
+    static T##CellType##Data<T, Geometry> * cast(TCellData<T, Geometry> * c) { return c ? c->to##CellType##Data() : nullptr; } \
+    static const T##CellType##Data<T, Geometry> * cast(const T##CellType##Data<T, Geometry> * c) { return c ? c->to##CellType##Data() : nullptr; }
 
 namespace OpenVAC
 {
 
-template <class T> class TKeyVertexData;
-template <class T> class TKeyEdgeData;
-template <class T> class TKeyFaceData;
-template <class T> class TInbetweenVertexData;
-template <class T> class TInbetweenEdgeData;
-template <class T> class TInbetweenFaceData;
+OPENVAC_FOREACH_FINAL_CELL_TYPE(OPENVAC_FORWARD_DECLARE_TCELL_DATA_)
 
 /// \class TCellData Topology/TCellData/TCellData.h
 /// \brief TCellData is a class template to store low-level cell topological data.
@@ -68,7 +80,7 @@ template <class T> class TInbetweenFaceData;
 /// OpCellDataTrait, defining CellRef as CellId (itself defined as unsigned
 /// int).
 
-template <class T>
+template <class T, class Geometry>
 class TCellData
 {
 public:
@@ -78,29 +90,9 @@ public:
     // Type
     virtual CellType type() const=0;
 
-    // Type casting to this class
-    TCellData<T> * toCellData() { return this; }
-    const TCellData<T> * toCellData() const { return this; }
-    static TCellData<T> * cast(TCellData<T> * c) { return c ? c->toCellData() : nullptr; }
-    static const TCellData<T> * cast(const TCellData<T> * c) { return c ? c->toCellData() : nullptr; }
-
-    // Type casting to derived classes
-    virtual TKeyVertexData<T> * toKeyVertexData()             { return nullptr; }
-    virtual TKeyEdgeData<T> * toKeyEdgeData()                 { return nullptr; }
-    virtual TKeyFaceData<T> * toKeyFaceData()                 { return nullptr; }
-    virtual TInbetweenVertexData<T> * toInbetweenVertexData() { return nullptr; }
-    virtual TInbetweenEdgeData<T> * toInbetweenEdgeData()     { return nullptr; }
-    virtual TInbetweenFaceData<T> * toInbetweenFaceData()     { return nullptr; }
-    virtual const TKeyVertexData<T> * toKeyVertexData() const             { return nullptr; }
-    virtual const TKeyEdgeData<T> * toKeyEdgeData() const                 { return nullptr; }
-    virtual const TKeyFaceData<T> * toKeyFaceData() const                 { return nullptr; }
-    virtual const TInbetweenVertexData<T> * toInbetweenVertexData() const { return nullptr; }
-    virtual const TInbetweenEdgeData<T> * toInbetweenEdgeData() const     { return nullptr; }
-    virtual const TInbetweenFaceData<T> * toInbetweenFaceData() const     { return nullptr; }
-
-    // Templated type casting. Equivalent to dynamic_cast but much faster.
-    template <class U> U * to() { return U::cast(this); }
-    template <class U> const U * to() const { return U::cast(this); }
+    // Type casting
+    OPENVAC_DEFINE_CELLDATA_CAST_BASE
+    OPENVAC_DEFINE_CELLDATA_CAST(Cell)
 };
 
 }

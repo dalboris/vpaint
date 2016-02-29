@@ -15,21 +15,25 @@
 namespace OpenVAC
 {
 
-class KeyCell: virtual public Cell
+template <class Geometry>
+class KeyCell: virtual public Cell<Geometry>
 {
 public:
+    // Typedefs
+    OPENVAC_CELL_DECLARE_TYPEDEFS(KeyCell)
+
     // Constructor
-    KeyCell(VAC * vac, CellId id);
+    KeyCell(VAC * vac, CellId id) : Cell<Geometry>(vac, id) {}
 
     // Virtual destructor
-    virtual ~KeyCell()=0;
+    virtual ~KeyCell() {}
 
     // Frame
     virtual Frame frame() const=0;
 
 private:
     // Befriend Operator
-    friend class Operator;
+    friend Operator;
 
     // Casting
     OPENVAC_DEFINE_CELL_CAST(KeyCell)

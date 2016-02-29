@@ -14,30 +14,55 @@
 namespace OpenVAC
 {
 
-class OpMakeKeyOpenEdge: public Operator
+template <class Geometry>
+class OpMakeKeyOpenEdge: public Operator<Geometry>
 {
 public:
-    OpMakeKeyOpenEdge(KeyVertexHandle startVertex, KeyVertexHandle endVertex);
+    OPENVAC_OPERATOR(OpMakeKeyOpenEdge)
 
-    // Overrides compute() and apply() to return the derived type
-    OPENVAC_OPERATOR_OVERRIDE_COMPUTE_AND_APPLY(OpMakeKeyOpenEdge)
+    OpMakeKeyOpenEdge(KeyVertexHandle startVertex, KeyVertexHandle endVertex) :
+        Operator(startVertex ? startVertex->vac() : nullptr),
+        startVertex_(startVertex),
+        endVertex_(endVertex) {}
 
     // Post-computation info. Aborts if not computed.
-    KeyEdgeId keyEdgeId() const;
+    KeyEdgeId keyEdgeId() const { assert(isComputed()); return keyEdgeId_; }
 
     // Post-application info. Aborts if not applied.
-    KeyEdgeHandle keyEdge() const;
+    KeyEdgeHandle keyEdge() const { assert(isApplied()); return vac()->cell(keyEdgeId()); }
 
 private:
-    bool isValid_();
-    void compute_();
-
-    // In
     KeyVertexHandle startVertex_, endVertex_;
+    bool isValid_()
+    {
+        return     startVertex_
+                && endVertex_
+                && startVertex_->frame() == endVertex_->frame();
+    }
 
-    // Out
     KeyEdgeId keyEdgeId_;
+    void compute_()
+    {
+        auto keyEdge = newKeyEdge(&keyEdgeId_);
+        keyEdge->frame       = startVertex_->frame();
+        keyEdge->startVertex = startVertex_->id();
+        keyEdge->endVertex   = endVertex_->id();
+    }
 };
+
+namespace Operators
+{
+template <class Geometry>
+OpMakeKeyOpenEdge<Geometry> MakeKeyOpenEdge(KeyVertexHandle<Geometry> startVertex, KeyVertexHandle<Geometry> endVertex)
+{
+    return OpMakeKeyOpenEdge<Geometry>(startVertex, endVertex);
+}
+template <class Geometry>
+KeyEdgeHandle<Geometry> makeKeyOpenEdge(KeyVertexHandle<Geometry> startVertex, KeyVertexHandle<Geometry> endVertex)
+{
+    return MakeKeyOpenEdge(startVertex, endVertex).apply().keyEdge();
+}
+}
 
 }
 

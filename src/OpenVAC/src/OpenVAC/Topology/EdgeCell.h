@@ -14,18 +14,22 @@
 namespace OpenVAC
 {
 
-class EdgeCell: virtual public Cell
+template <class Geometry>
+class EdgeCell: virtual public Cell<Geometry>
 {
 public:
+    // Typedefs
+    OPENVAC_CELL_DECLARE_TYPEDEFS(EdgeCell)
+
     // Constructor
-    EdgeCell(VAC * vac, CellId id);
+    EdgeCell(VAC * vac, CellId id) : Cell<Geometry>(vac, id) {}
 
     // Virtual destructor
-    virtual ~EdgeCell()=0;
+    virtual ~EdgeCell() {}
 
 private:
     // Befriend Operator
-    friend class Operator;
+    friend Operator;
 
     // Casting
     OPENVAC_DEFINE_CELL_CAST(EdgeCell)

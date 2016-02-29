@@ -15,34 +15,42 @@
 namespace OpenVAC
 {
 
-class KeyEdge: public KeyCell, public EdgeCell
+template <class Geometry>
+class KeyEdge: public KeyCell<Geometry>, public EdgeCell<Geometry>
 {
 public:
+    // Typedefs
+    OPENVAC_CELL_DECLARE_TYPEDEFS(KeyEdge)
+
     // Constructor
-    KeyEdge(VAC * vac, CellId id, const KeyEdgeData & data = KeyEdgeData());
+    KeyEdge(VAC * vac, CellId id, const KeyEdgeData & data = KeyEdgeData()) :
+        Cell<Geometry>(vac, id),
+        KeyCell<Geometry>(vac, id),
+        EdgeCell<Geometry>(vac, id),
+        data_(data) {}
 
     // Cell type
     CellType type() const { return CellType::KeyEdge; }
 
     // Cell data
-    const KeyEdgeData & data() const;
+    const KeyEdgeData & data() const { return data_; }
 
     // Frame
-    Frame frame() const;
+    Frame frame() const { return data().frame; }
 
     // Start vertex
-    KeyVertexHandle startVertex() const;
+    KeyVertexHandle startVertex() const { return data().startVertex; }
 
     // End vertex
-    KeyVertexHandle endVertex() const;
+    KeyVertexHandle endVertex() const { return data().endVertex; }
 
 private:
     // Data
     KeyEdgeData data_;
-    KeyEdgeData & data();
+    KeyEdgeData & data() { return data_; }
 
     // Befriend Operator
-    friend class Operator;
+    friend Operator;
 
     // Casting
     OPENVAC_DEFINE_CELL_CAST(KeyEdge)

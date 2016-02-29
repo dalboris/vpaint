@@ -12,28 +12,51 @@
 #include <OpenVAC/Topology/CellId.h>
 #include <OpenVAC/Topology/CellData.h>
 
+#define OPENVAC_CELL_DECLARE_VAC_TYPEDEF_ \
+    typedef OpenVAC::VAC<Geometry> VAC;
+
+#define OPENVAC_CELL_DECLARE_OPERATOR_TYPEDEF_ \
+    typedef OpenVAC::Operator<Geometry> Operator;
+
+#define OPENVAC_CELL_DECLARE_HANDLE_TYPEDEF_(CellType) \
+    typedef OpenVAC::CellType##Handle<Geometry> CellType##Handle;
+
+#define OPENVAC_CELL_DECLARE_DATA_TYPEDEF_(CellType) \
+    typedef OpenVAC::CellType##Data<Geometry> CellType##Data;
+
+#define OPENVAC_CELL_DECLARE_TYPEDEFS(CellType) \
+    OPENVAC_CELL_DECLARE_VAC_TYPEDEF_ \
+    OPENVAC_CELL_DECLARE_OPERATOR_TYPEDEF_ \
+    OPENVAC_FOREACH_CELL_TYPE(OPENVAC_CELL_DECLARE_HANDLE_TYPEDEF_) \
+    OPENVAC_FOREACH_CELL_DATA_TYPE(OPENVAC_CELL_DECLARE_DATA_TYPEDEF_)
+
 namespace OpenVAC
 {
 
-class VAC;
+template <class Geometry> class Operator;
+template <class Geometry> class VAC;
 
+template <class Geometry>
 class Cell
 {
 public:
+    // Typedefs
+    OPENVAC_CELL_DECLARE_TYPEDEFS(Cell)
+
     // Constructor
-    Cell(VAC * vac, CellId id);
+    Cell(VAC * vac, CellId id) : vac_(vac), id_(id) {}
 
     // Virtual destructor
-    virtual ~Cell()=0;
+    virtual ~Cell() {}
 
     // Type
     virtual CellType type() const=0;
 
     // VAC this cell belongs to
-    VAC * vac() const;
+    VAC * vac() const { return vac_; }
 
     // Cell id
-    CellId id() const;
+    CellId id() const {return id_; }
 
     // Cell data
     virtual const CellData & data() const=0;
@@ -47,7 +70,7 @@ private:
     virtual CellData & data()=0;
 
     // Befriend Operator
-    friend class Operator;
+    friend Operator;
 
     // Casting
     OPENVAC_DEFINE_CELL_CAST_BASE

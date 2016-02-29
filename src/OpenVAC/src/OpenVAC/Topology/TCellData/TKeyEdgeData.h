@@ -21,23 +21,25 @@ namespace OpenVAC
 /// The TKeyEdgeData<T> class is not meant to be used by client code. Read
 /// the TCellData<T> documentation first.
 
-template <class T>
-class TKeyEdgeData : public TCellData<T>
+template <class T, class Geometry>
+class TKeyEdgeData : public TCellData<T, Geometry>, public Geometry::KeyEdge
 {
 public:
     // Type
     CellType type() const { return CellType::KeyEdge; }
 
-    // Type casting to this class
-    TKeyEdgeData<T> * toKeyEdgeData() { return this; }
-    const TKeyEdgeData<T> * toKeyEdgeData() const { return this; }
-    static TKeyEdgeData<T> * cast(TCellData<T> * c) { return c ? c->toKeyEdgeData() : nullptr; }
-    static const TKeyEdgeData<T> * cast(const TCellData<T> * c) { return c ? c->toKeyEdgeData() : nullptr; }
+    // Type casting
+    OPENVAC_DEFINE_CELLDATA_CAST(KeyEdge)
 
-    // Data
+    // Topological data
     Frame frame;
     typename T::KeyVertexRef startVertex;
     typename T::KeyVertexRef endVertex;
+
+    // Geometric data
+    typedef typename Geometry::KeyEdge KeyEdgeGeometry;
+    KeyEdgeGeometry & geometry() { return *this; }
+    const KeyEdgeGeometry & geometry() const { return *this; }
 };
 
 }

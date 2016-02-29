@@ -11,34 +11,90 @@
 
 #include <OpenVAC/Core/IdManager.h>
 #include <OpenVAC/Topology/Cell.h>
-#include <OpenVAC/Geometry/GManager.h>
 
-#include <memory>
+// Declare VAC public typedefs
+
+#define OPENVAC_VAC_DECLARE_GEOMETRY_TYPEDEF_ \
+    typedef Geometry Geometry_t;
+
+#define OPENVAC_VAC_DECLARE_OPERATOR_TYPEDEF_ \
+    typedef OpenVAC::Operator<Geometry> Operator;
+
+#define OPENVAC_VAC_DECLARE_HANDLE_TYPEDEF_(CellType) \
+    typedef OpenVAC::CellType##Handle<Geometry> CellType##Handle;
+
+#define OPENVAC_VAC_DECLARE_DATA_TYPEDEF_(CellType) \
+    typedef OpenVAC::CellType##Data<Geometry> CellType##Data;
+
+#define OPENVAC_VAC_DECLARE_TYPEDEFS \
+    OPENVAC_VAC_DECLARE_OPERATOR_TYPEDEF_ \
+    OPENVAC_FOREACH_CELL_TYPE(OPENVAC_VAC_DECLARE_HANDLE_TYPEDEF_) \
+    OPENVAC_FOREACH_CELL_DATA_TYPE(OPENVAC_VAC_DECLARE_DATA_TYPEDEF_)
+
+// Using VAC types within current scope
+
+#define OPENVAC_USING_CELLTYPE \
+    typedef OpenVAC::CellType CellType;
+
+#define OPENVAC_USING_VAC_OPERATOR(Vac) \
+    typedef Vac::Operator Operator;
+
+#define OPENVAC_USING_VAC_CELL_HANDLE(CellType, Vac) \
+    typedef Vac::CellType##Handle CellType##Handle;
+
+#define OPENVAC_USING_VAC_CELL_ID(CellType, Vac) \
+    typedef OpenVAC::CellType##Id CellType##Id;
+
+#define OPENVAC_USING_VAC_CELL_DATA(CellType, Vac) \
+    typedef Vac::CellType##Data CellType##Data;
+
+#define OPENVAC_USING_VAC_TYPES(Vac) \
+    OPENVAC_USING_CELLTYPE \
+    OPENVAC_USING_VAC_OPERATOR(Vac) \
+    OPENVAC_FOREACH_CELL_TYPE_ARGS(OPENVAC_USING_VAC_CELL_HANDLE, Vac) \
+    OPENVAC_FOREACH_CELL_TYPE_ARGS(OPENVAC_USING_VAC_CELL_ID, Vac) \
+    OPENVAC_FOREACH_CELL_DATA_TYPE_ARGS(OPENVAC_USING_VAC_CELL_DATA, Vac)
 
 namespace OpenVAC
 {
 
+template <class Geometry>
 class VAC
 {
+private:
+    // Private typedefs
+    typedef OpenVAC::CellSharedPtr<Geometry>  CellSharedPtr;
+    typedef OpenVAC::IdManager<CellSharedPtr> CellManager;
+    typedef typename Geometry::Manager        GeometryManager;
+
 public:
-    // Construct a VAC. The VAC takes ownership of gManager.
-    VAC(GManager * gManager = nullptr);
+    // Public typedefs
+    OPENVAC_VAC_DECLARE_TYPEDEFS
+
+    // Construct a VAC.
+    VAC() : cellManager_(), geometryManager_() {}
 
     // Number of cells
-    size_t numCells() const;
+    size_t numCells() const { return cellManager_.size(); }
 
     // Get cell from ID
-    CellHandle cell(CellId id) const;
+    CellHandle cell(CellId id) const
+    {
+        if (cellManager_.contains(id))
+            return cellManager_[id];
+        else
+            return CellHandle();
+    }
 
 private:
-    // Topological data
-    IdManager<CellSharedPtr> cellManager_;
+    // Cell manager
+    CellManager cellManager_;
 
-    // Geometric data
-    std::unique_ptr<GManager> gManager_;
+    // Geomety manager
+    GeometryManager geometryManager_;
 
     // Befriend Operator
-    friend class Operator;
+    friend Operator;
 };
 
 }

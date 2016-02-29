@@ -8,11 +8,21 @@
 
 #include "TestTCellData.h"
 
+#include <OpenVAC/Core/ForeachCellType.h>
 #include <OpenVAC/Topology/TCellData/TCellData.h>
 #include <OpenVAC/Topology/TCellData/TKeyVertexData.h>
 #include <OpenVAC/Topology/TCellData/TKeyEdgeData.h>
 
-class MyCellDataTrait
+#include <vector>
+
+class Geometry
+{
+public:
+    struct KeyVertex { double position; };
+    struct KeyEdge { std::vector<double> curve; };
+};
+
+class UintAsRefs
 {
 public:
     typedef unsigned int KeyVertexRef;
@@ -20,11 +30,9 @@ public:
 };
 
 #define DECLARE_MY_CELL_DATA(CellType) \
-    typedef OpenVAC::T##CellType##Data<MyCellDataTrait> My##CellType##Data;
+    typedef OpenVAC::T##CellType##Data<UintAsRefs, Geometry> My##CellType##Data;
 
-DECLARE_MY_CELL_DATA(Cell)
-DECLARE_MY_CELL_DATA(KeyVertex)
-DECLARE_MY_CELL_DATA(KeyEdge)
+OPENVAC_FOREACH_CELL_DATA_TYPE(DECLARE_MY_CELL_DATA)
 
 void TestTCellData::createTCellDataObjects()
 {

@@ -19,126 +19,76 @@
 #include <OpenVAC/Topology/KeyEdge.h>
 #include <OpenVAC/VAC.h>
 
+#define OPENVAC_IF_TYPE_MATCHES_THEN_CALL_CONVERT_(CellType_) \
+    if (type == CellType::CellType_) \
+    { \
+        convert(*fromData.to##CellType_##Data(), *toData.to##CellType_##Data()); \
+        return; \
+    }
+
+#define OPENVAC_DECLARE_CONVERT_(CellType) \
+    virtual void convert_(const typename T::CellType##Ref & fromRef, typename U::CellType##Ref & toRef)=0;
+
+#define OPENVAC_DEFINE_CELLID_TO_CELLHANDLE_CONVERT_(CellType) \
+    void convert_(const CellType##Id & id, CellType##Handle<Geometry> & handle) { handle = vac_->cell(id); }
+
+#define OPENVAC_DEFINE_CELLHANDLE_TO_CELLID_CONVERT_(CellType) \
+    void convert_(const CellType##Handle<Geometry> & handle, CellType##Id & id) { id = handle->id(); }
+
 namespace OpenVAC
 {
 
-template <class T, class U>
+template <class T, class U, class Geometry>
 class CellDataConverter
 {
 public:
-    void convert(const TCellData<T> & fromData, TCellData<U> & toData)
+    void convert(const TCellData<T, Geometry> & fromData, TCellData<U, Geometry> & toData)
     {
         assert(fromData.type() == toData.type());
         CellType type = fromData.type();
-        if (type == CellType::KeyVertex)
-            convert(*fromData.toKeyVertexData(), *toData.toKeyVertexData());
-        else if (type == CellType::KeyEdge)
-            convert(*fromData.toKeyEdgeData(), *toData.toKeyEdgeData());
-        else
-        {
-            // XXX TODO
-        }
+        OPENVAC_FOREACH_FINAL_CELL_TYPE(OPENVAC_IF_TYPE_MATCHES_THEN_CALL_CONVERT_)
     }
 
-    void convert(const TKeyVertexData<T> & fromData, TKeyVertexData<U> & toData)
+    void convert(const TKeyVertexData<T, Geometry> & fromData, TKeyVertexData<U, Geometry> & toData)
     {
         toData.frame = fromData.frame;
+        toData.geometry() = fromData.geometry();
     }
 
-    void convert(const TKeyEdgeData<T> & fromData, TKeyEdgeData<U> & toData)
+    void convert(const TKeyEdgeData<T, Geometry> & fromData, TKeyEdgeData<U, Geometry> & toData)
     {
         toData.frame = fromData.frame;
         convert_(fromData.startVertex, toData.startVertex);
         convert_(fromData.endVertex, toData.endVertex);
+        toData.geometry() = fromData.geometry();
     }
 
-    void convert(const TKeyFaceData<T> & fromData, TKeyFaceData<U> & toData)
-    {
-        // XXX TODO
-    }
-
-    void convert(const TInbetweenVertexData<T> & fromData, TInbetweenVertexData<U> & toData)
-    {
-        // XXX TODO
-    }
-
-    void convert(const TInbetweenEdgeData<T> & fromData, TInbetweenEdgeData<U> & toData)
-    {
-        // XXX TODO
-    }
-
-    void convert(const TInbetweenFaceData<T> & fromData, TInbetweenFaceData<U> & toData)
-    {
-        // XXX TODO
-    }
+    // XXX TODO other cell types
 
 protected:
-
-#define OPENVAC_DECLARE_VIRTUAL_CELL_DATA_CONVERT(CellType) \
-    virtual void convert_(const typename T::CellType##Ref & fromRef, typename U::CellType##Ref & toRef)=0;
-
-    OPENVAC_DECLARE_VIRTUAL_CELL_DATA_CONVERT(Cell)
-    OPENVAC_DECLARE_VIRTUAL_CELL_DATA_CONVERT(KeyCell)
-    //OPENVAC_DECLARE_VIRTUAL_CELL_DATA_CONVERT(InbetweenCell) // XXX TODO
-    OPENVAC_DECLARE_VIRTUAL_CELL_DATA_CONVERT(VertexCell)
-    OPENVAC_DECLARE_VIRTUAL_CELL_DATA_CONVERT(EdgeCell)
-    //OPENVAC_DECLARE_VIRTUAL_CELL_DATA_CONVERT(FaceCell)
-    OPENVAC_DECLARE_VIRTUAL_CELL_DATA_CONVERT(KeyVertex)
-    OPENVAC_DECLARE_VIRTUAL_CELL_DATA_CONVERT(KeyEdge)
-    //OPENVAC_DECLARE_VIRTUAL_CELL_DATA_CONVERT(KeyFace)
-    //OPENVAC_DECLARE_VIRTUAL_CELL_DATA_CONVERT(InbetweenVertex)
-    //OPENVAC_DECLARE_VIRTUAL_CELL_DATA_CONVERT(InbetweenEdge)
-    //OPENVAC_DECLARE_VIRTUAL_CELL_DATA_CONVERT(InbetweenFace)
+    OPENVAC_FOREACH_CELL_TYPE(OPENVAC_DECLARE_CONVERT_)
 };
 
-class OpCellDataToCellDataConverter: public CellDataConverter<OpCellDataTrait, CellDataTrait>
+template <class Geometry>
+class OpCellDataToCellDataConverter: public CellDataConverter<IdsAsRefs, HandlesAsRefs<Geometry>, Geometry>
 {
 public:
-    OpCellDataToCellDataConverter(VAC * vac) : vac_(vac) {}
+    OpCellDataToCellDataConverter(VAC<Geometry> * vac) : vac_(vac) {}
 
 private:
-    VAC * vac_;
-
-#define OPENVAC_DEFINE_CELLID_TO_CELLHANDLE_CONVERT(CellType) \
-    void convert_(const CellType##Id & id, CellType##Handle & handle) { handle = vac_->cell(id); }
-
-    OPENVAC_DEFINE_CELLID_TO_CELLHANDLE_CONVERT(Cell)
-    OPENVAC_DEFINE_CELLID_TO_CELLHANDLE_CONVERT(KeyCell)
-    //OPENVAC_DEFINE_CELLID_TO_CELLHANDLE_CONVERT(InbetweenCell) XXX TODO
-    OPENVAC_DEFINE_CELLID_TO_CELLHANDLE_CONVERT(VertexCell)
-    OPENVAC_DEFINE_CELLID_TO_CELLHANDLE_CONVERT(EdgeCell)
-    //OPENVAC_DEFINE_CELLID_TO_CELLHANDLE_CONVERT(FaceCell)
-    OPENVAC_DEFINE_CELLID_TO_CELLHANDLE_CONVERT(KeyVertex)
-    OPENVAC_DEFINE_CELLID_TO_CELLHANDLE_CONVERT(KeyEdge)
-    //OPENVAC_DEFINE_CELLID_TO_CELLHANDLE_CONVERT(KeyFace)
-    //OPENVAC_DEFINE_CELLID_TO_CELLHANDLE_CONVERT(InbetweenVertex)
-    //OPENVAC_DEFINE_CELLID_TO_CELLHANDLE_CONVERT(InbetweenEdge)
-   // OPENVAC_DEFINE_CELLID_TO_CELLHANDLE_CONVERT(InbetweenFace)
+    VAC<Geometry> * vac_;
+    OPENVAC_FOREACH_CELL_TYPE(OPENVAC_DEFINE_CELLID_TO_CELLHANDLE_CONVERT_)
 };
 
-class CellDataToOpCellDataConverter: public CellDataConverter<CellDataTrait, OpCellDataTrait>
+template <class Geometry>
+class CellDataToOpCellDataConverter: public CellDataConverter<HandlesAsRefs<Geometry>, IdsAsRefs, Geometry>
 {
 public:
-    CellDataToOpCellDataConverter(VAC * vac) : vac_(vac) {}
+    CellDataToOpCellDataConverter(VAC<Geometry> * vac) : vac_(vac) {}
 
 private:
-    VAC * vac_;
-
-#define OPENVAC_DEFINE_CELLHANDLE_TO_CELLID_CONVERT(CellType) \
-    void convert_(const CellType##Handle & handle, CellType##Id & id) { id = handle->id(); }
-
-    OPENVAC_DEFINE_CELLHANDLE_TO_CELLID_CONVERT(Cell)
-    OPENVAC_DEFINE_CELLHANDLE_TO_CELLID_CONVERT(KeyCell)
-    //OPENVAC_DEFINE_CELLHANDLE_TO_CELLID_CONVERT(InbetweenCell) XXX TODO
-    OPENVAC_DEFINE_CELLHANDLE_TO_CELLID_CONVERT(VertexCell)
-    OPENVAC_DEFINE_CELLHANDLE_TO_CELLID_CONVERT(EdgeCell)
-    //OPENVAC_DEFINE_CELLHANDLE_TO_CELLID_CONVERT(FaceCell)
-    OPENVAC_DEFINE_CELLHANDLE_TO_CELLID_CONVERT(KeyVertex)
-    OPENVAC_DEFINE_CELLHANDLE_TO_CELLID_CONVERT(KeyEdge)
-    //OPENVAC_DEFINE_CELLHANDLE_TO_CELLID_CONVERT(KeyFace)
-    //OPENVAC_DEFINE_CELLHANDLE_TO_CELLID_CONVERT(InbetweenVertex)
-    //OPENVAC_DEFINE_CELLHANDLE_TO_CELLID_CONVERT(InbetweenEdge)
-    //OPENVAC_DEFINE_CELLHANDLE_TO_CELLID_CONVERT(InbetweenFace)
+    VAC<Geometry> * vac_;
+    OPENVAC_FOREACH_CELL_TYPE(OPENVAC_DEFINE_CELLHANDLE_TO_CELLID_CONVERT_)
 };
 
 }

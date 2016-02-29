@@ -12,10 +12,10 @@
 namespace OpenVAC
 {
 
-class CellType
+// Enumeration of CellType values.
+// The dummy template param is a hack to define static const values in header.
+template <class Dummy> struct CellTypes_
 {
-public:
-    // Enumeration of valid values
     static const short KeyCell;
     static const short InbetweenCell;
 
@@ -30,7 +30,27 @@ public:
     static const short InbetweenVertex;
     static const short InbetweenEdge;
     static const short InbetweenFace;
+    static const short value;
+};
 
+template<class Dummy> const short CellTypes_<Dummy>::KeyCell       = 0x00;
+template<class Dummy> const short CellTypes_<Dummy>::InbetweenCell = 0x01;
+
+template<class Dummy> const short CellTypes_<Dummy>::VertexCell    = 0x02;
+template<class Dummy> const short CellTypes_<Dummy>::EdgeCell      = 0x04;
+template<class Dummy> const short CellTypes_<Dummy>::FaceCell      = 0x08;
+
+template<class Dummy> const short CellTypes_<Dummy>::KeyVertex = 0x02; // = KeyCell | VertexCell;
+template<class Dummy> const short CellTypes_<Dummy>::KeyEdge   = 0x04; // = KeyCell | EdgeCell;
+template<class Dummy> const short CellTypes_<Dummy>::KeyFace   = 0x08; // = KeyCell | FaceCell;
+
+template<class Dummy> const short CellTypes_<Dummy>::InbetweenVertex = 0x03; // = InbetweenCell | VertexCell;
+template<class Dummy> const short CellTypes_<Dummy>::InbetweenEdge   = 0x05; // = InbetweenCell | EdgeCell;
+template<class Dummy> const short CellTypes_<Dummy>::InbetweenFace   = 0x09; // = InbetweenCell | FaceCell;
+
+class CellType: public CellTypes_<void>
+{
+public:
     // Constructor
     CellType(short type) : type_(type) {}
 

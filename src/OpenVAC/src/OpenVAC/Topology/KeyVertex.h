@@ -15,28 +15,36 @@
 namespace OpenVAC
 {
 
-class KeyVertex: public KeyCell, public VertexCell
+template <class Geometry>
+class KeyVertex: public KeyCell<Geometry>, public VertexCell<Geometry>
 {
 public:
+    // Typedefs
+    OPENVAC_CELL_DECLARE_TYPEDEFS(KeyVertex)
+
     // Constructor
-    KeyVertex(VAC * vac, CellId id, const KeyVertexData & data = KeyVertexData());
+    KeyVertex(VAC * vac, CellId id, const KeyVertexData & data = KeyVertexData()) :
+        Cell<Geometry>(vac, id),
+        KeyCell<Geometry>(vac, id),
+        VertexCell<Geometry>(vac, id),
+        data_(data) {}
 
     // Cell type
     CellType type() const { return CellType::KeyVertex; }
 
     // Cell data
-    const KeyVertexData & data() const;
+    const KeyVertexData & data() const { return data_; }
 
     // Frame
-    Frame frame() const;
+    Frame frame() const { return data().frame; }
 
 private:
     // Data
     KeyVertexData data_;
-    KeyVertexData & data();
+    KeyVertexData & data() { return data_; }
 
     // Befriend Operator
-    friend class Operator;
+    friend Operator;
 
     // Casting
     OPENVAC_DEFINE_CELL_CAST(KeyVertex)

@@ -10,6 +10,35 @@
 #define OPENVAC_CELLHANDLE_H
 
 #include <OpenVAC/Core/Memory.h>
+#include <OpenVAC/Core/ForeachCellType.h>
+
+#define OPENVAC_DEFINE_STATIC_TO_CELL_(CellType) \
+    static CellType<Geometry> * to##CellType(Cell * c) { return c ? c->to##CellType##_() : nullptr; }
+
+#define OPENVAC_DEFINE_MEMBER_TO_CELL_(CellType) \
+    virtual CellType<Geometry> * to##CellType##_() { return nullptr; }
+
+#define OPENVAC_DEFINE_CELL_CAST_BASE \
+    protected: OPENVAC_FOREACH_CELL_TYPE(OPENVAC_DEFINE_STATIC_TO_CELL_) \
+    private:   OPENVAC_FOREACH_DERIVED_CELL_TYPE(OPENVAC_DEFINE_MEMBER_TO_CELL_)
+
+#define OPENVAC_DEFINE_CELL_CAST(CellType) \
+    template<class T, class U> friend TCellHandle<T> cell_handle_cast(const TCellHandle<U> & r); \
+    template<class T, class U> friend TCellHandle<T> cell_handle_cast(const SharedPtr<U> & r); \
+    CellType * to##CellType##_() { return this; } \
+    static CellType * cast_(Cell<Geometry> * c) { return Cell<Geometry>::to##CellType(c); }
+
+#define OPENVAC_FORWARD_DECLARE_CELL_(CellType) \
+    template <class Geometry> \
+    class CellType;
+
+#define OPENVAC_DECLARE_CELL_SHARED_PTR_(CellType) \
+    template <class Geometry> \
+    using CellType##SharedPtr = SharedPtr<CellType<Geometry>>;
+
+#define OPENVAC_DECLARE_CELL_HANDLE_(CellType) \
+    template <class Geometry> \
+    using CellType##Handle = TCellHandle<CellType<Geometry>>;
 
 namespace OpenVAC
 {
@@ -51,43 +80,6 @@ cell_handle_cast(const SharedPtr<U> & spu)
         }
     }
 }
-
-/////////////    Macros to define cell casting member functions    ////////////
-
-#define OPENVAC_DEFINE_CELL_CAST_BASE \
-    protected: \
-    static Cell * toCell(Cell * c)                       { return c ? c->toCell_()            : nullptr; } \
-    static KeyCell * toKeyCell(Cell * c)                 { return c ? c->toKeyCell_()         : nullptr; } \
-    static InbetweenCell * toInbetweenCell(Cell * c)     { return c ? c->toInbetweenCell_()   : nullptr; } \
-    static VertexCell * toVertexCell(Cell * c)           { return c ? c->toVertexCell_()      : nullptr; } \
-    static EdgeCell * toEdgeCell(Cell * c)               { return c ? c->toEdgeCell_()        : nullptr; } \
-    static FaceCell * toFaceCell(Cell * c)               { return c ? c->toFaceCell_()        : nullptr; } \
-    static KeyVertex * toKeyVertex(Cell * c)             { return c ? c->toKeyVertex_()       : nullptr; } \
-    static KeyEdge * toKeyEdge(Cell * c)                 { return c ? c->toKeyEdge_()         : nullptr; } \
-    static KeyFace * toKeyFace(Cell * c)                 { return c ? c->toKeyFace_()         : nullptr; } \
-    static InbetweenVertex * toInbetweenVertex(Cell * c) { return c ? c->toInbetweenVertex_() : nullptr; } \
-    static InbetweenEdge * toInbetweenEdge(Cell * c)     { return c ? c->toInbetweenEdge_()   : nullptr; } \
-    static InbetweenFace * toInbetweenFace(Cell * c)     { return c ? c->toInbetweenFace_()   : nullptr; } \
-    private: \
-    virtual KeyCell * toKeyCell_()                 { return nullptr; } \
-    virtual InbetweenCell * toInbetweenCell_()     { return nullptr; } \
-    virtual VertexCell * toVertexCell_()           { return nullptr; } \
-    virtual EdgeCell * toEdgeCell_()               { return nullptr; } \
-    virtual FaceCell * toFaceCell_()               { return nullptr; } \
-    virtual KeyVertex * toKeyVertex_()             { return nullptr; } \
-    virtual KeyEdge * toKeyEdge_()                 { return nullptr; } \
-    virtual KeyFace * toKeyFace_()                 { return nullptr; } \
-    virtual InbetweenVertex * toInbetweenVertex_() { return nullptr; } \
-    virtual InbetweenEdge * toInbetweenEdge_()     { return nullptr; } \
-    virtual InbetweenFace * toInbetweenFace_()     { return nullptr; }
-
-#define OPENVAC_DEFINE_CELL_CAST(CellType) \
-    template<class T, class U> \
-    friend TCellHandle<T> cell_handle_cast(const TCellHandle<U> & r); \
-    template<class T, class U> \
-    friend TCellHandle<T> cell_handle_cast(const SharedPtr<U> & r); \
-    CellType * to##CellType##_() { return this; } \
-    static CellType * cast_(Cell * c) { return to##CellType(c); }
 
 ///////////////////    Define TCellHandle class template    ///////////////////
 
@@ -170,53 +162,9 @@ void swap(TCellHandle<T> & lhs, TCellHandle<T> & rhs )
     return lhs.swap(rhs);
 }
 
-/////////////////////    Forward declare Cell classes    //////////////////////
-
-class Cell;
-class KeyCell;
-class InbetweenCell;
-class VertexCell;
-class EdgeCell;
-class FaceCell;
-class KeyVertex;
-class KeyEdge;
-class KeyFace;
-class InbetweenVertex;
-class InbetweenEdge;
-class InbetweenFace;
-
-//////////////////////    Declare CellSharedPtr classes    ////////////////////
-
-OPENVAC_DECLARE_SHARED_PTR(Cell)
-OPENVAC_DECLARE_SHARED_PTR(KeyCell)
-OPENVAC_DECLARE_SHARED_PTR(InbetweenCell)
-OPENVAC_DECLARE_SHARED_PTR(VertexCell)
-OPENVAC_DECLARE_SHARED_PTR(EdgeCell)
-OPENVAC_DECLARE_SHARED_PTR(FaceCell)
-OPENVAC_DECLARE_SHARED_PTR(KeyVertex)
-OPENVAC_DECLARE_SHARED_PTR(KeyEdge)
-OPENVAC_DECLARE_SHARED_PTR(KeyFace)
-OPENVAC_DECLARE_SHARED_PTR(InbetweenVertex)
-OPENVAC_DECLARE_SHARED_PTR(InbetweenEdge)
-OPENVAC_DECLARE_SHARED_PTR(InbetweenFace)
-
-///////////////////////    Declare CellHandle classes    //////////////////////
-
-#define OPENVAC_DECLARE_CELL_HANDLE(CellType) \
-    typedef OpenVAC::TCellHandle<CellType> CellType##Handle;
-
-OPENVAC_DECLARE_CELL_HANDLE(Cell)
-OPENVAC_DECLARE_CELL_HANDLE(KeyCell)
-OPENVAC_DECLARE_CELL_HANDLE(InbetweenCell)
-OPENVAC_DECLARE_CELL_HANDLE(VertexCell)
-OPENVAC_DECLARE_CELL_HANDLE(EdgeCell)
-OPENVAC_DECLARE_CELL_HANDLE(FaceCell)
-OPENVAC_DECLARE_CELL_HANDLE(KeyVertex)
-OPENVAC_DECLARE_CELL_HANDLE(KeyEdge)
-OPENVAC_DECLARE_CELL_HANDLE(KeyFace)
-OPENVAC_DECLARE_CELL_HANDLE(InbetweenVertex)
-OPENVAC_DECLARE_CELL_HANDLE(InbetweenEdge)
-OPENVAC_DECLARE_CELL_HANDLE(InbetweenFace)
+OPENVAC_FOREACH_CELL_TYPE(OPENVAC_FORWARD_DECLARE_CELL_)
+OPENVAC_FOREACH_CELL_TYPE(OPENVAC_DECLARE_CELL_SHARED_PTR_)
+OPENVAC_FOREACH_CELL_TYPE(OPENVAC_DECLARE_CELL_HANDLE_)
 
 }
 

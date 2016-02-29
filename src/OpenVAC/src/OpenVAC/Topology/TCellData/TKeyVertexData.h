@@ -21,21 +21,23 @@ namespace OpenVAC
 /// The TKeyVertexData<T> class is not meant to be used by client code. Read
 /// the TCellData<T> documentation first.
 
-template <class T>
-class TKeyVertexData : public TCellData<T>
+template <class T, class Geometry>
+class TKeyVertexData : public TCellData<T, Geometry>, public Geometry::KeyVertex
 {
 public:
     // Type
     CellType type() const { return CellType::KeyVertex; }
 
-    // Type casting to this class
-    TKeyVertexData<T> * toKeyVertexData() { return this; }
-    const TKeyVertexData<T> * toKeyVertexData() const { return this; }
-    static TKeyVertexData<T> * cast(TCellData<T> * c) { return c ? c->toKeyVertexData() : nullptr; }
-    static const TKeyVertexData<T> * cast(const TCellData<T> * c) { return c ? c->toKeyVertexData() : nullptr; }
+    // Type casting
+    OPENVAC_DEFINE_CELLDATA_CAST(KeyVertex)
 
-    // Data
+    // Topological data
     Frame frame;
+
+    // Geometric data
+    typedef typename Geometry::KeyVertex KeyVertexGeometry;
+    KeyVertexGeometry & geometry() { return *this; }
+    const KeyVertexGeometry & geometry() const { return *this; }
 };
 
 }

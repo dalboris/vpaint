@@ -11,49 +11,33 @@
 
 #include <OpenVAC/Core/Memory.h>
 #include <OpenVAC/Topology/CellId.h>
-#include <OpenVAC/Topology/TCellData/DefineCellData.h>
+
+#define OPENVAC_USING_CELLID_AS_CELLREF_(CellType) \
+    typedef CellId CellType##Ref;
+
+#define OPENVAC_DECLARE_OP_CELL_DATA_(CellType) \
+    template <class Geometry> \
+    using Op##CellType##Data = T##CellType##Data<IdsAsRefs, Geometry>;
+
+#define OPENVAC_DECLARE_OP_CELL_DATA_SHARED_PTR_(CellType) \
+    template <class Geometry> \
+    using Op##CellType##DataSharedPtr = SharedPtr<Op##CellType##Data<Geometry>>;
+
+#define OPENVAC_DECLARE_OP_CELL_DATA_PTR_(CellType) \
+    template <class Geometry> using Op##CellType##DataPtr = WeakPtr<Op##CellType##Data<Geometry>>;
 
 namespace OpenVAC
 {
 
-class OpCellDataTrait
+class IdsAsRefs
 {
 public:
-    typedef CellId CellRef;
-    typedef CellId KeyCellRef;
-    typedef CellId InbetweenCellRef;
-    typedef CellId VertexCellRef;
-    typedef CellId EdgeCellRef;
-    typedef CellId FaceCellRef;
-    typedef CellId KeyVertexRef;
-    typedef CellId KeyEdgeRef;
-    typedef CellId KeyFaceRef;
-    typedef CellId InbetweenVertexRef;
-    typedef CellId InbetweenEdgeRef;
-    typedef CellId InbetweenFaceRef;
+    OPENVAC_FOREACH_CELL_TYPE(OPENVAC_USING_CELLID_AS_CELLREF_)
 };
 
-OPENVAC_DEFINE_CELL_DATA(Op, OpCellDataTrait)
-
-OPENVAC_DECLARE_SHARED_PTR(OpCellData)
-OPENVAC_DECLARE_SHARED_PTR(OpKeyVertexData)
-OPENVAC_DECLARE_SHARED_PTR(OpKeyEdgeData)
-/* XXX TODO
-OPENVAC_DECLARE_SHARED_PTR(OpKeyFaceData)
-OPENVAC_DECLARE_SHARED_PTR(OpInbetweenVertexData)
-OPENVAC_DECLARE_SHARED_PTR(OpInbetweenEdgeData)
-OPENVAC_DECLARE_SHARED_PTR(OpInbetweenFaceData)
-*/
-
-OPENVAC_DECLARE_PTR(OpCellData)
-OPENVAC_DECLARE_PTR(OpKeyVertexData)
-OPENVAC_DECLARE_PTR(OpKeyEdgeData)
-/* XXX TODO
-OPENVAC_DECLARE_PTR(OpKeyFaceData)
-OPENVAC_DECLARE_PTR(OpInbetweenVertexData)
-OPENVAC_DECLARE_PTR(OpInbetweenEdgeData)
-OPENVAC_DECLARE_PTR(OpInbetweenFaceData)
-*/
+OPENVAC_FOREACH_CELL_DATA_TYPE(OPENVAC_DECLARE_OP_CELL_DATA_)
+OPENVAC_FOREACH_CELL_DATA_TYPE(OPENVAC_DECLARE_OP_CELL_DATA_SHARED_PTR_)
+OPENVAC_FOREACH_CELL_DATA_TYPE(OPENVAC_DECLARE_OP_CELL_DATA_PTR_)
 
 }
 

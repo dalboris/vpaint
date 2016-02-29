@@ -8,15 +8,33 @@
 
 #include "TestCell.h"
 
+#include <OpenVAC/VAC.h>
 #include <OpenVAC/Topology/KeyVertex.h>
 #include <OpenVAC/Topology/KeyEdge.h>
 
-using namespace OpenVAC;
+class Geometry
+{
+public:
+    class Manager {};
+
+    class KeyVertex {};
+    class KeyEdge {};
+};
+
+typedef OpenVAC::VAC<Geometry> Vac;
+
+#define USING_CELL_TYPE(CellType) \
+    typedef OpenVAC::CellType<Geometry> CellType;
+
+OPENVAC_FOREACH_CELL_TYPE(USING_CELL_TYPE)
+
+OPENVAC_USING_VAC_TYPES(Vac)
+typedef OpenVAC::CellSharedPtr<Geometry> CellSharedPtr;
 
 void TestCell::testAllocatingAndCasting()
 {
     // Some dummy data
-    VAC * vac = nullptr;
+    Vac * vac = nullptr;
     CellId id1 = 1;
     CellId id2 = 2;
     KeyVertexData keyVertexData; keyVertexData.frame = 42;

@@ -14,18 +14,22 @@
 namespace OpenVAC
 {
 
-class VertexCell: virtual public Cell
+template <class Geometry>
+class VertexCell: virtual public Cell<Geometry>
 {
 public:
+    // Typedefs
+    OPENVAC_CELL_DECLARE_TYPEDEFS(VertexCell)
+
     // Constructor
-    VertexCell(VAC * vac, CellId id);
+    VertexCell(VAC * vac, CellId id) : Cell<Geometry>(vac, id) {}
 
     // Virtual destructor
-    virtual ~VertexCell()=0;
+    virtual ~VertexCell() {}
 
 private:
     // Befriend Operator
-    friend class Operator;
+    friend Operator;
 
     // Casting
     OPENVAC_DEFINE_CELL_CAST(VertexCell)

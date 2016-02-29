@@ -10,29 +10,28 @@
 #define OPENVAC_CELLDATA_H
 
 #include <OpenVAC/Topology/CellHandle.h>
-#include <OpenVAC/Topology/TCellData/DefineCellData.h>
+#include <OpenVAC/Topology/TCellData/TCellData.h>
+#include <OpenVAC/Topology/TCellData/TKeyVertexData.h>
+#include <OpenVAC/Topology/TCellData/TKeyEdgeData.h>
+
+#define OPENVAC_USING_CELLHANDLE_AS_CELLREF_(CellType) \
+    typedef CellType##Handle<Geometry> CellType##Ref;
+
+#define OPENVAC_DECLARE_CELL_DATA_(CellType) \
+    template <class Geometry> \
+    using CellType##Data = T##CellType##Data<HandlesAsRefs<Geometry>, Geometry>;
 
 namespace OpenVAC
 {
 
-class CellDataTrait
+template <class Geometry>
+class HandlesAsRefs
 {
 public:
-    typedef CellHandle            CellRef;
-    typedef KeyCellHandle         KeyCellRef;
-    typedef InbetweenCellHandle   InbetweenCellRef;
-    typedef VertexCellHandle      VertexCellRef;
-    typedef EdgeCellHandle        EdgeCellRef;
-    typedef FaceCellHandle        FaceCellRef;
-    typedef KeyVertexHandle       KeyVertexRef;
-    typedef KeyEdgeHandle         KeyEdgeRef;
-    typedef KeyFaceHandle         KeyFaceRef;
-    typedef InbetweenVertexHandle InbetweenVertexRef;
-    typedef InbetweenEdgeHandle   InbetweenEdgeRef;
-    typedef InbetweenFaceHandle   InbetweenFaceRef;
+    OPENVAC_FOREACH_CELL_TYPE(OPENVAC_USING_CELLHANDLE_AS_CELLREF_)
 };
 
-OPENVAC_DEFINE_CELL_DATA(/* No prefix */, CellDataTrait)
+OPENVAC_FOREACH_CELL_DATA_TYPE(OPENVAC_DECLARE_CELL_DATA_)
 
 }
 
