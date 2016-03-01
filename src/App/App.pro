@@ -67,11 +67,11 @@ CONFIG(debug,   debug|release): RELEASE_OR_DEBUG = debug
 ###############################################################################
 #                      SHIPPED INTERNAL LIBRARIES
 
-# OpenVAC
+# OpenVac
 
-OPENVAC_SRC       = $$PWD/../OpenVAC/src
-OPENVAC_OUT_UNIX  = $$OUT_PWD/../OpenVAC
-OPENVAC_OUT_WIN32 = $$OUT_PWD/../OpenVAC/$$RELEASE_OR_DEBUG
+OPENVAC_SRC       = $$PWD/../OpenVac/src
+OPENVAC_OUT_UNIX  = $$OUT_PWD/../OpenVac
+OPENVAC_OUT_WIN32 = $$OUT_PWD/../OpenVac/$$RELEASE_OR_DEBUG
 
 INCLUDEPATH += $$OPENVAC_SRC/
 DEPENDPATH += $$OPENVAC_SRC/
@@ -79,12 +79,12 @@ DEPENDPATH += $$OPENVAC_SRC/
 
 win32 {
     LIBS += -L$$OPENVAC_OUT_WIN32/
-    win32-g++: PRE_TARGETDEPS += $$OPENVAC_OUT_WIN32/libOpenVAC.a
-    else:      PRE_TARGETDEPS += $$OPENVAC_OUT_WIN32/OpenVAC.lib
+    win32-g++: PRE_TARGETDEPS += $$OPENVAC_OUT_WIN32/libOpenVac.a
+    else:      PRE_TARGETDEPS += $$OPENVAC_OUT_WIN32/OpenVac.lib
 }
 else:unix {
-    LIBS += -L$$OPENVAC_OUT_UNIX/ -lOpenVAC
-    PRE_TARGETDEPS += $$OPENVAC_OUT_UNIX/libOpenVAC.a
+    LIBS += -L$$OPENVAC_OUT_UNIX/ -lOpenVac
+    PRE_TARGETDEPS += $$OPENVAC_OUT_UNIX/libOpenVac.a
 }
 
 ###############################################################################
