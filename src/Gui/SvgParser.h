@@ -26,6 +26,7 @@ public:
     bool readPolyline_(XmlStreamReader & xml);
     bool readPolygon_(XmlStreamReader & xml);
     bool readCircle_(XmlStreamReader & xml);
+    bool readEllipse_(XmlStreamReader & xml);
     void readSvg_(XmlStreamReader & xml);
 };
 
