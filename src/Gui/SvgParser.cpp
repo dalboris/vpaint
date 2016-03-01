@@ -15,6 +15,7 @@
 #include <View.h>
 #include <Global.h>
 #include <QRegExp>
+#include <QtMath>
 
 SvgParser::SvgParser()
 {
@@ -449,6 +450,80 @@ bool SvgParser::readPolygon_(XmlStreamReader &xml) {
     return true;
 }
 
+bool SvgParser::readCircle_(XmlStreamReader &xml) {
+    // Check to make sure we are reading a circle object
+    if(xml.name() != "circle") return true;
+
+    bool okay;
+
+    // Get attributes
+
+    // Center X position
+    double cx = xml.attributes().hasAttribute("cx") ? xml.attributes().value("cx").toDouble(&okay) : 0;
+    if(!okay) cx = 0;
+
+    // Center Y position
+    double cy = xml.attributes().hasAttribute("cy") ? xml.attributes().value("cy").toDouble(&okay) : 0;
+    if(!okay) cy = 0;
+
+    // Radius
+    double r = xml.attributes().value("r").toDouble(&okay);
+    // Error, radius isn't a real number
+    if(!okay) return false;
+
+    // Negative radius results in an error
+    if(r < 0) return false;
+
+    // Get presentation attributes
+    SvgPresentationAttributes pa(xml, *this);
+
+    // Build verticies and edges
+    QVector<VectorAnimationComplex::KeyVertex *> v;
+    v.push_back(global()->currentVAC()->newKeyVertex(global()->activeTime(), Eigen::Vector2d(cx + r, cy)));
+    v.push_back(global()->currentVAC()->newKeyVertex(global()->activeTime(), Eigen::Vector2d(cx, cy + r)));
+    v.push_back(global()->currentVAC()->newKeyVertex(global()->activeTime(), Eigen::Vector2d(cx - r, cy)));
+    v.push_back(global()->currentVAC()->newKeyVertex(global()->activeTime(), Eigen::Vector2d(cx, cy - r)));
+    QVector<SculptCurve::Curve<VectorAnimationComplex::EdgeSample> > c(4);
+    QVector<VectorAnimationComplex::KeyEdge *> e(4);
+
+    // The number of sampling segments in a quarter of a circle
+    double quarterSegments = qCeil(r * M_PI_2 / c[0].ds());
+    // Angle with at most arc length of ds
+    double dsAngle = M_PI_2 / quarterSegments;
+
+    for(int i = 0; i < 4; i++) {
+        // Set vertex color
+        v[i]->setColor(pa.stroke);
+
+        // Create curve
+        c[i].setEndPoints(VectorAnimationComplex::EdgeSample(v[i]->pos()[0], v[i]->pos()[1], pa.strokeWidth), VectorAnimationComplex::EdgeSample(v[(i+1)%4]->pos()[0], v[(i+1)%4]->pos()[1], pa.strokeWidth));
+        c[i].beginSketch(VectorAnimationComplex::EdgeSample(v[i]->pos()[0], v[i]->pos()[1], pa.strokeWidth));
+        for(int j = 1; j < quarterSegments; j++) {
+            c[i].continueSketch(VectorAnimationComplex::EdgeSample(cx + r * qCos(j * dsAngle + M_PI_2 * i), cy + r * qSin(j * dsAngle + M_PI_2 * i), pa.strokeWidth));
+        }
+        c[i].continueSketch(VectorAnimationComplex::EdgeSample(v[(i+1)%4]->pos()[0], v[(i+1)%4]->pos()[1], pa.strokeWidth));
+        c[i].endSketch();
+
+        // Create KeyEdge
+        e[i] = global()->currentVAC()->newKeyEdge(global()->activeTime(), v[i], v[(i+1)%4], (new VectorAnimationComplex::LinearSpline(c[i])), pa.strokeWidth);
+        e[i]->setColor(pa.stroke);
+    }
+
+    // Add fill
+    if(xml.attributes().value("fill").trimmed() != "none")
+    {
+        QList<VectorAnimationComplex::KeyHalfedge> edges;
+        for(VectorAnimationComplex::KeyEdge * edge : e) {
+            edges.append(VectorAnimationComplex::KeyHalfedge(edge, true));
+        }
+        VectorAnimationComplex::Cycle cycle(edges);
+        VectorAnimationComplex::KeyFace * face = global()->currentVAC()->newKeyFace(cycle);
+        face->setColor(pa.fill);
+    }
+
+    return true;
+}
+
 void SvgParser::readSvg_(XmlStreamReader & xml)
 {
     while (xml.readNextStartElement())
@@ -471,6 +546,10 @@ void SvgParser::readSvg_(XmlStreamReader & xml)
                 else if(xml.name() == "polygon")
                 {
                     if(!readPolygon_(xml)) return;
+                }
+                else if(xml.name() == "circle")
+                {
+                    if(!readCircle_(xml)) return;
                 }
 
                 xml.skipCurrentElement();
