@@ -7,23 +7,23 @@
 
 class QString;
 
-class SVGParser
+class SvgParser
 {
 public:
-    SVGParser();
+    SvgParser();
 //private:
     QColor parseColor_(QString s);
     bool readRect_(XmlStreamReader & xml);
     bool readLine_(XmlStreamReader & xml);
     bool readPolyline_(XmlStreamReader & xml);
     bool readPolygon_(XmlStreamReader & xml);
-    void readSVG_(XmlStreamReader & xml);
+    void readSvg_(XmlStreamReader & xml);
 };
 
-class SVGPresentationAttributes
+class SvgPresentationAttributes
 {
 public:
-    SVGPresentationAttributes(XmlStreamReader & xml, SVGParser & parser);
+    SvgPresentationAttributes(XmlStreamReader & xml, SvgParser & parser);
     QColor fill, stroke;
     qreal strokeWidth;
 };

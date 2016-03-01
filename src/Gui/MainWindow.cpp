@@ -25,7 +25,7 @@
 #include "Background/BackgroundWidget.h"
 #include "VectorAnimationComplex/VAC.h"
 #include "VectorAnimationComplex/InbetweenFace.h"
-#include "SVGParser.h"
+#include "SvgParser.h"
 
 #include "IO/FileVersionConverter.h"
 #include "XmlStreamWriter.h"
@@ -621,12 +621,12 @@ void MainWindow::open()
     }
 }
 
-void MainWindow::importSVG()
+void MainWindow::importSvg()
 {
     QString filePath = QFileDialog::getOpenFileName(this, tr("Import as SVG"), global()->documentDir().path(), tr("SVG files (*.svg)"));
     // Open file
     if (!filePath.isEmpty())
-        doImportSVG(filePath);
+        doImportSvg(filePath);
 }
 
 bool MainWindow::save()
@@ -842,9 +842,9 @@ void MainWindow::open_(const QString & filePath)
     }
 }
 
-void MainWindow::doImportSVG(const QString & filePath)
+void MainWindow::doImportSvg(const QString & filePath)
 {
-    SVGParser parser;
+    SvgParser parser;
     QFile file(filePath);
     if (!file.open(QFile::ReadOnly | QFile::Text))
     {
@@ -853,7 +853,7 @@ void MainWindow::doImportSVG(const QString & filePath)
     }
 
     XmlStreamReader xml(&file);
-    parser.readSVG_(xml);
+    parser.readSvg_(xml);
 
     // Close file
     file.close();
@@ -1315,9 +1315,9 @@ void MainWindow::createActions()
     connect(actionOpen, SIGNAL(triggered()), this, SLOT(open()));
 
     // Import SVG
-    actionImportSVG = new QAction(/*QIcon(":/iconLoad"),*/ tr("SVG [Beta]"), this);
-    actionImportSVG->setStatusTip(tr("Import an existing SVG file."));
-    connect(actionImportSVG, SIGNAL(triggered()), this, SLOT(importSVG()));
+    actionImportSvg = new QAction(/*QIcon(":/iconLoad"),*/ tr("SVG [Beta]"), this);
+    actionImportSvg->setStatusTip(tr("Import an existing SVG file."));
+    connect(actionImportSvg, SIGNAL(triggered()), this, SLOT(importSvg()));
 
     // Save
     actionSave = new QAction(/*QIcon(":/iconSave"),*/ tr("&Save"), this);
@@ -1759,7 +1759,7 @@ void MainWindow::createMenus()
     menuFile->addAction(actionNew);
     menuFile->addAction(actionOpen);
     QMenu * importMenu = menuFile->addMenu(tr("Import")); {
-        importMenu->addAction(actionImportSVG);
+        importMenu->addAction(actionImportSvg);
     }
     menuFile->addSeparator();
     menuFile->addAction(actionSave);

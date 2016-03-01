@@ -189,7 +189,7 @@ HEADERS += MainWindow.h \
     UpdateCheck.h \
     VectorAnimationComplex/BoundingBox.h \
     VectorAnimationComplex/TransformTool.h \
-    SVGParser.h
+    SvgParser.h
 
 SOURCES += main.cpp \
     SaveAndLoad.cpp \
@@ -280,4 +280,4 @@ SOURCES += main.cpp \
     UpdateCheck.cpp \
     VectorAnimationComplex/BoundingBox.cpp \
     VectorAnimationComplex/TransformTool.cpp \
-    SVGParser.cpp
+    SvgParser.cpp

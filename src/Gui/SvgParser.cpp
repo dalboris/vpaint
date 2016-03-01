@@ -1,4 +1,4 @@
-#include "SVGParser.h"
+#include "SvgParser.h"
 #include "XmlStreamReader.h"
 
 #include <QString>
@@ -16,7 +16,7 @@
 #include <Global.h>
 #include <QRegExp>
 
-SVGParser::SVGParser()
+SvgParser::SvgParser()
 {
 
 }
@@ -26,7 +26,7 @@ SVGParser::SVGParser()
 // found at https://www.w3.org/TR/SVG11/types.html#DataTypeColor
 // It also extends the specifications in a few minor ways
 // This includes more flexible whitespace and some CSS3 features (hsl)
-QColor SVGParser::parseColor_(QString s)
+QColor SvgParser::parseColor_(QString s)
 {
     // Remove excess whitespace
     s = s.trimmed();
@@ -201,7 +201,7 @@ QColor SVGParser::parseColor_(QString s)
 // Reads a <rect> object
 // https://www.w3.org/TR/SVG11/shapes.html#RectElement
 // @return true on success, false on failure
-bool SVGParser::readRect_(XmlStreamReader & xml)
+bool SvgParser::readRect_(XmlStreamReader & xml)
 {
     // Check to make sure we are reading a rect object
     if(xml.name() != "rect") return true;
@@ -261,7 +261,7 @@ bool SVGParser::readRect_(XmlStreamReader & xml)
     ry = qBound(0.0, ry, height / 2);
 
     // Get presentation attributes
-    SVGPresentationAttributes pa(xml, *this);
+    SvgPresentationAttributes pa(xml, *this);
 
     // Build verticies and edges
     VectorAnimationComplex::KeyVertex * v1 = global()->currentVAC()->newKeyVertex(global()->activeTime(), Eigen::Vector2d(x, y));
@@ -303,7 +303,7 @@ bool SVGParser::readRect_(XmlStreamReader & xml)
     return true;
 }
 
-bool SVGParser::readLine_(XmlStreamReader & xml) {
+bool SvgParser::readLine_(XmlStreamReader & xml) {
     // Check to make sure we are reading a line object
     if(xml.name() != "line") return true;
 
@@ -328,7 +328,7 @@ bool SVGParser::readLine_(XmlStreamReader & xml) {
     if(!okay) y2 = 0;
 
     // Get presentation attributes
-    SVGPresentationAttributes pa(xml, *this);
+    SvgPresentationAttributes pa(xml, *this);
 
     // Build verticies and edges
     VectorAnimationComplex::KeyVertex * v1 = global()->currentVAC()->newKeyVertex(global()->activeTime(), Eigen::Vector2d(x1, y1));
@@ -344,14 +344,14 @@ bool SVGParser::readLine_(XmlStreamReader & xml) {
     return true;
 }
 
-bool SVGParser::readPolyline_(XmlStreamReader &xml) {
+bool SvgParser::readPolyline_(XmlStreamReader &xml) {
     // Check to make sure we are reading a polyline object
     if(xml.name() != "polyline" || !xml.attributes().hasAttribute("points")) return true;
 
     bool okay;
 
     // Get presentation attributes
-    SVGPresentationAttributes pa(xml, *this);
+    SvgPresentationAttributes pa(xml, *this);
 
     // Read and split points
     // Technically the parsing of separators is a bit more complicated,
@@ -386,14 +386,14 @@ bool SVGParser::readPolyline_(XmlStreamReader &xml) {
     return true;
 }
 
-bool SVGParser::readPolygon_(XmlStreamReader &xml) {
+bool SvgParser::readPolygon_(XmlStreamReader &xml) {
     // Check to make sure we are reading a polygon object
     if(xml.name() != "polygon" || !xml.attributes().hasAttribute("points")) return true;
 
     bool okay;
 
     // Get presentation attributes
-    SVGPresentationAttributes pa(xml, *this);
+    SvgPresentationAttributes pa(xml, *this);
 
     // Read and split points
     // Technically the parsing of separators is a bit more complicated,
@@ -449,7 +449,7 @@ bool SVGParser::readPolygon_(XmlStreamReader &xml) {
     return true;
 }
 
-void SVGParser::readSVG_(XmlStreamReader & xml)
+void SvgParser::readSvg_(XmlStreamReader & xml)
 {
     while (xml.readNextStartElement())
     {
@@ -484,7 +484,7 @@ void SVGParser::readSVG_(XmlStreamReader & xml)
     }
 }
 
-SVGPresentationAttributes::SVGPresentationAttributes(XmlStreamReader &xml, SVGParser & parser) {
+SvgPresentationAttributes::SvgPresentationAttributes(XmlStreamReader &xml, SvgParser & parser) {
     bool okay;
 
     // Stroke width
