@@ -23,7 +23,6 @@
 #include <View.h>
 #include <Global.h>
 #include <QRegExp>
-#include <QtMath>
 
 SvgParser::SvgParser()
 {
@@ -312,7 +311,8 @@ bool SvgParser::readRect_(XmlStreamReader & xml)
     return true;
 }
 
-bool SvgParser::readLine_(XmlStreamReader & xml) {
+bool SvgParser::readLine_(XmlStreamReader & xml)
+{
     // Check to make sure we are reading a line object
     if(xml.name() != "line") return true;
 
@@ -353,7 +353,8 @@ bool SvgParser::readLine_(XmlStreamReader & xml) {
     return true;
 }
 
-bool SvgParser::readPolyline_(XmlStreamReader &xml) {
+bool SvgParser::readPolyline_(XmlStreamReader &xml)
+{
     // Check to make sure we are reading a polyline object
     if(xml.name() != "polyline" || !xml.attributes().hasAttribute("points")) return true;
 
@@ -367,8 +368,8 @@ bool SvgParser::readPolyline_(XmlStreamReader &xml) {
     // but this will suffice as it correctly handles all standard-conforming svgs
     QStringList points = xml.attributes().value("points").toString().split(QRegExp("[\\s,]+"), QString::SkipEmptyParts);
 
-    // Fail if there isn't at least one complete coordinate
-    if(points.size() < 2) return false;
+    // Don't render isn't at least one complete coordinate
+    if(points.size() < 2) return true;
 
     QVector<VectorAnimationComplex::KeyVertex *> verticies(points.size() / 2);
 
@@ -395,7 +396,8 @@ bool SvgParser::readPolyline_(XmlStreamReader &xml) {
     return true;
 }
 
-bool SvgParser::readPolygon_(XmlStreamReader &xml) {
+bool SvgParser::readPolygon_(XmlStreamReader &xml)
+{
     // Check to make sure we are reading a polygon object
     if(xml.name() != "polygon" || !xml.attributes().hasAttribute("points")) return true;
 
@@ -458,7 +460,8 @@ bool SvgParser::readPolygon_(XmlStreamReader &xml) {
     return true;
 }
 
-bool SvgParser::readCircle_(XmlStreamReader &xml) {
+bool SvgParser::readCircle_(XmlStreamReader &xml)
+{
     // Check to make sure we are reading a circle object
     if(xml.name() != "circle") return true;
 
@@ -535,8 +538,9 @@ bool SvgParser::readCircle_(XmlStreamReader &xml) {
 }
 
 // TODO properly implement this instead of using a stretched circle
-bool SvgParser::readEllipse_(XmlStreamReader &xml) {
-    // Check to make sure we are reading a ellipse object
+bool SvgParser::readEllipse_(XmlStreamReader &xml)
+{
+    // Check to make sure we are reading an ellipse object
     if(xml.name() != "ellipse") return true;
 
     bool okay;
@@ -634,6 +638,28 @@ bool SvgParser::readEllipse_(XmlStreamReader &xml) {
     return true;
 }
 
+bool SvgParser::readPath_(XmlStreamReader &xml)
+{
+    // Check to make sure we are reading a path object
+    if(xml.name() != "path" || xml.attributes().hasAttribute("d")) return true;
+
+    // Get attributes
+
+    // Get presentation attributes
+    SvgPresentationAttributes pa(xml, *this);
+
+    QString d = xml.attributes().value("d").toString();
+
+    for(int startPos = 0; startPos < d.length();) {
+        switch(d.at(startPos).cell()) {
+        case 'M':
+            break;
+        }
+    }
+
+    return true;
+}
+
 void SvgParser::readSvg_(XmlStreamReader & xml)
 {
     while (xml.readNextStartElement())
@@ -713,4 +739,65 @@ SvgPresentationAttributes::SvgPresentationAttributes(XmlStreamReader &xml, SvgPa
     {
         stroke.setAlphaF(0);
     }
+}
+
+// For coordinate pair detection *with optional comma-wsp* which applies only to path elements, not polylines/polygons
+Eigen::Vector2d SvgParser::getNextCoordinatePair(QString & orig, bool * ok)
+{
+    QString s(static_cast<const QString>(orig));
+
+    // Find first number
+    QRegExp realNumberExp("[+\\-]?(([0-9]+\\.?[0-9]*) | (\\.[0-9]+))([Ee][0-9]+)?");
+    if(realNumberExp.indexIn(s) != 0)
+    {
+        *ok = false;
+        return Eigen::Vector2d(0, 0);
+    }
+    double x = realNumberExp.cap(0).toDouble(ok);
+    if(!ok)
+    {
+        return Eigen::Vector2d(0, 0);
+    }
+    s.remove(0, realNumberExp.cap(0).length());
+
+    // Move past whitespace
+    while(!s.isEmpty() && (s[0] == 0x20 || s[0] == 0x9 || s[0] == 0xD || s[0] == 0xA)) s.remove(0, 1);
+    // Check for comma
+    if(s[0] == ',')
+    {
+        s.remove(0, 1);
+        // Move past whitespace
+        while(!s.isEmpty() && (s[0] == 0x20 || s[0] == 0x9 || s[0] == 0xD || s[0] == 0xA)) s.remove(0, 1);
+    }
+
+    // Find second number
+    if(realNumberExp.indexIn(s) != 0)
+    {
+        *ok = false;
+        return Eigen::Vector2d(0, 0);
+    }
+    double y = realNumberExp.cap(0).toDouble(ok);
+    if(!ok)
+    {
+        return Eigen::Vector2d(0, 0);
+    }
+    s.remove(0, realNumberExp.cap(0).length());
+
+    orig = s;
+    *ok = true;
+    return Eigen::Vector2d(x, y);
+}
+
+/*void parsePathData() {
+
+}*/
+
+template<class T>
+bool PotentialPoint<T>::isSmooth()
+{
+    // Endpoints are not smooth
+    /*if(left_ < 0 || right_ < 0) return false;
+
+    if(qAbs(left_ - right_) < angleThreshold) return true;*/
+    return false;
 }

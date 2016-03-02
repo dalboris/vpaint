@@ -12,6 +12,9 @@
 #include <QtGlobal>
 #include <XmlStreamReader.h>
 #include <QColor>
+#include <QtMath>
+
+#include <VectorAnimationComplex/EdgeSample.h>
 
 class QString;
 
@@ -20,14 +23,42 @@ class SvgParser
 public:
     SvgParser();
 //private:
-    QColor parseColor_(QString s);
     bool readRect_(XmlStreamReader & xml);
     bool readLine_(XmlStreamReader & xml);
     bool readPolyline_(XmlStreamReader & xml);
     bool readPolygon_(XmlStreamReader & xml);
     bool readCircle_(XmlStreamReader & xml);
     bool readEllipse_(XmlStreamReader & xml);
+    bool readPath_(XmlStreamReader & xml);
     void readSvg_(XmlStreamReader & xml);
+
+    // Utilities
+    QColor parseColor_(QString s);
+    Eigen::Vector2d getNextCoordinatePair(QString & orig, bool * ok = 0);
+
+    // Path things
+    void addMoveto(QVector<VectorAnimationComplex::EdgeSample> & samplingPoints, XmlStreamReader & xml);
+};
+
+template <class T>
+class PotentialPoint
+{
+public:
+    PotentialPoint(T & index) : end_(index), left_(-1), right_(-1) {}
+
+    double getLeftTangent() { return left_; }
+    double getRightTangent() { return right_; }
+    void setLeftTangent(double angle) { left_ = fmod((fmod(angle, (2 * M_PI)) + (2 * M_PI)), (2 * M_PI)); }
+    void setRightTangent(double angle) { right_ = fmod((fmod(angle, (2 * M_PI)) + (2 * M_PI)), (2 * M_PI)); }
+
+    T & getIndex() { return end_; }
+
+    bool isSmooth();
+
+private:
+    double left_, right_;
+    const double angleThreshold = 0.01 * M_PI;
+    T & end_;
 };
 
 class SvgPresentationAttributes
