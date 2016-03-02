@@ -17,6 +17,7 @@
 #include <VectorAnimationComplex/EdgeSample.h>
 
 class QString;
+class SvgPresentationAttributes;
 
 class SvgParser
 {
@@ -37,7 +38,17 @@ public:
     Eigen::Vector2d getNextCoordinatePair(QString & orig, bool * ok = 0);
 
     // Path things
-    void addMoveto(QVector<VectorAnimationComplex::EdgeSample> & samplingPoints, XmlStreamReader & xml);
+    void parsePath(QString & data, const SvgPresentationAttributes & pa, const Eigen::Vector2d startPos = Eigen::Vector2d(0, 0));
+    void addMoveto(QVector<VectorAnimationComplex::EdgeSample> & samplingPoints, QString & data, bool relative);
+    void addLineto(QVector<VectorAnimationComplex::EdgeSample> & samplingPoints, QString & data, bool relative);
+    void addVerticalLineto(QVector<VectorAnimationComplex::EdgeSample> & samplingPoints, QString & data, bool relative);
+    void addHorizontalLineto(QVector<VectorAnimationComplex::EdgeSample> & samplingPoints, QString & data, bool relative);
+    void addCurveto(QVector<VectorAnimationComplex::EdgeSample> & samplingPoints, QString & data, bool relative);
+    void addSmoothCurveto(QVector<VectorAnimationComplex::EdgeSample> & samplingPoints, QString & data, bool relative);
+    void addQuadraticBezierCurveto(QVector<VectorAnimationComplex::EdgeSample> & samplingPoints, QString & data, bool relative);
+    void addSmoothQuadraticBezierCurveto(QVector<VectorAnimationComplex::EdgeSample> & samplingPoints, QString & data, bool relative);
+    void addEllipticalArc(QVector<VectorAnimationComplex::EdgeSample> & samplingPoints, QString & data, bool relative);
+    Eigen::Vector2d finishPath(QVector<VectorAnimationComplex::EdgeSample> & samplingPoints, const SvgPresentationAttributes pa, bool closed = false);
 };
 
 template <class T>
@@ -53,7 +64,7 @@ public:
 
     T & getIndex() { return end_; }
 
-    bool isSmooth();
+    bool isSmooth() { return left_ > 0 && right_ > 0 && qAbs(left_ - right_) < angleThreshold; }
 
 private:
     double left_, right_;

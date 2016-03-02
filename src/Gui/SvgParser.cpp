@@ -627,7 +627,8 @@ bool SvgParser::readEllipse_(XmlStreamReader &xml)
     if(xml.attributes().value("fill").trimmed() != "none")
     {
         QList<VectorAnimationComplex::KeyHalfedge> edges;
-        for(VectorAnimationComplex::KeyEdge * edge : e) {
+        for(VectorAnimationComplex::KeyEdge * edge : e)
+        {
             edges.append(VectorAnimationComplex::KeyHalfedge(edge, true));
         }
         VectorAnimationComplex::Cycle cycle(edges);
@@ -650,14 +651,100 @@ bool SvgParser::readPath_(XmlStreamReader &xml)
 
     QString d = xml.attributes().value("d").toString();
 
-    for(int startPos = 0; startPos < d.length();) {
-        switch(d.at(startPos).cell()) {
+    parsePath(d, pa);
+
+    return true;
+}
+
+void SvgParser::parsePath(QString &data, const SvgPresentationAttributes & pa, const Eigen::Vector2d startPos) {
+    QVector<VectorAnimationComplex::EdgeSample> samples;
+
+    data = data.trimmed();
+    if(data[0] != 'M' && data[0] != 'm')
+    {
+        samples.append(VectorAnimationComplex::EdgeSample(startPos[0], startPos[1]));
+    }
+
+    for(int startPos = 0; startPos < data.length();)
+    {
+        bool relative = true;
+        switch(data[startPos].cell()) {
+        case 0x20:
+        case 0x9:
+        case 0xD:
+        case 0xA:
+            break;
         case 'M':
+            relative = false;
+        case 'm':
+            addMoveto(samples, data, relative);
+            break;
+        case 'L':
+            relative = false;
+        case 'l':
+            addLineto(samples, data, relative);
+            break;
+        case 'V':
+            relative = false;
+        case 'v':
+            addVerticalLineto(samples, data, relative);
+            break;
+        case 'H':
+            relative = false;
+        case 'h':
+            addVerticalLineto(samples, data, relative);
+            break;
+        case 'C':
+            relative = false;
+        case 'c':
+            addCurveto(samples, data, relative);
+            break;
+        case 'S':
+            relative = false;
+        case 's':
+            addSmoothCurveto(samples, data, relative);
+            break;
+        case 'Q':
+            relative = false;
+        case 'q':
+            addQuadraticBezierCurveto(samples, data, relative);
+            break;
+        case 'T':
+            relative = false;
+        case 't':
+            addSmoothQuadraticBezierCurveto(samples, data, relative);
+            break;
+        case 'A':
+            relative = false;
+        case 'a':
+            addEllipticalArc(samples, data, relative);
+            break;
+        case 'Z':
+        case 'z':
+            data.remove(0, 1);
+            parsePath(data, pa, finishPath(samples, pa, true));
+            return;
             break;
         }
     }
+    if(samples.size() > 1)
+    {
+        finishPath(samples, pa);
+    }
+}
 
-    return true;
+void SvgParser::addMoveto(QVector<VectorAnimationComplex::EdgeSample> & samplingPoints, QString & data, bool relative) {}
+void SvgParser::addLineto(QVector<VectorAnimationComplex::EdgeSample> & samplingPoints, QString & data, bool relative) {}
+void SvgParser::addVerticalLineto(QVector<VectorAnimationComplex::EdgeSample> & samplingPoints, QString & data, bool relative) {}
+void SvgParser::addHorizontalLineto(QVector<VectorAnimationComplex::EdgeSample> & samplingPoints, QString & data, bool relative) {}
+void SvgParser::addCurveto(QVector<VectorAnimationComplex::EdgeSample> & samplingPoints, QString & data, bool relative) {}
+void SvgParser::addSmoothCurveto(QVector<VectorAnimationComplex::EdgeSample> & samplingPoints, QString & data, bool relative) {}
+void SvgParser::addQuadraticBezierCurveto(QVector<VectorAnimationComplex::EdgeSample> & samplingPoints, QString & data, bool relative) {}
+void SvgParser::addSmoothQuadraticBezierCurveto(QVector<VectorAnimationComplex::EdgeSample> & samplingPoints, QString & data, bool relative) {}
+void SvgParser::addEllipticalArc(QVector<VectorAnimationComplex::EdgeSample> & samplingPoints, QString & data, bool relative) {}
+Eigen::Vector2d SvgParser::finishPath(QVector<VectorAnimationComplex::EdgeSample> & samplingPoints, const SvgPresentationAttributes pa, bool closed)
+{
+    return Eigen::Vector2d(0, 0);
 }
 
 void SvgParser::readSvg_(XmlStreamReader & xml)
@@ -786,18 +873,4 @@ Eigen::Vector2d SvgParser::getNextCoordinatePair(QString & orig, bool * ok)
     orig = s;
     *ok = true;
     return Eigen::Vector2d(x, y);
-}
-
-/*void parsePathData() {
-
-}*/
-
-template<class T>
-bool PotentialPoint<T>::isSmooth()
-{
-    // Endpoints are not smooth
-    /*if(left_ < 0 || right_ < 0) return false;
-
-    if(qAbs(left_ - right_) < angleThreshold) return true;*/
-    return false;
 }
