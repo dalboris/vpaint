@@ -16,20 +16,22 @@
 #include <OpenVac/Operators/OpMakeKeyVertex.h>
 #include <OpenVac/Operators/OpMakeKeyOpenEdge.h>
 
+#include <vector>
+
+namespace
+{
 class Geometry
 {
 public:
     class Manager {};
-
-    class KeyVertex {};
-    class KeyEdge {};
+    class KeyVertex { double x; double y; };
+    class KeyEdge { std::vector<double> curve; };
 };
+}
 
 typedef OpenVac::Vac<Geometry> Vac;
+typedef OpenVac::OpMakeKeyVertex<Geometry> OpMakeKeyVertex;
 namespace Op = OpenVac::Operators;
-
-//OPENVAC_USING_VAC_TYPES(Vac)
-
 
 void TestOperators::opMakeKeyVertex()
 {
@@ -37,8 +39,8 @@ void TestOperators::opMakeKeyVertex()
     Vac vac;
     QVERIFY(vac.numCells() == 0);
 
-    // Create an OpMakeKeyVertex<Geometry> and test exhaustively
-    OpenVac::OpMakeKeyVertex<Geometry> op(vac.ptr(), 42);
+    // Create an OpMakeKeyVertex and test exhaustively
+    OpMakeKeyVertex op(vac.ptr(), 42);
     QVERIFY(vac.numCells() == 0);
 
     QVERIFY(op.isValid());

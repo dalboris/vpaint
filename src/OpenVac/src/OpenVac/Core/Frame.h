@@ -166,55 +166,190 @@ namespace OpenVac
 class Frame
 {
 private:
-    static const double EPS;
+    static double EPS() { return 1.0e-10; }
 
 public:
-    // Constructors
+
+    /**************************** Constructors *******************************/
+
+    ///
+    /// Constructs a zero-initialized super Frame.
+    ///
     Frame()             : value_(0.0)   {}
+    ///
+    /// Constructs a Frame initialized by the given \p value.
+    ///
     Frame(double value) : value_(value) {}
 
-    // Comparison operators
+
+    /************************** Comparison operators *************************/
+
+    ///
+    /// Returns \c true if \p f1 and \p f2 are epsilon-close; otherwise returns
+    /// \c false.
+    ///
+    /// Example:
+    ///
+    /// \code
+    /// Frame one = 1;
+    /// Frame two = 2;
+    /// Frame justBelowOne = 0.9999999999999999;
+    /// Frame justAboveOne = 1.0000000000000002;
+    ///
+    /// // All asserts below pass
+    /// assert(one + two == 3);
+    /// assert(justBelowOne == one);
+    /// assert(justAboveOne == one);
+    /// \endcode
+    ///
     friend bool operator==(const Frame & f1, const Frame & f2);
+    ///
+    /// Returns \c true if \p f1 and \p f2 are distant by more than epsilon;
+    /// otherwise returns \c false.
+    ///
     friend bool operator!=(const Frame & f1, const Frame & f2);
+    ///
+    /// Returns \c true if \p f1 and \p f2 are not epsilon-close and \p f1 is
+    /// lesser than \p f2; otherwise returns \c false.
+    ///
     friend bool operator< (const Frame & f1, const Frame & f2);
+    ///
+    /// Returns \c true if \p f1 and \p f2 are not epsilon-close and \p f1 is
+    /// greater than \p f2; otherwise returns \c false.
+    ///
     friend bool operator> (const Frame & f1, const Frame & f2);
+    ///
+    /// Returns \c true if \p f1 and \p f2 are epsilon-close or \p f1 is
+    /// lesser than \p f2; otherwise returns \c false.
+    ///
     friend bool operator<=(const Frame & f1, const Frame & f2);
+    ///
+    /// Returns \c true if \p f1 and \p f2 are epsilon-close or \p f1 is
+    /// greater than \p f2; otherwise returns \c false.
+    ///
     friend bool operator>=(const Frame & f1, const Frame & f2);
 
-    // Arithmetic operators
+
+    /************************** Arithmetic operators *************************/
+
+    ///
+    /// Returns the sum of \p f1 and \p f2.
+    ///
     friend Frame operator+(const Frame & f1, const Frame & f2);
+    ///
+    /// Returns the difference between \p f1 and \p f2.
+    ///
     friend Frame operator-(const Frame & f1, const Frame & f2);
+    ///
+    /// Returns the multiplication of \p f by \p scalar.
+    ///
     friend Frame operator*(double scalar, const Frame & f);
+    ///
+    /// Returns the multiplication of \p f by \p scalar.
+    ///
     friend Frame operator*(const Frame & f, double scalar);
+    ///
+    /// Returns the division of \p f by \p scalar.
+    ///
     friend Frame operator/(const Frame & f, double scalar);
 
-    // Compound assignment operators
+
+    /*********************** Compound assignment operators *******************/
+
+    ///
+    /// Adds \p f2 to \p f1.
+    ///
     friend Frame & operator+=(Frame & f1, const Frame & f2);
+    ///
+    /// Substracts \p f2 from \p f1.
+    ///
     friend Frame & operator-=(Frame & f1, const Frame & f2);
+    ///
+    /// Multiplies \p f by \p scalar.
+    ///
     friend Frame & operator*=(Frame & f, double scalar);
+    ///
+    /// Divides \p f by \p scalar.
+    ///
     friend Frame & operator/=(Frame & f, double scalar);
 
-    // Increment and decrement
+
+    /************************** Increment and decrement **********************/
+
+    ///
+    /// Increments \p f by 1.0. Returns value of \p f after incrementation.
+    ///
     friend Frame & operator++(Frame & f);
+    ///
+    /// Decrements \p f by 1.0. Returns value of \p f after decrementation.
+    ///
     friend Frame & operator--(Frame & f);
+    ///
+    /// Increments \p f by 1.0. Returns value of \p f before incrementation.
+    ///
     friend Frame   operator++(Frame & f, int);
+    ///
+    /// Decrements \p f by 1.0. Returns value of \p f before decrementation.
+    ///
     friend Frame   operator--(Frame & f, int);
 
-    // Floor, ceil, and round
-    static Frame floor(const Frame & f) { return Frame(std::floor(f.value_ + EPS)); }
-    static Frame ceil (const Frame & f) { return Frame(std::ceil (f.value_ - EPS)); }
+
+    /************************** Floor, ceil, and round ***********************/
+
+    ///
+    /// Returns the closest exact integer frame if \p f is an integer frame;
+    /// otherwise returns the largest exact integer frame not greater than \p f.
+    ///
+    static Frame floor(const Frame & f) { return Frame(std::floor(f.value_ + EPS())); }
+    ///
+    /// Returns the closest exact integer frame if \p f is an integer frame;
+    /// otherwise returns the smaller exact integer frame not less than \p f.
+    ///
+    static Frame ceil (const Frame & f) { return Frame(std::ceil (f.value_ - EPS())); }
+    ///
+    /// Returns the closest exact integer frame of \p f.
+    ///
     static Frame round(const Frame & f) { return Frame(std::floor(f.value_ + 0.5)); }
 
-    // Test whether the frame is an integer frame or a subframe
+
+    /***************** Test for integer frame or subframe ********************/
+
+    ///
+    /// Returns \c true if \p f is epsilon-close to an exact integer frame;
+    /// otherwise returns false.
+    ///
     bool isInteger()  const { return floor(*this).value_ == ceil(*this).value_; }
+    ///
+    /// Returns \c false if \p f is epsilon-close to an exact integer frame;
+    /// otherwise returns true.
+    ///
     bool isSubframe() const { return floor(*this).value_ != ceil(*this).value_; }
 
-    // Convert to double and int
+
+    /************************ Convert to double and int **********************/
+
+    ///
+    /// Returns the underlying double representing the frame.
+    ///
     double toDouble() const { return value_; }
+    ///
+    /// Returns Frame::floor(*this) as an int. We remind that Frame::floor(*this)
+    /// is always an exact integer frame.
+    ///
     int    toInt   () const { return Frame::floor(*this).value_; }
 
-    // Convert from and to time in seconds
+
+    /************************** Convert from and to time in seconds **********/
+
+    ///
+    /// Returns the time in seconds corresponding to this Frame, according to the
+    /// given \p fps.
+    ///
     double toSeconds(double fps) const { return value_ / fps; }
+    ///
+    /// Returns the Frame corresponding to the given time in seconds \p t,
+    /// according to the given \p fps.
+    ///
     static Frame fromSeconds(double t, double fps) { return Frame(t * fps); }
     
 private:
@@ -222,7 +357,7 @@ private:
 };
 
 // Comparison operators
-inline bool operator==(const Frame & f1, const Frame & f2) { return std::abs(f1.value_ - f2.value_) <= Frame::EPS; }
+inline bool operator==(const Frame & f1, const Frame & f2) { return std::abs(f1.value_ - f2.value_) <= Frame::EPS(); }
 inline bool operator!=(const Frame & f1, const Frame & f2) { return !(f1 == f2); }
 inline bool operator< (const Frame & f1, const Frame & f2) { return (f1 != f2) && (f1.value_ < f2.value_); }
 inline bool operator> (const Frame & f1, const Frame & f2) { return (f1 != f2) && (f1.value_ > f2.value_); }

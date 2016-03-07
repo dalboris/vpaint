@@ -10,12 +10,15 @@
 
 #include <OpenVac/Core/Memory.h>
 
+namespace
+{
 class Foo
 {
 public:
     Foo(int x) : x(x) {}
     int x;
 };
+}
 
 typedef OpenVac::SharedPtr<Foo> FooSharedPtr;
 typedef OpenVac::WeakPtr<Foo> FooPtr;
@@ -35,5 +38,4 @@ void TestMemory::testMemory()
     }
 
     QVERIFY(!wp);
-    QVERIFY(wp.get() == nullptr);
 }

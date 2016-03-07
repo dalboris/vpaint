@@ -1,0 +1,280 @@
+/*****************************************************************************
+ *                      CUSTOM STYLE-SHEET FOR OPENVAC
+ */
+
+/* Remove ugly shadows, borders, and background images */
+div.tabs, div.tabs2, div.tabs3,
+#navrow1, #navrow1 ul.tablist, #navrow1 ul.tablist li, #navrow1 ul.tablist li a,
+#navrow2, #navrow2 ul.tablist, #navrow2 ul.tablist li, #navrow2 ul.tablist li a,
+#navrow3, #navrow3 ul.tablist, #navrow3 ul.tablist li, #navrow3 ul.tablist li a,
+#nav-path, #nav-path ul, #nav-path ul li.navelem,
+div.header
+{
+	border: none;
+	box-shadow: none;
+	background: none;
+	border-radius: 0px;
+	color: inherit;
+	text-shadow: none;
+	font-weight: normal;
+	margin: 0;
+	padding: 0;
+}
+
+/* keep it simple: hide those useless and confusing secondary navrows */
+/*#navrow2, #navrow3
+{
+	display:none;
+}*/
+
+/* set title area style */
+#titlearea
+{
+  background: #E0E7F4;
+}
+
+/* set navrow style */
+div.tabs, #navrow1, #navrow1 ul.tablist, #navrow1 ul.tablist li, #navrow1 ul.tablist li a
+{
+	line-height: 36px;
+	height: 36px;
+}
+div.tabs2, #navrow2, #navrow2 ul.tablist, #navrow2 ul.tablist li, #navrow2 ul.tablist li a
+{
+	line-height: 25px;
+	height: 25px;
+}
+div.tabs3, #navrow3, #navrow3 ul.tablist, #navrow3 ul.tablist li, #navrow3 ul.tablist li a
+{
+	line-height: 25px;
+	height: 25px;
+}
+#navrow1, #navrow2, #navrow3
+{
+	background: rgba(249, 250, 252, 1);
+}
+#navrow1
+{
+	border-bottom: 1px solid #4A6AAA;
+}
+#navrow2, #navrow3
+{
+	border-bottom: 1px solid #BBBBBB;
+}
+#navrow1 ul.tablist li a,
+#navrow2 ul.tablist li a,
+#navrow3 ul.tablist li a
+{
+	padding-left: 20px;
+	padding-right: 20px;
+}
+#navrow1 ul.tablist li a:hover,
+#navrow2 ul.tablist li a:hover,
+#navrow3 ul.tablist li a:hover,
+#navrow1 ul.tablist li.current,
+#navrow2 ul.tablist li.current,
+#navrow3 ul.tablist li.current
+{
+	color: #4A6AAA;
+}
+
+/* set nav path style */
+#nav-path, #nav-path ul, #nav-path ul li.navelem, #nav-path ul li.navelem a
+{
+	line-height: 25px;
+	height: 25px;
+	font-size: 10px;
+}
+#nav-path
+{
+	background: rgba(249, 250, 252, 1);
+	border-bottom: 1px solid #BBBBBB;
+}
+#nav-path ul li.navelem:first-child
+{
+	margin-left: 20px;
+}
+#nav-path ul li.navelem
+{
+	margin-left: 10px;
+}
+.navelem b,
+.navelem a
+{
+	font-weight: normal;
+}
+#nav-path ul li.navelem a
+{
+	display: inline;
+}
+#nav-path ul li.navelem:after
+{
+	margin-left: 10px;
+	content: ">";
+}
+#nav-path ul li.navelem:last-child:after
+{
+	margin-left: 0px;
+	content: "";
+}
+
+/* Set list of members style */
+.memItemLeft, .memItemRight 
+{
+	background: rgba(245, 245, 245, 1.0);
+}
+.memItemLeft
+{
+	padding-left: 10px;
+	border-left: 1px solid rgba(200, 200, 200, 1.0);
+}
+.memItemRight 
+{
+	border-right: 1px solid rgba(200, 200, 200, 1.0);
+}
+table.memberdecls
+{
+	margin-top: 10px;
+	margin-right: 5px;
+}
+table.memberdecls tbody tr:first-child td /* heading */
+{
+	padding-bottom: 10px;
+}
+table.memberdecls tbody tr:nth-child(even)  /* mem items */
+{
+}
+table.memberdecls tbody tr:nth-child(2) td /* first mem item */
+{
+	padding-top: 5px;
+	border-top: 1px solid rgba(200, 200, 200, 1.0);
+}
+table.memberdecls tbody tr:nth-child(2) td.memItemLeft
+{
+	border-top-left-radius: 10px;
+}
+table.memberdecls tbody tr:nth-child(2) td.memItemRight
+{
+	border-top-right-radius: 10px;
+}
+table.memberdecls tbody tr:nth-last-child(2) td /* last mem item */
+{
+	padding-bottom: 5px;
+	border-bottom: 1px solid rgba(200, 200, 200, 1.0);
+}
+table.memberdecls tbody tr:nth-last-child(2) td.memItemLeft
+{
+	border-bottom-left-radius: 10px;
+}
+table.memberdecls tbody tr:nth-last-child(2) td.memItemRight
+{
+	border-bottom-right-radius: 10px;
+}
+table.memberdecls tbody tr:nth-child(2n+3) /* separators */
+{
+	/*display:none;*/
+}
+
+/* set member documentation style */
+div.memdoc
+{
+	border: none;
+	box-shadow: none;
+	background: none;
+	border-radius: 0px;
+}
+div.memproto
+{
+	border: 1px solid rgba(200, 200, 200, 1.0);
+	box-shadow: none;
+	background: rgba(245, 245, 245, 1.0);
+	border-radius: 10px;
+}
+div.memitem
+{
+	transition: none;
+	border: none;
+}
+table.memname
+{
+	font-size: 1.0em;
+}
+table.mlabels, .mlabels tbody, .mlabels tbody tr,
+td.mlabels-left, td.mlabels-right,
+table.memname
+{
+	display: inline;
+}
+.paramtype
+{
+	padding: 0;
+	margin: 0;
+}
+.memname tr, .memname td
+{
+	display: block;
+	float: left;
+	padding: 0;
+	margin: 0;
+}
+td.memname
+{
+	margin-left: 10px; /* Margin at the left of function name */
+}
+table.memname > tbody > tr:first-child > td.paramtype
+{
+	margin-left: 5px; /* Margin at the left of first param */
+}
+table.memname > tbody > tr > td.paramkey
+{
+	margin-left: 10px; /* Margin at the left of non-first param */
+	height: 10px;
+}
+table.memname > tbody > tr:last-child:first-child > td.paramname
+{
+	margin-right: 5px; /* Margin at the right of last param when nArgs < 2 */
+	height: 10px;
+}
+table.memname > tbody > tr:last-child > td:last-child
+{
+	margin-left: 5px; /* Margin at the left of the "const" keyword */
+	height: 10px;
+}
+
+/* Make "Definition at line 173 of file Frame.h." smaller */
+div.memdoc > p:last-child,
+div.textblock > p:last-child
+{
+	/*font-size: 0.6em;*/
+}
+
+/* style of blocks of code */
+div.fragment
+{
+	background: #FBFBFF;
+	border: 1px dotted #BABABA;
+}
+
+/* member labels (inline, friend, static, etc.) */
+span.mlabel 
+{
+	background: none;
+	border: 0;
+	text-shadow: none;
+	color: black;
+	margin: 0;
+	padding: 0;
+	font-size: inherit;
+	white-space: nowrap;
+	vertical-align: middle;
+	margin-right:20px;
+	font-weight: bold;
+}
+span.mlabel:before 
+{
+	content: "[ ";
+}
+span.mlabel:after 
+{
+	content: " ]";
+}

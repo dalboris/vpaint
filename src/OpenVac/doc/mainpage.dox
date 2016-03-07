@@ -1,0 +1,84 @@
+
+/**
+\mainpage
+
+<H2>What is OpenVAC?</H2>
+
+OpenVAC is an open-source C++ library providing an implementation of the <a
+href="http://www.dalboris.com/vac">Vector Animation Complex</a> (VAC). You can
+also ignore all animation components of the library, and simply use OpenVAC as
+an implementation of the <a href="http://www.dalboris.com/vac">Vector Graphics
+Complex</a> (VGC). OpenVAC is the core library <a
+href="http://www.vpaint.org">VPaint</a> is based on.
+
+The VGC is a modern data structure for vector graphics that solves many of the
+limitations that previous vector graphics representations have been facing for
+the last two decades. The VAC is an extension of the VGC to represent 2D
+animations, supporting arbitrary topological changes during the course of the
+animation (e.g., strokes merging and splitting). Check out the images and videos below for
+an overview of what OpenVAC is capable of!
+
+\image html teaser-vgc.png
+\image html teaser-vac.png
+
+\htmlonly
+<iframe width="250" src="https://www.youtube.com/embed/NdQFAMe7TlY" frameborder="0" allowfullscreen></iframe>
+<iframe width="250" src="https://www.youtube.com/embed/-XONNPyeb5U" frameborder="0" allowfullscreen></iframe>
+<iframe width="250" src="https://www.youtube.com/embed/Xk1_CugdytI" frameborder="0" allowfullscreen></iframe>
+\endhtmlonly
+
+<H2>What OpenVAC is not?</H2>
+
+OpenVAC is not a renderer. It is only a *representation* for your vector
+graphics and 2D animation data, but it is up to you to actually implement how
+you want to render this data on screen. You may want to use OpenGL, or maybe a
+2D library such as Cairo.
+
+OpenVAC is not a curve library. It only knows how to represent *incidence
+relationships* between curves, and is merely aware of what the *concept* of
+curve is, but to keep the library generic it is up to you to provide a curve
+implementation. You may want to use the long-established Bézier curves, or
+like in VPaint some sculptable hand-drawn strokes with variable width, and
+maybe attach some fancy styling. The power is in your hands!
+
+OpenVAC is not a user interface. It is only a back-end that knows how to
+perform low-level topological operations on vector graphics and 2D animation
+data, but it is up to you to create a UI, some sort of selection mechanism,
+and listen to user input to decide which low-level OpenVAC functions to call.
+
+Though, don't be too scared! In the \ref gettingstarted "Getting Started"
+section,  you will be guided in a pedagogical way through all the steps
+necessary, and a minimal implementations of all the above is provided, that
+you can later extend. You can also use the source code of VPaint as reference,
+or even fork it and experiment.
+
+
+<H2>Why should I use OpenVAC?</H2>
+
+It is tempting to think that vector graphics is quite simple, and therefore
+that appropriate data structures have been figured out long ago, without much
+room for improvement. Unfortunately this is not true, and designing good data
+structures for vector graphics is actually hard, especially to support intuitive
+authoring of vector graphics, or to represent any non-trivial vector graphics
+animation. The mathematical foundations required to solve these challenges were
+poorly studied and understood until now.
+
+The VGC is the result of 2 years of research and development at Inria Grenoble
+and the University of British Columbia, and it has been derived from a
+rigorous and systematic analysis rooted in algebraic topology, which you can
+find in <a
+href="http://www.dalboris.com/research/vgc/dalstein2014pcs.pdf">this
+report</a>. The VAC took 3 years to develop, and even though it is not derived
+from such a rigorous analysis, a lot of care has been taken in its design, and
+many other designs were tested and thrown away in order to get it right.
+
+Whether you are planning to develop a brand new vector graphics or 2D animation app, or want to
+improve your existing app, using OpenVAC can save you from this hard work
+and equip you with the latest advancements in the field. Moreover, given
+the many advantages of the VGC compared to previous vector graphics representations,
+it is a reasonable guess that it will eventually become standard,
+and getting on board early doesn't hurt.
+
+Convinced? Then let's \ref gettingstarted "get started"!
+
+*/

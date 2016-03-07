@@ -159,7 +159,6 @@ public:
         return *this;
     }
 
-
     // Computes operation if not computed yet, then applies operation to VAC.
     // Aborts if not valid or already applied. Returns this Operator.
     bool isApplied() const { return isApplied_; }
@@ -222,8 +221,8 @@ private:
         {
             CellId id = id_data_pair.first;
             const OpCellData & opCellData = *id_data_pair.second;
-            CellData & cellData = vac_->cellManager_[id]->data();
-
+            CellHandle toCell = vac_->cellManager_[id];
+            CellData & cellData = toCell->data();
             converter.convert(opCellData, cellData);
         }
     }
@@ -283,6 +282,18 @@ private:
                     OPENVAC_OPERATOR_RETURN_MAKE_SHARED_IF_TYPE_MATCHES_)
     }
 };
+
+/// \addtogroup Operators
+/// @{
+
+/// \namespace OpenVac::Operators
+/// \brief Free functions to construct or apply Vac operators
+namespace Operators
+{
+}
+
+/// @} Doxygen Operators group
+
 
 }
 

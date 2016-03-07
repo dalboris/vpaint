@@ -12,6 +12,9 @@
 #include <OpenVac/Core/Memory.h>
 #include <OpenVac/Core/ForeachCellType.h>
 
+// XXX this header should be removed
+#include <OpenVac/Topology/CellType.h>
+
 #define OPENVAC_DEFINE_STATIC_TO_CELL_(CellType) \
     static CellType<Geometry> * to##CellType(Cell * c) { return c ? c->to##CellType##_() : nullptr; }
 
@@ -68,6 +71,8 @@ cell_handle_cast(const SharedPtr<U> & spu)
     else
     {
         U * pu = spu.get();
+        //T * pt = dynamic_cast<T*>(pu);
+        // XXX
         T * pt = T::cast_(pu);
         if (pt)
         {
@@ -95,7 +100,14 @@ public:
     TCellHandle(const TCellHandle & r) : ptr_(r.ptr_) {}
 
     template <class Y>
-    TCellHandle(const TCellHandle<Y> & r) : TCellHandle(cell_handle_cast<T>(r)) {}
+    TCellHandle(const TCellHandle<Y> & r) : TCellHandle(cell_handle_cast<T>(r))
+    {
+        if (r)
+        {
+            CellType t = r->type();
+            CellType t2 = t;
+        }
+    }
 
     TCellHandle(const SharedPtr<T> & r) : ptr_(r) {}
 
@@ -151,8 +163,8 @@ public:
 
     // Dereferencing
     T * get() const { return ptr_.get(); }
-    T & operator*() const { return *get(); }
-    T * operator->() const { return get(); }
+    T & operator*() const { T * p = get(); assert(p); return *p; }
+    T * operator->() const { T * p = get(); assert(p); return p; }
 
 private:
     WeakPtr<T> ptr_;

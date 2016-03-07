@@ -1,0 +1,239 @@
+
+/*****************************    Font    ************************************/
+
+@font-face {
+    font-family: OpenSansLight;
+    src: url(OpenSans-Light.ttf);
+}
+
+p, ul {
+	font-family: 'Open Sans', sans-serif;
+	font-size: 12pt;
+	font-weight: 400;
+}
+
+h1, h2 {
+	font-family: 'OpenSansLight', sans-serif;
+	font-size: 25pt;
+	font-weight: 300;
+}
+
+#sidebar-header h1 {
+    font-family: 'OpenSansLight', sans-serif;
+    font-size: 28pt;
+    font-weight: 400;
+}
+
+#sidebar-header h2 {
+    font-family: 'Open Sans', sans-serif;
+    font-size: 9pt;
+    font-weight: 400;
+    font-style: italic;
+}
+
+
+/************************    General Layout    *******************************/
+
+html {
+  box-sizing: border-box;
+}
+
+*, *:before, *:after {
+    box-sizing: inherit;
+    margin: 0; 
+    padding: 0; 
+}
+
+html, body { 
+    height: 100%; 
+}
+
+#background-container {
+    position: fixed;
+}
+
+#content-container {
+    position: relative;
+}
+
+#background-container, #content-container {
+    margin-left: auto;
+    margin-right: auto;
+    left: 0;
+    right: 0;
+	max-width: 1200px;
+}
+
+#background-container {
+    height: 100%;
+}
+
+#content-container {
+	min-height: 100%;
+}
+
+#sidebar-background {
+    width: 300px;
+    height: 100%;
+}
+
+#sidebar {
+    width: 300px;
+    height: 100%;
+    float: left;
+}
+
+#content {
+    width: calc(100% - 300px);
+    height: 100%;
+    float: right;
+}
+
+#sidebar-header {
+    width: 100%;
+}
+
+/*************************    Navbar layout    *******************************/
+
+#sidebar-header {
+    padding-top: 15px;
+    padding-bottom: 20px;
+
+    border-top: 10px solid #266496;
+    border-bottom: 10px solid #266496;
+}
+
+#sidebar-header div {
+    /*margin-top: 10px;*/
+    text-align: center;
+}
+
+#sidebar-header img {
+    vertical-align:middle
+}
+
+#sidebar-header h1 {
+    text-align: center;
+    vertical-align:middle;
+    display: inline; 
+/*
+    padding-top: 10px;
+    padding-bottom: 0px;*/
+}
+
+#sidebar-header h2 {
+    text-align: center;
+
+    padding-left: 30px;
+    padding-right: 30px;
+    padding-top: 10px;
+}
+
+#sidebar-nav ul {
+    list-style-type: none;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+#sidebar-nav li {
+}
+
+#sidebar-nav li a { 
+    padding-left: 20px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    margin: 0;
+    display: block; 
+    width: 100%; 
+    height: 100%; 
+}
+
+/************************    Content Layout    *******************************/
+
+#content h1, #content h2, #content p {
+    padding-left: 60px;
+    padding-right: 60px;
+}
+
+
+#content div.image {
+    text-align: center;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+#content p {
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+#content h1 {
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+
+#content h2 {
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+#content {
+    padding-bottom: 40px;
+}
+
+
+
+/****************************    Colors    ***********************************/
+
+/* Color palette:
+    light  grey: rgb(180,180,180);
+    medium grey: rgb(80,80,80);
+    dark   grey: rgb(50,50,50);
+    blue       : rgb(65,124,182);
+
+*/
+
+a {
+  color: inherit;
+  text-decoration: none; 
+}
+
+body { 
+    background-color: rgb(180,180,180); 
+}
+
+#background-container {
+    background-color: white;
+    box-shadow: 0 0 20px 0px rgb(80,80,80);
+}
+
+#sidebar-background {
+    background-color: rgb(50,50,50);
+}
+
+#sidebar-header {
+    background-color: rgb(65,124,182);
+    color: white;
+}
+
+#sidebar-nav {
+    color: rgb(180,180,180);
+}
+
+#sidebar-nav li:hover {
+    background-color: rgb(80,80,80);
+}
+
+#content h2:after
+{
+    content: ' ';
+    display: block;
+    border-bottom: 1px solid rgb(39, 118, 195);
+}
+
+#content a {
+    color: rgb(39, 118, 195);
+}
+
+#content a:hover {
+    text-decoration: underline;
+}

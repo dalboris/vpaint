@@ -12,72 +12,30 @@
 namespace OpenVac
 {
 
-// Enumeration of CellType values.
-// The dummy template param is a hack to define static const values in header.
-template <class Dummy> struct CellTypes_
+enum class CellType : char
 {
-    static const short KeyCell;
-    static const short InbetweenCell;
+    Cell       = 0x00,
 
-    static const short VertexCell;
-    static const short EdgeCell;
-    static const short FaceCell;
+    KeyCell       = 0x01,
+    InbetweenCell = 0x02,
 
-    static const short KeyVertex;
-    static const short KeyEdge;
-    static const short KeyFace;
+    VertexCell    = 0x10,
+    EdgeCell      = 0x20,
+    FaceCell      = 0x40,
 
-    static const short InbetweenVertex;
-    static const short InbetweenEdge;
-    static const short InbetweenFace;
-    static const short value;
+    KeyVertex = KeyCell | VertexCell,
+    KeyEdge   = KeyCell | EdgeCell,
+    KeyFace   = KeyCell | FaceCell,
+
+    InbetweenVertex = InbetweenCell | VertexCell,
+    InbetweenEdge   = InbetweenCell | EdgeCell,
+    InbetweenFace   = InbetweenCell | FaceCell
 };
 
-template<class Dummy> const short CellTypes_<Dummy>::KeyCell       = 0x00;
-template<class Dummy> const short CellTypes_<Dummy>::InbetweenCell = 0x01;
-
-template<class Dummy> const short CellTypes_<Dummy>::VertexCell    = 0x02;
-template<class Dummy> const short CellTypes_<Dummy>::EdgeCell      = 0x04;
-template<class Dummy> const short CellTypes_<Dummy>::FaceCell      = 0x08;
-
-template<class Dummy> const short CellTypes_<Dummy>::KeyVertex = 0x02; // = KeyCell | VertexCell;
-template<class Dummy> const short CellTypes_<Dummy>::KeyEdge   = 0x04; // = KeyCell | EdgeCell;
-template<class Dummy> const short CellTypes_<Dummy>::KeyFace   = 0x08; // = KeyCell | FaceCell;
-
-template<class Dummy> const short CellTypes_<Dummy>::InbetweenVertex = 0x03; // = InbetweenCell | VertexCell;
-template<class Dummy> const short CellTypes_<Dummy>::InbetweenEdge   = 0x05; // = InbetweenCell | EdgeCell;
-template<class Dummy> const short CellTypes_<Dummy>::InbetweenFace   = 0x09; // = InbetweenCell | FaceCell;
-
-class CellType: public CellTypes_<void>
+inline constexpr CellType operator&(CellType t1, CellType t2)
 {
-public:
-    // Constructor
-    CellType(short type) : type_(type) {}
-
-    // Copy constructor
-    CellType(const CellType & other) : type_(other.type_) {}
-
-    // Assignment operator
-    CellType & operator=(const CellType & other)
-    {
-        type_ = other.type_;
-        return *this;
-    }
-
-    // Comparison operators
-    bool operator==(const CellType & other) { return type_ == other.type_; }
-    bool operator!=(const CellType & other) { return type_ != other.type_; }
-
-    // Sub-type checking
-    bool isKeyCell()       const { return type_ & KeyCell;       }
-    bool isInbetweenCell() const { return type_ & InbetweenCell; }
-    bool isVertexCell()    const { return type_ & VertexCell;    }
-    bool isEdgeCell()      const { return type_ & EdgeCell;      }
-    bool isFaceCell()      const { return type_ & FaceCell;      }
-
-private:
-    short type_;
-};
+    return static_cast<CellType> (static_cast<char>(t1) & static_cast<char>(t2));
+}
 
 }
 

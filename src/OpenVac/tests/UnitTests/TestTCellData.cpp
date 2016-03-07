@@ -15,6 +15,8 @@
 
 #include <vector>
 
+namespace
+{
 class Geometry
 {
 public:
@@ -28,6 +30,7 @@ public:
     typedef unsigned int KeyVertexRef;
     typedef unsigned int KeyEdgeRef;
 };
+}
 
 #define DECLARE_MY_CELL_DATA(CellType) \
     typedef OpenVac::T##CellType##Data<UintAsRefs, Geometry> My##CellType##Data;

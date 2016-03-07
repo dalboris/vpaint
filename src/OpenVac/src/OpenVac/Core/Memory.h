@@ -19,11 +19,11 @@ namespace OpenVac
 template <class T>
 using SharedPtr = std::shared_ptr<T>;
 
-// Weak pointer. Like std::weak_ptr but providing the additional functionality:
-//   - operator bool(): returns true if it's not empty, not expired, and the
-//                      stored pointer is not null
-//   - get(), operator*, and operator->: returns null if the weak pointer is
-//                      empty or expired, otherwise return the store pointer
+// Weak pointer. Like std::weak_ptr but providing the additional:
+//   - operator bool(): Returns true if use_count() > 0 && stored pointer non null
+//   - get(), operator*, and operator->: Returns stored pointer. Aborts if use_count() == 0.
+//     doesn't require a lock(): the stored pointer is cached. You can still perform a
+//     lock yourself if thread safety is an issue in your case.
 template <class T>
 class WeakPtr
 {
@@ -31,55 +31,94 @@ public:
     typedef T element_type;
 
     // Constructors
-    WeakPtr() : ptr_() {}
+    WeakPtr() :
+        wp_(),
+        p_(nullptr)
+    {
+    }
 
-    WeakPtr(const WeakPtr & r) : ptr_(r.ptr_) {}
+    WeakPtr(const WeakPtr & r) :
+        wp_(r.wp_),
+        p_(r.p_)
+    {
+    }
 
     template <class Y>
-    WeakPtr(const WeakPtr<Y> & r) : ptr_(r.ptr_) {}
+    WeakPtr(const WeakPtr<Y> & r) :
+        wp_(r.wp_),
+        p_(r.p_)
+    {
+    }
 
     template <class Y>
-    WeakPtr(const SharedPtr<Y> & r) : ptr_(r) {}
+    WeakPtr(const SharedPtr<Y> & r) :
+        wp_(r),
+        p_(r.get()) // Warning: r.use_count() == 0 does not guarantee r.get() == nullptr
+    {
+    }
 
     // Destructor
     ~WeakPtr() {}
 
     // Assignment operators
-    WeakPtr & operator=(const WeakPtr & r) { ptr_ = r.ptr_; return *this; }
+    WeakPtr & operator=(const WeakPtr & r)
+    {
+        wp_ = r.wp_;
+        p_ = r.p_;
+        return *this;
+    }
 
     template <class Y>
-    WeakPtr & operator=(const WeakPtr<Y> & r) { ptr_ = r.ptr_; return *this; }
+    WeakPtr & operator=(const WeakPtr<Y> & r)
+    {
+        wp_ = r.wp_;
+        p_ = r.p_;
+        return *this;
+    }
 
     template <class Y>
-    WeakPtr & operator=(const SharedPtr<Y> & r) { ptr_ = r; return *this; }
+    WeakPtr & operator=(const SharedPtr<Y> & r)
+    {
+        wp_ = r;
+        p_ = r.get();
+        return *this;
+    }
 
     // Reset
-    void reset() { ptr_.reset(); }
+    void reset()
+    {
+        wp_.reset();
+        p_ = nullptr;
+    }
 
     // Swap
-    void swap( WeakPtr & r ) { ptr_.swap(r.ptr_); }
+    void swap(WeakPtr & r)
+    {
+        wp_.swap(r.wp_);
+        swap(p_, r.p_);
+    }
 
     // Use count
-    long use_count() const { return ptr_.use_count(); }
+    long use_count() const { return wp_.use_count(); }
 
     // Expired
-    bool expired() const { return ptr_.expired(); }
+    bool expired() const { return wp_.expired(); }
 
     // Lock
-    SharedPtr<T> lock() const { return ptr_.lock(); }
+    SharedPtr<T> lock() const { return wp_.lock(); }
 
     // Owner before
     template <class Y>
-    bool owner_before(const WeakPtr<Y> & other) const { return ptr_.owner_before(other); }
+    bool owner_before(const WeakPtr<Y> & other) const { return wp_.owner_before(other.wp_); }
 
     template <class Y>
-    bool owner_before(const SharedPtr<Y> & other) const { return ptr_.owner_before(other); }
+    bool owner_before(const SharedPtr<Y> & other) const { return wp_.owner_before(other); }
 
     // Conversion to bool
-    operator bool() const { return use_count() > 0 && (bool)lock(); }
+    operator bool() const { return use_count() > 0 && p_; }
 
     // Dereferencing
-    T * get() const { return use_count() > 0 ? lock().get() : nullptr; }
+    T * get() const { assert(use_count() > 0); return p_; }
     T & operator*() const { return *get(); }
     T * operator->() const { return get(); }
 
@@ -87,11 +126,18 @@ public:
     template <class YPtr>
     bool operator==(const YPtr & otherPtr)
     {
-        return get() == otherPtr.get();
+        bool valid = use_count();
+        bool otherValid = otherPtr.use_count();
+
+        if (valid && otherValid)
+            return get() == otherPtr.get(); // Both valid with same pointer value
+        else
+            return valid == otherValid;     // Both invalid
     }
 
 private:
-    std::weak_ptr<T> ptr_;
+    std::weak_ptr<T> wp_;
+    T * p_;
 };
 
 template <class T>
@@ -111,6 +157,16 @@ public:
         return weakToShared_;
     }
 
+    // Sets the shared pointer that provided weak pointers will refer too.
+    // Causes undefined behaviour if ptr() has been called before setShared().
+    // In other words, there are only two usage scenarios:
+    //
+    //   1) You never call setShared (when t is stack-allocated, member attribute,
+    //      or managed by unique_ptr)
+    //
+    //   2) You call setShared() first and once only, followed by any numbers
+    //      of calls to ptr() (when t is stack-allocated, member attribute, or
+    //      managed by unique_ptr)
     void setShared(const SharedPtr<T> & sp)
     {
         fakeShared_.reset();

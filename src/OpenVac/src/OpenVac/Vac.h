@@ -12,8 +12,6 @@
 #include <OpenVac/Core/IdManager.h>
 #include <OpenVac/Topology/Cell.h>
 
-// Declare VAC public typedefs
-
 #define OPENVAC_VAC_DECLARE_GEOMETRY_TYPE_ \
     typedef Geometry geometry_type;
 
@@ -43,30 +41,12 @@
     OPENVAC_FOREACH_CELL_TYPE(OPENVAC_VAC_DECLARE_ID_TYPEDEF_) \
     OPENVAC_FOREACH_CELL_DATA_TYPE(OPENVAC_VAC_DECLARE_DATA_TYPEDEF_)
 
-// Using VAC types within current scope
-
-#define OPENVAC_USING_CELLTYPE \
-    typedef OpenVac::CellType CellType;
-
-#define OPENVAC_USING_VAC_OPERATOR(Vac) \
-    typedef Vac::Operator Operator;
-
-#define OPENVAC_USING_VAC_CELL_HANDLE(CellType, Vac) \
-    typedef Vac::CellType##Handle CellType##Handle;
-
-#define OPENVAC_USING_VAC_CELL_ID(CellType, Vac) \
-    typedef OpenVac::CellType##Id CellType##Id;
-
-#define OPENVAC_USING_VAC_CELL_DATA(CellType, Vac) \
-    typedef Vac::CellType##Data CellType##Data;
-
-#define OPENVAC_USING_VAC_TYPES(Vac) \
-    OPENVAC_USING_CELLTYPE \
-    OPENVAC_USING_VAC_OPERATOR(Vac) \
-    OPENVAC_FOREACH_CELL_TYPE_ARGS(OPENVAC_USING_VAC_CELL_HANDLE, Vac) \
-    OPENVAC_FOREACH_CELL_TYPE_ARGS(OPENVAC_USING_VAC_CELL_ID, Vac) \
-    OPENVAC_FOREACH_CELL_DATA_TYPE_ARGS(OPENVAC_USING_VAC_CELL_DATA, Vac)
-
+/// \namespace OpenVac
+/// \brief The OpenVAC library
+///
+/// OpenVAC is an open-source C++ implementation of the Vector Animation
+/// Complex (VAC), See \ref mainpage "Getting started" for more details.
+///
 namespace OpenVac
 {
 

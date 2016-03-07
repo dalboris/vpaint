@@ -14,6 +14,9 @@
 namespace OpenVac
 {
 
+/// \addtogroup Operators
+/// @{
+
 template <class Geometry>
 class OpMakeKeyVertex: public Operator<Geometry>
 {
@@ -46,6 +49,8 @@ private:
 namespace Operators
 {
 
+/// \fn template <class VacPtr> OpMakeKeyVertex<geometry_type<VacPtr>> MakeKeyVertex(VacPtr & vac, Frame frame)
+///
 /// Constructs an OpMakeKeyVertex<Geometry> without having to specify the
 /// template parameter (thanks to template argument deduction).
 ///
@@ -54,9 +59,9 @@ namespace Operators
 /// \endcode
 ///
 template <class VacPtr>
-OpMakeKeyVertex<geometry_type<VacPtr>> MakeKeyVertex(VacPtr & vac, Frame frame)
+OpMakeKeyVertex<geometry_type_t<VacPtr>> MakeKeyVertex(VacPtr & vac, Frame frame)
 {
-    return OpMakeKeyVertex<geometry_type<VacPtr>>(vac, frame);
+    return OpMakeKeyVertex<geometry_type_t<VacPtr>>(vac, frame);
 }
 
 /// Constructs an OpMakeKeyVertex<Geometry>, applies the operation, then returns
@@ -67,13 +72,15 @@ OpMakeKeyVertex<geometry_type<VacPtr>> MakeKeyVertex(VacPtr & vac, Frame frame)
 /// \endcode
 ///
 template <class VacPtr>
-KeyVertexHandle<geometry_type<VacPtr>> makeKeyVertex(VacPtr & vac, Frame frame)
+KeyVertexHandle<geometry_type_t<VacPtr>> makeKeyVertex(VacPtr & vac, Frame frame)
 {
-    return OpMakeKeyVertex<geometry_type<VacPtr>>(vac, frame).apply().keyVertex();
+    return OpMakeKeyVertex<geometry_type_t<VacPtr>>(vac, frame).apply().keyVertex();
 }
 
 }
 
 }
+
+/// @} Doxygen Operators group
 
 #endif
