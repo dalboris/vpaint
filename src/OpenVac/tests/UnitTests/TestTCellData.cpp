@@ -20,6 +20,7 @@ namespace
 class Geometry
 {
 public:
+    typedef int Frame;
     struct KeyVertex { double position; };
     struct KeyEdge { std::vector<double> curve; };
 };

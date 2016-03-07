@@ -23,6 +23,7 @@ namespace
 class Geometry
 {
 public:
+    typedef int Frame;
     class Manager {};
     class KeyVertex { double x; double y; };
     class KeyEdge { std::vector<double> curve; };

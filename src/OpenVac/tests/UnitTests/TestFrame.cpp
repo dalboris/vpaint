@@ -8,9 +8,9 @@
 
 #include "TestFrame.h"
 
-#include <OpenVac/Core/Frame.h>
+#include <OpenVac/Geometry/DFrame.h>
 
-using OpenVac::Frame;
+typedef OpenVac::DFrame Frame;
 
 void TestFrame::createFrames()
 {

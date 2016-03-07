@@ -10,7 +10,6 @@
 #define OPENVAC_TKEYEDGEDATA_H
 
 #include <OpenVac/Topology/TCellData/TCellData.h>
-#include <OpenVac/Core/Frame.h>
 
 namespace OpenVac
 {
@@ -32,11 +31,11 @@ public:
     OPENVAC_DEFINE_CELLDATA_CAST(KeyEdge)
 
     // Topological data
-    Frame frame;
     typename T::KeyVertexRef startVertex;
     typename T::KeyVertexRef endVertex;
 
     // Geometric data
+    typename Geometry::Frame frame;
     typedef typename Geometry::KeyEdge KeyEdgeGeometry;
     KeyEdgeGeometry & geometry() { return *this; }
     const KeyEdgeGeometry & geometry() const { return *this; }

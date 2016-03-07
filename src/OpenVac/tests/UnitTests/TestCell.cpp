@@ -19,6 +19,7 @@ namespace
 class Geometry
 {
 public:
+    typedef int Frame;
     class Manager {};
     class KeyVertex {};
     class KeyEdge {};

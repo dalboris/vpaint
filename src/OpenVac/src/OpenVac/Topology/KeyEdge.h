@@ -36,7 +36,7 @@ public:
     const KeyEdgeData & data() const { return data_; }
 
     // Frame
-    Frame frame() const { return data().frame; }
+    typename Geometry::Frame frame() const { return data().frame; }
 
     // Start vertex
     KeyVertexHandle startVertex() const { return data().startVertex; }

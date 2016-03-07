@@ -36,7 +36,7 @@ public:
     const KeyVertexData & data() const { return data_; }
 
     // Frame
-    Frame frame() const { return data().frame; }
+    typename Geometry::Frame frame() const { return data().frame; }
 
 private:
     // Data

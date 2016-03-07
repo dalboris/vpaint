@@ -21,7 +21,6 @@ SOURCES +=
 
 HEADERS += \
     Core/Memory.h \
-    Core/Frame.h \
     Core/IdManager.h \
     Topology/TCellData/TCellData.h \
     Topology/TCellData/TKeyVertexData.h \
@@ -43,7 +42,8 @@ HEADERS += \
     Topology/CellData.h \
     Core/ForeachCellType.h \
     Vac.h \
-    Core/GeometryType.h
+    Core/GeometryType.h \
+    Geometry/DFrame.h
 
 unix {
     target.path = /usr/lib

@@ -9,7 +9,6 @@
 #ifndef OPENVAC_KEYCELL_H
 #define OPENVAC_KEYCELL_H
 
-#include <OpenVac/Core/Frame.h>
 #include <OpenVac/Topology/Cell.h>
 
 namespace OpenVac
@@ -29,7 +28,7 @@ public:
     virtual ~KeyCell() {}
 
     // Frame
-    virtual Frame frame() const=0;
+    virtual typename Geometry::Frame frame() const=0;
 
 private:
     // Befriend Operator

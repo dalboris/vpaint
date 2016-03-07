@@ -24,7 +24,7 @@ public:
     OPENVAC_OPERATOR(OpMakeKeyVertex)
 
     // Constructor
-    OpMakeKeyVertex(VacPtr vac, Frame frame) :
+    OpMakeKeyVertex(VacPtr vac, typename Geometry::Frame frame) :
         Operator(vac),
         frame_(frame) {}
 
@@ -35,7 +35,7 @@ public:
     KeyVertexHandle keyVertex() const { assert(isApplied()); return vac()->cell(keyVertexId()); }
 
 private:
-    Frame frame_;
+    typename Geometry::Frame frame_;
     bool isValid_() { return true; }
 
     KeyVertexId keyVertexId_;
@@ -59,7 +59,9 @@ namespace Operators
 /// \endcode
 ///
 template <class VacPtr>
-OpMakeKeyVertex<geometry_type_t<VacPtr>> MakeKeyVertex(VacPtr & vac, Frame frame)
+OpMakeKeyVertex<geometry_type_t<VacPtr>> MakeKeyVertex(
+        VacPtr & vac,
+        typename geometry_type_t<VacPtr>::Frame frame)
 {
     return OpMakeKeyVertex<geometry_type_t<VacPtr>>(vac, frame);
 }
@@ -72,7 +74,9 @@ OpMakeKeyVertex<geometry_type_t<VacPtr>> MakeKeyVertex(VacPtr & vac, Frame frame
 /// \endcode
 ///
 template <class VacPtr>
-KeyVertexHandle<geometry_type_t<VacPtr>> makeKeyVertex(VacPtr & vac, Frame frame)
+KeyVertexHandle<geometry_type_t<VacPtr>> makeKeyVertex(
+        VacPtr & vac,
+        typename geometry_type_t<VacPtr>::Frame frame)
 {
     return OpMakeKeyVertex<geometry_type_t<VacPtr>>(vac, frame).apply().keyVertex();
 }
