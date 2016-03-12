@@ -21,20 +21,20 @@ class Geometry
 public:
     typedef int Frame;
     class Manager {};
-    class KeyVertex {};
-    class KeyEdge {};
+    class KeyVertexGeometry {};
+    class KeyEdgeGeometry {};
 };
 }
 
-typedef OpenVac::Vac<Geometry> Vac;
-typedef OpenVac::KeyVertex<Geometry> KeyVertex;
-typedef OpenVac::KeyEdge<Geometry> KeyEdge;
-typedef OpenVac::CellSharedPtr<Geometry> CellSharedPtr;
+using Vac = OpenVac::Vac<Geometry>;
+using KeyVertex = OpenVac::KeyVertex<Geometry>;
+using KeyEdge = OpenVac::KeyEdge<Geometry>;
+using CellSharedPtr = OpenVac::SharedPtr< OpenVac::Cell<Geometry> >;
 
 void TestCell::testAllocatingAndCasting()
 {
     // Some dummy data
-    Vac::Ptr vac; // null vac pointer
+    Vac * vac = nullptr;
     Vac::CellId id1 = 1;
     Vac::CellId id2 = 2;
     Vac::KeyVertexData keyVertexData; keyVertexData.frame = 42;

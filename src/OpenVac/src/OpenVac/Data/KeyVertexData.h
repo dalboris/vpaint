@@ -9,37 +9,35 @@
 #ifndef OPENVAC_TKEYVERTEXDATA_H
 #define OPENVAC_TKEYVERTEXDATA_H
 
-#include <OpenVac/Topology/TCellData/TCellData.h>
+#include <OpenVac/Data/CellData.h>
 
 namespace OpenVac
 {
 
-/// \class TKeyVertexData Topology/TCellData/TKeyVertexData.h
-/// \brief TKeyVertexData is a class template to store low-level key vertex topological data.
+/// \class KeyVertexData OpenVac/Data/KeyVertexData.h
+/// \brief A class to store key vertex raw data.
 ///
-/// The TKeyVertexData<T> class is not meant to be used by client code. Read
-/// the TCellData<T> documentation first.
+/// \sa CellData
 
 template <class T, class Geometry>
-class TKeyVertexData : public TCellData<T, Geometry>, public Geometry::KeyVertex
+class KeyVertexData : public CellData<T, Geometry>
 {
 public:
     // Type
     CellType type() const { return CellType::KeyVertex; }
 
-    // Type casting
-    OPENVAC_DEFINE_CELLDATA_CAST(KeyVertex)
+    // Visitor pattern
+    void accept(CellDataVisitor<T, Geometry> & v) const { v.visit(*this); }
+    void accept(CellDataMutator<T, Geometry> & m)       { m.visit(*this); }
 
     // Topological data
     // (none)
 
     // Geometric data
     typename Geometry::Frame frame;
-    typedef typename Geometry::KeyVertex KeyVertexGeometry;
-    KeyVertexGeometry & geometry() { return *this; }
-    const KeyVertexGeometry & geometry() const { return *this; }
+    typename Geometry::KeyVertexGeometry geometry;
 };
 
-}
+} // end namespace OpenVac
 
 #endif

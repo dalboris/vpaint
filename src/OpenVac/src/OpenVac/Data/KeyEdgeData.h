@@ -9,26 +9,26 @@
 #ifndef OPENVAC_TKEYEDGEDATA_H
 #define OPENVAC_TKEYEDGEDATA_H
 
-#include <OpenVac/Topology/TCellData/TCellData.h>
+#include <OpenVac/Data/CellData.h>
 
 namespace OpenVac
 {
 
-/// \class TKeyEdgeData Topology/TCellData/TKeyEdgeData.h
-/// \brief TKeyEdgeData is a class template to store low-level key edge topological data.
+/// \class KeyEdgeData OpenVac/Data/KeyEdgeData.h
+/// \brief A class to store key edge raw data.
 ///
-/// The TKeyEdgeData<T> class is not meant to be used by client code. Read
-/// the TCellData<T> documentation first.
+/// \sa CellData
 
 template <class T, class Geometry>
-class TKeyEdgeData : public TCellData<T, Geometry>, public Geometry::KeyEdge
+class KeyEdgeData : public CellData<T, Geometry>
 {
 public:
     // Type
     CellType type() const { return CellType::KeyEdge; }
 
-    // Type casting
-    OPENVAC_DEFINE_CELLDATA_CAST(KeyEdge)
+    // Visitor pattern
+    void accept(CellDataVisitor<T, Geometry> & v) const { v.visit(*this); }
+    void accept(CellDataMutator<T, Geometry> & m)       { m.visit(*this); }
 
     // Topological data
     typename T::KeyVertexRef startVertex;
@@ -36,11 +36,9 @@ public:
 
     // Geometric data
     typename Geometry::Frame frame;
-    typedef typename Geometry::KeyEdge KeyEdgeGeometry;
-    KeyEdgeGeometry & geometry() { return *this; }
-    const KeyEdgeGeometry & geometry() const { return *this; }
+    typename Geometry::KeyEdgeGeometry geometry;
 };
 
-}
+} // end namespace OpenVac
 
 #endif

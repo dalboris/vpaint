@@ -6,8 +6,8 @@
 // license terms and conditions in the LICENSE.MIT file found in the top-level
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
-#ifndef OPENVAC_GEOMETRYTYPE_H
-#define OPENVAC_GEOMETRYTYPE_H
+#ifndef OPENVAC_TYPETRAITS_H
+#define OPENVAC_TYPETRAITS_H
 
 namespace OpenVac
 {
@@ -68,6 +68,6 @@ using geometry_type_t = typename geometry_type<T_Ptr>::type;
 ///
 /// \endcond
 
-}
+} // end namespace OpenVac
 
-#endif
+#endif // OPENVAC_TYPETRAITS_H

@@ -15,15 +15,18 @@
 namespace OpenVac
 {
 
+/// \class KeyVertex OpenVac/Topology/KeyVertex.h
+/// \brief A class that represents a key vertex
+///
 template <class Geometry>
 class KeyVertex: public KeyCell<Geometry>, public VertexCell<Geometry>
 {
 public:
     // Typedefs
-    OPENVAC_CELL_DECLARE_TYPEDEFS(KeyVertex)
+    OPENVAC_CELL_DECLARE_TYPE_ALIASES_
 
     // Constructor
-    KeyVertex(VacPtr vac, CellId id, const KeyVertexData & data = KeyVertexData()) :
+    KeyVertex(Vac * vac, CellId id, const KeyVertexData & data = KeyVertexData()) :
         Cell<Geometry>(vac, id),
         KeyCell<Geometry>(vac, id),
         VertexCell<Geometry>(vac, id),
@@ -36,12 +39,14 @@ public:
     const KeyVertexData & data() const { return data_; }
 
     // Frame
-    typename Geometry::Frame frame() const { return data().frame; }
+    Frame frame() const { return data().frame; }
 
 private:
     // Data
     KeyVertexData data_;
-    KeyVertexData & data() { return data_; }
+
+    // Non-const data access
+    CellData & data() { return data_; }
 
     // Befriend Operator
     friend Operator;
@@ -50,6 +55,6 @@ private:
     OPENVAC_DEFINE_CELL_CAST(KeyVertex)
 };
 
-}
+} // end namespace OpenVac
 
 #endif // OPENVAC_KEYVERTEX_H

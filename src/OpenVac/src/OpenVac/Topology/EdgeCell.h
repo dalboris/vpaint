@@ -14,15 +14,18 @@
 namespace OpenVac
 {
 
+/// \class EdgeCell OpenVac/Topology/EdgeCell.h
+/// \brief Virtual base class of KeyEdge and InbetweenEdge
+///
 template <class Geometry>
 class EdgeCell: virtual public Cell<Geometry>
 {
 public:
     // Typedefs
-    OPENVAC_CELL_DECLARE_TYPEDEFS(EdgeCell)
+    OPENVAC_CELL_DECLARE_TYPE_ALIASES_
 
     // Constructor
-    EdgeCell(VacPtr vac, CellId id) : Cell<Geometry>(vac, id) {}
+    EdgeCell(Vac * vac, CellId id) : Cell<Geometry>(vac, id) {}
 
     // Virtual destructor
     virtual ~EdgeCell() {}
@@ -35,6 +38,6 @@ private:
     OPENVAC_DEFINE_CELL_CAST(EdgeCell)
 };
 
-}
+} // end namespace OpenVac
 
 #endif // OPENVAC_EDGECELL_H

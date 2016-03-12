@@ -9,45 +9,124 @@
 #ifndef OPENVAC_CELL_H
 #define OPENVAC_CELL_H
 
-#include <OpenVac/Topology/CellId.h>
-#include <OpenVac/Topology/CellData.h>
+#include <OpenVac/Core/CellId.h>
+#include <OpenVac/Core/Memory.h>
+#include <OpenVac/Data/UsingData.h>
+#include <OpenVac/Geometry/UsingGeometry.h>
 
-#define OPENVAC_CELL_DECLARE_VAC_TYPEDEF_ \
-    typedef OpenVac::Vac<Geometry> Vac; \
-    typedef OpenVac::WeakPtr<Vac> VacPtr;
 
-#define OPENVAC_CELL_DECLARE_OPERATOR_TYPEDEF_ \
-    typedef OpenVac::Operator<Geometry> Operator;
+/************** Private macros to declare Cell type aliases  *****************/
 
-#define OPENVAC_CELL_DECLARE_HANDLE_TYPEDEF_(CellType) \
-    typedef OpenVac::CellType##Handle<Geometry> CellType##Handle;
+#define OPENVAC_CELL_USING_GEOMETRY_ \
+    using geometry_type = Geometry; \
+    OPENVAC_USING_GEOMETRY(/* No prefix */, Geometry)
 
-#define OPENVAC_CELL_DECLARE_DATA_TYPEDEF_(CellType) \
-    typedef OpenVac::CellType##Data<Geometry> CellType##Data;
+#define OPENVAC_CELL_USING_VAC_ \
+    using Vac = OpenVac::Vac<Geometry>;
 
-#define OPENVAC_CELL_DECLARE_TYPEDEFS(CellType) \
-    OPENVAC_CELL_DECLARE_VAC_TYPEDEF_ \
-    OPENVAC_CELL_DECLARE_OPERATOR_TYPEDEF_ \
-    OPENVAC_FOREACH_CELL_TYPE(OPENVAC_CELL_DECLARE_HANDLE_TYPEDEF_) \
-    OPENVAC_FOREACH_CELL_DATA_TYPE(OPENVAC_CELL_DECLARE_DATA_TYPEDEF_)
+#define OPENVAC_CELL_USING_DATA_ \
+    OPENVAC_USING_DATA(/* No prefix */, UsingCellHandlesAsCellRefs<Geometry>, Geometry);
 
-#include <iostream>
+#define OPENVAC_CELL_USING_OPERATOR_ \
+    using Operator = OpenVac::Operator<Geometry>;
+
+#define OPENVAC_CELL_USING_CELL_HANDLE_(CellType) \
+    using CellType##Handle = OpenVac::Handle<CellType<Geometry>>;
+
+#define OPENVAC_CELL_DECLARE_TYPE_ALIASES_ \
+    OPENVAC_CELL_USING_GEOMETRY_ \
+    OPENVAC_CELL_USING_VAC_ \
+    OPENVAC_CELL_USING_DATA_ \
+    OPENVAC_CELL_USING_OPERATOR_ \
+    OPENVAC_FOREACH_CELL_TYPE(OPENVAC_CELL_USING_CELL_HANDLE_)
+
+/********** Private macros to define handle_cast member functions  ***********/
+
+#define OPENVAC_DEFINE_STATIC_TO_CELL_(CellType) \
+    static CellType<Geometry> * to##CellType(Cell * c) \
+    { \
+        return c ? c->to##CellType##_() : nullptr; \
+    }
+
+#define OPENVAC_DEFINE_MEMBER_TO_CELL_(CellType) \
+    virtual CellType<Geometry> * to##CellType##_() \
+    { \
+        return nullptr; \
+    }
+
+#define OPENVAC_DEFINE_CELL_CAST_BASE \
+    protected: \
+        OPENVAC_FOREACH_CELL_TYPE(OPENVAC_DEFINE_STATIC_TO_CELL_) \
+    private: \
+        OPENVAC_FOREACH_DERIVED_CELL_TYPE(OPENVAC_DEFINE_MEMBER_TO_CELL_)
+
+#define OPENVAC_DEFINE_CELL_CAST(CellType) \
+    template<class T, class U> \
+    friend Handle<T> handle_cast(const Handle<U> & r); \
+    \
+    template<class T, class U> \
+    friend Handle<T> handle_cast(const SharedPtr<U> & r); \
+    \
+    CellType<Geometry> * to##CellType##_() \
+    { \
+        return this; \
+    } \
+    \
+    static CellType<Geometry> * handle_cast(Cell<Geometry> * c) \
+    { \
+        return Cell<Geometry>::to##CellType(c); \
+    }
+
 
 namespace OpenVac
 {
 
+/*********************** Forward declare Cell classes ************************/
+
+#define OPENVAC_CELL_FORWARD_DECLARE_CELL_(CellType) \
+    template <class Geometry> \
+    class CellType;
+
+OPENVAC_FOREACH_CELL_TYPE(OPENVAC_CELL_FORWARD_DECLARE_CELL_)
+
+
+/************************* UsingCellHandlesAsCellRefs  ***********************/
+
+/// \class UsingCellHandlesAsCellRefs OpenVac/Topology/Cell.h
+/// \brief A class that declares CellType##Ref as an alias for
+/// Handle<CellType>, for each cell type.
+///
+/// UsingCellHandlesAsCellRefs is used as the T template argument of the Data
+/// classes used within the Cell classes.
+///
+template <class Geometry>
+class UsingCellHandlesAsCellRefs
+{
+#define OPENVAC_CELL_USING_HANDLE_AS_REF_(CellType) \
+    using CellType##Ref = Handle<CellType<Geometry>>;
+
+public:
+    OPENVAC_FOREACH_CELL_TYPE(OPENVAC_CELL_USING_HANDLE_AS_REF_)
+};
+
+
+/*********************************** Cell ************************************/
+
 template <class Geometry> class Operator;
 template <class Geometry> class Vac;
 
+/// \class Cell OpenVac/Topology/Cell.h
+/// \brief Virtual base class of all cell classes
+///
 template <class Geometry>
 class Cell
 {
 public:
-    // Typedefs
-    OPENVAC_CELL_DECLARE_TYPEDEFS(Cell)
+    // Type aliases
+    OPENVAC_CELL_DECLARE_TYPE_ALIASES_
 
     // Constructor
-    Cell(VacPtr vac, CellId id) : vac_(vac), id_(id) {}
+    Cell(Vac * vac, CellId id) : vac_(vac), id_(id) {}
 
     // Virtual destructor
     virtual ~Cell() {}
@@ -56,7 +135,7 @@ public:
     virtual CellType type() const=0;
 
     // VAC this cell belongs to
-    VacPtr vac() const { return vac_; }
+    Vac * vac() const { return vac_; }
 
     // Cell id
     CellId id() const { return id_; }
@@ -66,7 +145,7 @@ public:
 
 private:
     // Member variables
-    VacPtr vac_;
+    Vac * vac_;
     CellId id_;
 
     // Non-const data access
@@ -80,6 +159,6 @@ private:
     OPENVAC_DEFINE_CELL_CAST(Cell)
 };
 
-}
+} // end namespace OpenVac
 
 #endif // OPENVAC_CELL_H

@@ -10,36 +10,41 @@
 #define OPENVAC_VAC_H
 
 #include <OpenVac/Core/IdManager.h>
+#include <OpenVac/Data/UsingData.h>
 #include <OpenVac/Topology/Cell.h>
 
-#define OPENVAC_VAC_DECLARE_GEOMETRY_TYPE_ \
-    typedef Geometry geometry_type;
+/************** Private macros to declare Vac type aliases  ******************/
 
-#define OPENVAC_VAC_DECLARE_VAC_PTRS_ \
-    typedef OpenVac::WeakPtr<Vac> Ptr; \
-    typedef OpenVac::WeakPtr<Vac> VacPtr; \
-    typedef OpenVac::SharedPtr<Vac> SharedPtr; \
-    typedef OpenVac::SharedPtr<Vac> VacSharedPtr;
+// public type aliases
 
-#define OPENVAC_VAC_DECLARE_OPERATOR_TYPEDEF_ \
-    typedef OpenVac::Operator<Geometry> Operator;
+#define OPENVAC_VAC_USING_GEOMETRY_ \
+    using geometry_type = Geometry;
 
-#define OPENVAC_VAC_DECLARE_HANDLE_TYPEDEF_(CellType) \
-    typedef OpenVac::CellType##Handle<Geometry> CellType##Handle;
+#define OPENVAC_VAC_USING_DATA_ \
+    OPENVAC_USING_DATA(/*  No prefix  */, UsingCellHandlesAsCellRefs<Geometry>, Geometry);
 
-#define OPENVAC_VAC_DECLARE_ID_TYPEDEF_(CellType) \
-    typedef OpenVac::CellType##Id CellType##Id;
+#define OPENVAC_VAC_USING_OPERATOR_ \
+    using Operator = OpenVac::Operator<Geometry>;
 
-#define OPENVAC_VAC_DECLARE_DATA_TYPEDEF_(CellType) \
-    typedef OpenVac::CellType##Data<Geometry> CellType##Data;
+#define OPENVAC_VAC_USING_CELL_HANDLE_(CellType) \
+    using CellType##Handle = OpenVac::Handle< CellType<Geometry> >;
 
-#define OPENVAC_VAC_DECLARE_TYPEDEFS \
-    OPENVAC_VAC_DECLARE_GEOMETRY_TYPE_ \
-    OPENVAC_VAC_DECLARE_VAC_PTRS_ \
-    OPENVAC_VAC_DECLARE_OPERATOR_TYPEDEF_ \
-    OPENVAC_FOREACH_CELL_TYPE(OPENVAC_VAC_DECLARE_HANDLE_TYPEDEF_) \
-    OPENVAC_FOREACH_CELL_TYPE(OPENVAC_VAC_DECLARE_ID_TYPEDEF_) \
-    OPENVAC_FOREACH_CELL_DATA_TYPE(OPENVAC_VAC_DECLARE_DATA_TYPEDEF_)
+#define OPENVAC_VAC_USING_CELL_ID_(CellType) \
+    using CellType##Id = OpenVac::CellType##Id;
+
+#define OPENVAC_VAC_DECLARE_PUBLIC_TYPE_ALIASES_ \
+    OPENVAC_VAC_USING_GEOMETRY_ \
+    OPENVAC_VAC_USING_DATA_ \
+    OPENVAC_VAC_USING_OPERATOR_ \
+    OPENVAC_FOREACH_CELL_TYPE(OPENVAC_VAC_USING_CELL_HANDLE_) \
+    OPENVAC_FOREACH_CELL_TYPE(OPENVAC_VAC_USING_CELL_ID_) \
+
+// private type aliases
+
+#define OPENVAC_VAC_DECLARE_PRIVATE_TYPE_ALIASES_ \
+    using CellSharedPtr = OpenVac::SharedPtr< Cell<Geometry> >; \
+    using CellManager = OpenVac::IdManager< CellSharedPtr >; \
+    using GeometryManager = typename Geometry::Manager;
 
 /// \namespace OpenVac
 /// \brief The OpenVAC library
@@ -50,43 +55,34 @@
 namespace OpenVac
 {
 
+/********************************* Vac  **************************************/
+
+/// \class Vac OpenVac/Vac.h
+/// \brief A class to represent a Vector Animation Complex
+///
 template <class Geometry>
 class Vac
 {
 private:
-    // Private typedefs
-    typedef OpenVac::CellSharedPtr<Geometry>  CellSharedPtr;
-    typedef OpenVac::IdManager<CellSharedPtr> CellManager;
-    typedef typename Geometry::Manager        GeometryManager;
+    OPENVAC_VAC_DECLARE_PRIVATE_TYPE_ALIASES_
 
 public:
-    // Public typedefs
-    OPENVAC_VAC_DECLARE_TYPEDEFS
+    OPENVAC_VAC_DECLARE_PUBLIC_TYPE_ALIASES_
 
-    // Construct a VAC.
-    Vac() : cellManager_(), geometryManager_(), ptrProvider_(this) {}
+    /// Constructs a Vac.
+    Vac() : cellManager_(), geometryManager_() {}
 
-    // Number of cells
+    /// Returns the number of cells in the Vac.
     size_t numCells() const { return cellManager_.size(); }
 
-    // Get cell from ID
+    /// Returns a handle to the cell with the given \p id. Returns an empty
+    /// handle if no cell has the given \p id.
     CellHandle cell(CellId id) const
     {
         if (cellManager_.contains(id))
             return cellManager_[id];
         else
             return CellHandle();
-    }
-
-    // Returns a weak pointer to this vac
-    Ptr & ptr() { return ptrProvider_.ptr(); }
-
-    // Construct a Vac managed via a shared pointer
-    static SharedPtr make_shared()
-    {
-        auto vac = std::make_shared<Vac>();
-        vac->ptrProvider_.setShared(vac);
-        return vac;
     }
 
 private:
@@ -96,13 +92,10 @@ private:
     // Geomety manager
     GeometryManager geometryManager_;
 
-    // Weak pointer provider
-    WeakPtrProvider<Vac> ptrProvider_;
-
     // Befriend Operator
     friend Operator;
 };
 
-}
+} // end namespace OpenVac
 
 #endif // OPENVAC_ VAC_H

@@ -6,8 +6,8 @@
 // license terms and conditions in the LICENSE.MIT file found in the top-level
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
-#ifndef IDMANAGER_H
-#define IDMANAGER_H
+#ifndef OPENVAC_IDMANAGER_H
+#define OPENVAC_IDMANAGER_H
 
 #include <map>
 #include <vector>
@@ -16,15 +16,15 @@
 namespace OpenVac
 {
 
-/// \class IdManager Core/IdManager.h
-/// \brief IdManager is a container that assigns unique IDs to stored elements.
+/// \class IdManager OpenVac/Core/IdManager.h
+/// \brief A container that assigns unique IDs to stored elements.
 
 template <class T>
 class IdManager
 {
 public:
-    typedef unsigned int Id;
-    typedef std::map<Id, T> map_type;
+    using Id       = unsigned int;
+    using map_type = std::map<Id, T>;
 
     IdManager() : map_() {}
 
@@ -104,6 +104,6 @@ private:
     }
 };
 
-}
+} // end namespace OpenVac
 
-#endif // IDMANAGER_H
+#endif // OPENVAC_IDMANAGER_H

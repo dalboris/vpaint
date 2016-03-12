@@ -22,12 +22,6 @@ SOURCES +=
 HEADERS += \
     Core/Memory.h \
     Core/IdManager.h \
-    Topology/TCellData/TCellData.h \
-    Topology/TCellData/TKeyVertexData.h \
-    Topology/TCellData/TKeyEdgeData.h \
-    Topology/CellType.h \
-    Topology/CellId.h \
-    Topology/CellHandle.h \
     Topology/Cell.h \
     Topology/KeyCell.h \
     Topology/VertexCell.h \
@@ -35,15 +29,20 @@ HEADERS += \
     Topology/KeyVertex.h \
     Topology/KeyEdge.h \
     Operators/Operator.h \
-    Operators/OpMakeKeyVertex.h \
-    Operators/OpCellData.h \
-    Operators/CellDataConverter.h \
-    Operators/OpMakeKeyOpenEdge.h \
-    Topology/CellData.h \
     Core/ForeachCellType.h \
     Vac.h \
-    Core/GeometryType.h \
-    Geometry/DFrame.h
+    Geometry/DFrame.h \
+    Core/CellType.h \
+    Core/TypeTraits.h \
+    Data/CellData.h \
+    Data/KeyEdgeData.h \
+    Data/KeyVertexData.h \
+    Core/CellId.h \
+    Data/UsingData.h \
+    Geometry/UsingGeometry.h \
+    Operators/CellDataCopier.h \
+    Operators/MakeKeyVertex.h \
+    Operators/MakeKeyOpenEdge.h
 
 unix {
     target.path = /usr/lib

@@ -11,14 +11,14 @@
 
 #include "Test.h"
 
-class TestTCellData: public QObject
+class TestCellData: public QObject
 {
     Q_OBJECT
 
 private slots:
-    void createTCellDataObjects();
+    void createCellDataObjects();
 };
 
-REGISTER_TEST(TestTCellData)
+REGISTER_TEST(TestCellData)
 
 #endif // TESTTCELLDATA_H

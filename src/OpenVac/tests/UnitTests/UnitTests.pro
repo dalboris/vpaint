@@ -31,15 +31,15 @@ else:unix {
 SOURCES = \
     main.cpp \
     TestFrame.cpp \
-    TestTCellData.cpp \
     TestMemory.cpp \
     TestCell.cpp \
-    TestOperators.cpp
+    TestOperators.cpp \
+    TestCellData.cpp
 
 HEADERS += \
     Test.h \
     TestFrame.h \
-    TestTCellData.h \
     TestMemory.h \
     TestCell.h \
-    TestOperators.h
+    TestOperators.h \
+    TestCellData.h

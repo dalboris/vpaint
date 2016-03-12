@@ -15,15 +15,18 @@
 namespace OpenVac
 {
 
+/// \class KeyEdge OpenVac/Topology/KeyEdge.h
+/// \brief A class that represents a key edge
+///
 template <class Geometry>
 class KeyEdge: public KeyCell<Geometry>, public EdgeCell<Geometry>
 {
 public:
     // Typedefs
-    OPENVAC_CELL_DECLARE_TYPEDEFS(KeyEdge)
+    OPENVAC_CELL_DECLARE_TYPE_ALIASES_
 
     // Constructor
-    KeyEdge(VacPtr vac, CellId id, const KeyEdgeData & data = KeyEdgeData()) :
+    KeyEdge(Vac * vac, CellId id, const KeyEdgeData & data = KeyEdgeData()) :
         Cell<Geometry>(vac, id),
         KeyCell<Geometry>(vac, id),
         EdgeCell<Geometry>(vac, id),
@@ -36,18 +39,20 @@ public:
     const KeyEdgeData & data() const { return data_; }
 
     // Frame
-    typename Geometry::Frame frame() const { return data().frame; }
+    Frame frame() const { return data().frame; }
 
     // Start vertex
-    KeyVertexHandle startVertex() const { return data().startVertex; }
+    const KeyVertexHandle & startVertex() const { return data().startVertex; }
 
     // End vertex
-    KeyVertexHandle endVertex() const { return data().endVertex; }
+    const KeyVertexHandle & endVertex() const { return data().endVertex; }
 
 private:
     // Data
     KeyEdgeData data_;
-    KeyEdgeData & data() { return data_; }
+
+    // Non-const data access
+    CellData & data() { return data_; }
 
     // Befriend Operator
     friend Operator;
@@ -56,6 +61,6 @@ private:
     OPENVAC_DEFINE_CELL_CAST(KeyEdge)
 };
 
-}
+} // end namespace OpenVac
 
 #endif // OPENVAC_KEYEDGE_H

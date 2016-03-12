@@ -6,12 +6,12 @@
 // license terms and conditions in the LICENSE.MIT file found in the top-level
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
-#include "TestTCellData.h"
+#include "TestCellData.h"
 
 #include <OpenVac/Core/ForeachCellType.h>
-#include <OpenVac/Topology/TCellData/TCellData.h>
-#include <OpenVac/Topology/TCellData/TKeyVertexData.h>
-#include <OpenVac/Topology/TCellData/TKeyEdgeData.h>
+#include <OpenVac/Data/CellData.h>
+#include <OpenVac/Data/KeyVertexData.h>
+#include <OpenVac/Data/KeyEdgeData.h>
 
 #include <vector>
 
@@ -21,24 +21,24 @@ class Geometry
 {
 public:
     typedef int Frame;
-    struct KeyVertex { double position; };
-    struct KeyEdge { std::vector<double> curve; };
+    struct KeyVertexGeometry { double position; };
+    struct KeyEdgeGeometry { std::vector<double> curve; };
 };
 
 class UintAsRefs
 {
 public:
-    typedef unsigned int KeyVertexRef;
-    typedef unsigned int KeyEdgeRef;
+    using KeyVertexRef = unsigned int;
+    using KeyEdgeRef   = unsigned int;
 };
 }
 
 #define DECLARE_MY_CELL_DATA(CellType) \
-    typedef OpenVac::T##CellType##Data<UintAsRefs, Geometry> My##CellType##Data;
+    using My##CellType##Data = OpenVac::CellType##Data<UintAsRefs, Geometry>;
 
 OPENVAC_FOREACH_CELL_DATA_TYPE(DECLARE_MY_CELL_DATA)
 
-void TestTCellData::createTCellDataObjects()
+void TestCellData::createCellDataObjects()
 {
     MyKeyVertexData keyVertexData;
     MyKeyEdgeData keyEdgeData;

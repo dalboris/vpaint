@@ -383,6 +383,6 @@ inline DFrame & operator--(DFrame & f) { f.value_ -= 1.0; return f; }
 inline DFrame   operator++(DFrame & f, int) { DFrame res = f; f.value_ += 1.0; return res; }
 inline DFrame   operator--(DFrame & f, int) { DFrame res = f; f.value_ -= 1.0; return res; }
 
-}
+} // end namespace OpenVac
 
 #endif // OPENVAC_DFRAME_H

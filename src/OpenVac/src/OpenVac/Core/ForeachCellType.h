@@ -9,7 +9,8 @@
 #ifndef OPENVAC_FOREACHCELLTYPE_H
 #define OPENVAC_FOREACHCELLTYPE_H
 
-// Without arguments
+
+/***************************** Without arguments *****************************/
 
 #define OPENVAC_FOREACH_BASE_CELL_TYPE(MACRO_NAME) \
     MACRO_NAME(Cell)
@@ -32,11 +33,12 @@
     OPENVAC_FOREACH_MID_CELL_TYPE   (MACRO_NAME) \
     OPENVAC_FOREACH_FINAL_CELL_TYPE (MACRO_NAME)
 
-#define OPENVAC_FOREACH_CELL_DATA_TYPE(MACRO_NAME, ...) \
+#define OPENVAC_FOREACH_CELL_DATA_TYPE(MACRO_NAME) \
     OPENVAC_FOREACH_BASE_CELL_TYPE  (MACRO_NAME) \
     OPENVAC_FOREACH_FINAL_CELL_TYPE (MACRO_NAME)
 
-// With variadic arguments
+
+/*************************** With variadic arguments *************************/
 
 #define OPENVAC_FOREACH_BASE_CELL_TYPE_ARGS(MACRO_NAME, ...) \
     MACRO_NAME (Cell, __VA_ARGS__)
@@ -63,4 +65,5 @@
     OPENVAC_FOREACH_BASE_CELL_TYPE_ARGS  (MACRO_NAME, __VA_ARGS__) \
     OPENVAC_FOREACH_FINAL_CELL_TYPE_ARGS (MACRO_NAME, __VA_ARGS__)
 
-#endif
+
+#endif // OPENVAC_FOREACHCELLTYPE_H
