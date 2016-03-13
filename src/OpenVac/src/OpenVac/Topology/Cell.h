@@ -25,7 +25,7 @@
     using Vac = OpenVac::Vac<Geometry>;
 
 #define OPENVAC_CELL_USING_DATA_ \
-    OPENVAC_USING_DATA(/* No prefix */, UsingCellHandlesAsCellRefs<Geometry>, Geometry);
+    OPENVAC_USING_DATA(/* No prefix */, UsingCellHandlesAsCellRefs<Geometry>, Geometry)
 
 #define OPENVAC_CELL_USING_OPERATOR_ \
     using Operator = OpenVac::Operator<Geometry>;

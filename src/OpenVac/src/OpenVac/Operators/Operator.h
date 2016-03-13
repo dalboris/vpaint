@@ -32,10 +32,10 @@
     using Vac = OpenVac::Vac<Geometry>;
 
 #define OPENVAC_OPERATOR_USING_DATA_ \
-    OPENVAC_USING_DATA(/*  No prefix  */, UsingCellHandlesAsCellRefs<Geometry>, Geometry);
+    OPENVAC_USING_DATA(/*  No prefix  */, UsingCellHandlesAsCellRefs<Geometry>, Geometry)
 
 #define OPENVAC_OPERATOR_USING_OP_DATA_ \
-    OPENVAC_USING_DATA(/* Prefix = */ Op, UsingCellIdsAsCellRefs, Geometry);
+    OPENVAC_USING_DATA(/* Prefix = */ Op, UsingCellIdsAsCellRefs, Geometry)
 
 #define OPENVAC_OPERATOR_USING_CELL_HANDLE_(CellType) \
     using CellType##Handle = Handle< OpenVac::CellType<Geometry> >;
