@@ -15,7 +15,7 @@
 namespace OpenVac
 {
 
-/// \enum CellType
+/// \enum CellType OpenVac/Core/CellType.h
 /// \brief A scoped enumeration of cell types.
 ///
 /// The *type* of a cell is defined by its temporal dimension and its spatial

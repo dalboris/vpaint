@@ -17,25 +17,21 @@ namespace OpenVac
 /// \class VertexCell OpenVac/Topology/VertexCell.h
 /// \brief Virtual base class of KeyVertex and InbetweenVertex
 ///
-template <class Geometry>
-class VertexCell: virtual public Cell<Geometry>
+class VertexCell: virtual public Cell
 {
 public:
-    // Typedefs
-    OPENVAC_CELL_DECLARE_TYPE_ALIASES_
+    /// Constructors a VertexCell.
+    VertexCell(Vac * vac, CellId id) : Cell(vac, id) {}
 
-    // Constructor
-    VertexCell(Vac * vac, CellId id) : Cell<Geometry>(vac, id) {}
-
-    // Virtual destructor
+    /// Destructs a VertexCell.
     virtual ~VertexCell() {}
 
 private:
     // Befriend Operator
-    friend Operator;
+    friend class Operator;
 
     // Casting
-    OPENVAC_DEFINE_CELL_CAST(VertexCell)
+    OPENVAC_CELL_DEFINE_CAST_(VertexCell)
 };
 
 } // end namespace OpenVac

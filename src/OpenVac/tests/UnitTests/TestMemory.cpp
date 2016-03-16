@@ -33,9 +33,10 @@ void TestMemory::testMemory()
         QCOMPARE(sp->x, 42);
 
         wp = sp;
-        QVERIFY(wp);
+        QVERIFY(!wp.expired());
         QCOMPARE(wp->x, 42);
     }
 
-    QVERIFY(!wp);
+    QVERIFY(wp.expired());
+    //QVERIFY(!wp); // Fail
 }

@@ -18,21 +18,7 @@
 
 #include <vector>
 
-namespace
-{
-class Geometry
-{
-public:
-    typedef int Frame;
-    class Manager {};
-    class KeyVertexGeometry { double x; double y; };
-    class KeyEdgeGeometry { std::vector<double> curve; };
-};
-}
-
-using Vac = OpenVac::Vac<Geometry>;
-using OpMakeKeyVertex = OpenVac::OpMakeKeyVertex<Geometry>;
-namespace Op = OpenVac::Operators;
+using namespace OpenVac;
 
 void TestOperators::opMakeKeyVertex()
 {
@@ -51,49 +37,58 @@ void TestOperators::opMakeKeyVertex()
     op.apply(vac);
     QVERIFY(vac.numCells() == 1);
 
-    Vac::KeyVertexId keyVertexId = op.keyVertexId();
-    std::vector<Vac::CellId> newCellsIds = op.newCells();
+    KeyVertexId keyVertexId = op.keyVertexId();
+    std::vector<CellId> newCellsIds = op.newCells();
     QVERIFY(newCellsIds.size() == 1);
     QVERIFY(newCellsIds[0] == keyVertexId);
 
-    Vac::KeyVertexHandle keyVertex = vac.cell(op.keyVertexId());
-    QVERIFY(keyVertex);
+    KeyVertexHandle keyVertex = vac.cell(op.keyVertexId());
+    QVERIFY((bool)keyVertex);
     QVERIFY(keyVertex == vac.cell(keyVertexId));
     QVERIFY(keyVertex->frame() == 42);
 
     // Example 1 of typical client code
-    Op::makeKeyVertex(vac, 42);
+    Operators::makeKeyVertex(vac, 42);
     QVERIFY(vac.numCells() == 2);
 
     // Example 2 of typical client code
-    Vac::KeyVertexHandle keyVertex2 = Op::makeKeyVertex(vac, 12);
+    KeyVertexHandle keyVertex2 = Operators::makeKeyVertex(vac, 12);
     QVERIFY(vac.numCells() == 3);
+    QVERIFY((bool)keyVertex2);
     QVERIFY(keyVertex2->frame() == 12);
 
     // Example 3 of typical client code
-    auto op3 = Op::MakeKeyVertex<Geometry>(13);
+    OpMakeKeyVertex op3(13);
     if (op3.compute(vac))
         op3.apply(vac);
-    Vac::KeyVertexHandle keyVertex3 = vac.cell(op3.keyVertexId());
+    KeyVertexHandle keyVertex3 = vac.cell(op3.keyVertexId());
     QVERIFY(vac.numCells() == 4);
+    QVERIFY((bool)keyVertex3);
     QVERIFY(keyVertex3->frame() == 13);
 }
 
 void TestOperators::opMakeKeyOpenEdge()
 {
-    // Setup (using shared_ptr-managed Vac)
+    // Setup (using a shared pointer to manage the Vac)
     auto vac = std::make_shared<Vac>();
-    auto keyVertex1 = Op::makeKeyVertex(*vac, 12);
-    auto keyVertex2 = Op::makeKeyVertex(*vac, 12);
-    auto keyVertex3 = Op::makeKeyVertex(*vac, 13);
+    auto keyVertex1 = Operators::makeKeyVertex(*vac, 12);
+    auto keyVertex2 = Operators::makeKeyVertex(*vac, 12);
+    auto keyVertex3 = Operators::makeKeyVertex(*vac, 13);
     QVERIFY(vac->numCells() == 3);
 
     // Create valid key edge
-    auto keyEdge = Op::makeKeyOpenEdge(keyVertex1, keyVertex2);
+    auto keyEdge1 = Operators::makeKeyOpenEdge(keyVertex1, keyVertex2);
     QVERIFY(vac->numCells() == 4);
-    QVERIFY(keyEdge);
-    QVERIFY(keyEdge->frame() == 12);
+    QVERIFY((bool)keyEdge1);
+    QVERIFY(keyEdge1->frame() == 12);
 
     // Test invalid OpMakeKeyOpenEdge
-    QVERIFY(!Op::MakeKeyOpenEdge(keyVertex1, keyVertex3).compute(*vac));
+    auto keyEdge2 = Operators::makeKeyOpenEdge(keyVertex1, keyVertex3);
+    QVERIFY(vac->numCells() == 4);
+    QVERIFY(!keyEdge2);
+
+    // Test invalid OpMakeKeyOpenEdge
+    OpMakeKeyOpenEdge op(keyVertex1->id(), keyVertex3->id());
+    op.compute(*vac);
+    QVERIFY(!op);
 }

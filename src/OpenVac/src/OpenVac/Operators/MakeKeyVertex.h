@@ -14,25 +14,27 @@
 namespace OpenVac
 {
 
-/// \addtogroup Operators
-/// @{
-
 /// \class OpMakeKeyVertex OpenVac/Operators/MakeKeyVertex.h
-/// \brief Operator to create a new key vertex
+/// \brief Operator to create a key vertex.
 ///
-template <class Geometry>
-class OpMakeKeyVertex: public Operator<Geometry>
+class OpMakeKeyVertex: public Operator
 {
-    OPENVAC_OPERATOR(OpMakeKeyVertex)
-
 public:
+    // Override compute and apply.
+    OpMakeKeyVertex & compute(const Vac & vac) { Operator::compute(vac); return *this; }
+    OpMakeKeyVertex & apply(Vac & vac)         { Operator::apply(vac);   return *this; }
+
     /// Constructs an OpMakeKeyVertex.
-    OpMakeKeyVertex(Frame frame) :
-        frame_(frame)
+    ///
+    OpMakeKeyVertex(
+            const Geometry::Frame & frame = Geometry::Frame(),
+            const Geometry::KeyVertexGeometry & geometry = Geometry::KeyVertexGeometry()) :
+        frame_(frame),
+        geometry_(geometry)
     {
     }
 
-    /// Returns the ID of the new key vertex. Aborts if can't be applied.
+    /// Returns the ID of the created key vertex. Aborts if can't be applied.
     ///
     KeyVertexId keyVertexId() const
     {
@@ -42,7 +44,8 @@ public:
 
 private:
     // Input
-    Frame frame_;
+    Geometry::Frame frame_;
+    Geometry::KeyVertexGeometry geometry_;
 
     // Output
     KeyVertexId keyVertexId_;
@@ -52,6 +55,7 @@ private:
     {
         auto keyVertex = newKeyVertex(&keyVertexId_);
         keyVertex->frame = frame_;
+        keyVertex->geometry = geometry_;
 
         return true;
     }
@@ -60,34 +64,20 @@ private:
 namespace Operators
 {
 
-/// Constructs an OpMakeKeyVertex.
+/// Creates a new KeyVertex in the given Vac, at the given Frame, with the
+/// given KeyVertexGeometry.
 ///
 /// \code
-/// auto op = Operators::MakeKeyVertex(frame);
-/// if (op.compute(vac))
-///     op.apply(vac);
+/// KeyVertexHandle keyVertex = Operators::makeKeyVertex(vac, frame, geometry);
 /// \endcode
 ///
-template <class Geometry>
-OpMakeKeyVertex<Geometry> MakeKeyVertex(typename Geometry::Frame frame)
+KeyVertexHandle makeKeyVertex(
+        Vac & vac,
+        const Geometry::Frame & frame = Geometry::Frame(),
+        const Geometry::KeyVertexGeometry & geometry = Geometry::KeyVertexGeometry())
 {
-    return OpMakeKeyVertex<Geometry>(frame);
-}
-
-/// Constructs an OpMakeKeyVertex<Geometry>, applies the operation to the given
-/// \p vac, then returns the created vertex. Returns an empty handle if the
-/// operator can't be applied.
-///
-/// \code
-/// auto keyVertex = Operators::makeKeyVertex(vac, frame);
-/// \endcode
-///
-template <class Geometry>
-Handle<KeyVertex<Geometry>> makeKeyVertex(Vac<Geometry> & vac,
-                                          typename Geometry::Frame frame)
-{
-    Handle<KeyVertex<Geometry>> res;
-    auto op = MakeKeyVertex<Geometry>(frame);
+    KeyVertexHandle res;
+    OpMakeKeyVertex op(frame, geometry);
     if (op.compute(vac))
     {
         op.apply(vac);
@@ -99,7 +89,5 @@ Handle<KeyVertex<Geometry>> makeKeyVertex(Vac<Geometry> & vac,
 } // end namespace Operators
 
 } // end namespace OpenVac
-
-/// @} end addtogroup Operators
 
 #endif // OPENVAC_MAKEKEYVERTEX_H

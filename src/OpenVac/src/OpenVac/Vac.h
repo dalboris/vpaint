@@ -10,41 +10,8 @@
 #define OPENVAC_VAC_H
 
 #include <OpenVac/Core/IdManager.h>
-#include <OpenVac/Data/UsingData.h>
 #include <OpenVac/Topology/Cell.h>
-
-/************** Private macros to declare Vac type aliases  ******************/
-
-// public type aliases
-
-#define OPENVAC_VAC_USING_GEOMETRY_ \
-    using geometry_type = Geometry;
-
-#define OPENVAC_VAC_USING_DATA_ \
-    OPENVAC_USING_DATA(/*  No prefix  */, UsingCellHandlesAsCellRefs<Geometry>, Geometry)
-
-#define OPENVAC_VAC_USING_OPERATOR_ \
-    using Operator = OpenVac::Operator<Geometry>;
-
-#define OPENVAC_VAC_USING_CELL_HANDLE_(CellType) \
-    using CellType##Handle = OpenVac::Handle< CellType<Geometry> >;
-
-#define OPENVAC_VAC_USING_CELL_ID_(CellType) \
-    using CellType##Id = OpenVac::CellType##Id;
-
-#define OPENVAC_VAC_DECLARE_PUBLIC_TYPE_ALIASES_ \
-    OPENVAC_VAC_USING_GEOMETRY_ \
-    OPENVAC_VAC_USING_DATA_ \
-    OPENVAC_VAC_USING_OPERATOR_ \
-    OPENVAC_FOREACH_CELL_TYPE(OPENVAC_VAC_USING_CELL_HANDLE_) \
-    OPENVAC_FOREACH_CELL_TYPE(OPENVAC_VAC_USING_CELL_ID_) \
-
-// private type aliases
-
-#define OPENVAC_VAC_DECLARE_PRIVATE_TYPE_ALIASES_ \
-    using CellSharedPtr = OpenVac::SharedPtr< Cell<Geometry> >; \
-    using CellManager = OpenVac::IdManager< CellSharedPtr >; \
-    using GeometryManager = typename Geometry::Manager;
+#include <OpenVac/Geometry.h>
 
 /// \namespace OpenVac
 /// \brief The OpenVAC library
@@ -60,15 +27,9 @@ namespace OpenVac
 /// \class Vac OpenVac/Vac.h
 /// \brief A class to represent a Vector Animation Complex
 ///
-template <class Geometry>
 class Vac
 {
-private:
-    OPENVAC_VAC_DECLARE_PRIVATE_TYPE_ALIASES_
-
 public:
-    OPENVAC_VAC_DECLARE_PUBLIC_TYPE_ALIASES_
-
     /// Constructs a Vac.
     Vac() : cellManager_(), geometryManager_() {}
 
@@ -87,13 +48,13 @@ public:
 
 private:
     // Cell manager
-    CellManager cellManager_;
+    IdManager<SharedPtr<Cell>> cellManager_;
 
     // Geomety manager
-    GeometryManager geometryManager_;
+    Geometry::GeometryManager geometryManager_;
 
     // Befriend Operator
-    friend Operator;
+    friend class Operator;
 };
 
 } // end namespace OpenVac

@@ -10,6 +10,7 @@
 #define OPENVAC_KEYCELL_H
 
 #include <OpenVac/Topology/Cell.h>
+#include <OpenVac/Geometry.h>
 
 namespace OpenVac
 {
@@ -17,28 +18,24 @@ namespace OpenVac
 /// \class KeyCell OpenVac/Topology/KeyCell.h
 /// \brief Virtual base class of KeyVertex, KeyEdge, and KeyFace
 ///
-template <class Geometry>
-class KeyCell: virtual public Cell<Geometry>
+class KeyCell: virtual public Cell
 {
 public:
-    // Typedefs
-    OPENVAC_CELL_DECLARE_TYPE_ALIASES_
+    /// Constructs a KeyCell.
+    KeyCell(Vac * vac, CellId id) : Cell(vac, id) {}
 
-    // Constructor
-    KeyCell(Vac * vac, CellId id) : Cell<Geometry>(vac, id) {}
-
-    // Virtual destructor
+    /// Destruct an EdgeCell.
     virtual ~KeyCell() {}
 
-    // Frame
-    virtual Frame frame() const=0;
+    /// Accesses the Frame of this KeyCell.
+    virtual const Geometry::Frame & frame() const=0;
 
 private:
     // Befriend Operator
-    friend Operator;
+    friend class Operator;
 
     // Casting
-    OPENVAC_DEFINE_CELL_CAST(KeyCell)
+    OPENVAC_CELL_DEFINE_CAST_(KeyCell)
 };
 
 } // end namespace OpenVac

@@ -6,33 +6,33 @@
 // license terms and conditions in the LICENSE.MIT file found in the top-level
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
-#ifndef OPENVAC_DFRAME_H
-#define OPENVAC_DFRAME_H
+#ifndef OPENVAC_FRAME_H
+#define OPENVAC_FRAME_H
 
 #include <cmath>
 
 namespace OpenVac
 {
 
-/// \class DFrame Geometry/DFrame.h
+/// \class Frame OpenVac/Geometry/Frame.h
 /// \brief A class representing a frame of an animation as a double.
 ///
-/// Even though represented as a double, a DFrame will typically be an "integer"
+/// Even though represented as a double, a Frame will typically be an "integer"
 /// such as 1.0, 2.0, 3.0, etc. Here is the typical way frames are initialized:
 ///
 /// \code
-/// DFrame f1 = 1;
-/// DFrame f2 = 2;
-/// DFrame f3; // == 0
+/// Frame f1 = 1;
+/// Frame f2 = 2;
+/// Frame f3; // == 0
 /// \endcode
 ///
 /// A subframe can be represented as a non-integer double, such as 1.5:
 ///
 /// \code
-/// DFrame f4 = 1.5;
+/// Frame f4 = 1.5;
 /// \endcode
 ///
-/// To test whether a DFrame is an integer frame or a subframe, use isInteger().
+/// To test whether a Frame is an integer frame or a subframe, use isInteger().
 ///
 /// \code
 /// f1.isInteger(); // True:  f1 is an integer frame
@@ -50,7 +50,7 @@ namespace OpenVac
 /// You can compare frames together (Are they equal? Which one is smaller?),
 /// which is a safe double comparison "within epsilon", so that integer
 /// frames are always equal to the closest exact integer, even in the case
-/// or numerical errors. Ints and doubles are implicitely casted to DFrame, so
+/// or numerical errors. Ints and doubles are implicitely casted to Frame, so
 /// you can use a very convenient syntax:
 ///
 /// \code
@@ -59,19 +59,19 @@ namespace OpenVac
 /// if (f1 > 0) { ... }
 /// \endcode
 ///
-/// DFrames can be added/substracted together, frames can be added/substracted
+/// Frames can be added/substracted together, frames can be added/substracted
 /// with an int or double, and frames can be multiplied/divided by an int or
 /// double. However, frames can't be multiplied/divided together. The operation
 /// is always interpreted in a 'double' sense.
 ///
 /// \code
-/// DFrame midDFrame = (f1+f2)/2; // == 1.5
+/// Frame midFrame = (f1+f2)/2; // == 1.5
 /// f1 = f2 + 5; // == 7
 /// f1 = 2*f2; // == 4
 /// f1 += 2; // == 6
 /// f1++; // f1 is now 7; 6 is returned
 /// ++f1; // f1 is now 8; 8 is returned
-/// ++midDFrame; // midDFrame is now 2.5; 2.5 is returned
+/// ++midFrame; // midFrame is now 2.5; 2.5 is returned
 /// \endcode
 ///
 /// Sometimes, for instance to compute interpolated geometry, it may be
@@ -81,7 +81,7 @@ namespace OpenVac
 /// double frameAsDouble = f1.toDouble();
 /// \endcode
 ///
-/// However, most of the time, you should use the DFrame class directly instead
+/// However, most of the time, you should use the Frame class directly instead
 /// of manipulating doubles. Indeed, even though any 32-bit int can be exactly
 /// represented as a double, numerical errors can occur when they come from
 /// a computation, such as:
@@ -97,13 +97,13 @@ namespace OpenVac
 /// assert(frame == 0.9999999999999999); // PASS
 /// \endcode
 ///
-/// The DFrame class takes care of this for you by reimplementing the comparison
+/// The Frame class takes care of this for you by reimplementing the comparison
 /// operators to compare 'within epsilon', such that we have the following:
 ///
 /// \code
 /// int n = 10;
 /// double df = 1.0 / n;
-/// DFrame frame = 0;
+/// Frame frame = 0;
 /// for (int i=0; i<n; ++i)
 ///     frame += df;
 ///
@@ -115,55 +115,55 @@ namespace OpenVac
 /// It is possible to take the floor, ceil, and round of a frame:
 ///
 /// \code
-/// DFrame f18 = 1.8;
-/// DFrame::floor(f18); // returns DFrame(1)
-/// DFrame::ceil(f18);  // returns DFrame(2)
-/// DFrame::round(f2);  // returns DFrame(2)
+/// Frame f18 = 1.8;
+/// Frame::floor(f18); // returns Frame(1)
+/// Frame::ceil(f18);  // returns Frame(2)
+/// Frame::round(f2);  // returns Frame(2)
 /// \endcode
 ///
 /// If f.isInteger() is true, then we are guaranteed to have:
 ///
 /// \code
-/// DFrame::floor(f).toDouble() == DFrame::ceil(f).toDouble(); // == DFrame::round(f).toDouble()
+/// Frame::floor(f).toDouble() == Frame::ceil(f).toDouble(); // == Frame::round(f).toDouble()
 /// \endcode
 ///
 /// If f.isSubframe() is true, then we are guaranteed to have:
 ///
 /// \code
-/// DFrame::floor(f).toDouble() + 1.0 == DFrame::ceil(f).toDouble();
+/// Frame::floor(f).toDouble() + 1.0 == Frame::ceil(f).toDouble();
 /// \endcode
 ///
-/// Note that DFrame::floor() and std::floor() may disagree, by design. Indeed,
+/// Note that Frame::floor() and std::floor() may disagree, by design. Indeed,
 /// when a frame is epsilon-close to an integer N (i.e., when f.isInteger()
-/// returns true), then DFrame::floor() returns N no matter if f.toDouble() is
-/// smaller or bigger than N. The same is of true for DFrame::ceil() and
+/// returns true), then Frame::floor() returns N no matter if f.toDouble() is
+/// smaller or bigger than N. The same is of true for Frame::ceil() and
 /// std::ceil(). See the examples below for clarification:
 ///
 /// \code
 /// double justBelowOne = 0.9999999999999999;
 /// double justAboveOne = 1.0000000000000002;
 ///
-/// DFrame::floor(justBelowOne); // == 1.0;
-/// DFrame::ceil(justBelowOne);  // == 1.0;
+/// Frame::floor(justBelowOne); // == 1.0;
+/// Frame::ceil(justBelowOne);  // == 1.0;
 /// std::floor(justBelowOne);   // == 0.0;
 /// std::ceil(justBelowOne);    // == 1.0;
 ///
-/// DFrame::floor(justAboveOne); // == 1.0;
-/// DFrame::ceil(justAboveOne);  // == 1.0;
+/// Frame::floor(justAboveOne); // == 1.0;
+/// Frame::ceil(justAboveOne);  // == 1.0;
 /// std::floor(justAboveOne);   // == 1.0;
 /// std::ceil(justAboveOne);    // == 2.0;
 /// \endcode
 ///
-/// To cast the DFrame to an int, call the static method DFrame::toInt(f), which
-/// is equivalent to (int)DFrame::floor(f).toDouble(). If you want to round or
-/// ceil instead of floor, you can use DFrame::round(f).toInt() or
-/// DFrame::ceil(f).toInt().
+/// To cast the Frame to an int, call the static method Frame::toInt(f), which
+/// is equivalent to (int)Frame::floor(f).toDouble(). If you want to round or
+/// ceil instead of floor, you can use Frame::round(f).toInt() or
+/// Frame::ceil(f).toInt().
 ///
-/// DFrames are FPS-independent, they are not aware of time. To convert a
+/// Frames are FPS-independent, they are not aware of time. To convert a
 /// frame to a time in seconds, use toSeconds(double fps), or conversely
 /// to get a frame from a time in seconds, use fromSeconds(double fps).
-
-class DFrame
+///
+class Frame
 {
 private:
     static double EPS() { return 1.0e-10; }
@@ -173,13 +173,13 @@ public:
     /**************************** Constructors *******************************/
 
     ///
-    /// Constructs a zero-initialized super DFrame.
+    /// Constructs a zero-initialized super Frame.
     ///
-    DFrame()             : value_(0.0)   {}
+    Frame()             : value_(0.0)   {}
     ///
-    /// Constructs a DFrame initialized by the given \p value.
+    /// Constructs a Frame initialized by the given \p value.
     ///
-    DFrame(double value) : value_(value) {}
+    Frame(double value) : value_(value) {}
 
 
     /************************** Comparison operators *************************/
@@ -191,10 +191,10 @@ public:
     /// Example:
     ///
     /// \code
-    /// DFrame one = 1;
-    /// DFrame two = 2;
-    /// DFrame justBelowOne = 0.9999999999999999;
-    /// DFrame justAboveOne = 1.0000000000000002;
+    /// Frame one = 1;
+    /// Frame two = 2;
+    /// Frame justBelowOne = 0.9999999999999999;
+    /// Frame justAboveOne = 1.0000000000000002;
     ///
     /// // All asserts below pass
     /// assert(one + two == 3);
@@ -202,32 +202,32 @@ public:
     /// assert(justAboveOne == one);
     /// \endcode
     ///
-    friend bool operator==(const DFrame & f1, const DFrame & f2);
+    friend bool operator==(const Frame & f1, const Frame & f2);
     ///
     /// Returns \c true if \p f1 and \p f2 are distant by more than epsilon;
     /// otherwise returns \c false.
     ///
-    friend bool operator!=(const DFrame & f1, const DFrame & f2);
+    friend bool operator!=(const Frame & f1, const Frame & f2);
     ///
     /// Returns \c true if \p f1 and \p f2 are not epsilon-close and \p f1 is
     /// lesser than \p f2; otherwise returns \c false.
     ///
-    friend bool operator< (const DFrame & f1, const DFrame & f2);
+    friend bool operator< (const Frame & f1, const Frame & f2);
     ///
     /// Returns \c true if \p f1 and \p f2 are not epsilon-close and \p f1 is
     /// greater than \p f2; otherwise returns \c false.
     ///
-    friend bool operator> (const DFrame & f1, const DFrame & f2);
+    friend bool operator> (const Frame & f1, const Frame & f2);
     ///
     /// Returns \c true if \p f1 and \p f2 are epsilon-close or \p f1 is
     /// lesser than \p f2; otherwise returns \c false.
     ///
-    friend bool operator<=(const DFrame & f1, const DFrame & f2);
+    friend bool operator<=(const Frame & f1, const Frame & f2);
     ///
     /// Returns \c true if \p f1 and \p f2 are epsilon-close or \p f1 is
     /// greater than \p f2; otherwise returns \c false.
     ///
-    friend bool operator>=(const DFrame & f1, const DFrame & f2);
+    friend bool operator>=(const Frame & f1, const Frame & f2);
 
 
     /************************** Arithmetic operators *************************/
@@ -235,23 +235,23 @@ public:
     ///
     /// Returns the sum of \p f1 and \p f2.
     ///
-    friend DFrame operator+(const DFrame & f1, const DFrame & f2);
+    friend Frame operator+(const Frame & f1, const Frame & f2);
     ///
     /// Returns the difference between \p f1 and \p f2.
     ///
-    friend DFrame operator-(const DFrame & f1, const DFrame & f2);
+    friend Frame operator-(const Frame & f1, const Frame & f2);
     ///
     /// Returns the multiplication of \p f by \p scalar.
     ///
-    friend DFrame operator*(double scalar, const DFrame & f);
+    friend Frame operator*(double scalar, const Frame & f);
     ///
     /// Returns the multiplication of \p f by \p scalar.
     ///
-    friend DFrame operator*(const DFrame & f, double scalar);
+    friend Frame operator*(const Frame & f, double scalar);
     ///
     /// Returns the division of \p f by \p scalar.
     ///
-    friend DFrame operator/(const DFrame & f, double scalar);
+    friend Frame operator/(const Frame & f, double scalar);
 
 
     /*********************** Compound assignment operators *******************/
@@ -259,19 +259,19 @@ public:
     ///
     /// Adds \p f2 to \p f1.
     ///
-    friend DFrame & operator+=(DFrame & f1, const DFrame & f2);
+    friend Frame & operator+=(Frame & f1, const Frame & f2);
     ///
     /// Substracts \p f2 from \p f1.
     ///
-    friend DFrame & operator-=(DFrame & f1, const DFrame & f2);
+    friend Frame & operator-=(Frame & f1, const Frame & f2);
     ///
     /// Multiplies \p f by \p scalar.
     ///
-    friend DFrame & operator*=(DFrame & f, double scalar);
+    friend Frame & operator*=(Frame & f, double scalar);
     ///
     /// Divides \p f by \p scalar.
     ///
-    friend DFrame & operator/=(DFrame & f, double scalar);
+    friend Frame & operator/=(Frame & f, double scalar);
 
 
     /************************** Increment and decrement **********************/
@@ -279,19 +279,19 @@ public:
     ///
     /// Increments \p f by 1.0. Returns value of \p f after incrementation.
     ///
-    friend DFrame & operator++(DFrame & f);
+    friend Frame & operator++(Frame & f);
     ///
     /// Decrements \p f by 1.0. Returns value of \p f after decrementation.
     ///
-    friend DFrame & operator--(DFrame & f);
+    friend Frame & operator--(Frame & f);
     ///
     /// Increments \p f by 1.0. Returns value of \p f before incrementation.
     ///
-    friend DFrame   operator++(DFrame & f, int);
+    friend Frame   operator++(Frame & f, int);
     ///
     /// Decrements \p f by 1.0. Returns value of \p f before decrementation.
     ///
-    friend DFrame   operator--(DFrame & f, int);
+    friend Frame   operator--(Frame & f, int);
 
 
     /************************** Floor, ceil, and round ***********************/
@@ -300,16 +300,16 @@ public:
     /// Returns the closest exact integer frame if \p f is an integer frame;
     /// otherwise returns the largest exact integer frame not greater than \p f.
     ///
-    static DFrame floor(const DFrame & f) { return DFrame(std::floor(f.value_ + EPS())); }
+    static Frame floor(const Frame & f) { return Frame(std::floor(f.value_ + EPS())); }
     ///
     /// Returns the closest exact integer frame if \p f is an integer frame;
     /// otherwise returns the smaller exact integer frame not less than \p f.
     ///
-    static DFrame ceil (const DFrame & f) { return DFrame(std::ceil (f.value_ - EPS())); }
+    static Frame ceil (const Frame & f) { return Frame(std::ceil (f.value_ - EPS())); }
     ///
     /// Returns the closest exact integer frame of \p f.
     ///
-    static DFrame round(const DFrame & f) { return DFrame(std::floor(f.value_ + 0.5)); }
+    static Frame round(const Frame & f) { return Frame(std::floor(f.value_ + 0.5)); }
 
 
     /***************** Test for integer frame or subframe ********************/
@@ -333,56 +333,56 @@ public:
     ///
     double toDouble() const { return value_; }
     ///
-    /// Returns DFrame::floor(*this) as an int. We remind that DFrame::floor(*this)
+    /// Returns Frame::floor(*this) as an int. We remind that Frame::floor(*this)
     /// is always an exact integer frame.
     ///
-    int    toInt   () const { return DFrame::floor(*this).value_; }
+    int    toInt   () const { return Frame::floor(*this).value_; }
 
 
     /************************** Convert from and to time in seconds **********/
 
     ///
-    /// Returns the time in seconds corresponding to this DFrame, according to the
+    /// Returns the time in seconds corresponding to this Frame, according to the
     /// given \p fps.
     ///
     double toSeconds(double fps) const { return value_ / fps; }
     ///
-    /// Returns the DFrame corresponding to the given time in seconds \p t,
+    /// Returns the Frame corresponding to the given time in seconds \p t,
     /// according to the given \p fps.
     ///
-    static DFrame fromSeconds(double t, double fps) { return DFrame(t * fps); }
+    static Frame fromSeconds(double t, double fps) { return Frame(t * fps); }
     
 private:
     double value_;
 };
 
 // Comparison operators
-inline bool operator==(const DFrame & f1, const DFrame & f2) { return std::abs(f1.value_ - f2.value_) <= DFrame::EPS(); }
-inline bool operator!=(const DFrame & f1, const DFrame & f2) { return !(f1 == f2); }
-inline bool operator< (const DFrame & f1, const DFrame & f2) { return (f1 != f2) && (f1.value_ < f2.value_); }
-inline bool operator> (const DFrame & f1, const DFrame & f2) { return (f1 != f2) && (f1.value_ > f2.value_); }
-inline bool operator<=(const DFrame & f1, const DFrame & f2) { return (f1 == f2) || (f1.value_ < f2.value_); }
-inline bool operator>=(const DFrame & f1, const DFrame & f2) { return (f1 == f2) || (f1.value_ > f2.value_); }
+inline bool operator==(const Frame & f1, const Frame & f2) { return std::abs(f1.value_ - f2.value_) <= Frame::EPS(); }
+inline bool operator!=(const Frame & f1, const Frame & f2) { return !(f1 == f2); }
+inline bool operator< (const Frame & f1, const Frame & f2) { return (f1 != f2) && (f1.value_ < f2.value_); }
+inline bool operator> (const Frame & f1, const Frame & f2) { return (f1 != f2) && (f1.value_ > f2.value_); }
+inline bool operator<=(const Frame & f1, const Frame & f2) { return (f1 == f2) || (f1.value_ < f2.value_); }
+inline bool operator>=(const Frame & f1, const Frame & f2) { return (f1 == f2) || (f1.value_ > f2.value_); }
 
 // Arithmetic operators
-inline DFrame operator+(const DFrame & f1, const DFrame & f2) { return DFrame(f1.value_ + f2.value_); }
-inline DFrame operator-(const DFrame & f1, const DFrame & f2) { return DFrame(f1.value_ - f2.value_); }
-inline DFrame operator*(double scalar, const DFrame & f)     { return DFrame(scalar * f.value_); }
-inline DFrame operator*(const DFrame & f, double scalar)     { return DFrame(scalar * f.value_); }
-inline DFrame operator/(const DFrame & f, double scalar)     { return DFrame(f.value_ / scalar); }
+inline Frame operator+(const Frame & f1, const Frame & f2) { return Frame(f1.value_ + f2.value_); }
+inline Frame operator-(const Frame & f1, const Frame & f2) { return Frame(f1.value_ - f2.value_); }
+inline Frame operator*(double scalar, const Frame & f)     { return Frame(scalar * f.value_); }
+inline Frame operator*(const Frame & f, double scalar)     { return Frame(scalar * f.value_); }
+inline Frame operator/(const Frame & f, double scalar)     { return Frame(f.value_ / scalar); }
 
 // Compound assignment operators
-inline DFrame & operator+=(DFrame & f1, const DFrame & f2) { f1.value_ += f2.value_; return f1; }
-inline DFrame & operator-=(DFrame & f1, const DFrame & f2) { f1.value_ -= f2.value_; return f1; }
-inline DFrame & operator*=(DFrame & f, double scalar)     { f.value_  *= scalar;    return f;  }
-inline DFrame & operator/=(DFrame & f, double scalar)     { f.value_  /= scalar;    return f;  }
+inline Frame & operator+=(Frame & f1, const Frame & f2) { f1.value_ += f2.value_; return f1; }
+inline Frame & operator-=(Frame & f1, const Frame & f2) { f1.value_ -= f2.value_; return f1; }
+inline Frame & operator*=(Frame & f, double scalar)     { f.value_  *= scalar;    return f;  }
+inline Frame & operator/=(Frame & f, double scalar)     { f.value_  /= scalar;    return f;  }
 
 // Increment and decrement
-inline DFrame & operator++(DFrame & f) { f.value_ += 1.0; return f; }
-inline DFrame & operator--(DFrame & f) { f.value_ -= 1.0; return f; }
-inline DFrame   operator++(DFrame & f, int) { DFrame res = f; f.value_ += 1.0; return res; }
-inline DFrame   operator--(DFrame & f, int) { DFrame res = f; f.value_ -= 1.0; return res; }
+inline Frame & operator++(Frame & f) { f.value_ += 1.0; return f; }
+inline Frame & operator--(Frame & f) { f.value_ -= 1.0; return f; }
+inline Frame   operator++(Frame & f, int) { Frame res = f; f.value_ += 1.0; return res; }
+inline Frame   operator--(Frame & f, int) { Frame res = f; f.value_ -= 1.0; return res; }
 
 } // end namespace OpenVac
 
-#endif // OPENVAC_DFRAME_H
+#endif // OPENVAC_FRAME_H

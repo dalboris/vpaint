@@ -10,173 +10,11 @@
 #define OPENVAC_CELLDATA_H
 
 #include <OpenVac/Core/CellType.h>
-#include <OpenVac/Core/ForeachCellType.h>
+#include <OpenVac/Data/Util/CellDataVisitor.h>
+#include <OpenVac/Data/Util/CellDataMutator.h>
 
 namespace OpenVac
 {
-
-/********************** Forward declare CellData classes **********************/
-
-#define OPENVAC_CELLDATA_FORWARD_DECLARE_CELL_DATA_(CellType) \
-    template <class T, class Geometry> \
-    class CellType##Data;
-
-OPENVAC_FOREACH_CELL_TYPE(OPENVAC_CELLDATA_FORWARD_DECLARE_CELL_DATA_)
-
-
-/**************************** CellDataVisitor ********************************/
-
-/// \class CellDataVisitor OpenVac/Data/CellData.h
-/// \brief A class that implements dynamic dispatch for CellData using the
-/// Visitor pattern.
-///
-/// The CellDataVisitor class should be used whenever you need to do something
-/// with a CellData& that depends on its actual derived type, but you don't
-/// know this type at compile time.
-///
-/// In other words, whenever you feel the need to write code like:
-///
-/// \code
-/// if (cellData.type() == CellType::KeyVertex)
-/// {
-///    KeyVertexData & keyVertexData = static_cast<KeyVertexData &> (cellData);
-///    // ...
-/// }
-/// else if
-/// // ...
-/// \endcode
-///
-/// Then you should instead subclass CellDataVisitor and reimplement its
-/// visit() virtual functions.
-///
-/// Note that CellDataVisitor does not allow you to modify the data. If you
-/// need to modify the data, use CellDataMutator instead.
-///
-/// <H2>Example:</H2>
-///
-/// \code
-/// class CellDataPrinter: public MyVac::CellDataVisitor
-/// {
-/// public:
-///     void print(const MyVac::CellData & data) const
-///     {
-///         visit(data);
-///     }
-///
-///     void visit(const MyVac::KeyVertexData & data) const
-///     {
-///         std::cout << "KeyVertexData( "
-///                   <<     "pos = ("
-///                   <<         data.geometry.pos[0] << ", " << data.geometry.pos[1]
-///                   <<     ")";
-///                   << " )\n";
-///     }
-///
-///     void visit(const MyVac::KeyEdgeData & data) const
-///     {
-///         std::cout << "KeyEdgeData( "
-///                   <<     "startVertex = " << data.startVertex->id() << " ; "
-///                   <<     "endVertex = "   << data.endVertex->id()
-///                   << " )\n";
-///     }
-/// }
-///
-/// void print(const MyVac::CellData & data)
-/// {
-///     CellDataPrinter().print(data);
-/// }
-/// \endcode
-///
-template <class T, class Geometry>
-class CellDataVisitor
-{
-public:
-    /// Calls the visit() virtual function corresponding to the dynamic type
-    /// of \p data.
-    void visit(const CellData<T, Geometry> & data)
-    {
-        data.accept(*this);
-    }
-
-    #define OPENVAC_CELLDATA_DECLARE_CONST_VISIT_(CellType_) \
-        /** This virtual function is called by the non-virtual visit() */ \
-        /** function whenever data.type() == CellType::##CellType_.    */ \
-        /** Reimplement it in subclasses. The default implementation   */ \
-        /** does nothing.                                              */ \
-        virtual void visit(const CellType_##Data<T, Geometry> & data) {}
-
-    OPENVAC_FOREACH_FINAL_CELL_TYPE(OPENVAC_CELLDATA_DECLARE_CONST_VISIT_)
-};
-
-/// \class CellDataMutator OpenVac/Data/CellData.h
-/// \brief Same as CellDataVisitor, but allows to modify the data.
-///
-/// CellDataMutator is identical to CellDataVisitor with the exception that its
-/// visit() functions allows to modify the data (it is passed by reference
-/// instead of const reference).
-///
-/// See CellDataVisitor for more information.
-///
-/// <H2>Example:</H2>
-///
-/// \code
-/// class CellDataAffineTransformer: public MyVac::CellDataMutator
-/// {
-/// private:
-///     const AffineTransform & xf_;
-///
-/// public:
-///     CellDataAffineTransformer(const AffineTransform & xf) : xf_(xf) {}
-///
-///     void transform(MyVac::CellData & data) const
-///     {
-///         visit(data);
-///     }
-///
-///     void visit(MyVac::KeyVertexData & data) const
-///     {
-///         data.geometry.pos = xf_ * data.geometry.pos;
-///     }
-///
-///     void visit(MyVac::KeyEdgeData & data) const
-///     {
-///         int n = data.geometry.curve.numSamples();
-///         for (int i=0; i<n; ++i)
-///         {
-///             data.geometry.curve[i] = xf_ * data.geometry.curve[i];
-///         }
-///     }
-/// }
-///
-/// void transform(MyVac::CellData & data, const AffineTransform & xf)
-/// {
-///     CellDataAffineTransformer(xf).transform(data);
-/// }
-/// \endcode
-///
-template <class T, class Geometry>
-class CellDataMutator
-{
-public:
-    /// Calls the visit() virtual function corresponding to the dynamic type
-    /// of \p data.
-    void visit(CellData<T, Geometry> & data)
-    {
-        data.accept(*this);
-    }
-
-    #define OPENVAC_CELLDATA_DECLARE_VISIT_(CellType_) \
-        /** This virtual function is called by the non-virtual visit() */ \
-        /** function whenever `data.type() == CellType::##CellType_`.  */ \
-        /** Reimplement it in subclasses. The default implementation   */ \
-        /** does nothing.                                              */ \
-        virtual void visit(CellType_##Data<T, Geometry> & data) {}
-
-    OPENVAC_FOREACH_FINAL_CELL_TYPE(OPENVAC_CELLDATA_DECLARE_VISIT_)
-};
-
-
-/******************************* CellData ************************************/
 
 /// \class CellData OpenVac/Data/CellData.h
 /// \brief A class to store cell raw data.
@@ -249,40 +87,29 @@ public:
 /// and ignores all the convenient Vac and Operator classes, then feel free to
 /// use T as you wish. For instance, all reference types may be CellData*.
 ///
-template <class T, class Geometry>
+template <class T>
 class CellData
 {
 public:
-    // Virtual destructor
+    /// Virtual destructor that makes it safe to destruct an object of a
+    /// subclass via a pointer of the base class.
     virtual ~CellData() {}
 
-    // Type
+    /// Returns CellType::Cell. This static function is reimplemented in
+    /// derived classes to return their associated CellType.
+    static CellType static_type() { return CellType::Cell; }
+
+    /// Returns the dynamic CellType associated with this cell data.
     virtual CellType type() const=0;
 
-    // Visitor pattern
-    virtual void accept(CellDataVisitor<T, Geometry> & visitor) const=0;
-    virtual void accept(CellDataMutator<T, Geometry> & mutator)      =0;
+    /// Implements double-dispatch via the Visitor pattern. See CellDataVisitor
+    /// for more information.
+    virtual void accept(CellDataVisitor<T> & visitor) const=0;
+
+    /// Implements double-dispatch via the Visitor pattern. See CellDataMutator
+    /// for more information.
+    virtual void accept(CellDataMutator<T> & mutator)      =0;
 };
-
-
-/***************************** new_cell_data *********************************/
-
-/// Allocate a CellData of the given \p type via \p new. Returns null if the
-/// cell type is not a final type.
-///
-template <class T, class Geometry>
-CellData<T, Geometry> * new_cell_data(CellType type)
-{
-    #define OPENVAC_CELLDATA_RETURN_NEW_IF_TYPE_MATCHES_(CellType_) \
-        if (type == CellType::CellType_) \
-            return new CellType_##Data<T, Geometry>();
-
-    OPENVAC_FOREACH_FINAL_CELL_TYPE(
-                OPENVAC_CELLDATA_RETURN_NEW_IF_TYPE_MATCHES_)
-
-    return nullptr;
-}
-
 
 } // end namespace OpenVac
 

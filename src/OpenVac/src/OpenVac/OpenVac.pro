@@ -31,18 +31,27 @@ HEADERS += \
     Operators/Operator.h \
     Core/ForeachCellType.h \
     Vac.h \
-    Geometry/DFrame.h \
     Core/CellType.h \
-    Core/TypeTraits.h \
     Data/CellData.h \
     Data/KeyEdgeData.h \
     Data/KeyVertexData.h \
     Core/CellId.h \
-    Data/UsingData.h \
-    Geometry/UsingGeometry.h \
-    Operators/CellDataCopier.h \
     Operators/MakeKeyVertex.h \
-    Operators/MakeKeyOpenEdge.h
+    Operators/MakeKeyOpenEdge.h \
+    Geometry.h \
+    Geometry/Frame.h \
+    Data/Util/CellDataCopier.h \
+    Data/Util/CellDataCopierVisitor.h \
+    Data/Util/CellRefTranslator.h \
+    Operators/Util/HandleToIdTranslator.h \
+    Operators/Util/IdToHandleTranslator.h \
+    Operators/Util/HandlesToIdsCopier.h \
+    Operators/Util/IdsToHandlesCopier.h \
+    Data/Util/CellDataMutator.h \
+    Data/Util/CellDataVisitor.h \
+    Operators/Util/Ids.h \
+    Topology/Util/Handles.h \
+    Topology/Util/CellCast.h
 
 unix {
     target.path = /usr/lib

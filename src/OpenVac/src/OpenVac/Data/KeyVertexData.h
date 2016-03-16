@@ -10,6 +10,7 @@
 #define OPENVAC_TKEYVERTEXDATA_H
 
 #include <OpenVac/Data/CellData.h>
+#include <OpenVac/Geometry.h>
 
 namespace OpenVac
 {
@@ -18,24 +19,25 @@ namespace OpenVac
 /// \brief A class to store key vertex raw data.
 ///
 /// \sa CellData
-
-template <class T, class Geometry>
-class KeyVertexData : public CellData<T, Geometry>
+///
+template <class T>
+class KeyVertexData : public CellData<T>
 {
 public:
-    // Type
-    CellType type() const { return CellType::KeyVertex; }
+    /// Returns CellType::KeyVertex.
+    static CellType static_type() { return CellType::KeyVertex; }
+    CellType type() const { return static_type(); }
 
     // Visitor pattern
-    void accept(CellDataVisitor<T, Geometry> & v) const { v.visit(*this); }
-    void accept(CellDataMutator<T, Geometry> & m)       { m.visit(*this); }
+    void accept(CellDataVisitor<T> & v) const { v.visit(*this); }
+    void accept(CellDataMutator<T> & m)       { m.visit(*this); }
 
     // Topological data
     // (none)
 
     // Geometric data
-    typename Geometry::Frame frame;
-    typename Geometry::KeyVertexGeometry geometry;
+    Geometry::Frame frame;
+    Geometry::KeyVertexGeometry geometry;
 };
 
 } // end namespace OpenVac

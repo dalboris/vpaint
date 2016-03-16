@@ -9,6 +9,7 @@
 #ifndef OPENVAC_KEYVERTEX_H
 #define OPENVAC_KEYVERTEX_H
 
+#include <OpenVac/Data/KeyVertexData.h>
 #include <OpenVac/Topology/KeyCell.h>
 #include <OpenVac/Topology/VertexCell.h>
 
@@ -18,41 +19,40 @@ namespace OpenVac
 /// \class KeyVertex OpenVac/Topology/KeyVertex.h
 /// \brief A class that represents a key vertex
 ///
-template <class Geometry>
-class KeyVertex: public KeyCell<Geometry>, public VertexCell<Geometry>
+class KeyVertex: public KeyCell, public VertexCell
 {
 public:
-    // Typedefs
-    OPENVAC_CELL_DECLARE_TYPE_ALIASES_
-
-    // Constructor
-    KeyVertex(Vac * vac, CellId id, const KeyVertexData & data = KeyVertexData()) :
-        Cell<Geometry>(vac, id),
-        KeyCell<Geometry>(vac, id),
-        VertexCell<Geometry>(vac, id),
+    /// Constructs a KeyVertex.
+    KeyVertex(Vac * vac, CellId id, const KeyVertexData<Handles> & data = KeyVertexData<Handles>()) :
+        Cell(vac, id),
+        KeyCell(vac, id),
+        VertexCell(vac, id),
         data_(data) {}
 
-    // Cell type
+    /// Returns the type of this cell, i.e. CellType::KeyVertex.
     CellType type() const { return CellType::KeyVertex; }
 
-    // Cell data
-    const KeyVertexData & data() const { return data_; }
+    /// Accesses the KeyVertexData of this KeyVertex.
+    const KeyVertexData<Handles> & data() const { return data_; }
 
-    // Frame
-    Frame frame() const { return data().frame; }
+    /// Accesses the Frame of this KeyVertex.
+    const Geometry::Frame & frame() const { return data().frame; }
+
+    /// Accesses the KeyVertexGeometry of this KeyVertex.
+    const Geometry::KeyVertexGeometry & geometry() const { return data().geometry; }
 
 private:
     // Data
-    KeyVertexData data_;
+    KeyVertexData<Handles> data_;
 
     // Non-const data access
-    CellData & data() { return data_; }
+    KeyVertexData<Handles> & data() { return data_; }
 
     // Befriend Operator
-    friend Operator;
+    friend class Operator;
 
     // Casting
-    OPENVAC_DEFINE_CELL_CAST(KeyVertex)
+    OPENVAC_CELL_DEFINE_CAST_(KeyVertex)
 };
 
 } // end namespace OpenVac

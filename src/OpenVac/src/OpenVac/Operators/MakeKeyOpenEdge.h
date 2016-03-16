@@ -10,29 +10,35 @@
 #define OPENVAC_MAKEKEYEDGE_H
 
 #include <OpenVac/Operators/Operator.h>
+#include <OpenVac/Topology/KeyVertex.h>
 
 namespace OpenVac
 {
 
-/*************************** Operator subclass *******************************/
-
-/// \class OpMakeKeyOpenEdge OpenVac/Operators/OpMakeKeyOpenEdge.h
+/// \class OpMakeKeyOpenEdge OpenVac/Operators/MakeKeyOpenEdge.h
 /// \brief Operator to create a key open edge
 ///
-template <class Geometry>
-class OpMakeKeyOpenEdge: public Operator<Geometry>
+class OpMakeKeyOpenEdge: public Operator
 {
-    OPENVAC_OPERATOR(OpMakeKeyOpenEdge)
-
 public:
+    // Override compute and apply.
+    OpMakeKeyOpenEdge & compute(const Vac & vac) { Operator::compute(vac); return *this; }
+    OpMakeKeyOpenEdge & apply(Vac & vac)         { Operator::apply(vac);   return *this; }
+
     /// Constructs an OpMakeKeyOpenEdge.
-    OpMakeKeyOpenEdge(KeyVertexId startVertexId, KeyVertexId endVertexId) :
+    ///
+    OpMakeKeyOpenEdge(
+            KeyVertexId startVertexId,
+            KeyVertexId endVertexId,
+            const Geometry::KeyEdgeGeometry & geometry = Geometry::KeyEdgeGeometry()) :
         startVertexId_(startVertexId),
-        endVertexId_(endVertexId)
+        endVertexId_(endVertexId),
+        geometry_(geometry)
     {
     }
 
-    /// Returns ID of new edge. Aborts if can't be applied.
+    /// Returns the ID of created key edge. Aborts if can't be applied.
+    ///
     KeyEdgeId keyEdgeId() const
     {
         assert(canBeApplied());
@@ -42,6 +48,7 @@ public:
 private:
     // Input
     KeyVertexId startVertexId_, endVertexId_;
+    Geometry::KeyEdgeGeometry geometry_;
 
     // Output
     KeyEdgeId keyEdgeId_;
@@ -75,35 +82,24 @@ private:
 namespace Operators
 {
 
-/// Constructs an OpMakeKeyOpenEdge<Geometry>.
+/// Creates a new KeyEdge in the given Vac, starting at the given startVertex
+/// and ending at the given endVertex, with the given KeyEdgeGeometry. Returns
+/// a handle to the new KeyEdge, or an empty handle if the key edge cannot be
+/// created (for instance, if its end vertices are not on the same frame).
+/// Behavior is undefined if one of the given key vertex handles are empty.
 ///
 /// \code
-/// auto op = Operators::MakeKeyOpenEdge(startvertex, endVertex);
+/// KeyEdgeHandle keyEdge = Operators::makeKeyOpenEdge(startVertex, endVertex);
 /// \endcode
 ///
-template <class Geometry>
-OpMakeKeyOpenEdge<Geometry> MakeKeyOpenEdge(
-        const Handle<KeyVertex<Geometry>> & startVertex,
-        const Handle<KeyVertex<Geometry>> & endVertex)
+KeyEdgeHandle makeKeyOpenEdge(
+        const KeyVertexHandle & startVertex,
+        const KeyVertexHandle & endVertex,
+        const Geometry::KeyEdgeGeometry & geometry = Geometry::KeyEdgeGeometry())
 {
-    return OpMakeKeyOpenEdge<Geometry>(startVertex->id(), endVertex->id());
-}
-
-/// Constructs an OpMakeKeyOpenEdge<Geometry>, applies the operation, then
-/// returns the created edge.
-///
-/// \code
-/// auto keyEdge = Operators::makeKeyOpenEdge(startVertex, endVertex);
-/// \endcode
-///
-template <class Geometry>
-Handle<KeyEdge<Geometry>> makeKeyOpenEdge(
-        const Handle<KeyVertex<Geometry>> & startVertex,
-        const Handle<KeyVertex<Geometry>> & endVertex)
-{
-    Handle<KeyEdge<Geometry>> res;
-    Vac<Geometry> & vac = *startVertex->vac();
-    auto op = MakeKeyOpenEdge<Geometry>(startVertex, endVertex);
+    KeyEdgeHandle res;
+    Vac & vac = *startVertex->vac();
+    OpMakeKeyOpenEdge op(startVertex->id(), endVertex->id(), geometry);
     if (op.compute(vac))
     {
         op.apply(vac);

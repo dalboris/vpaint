@@ -9,167 +9,35 @@
 #ifndef OPENVAC_OPERATOR_H
 #define OPENVAC_OPERATOR_H
 
-#include <OpenVac/Core/Memory.h>
-#include <OpenVac/Core/TypeTraits.h>
-#include <OpenVac/Data/UsingData.h>
-#include <OpenVac/Geometry/UsingGeometry.h>
-#include <OpenVac/Operators/CellDataCopier.h>
+#include <OpenVac/Core/ForeachCellType.h>
+#include <OpenVac/Core/CellId.h>
+#include <OpenVac/Data/CellData.h>
+#include <OpenVac/Operators/Util/Ids.h>
+#include <OpenVac/Operators/Util/IdsToHandlesCopier.h>
+#include <OpenVac/Operators/Util/HandlesToIdsCopier.h>
+#include <OpenVac/Vac.h>
 
 #include <vector>
 #include <map>
 #include <cassert>
 
-
-/**************** Private macros to declare type aliases  ********************/
-
-// Type aliases common to Operator and derived class
-
-#define OPENVAC_OPERATOR_USING_GEOMETRY_ \
-    using geometry_type = Geometry; \
-    OPENVAC_USING_GEOMETRY(/* No prefix */, Geometry)
-
-#define OPENVAC_OPERATOR_USING_VAC_ \
-    using Vac = OpenVac::Vac<Geometry>;
-
-#define OPENVAC_OPERATOR_USING_DATA_ \
-    OPENVAC_USING_DATA(/*  No prefix  */, UsingCellHandlesAsCellRefs<Geometry>, Geometry)
-
-#define OPENVAC_OPERATOR_USING_OP_DATA_ \
-    OPENVAC_USING_DATA(/* Prefix = */ Op, UsingCellIdsAsCellRefs, Geometry)
-
-#define OPENVAC_OPERATOR_USING_CELL_HANDLE_(CellType) \
-    using CellType##Handle = Handle< OpenVac::CellType<Geometry> >;
-
-#define OPENVAC_OPERATOR_DECLARE_TYPE_ALIASES_COMMON_ \
-    OPENVAC_OPERATOR_USING_GEOMETRY_ \
-    OPENVAC_OPERATOR_USING_VAC_ \
-    OPENVAC_OPERATOR_USING_DATA_ \
-    OPENVAC_OPERATOR_USING_OP_DATA_ \
-    OPENVAC_FOREACH_CELL_TYPE(OPENVAC_OPERATOR_USING_CELL_HANDLE_)
-
-// Type aliases specific to Operator base class
-
-#define OPENVAC_OPERATOR_USING_CELL_(CellType) \
-    using CellType = OpenVac::CellType<Geometry>;
-
-#define OPENVAC_OPERATOR_DECLARE_TYPE_ALIASES_BASE_ONLY_ \
-    OPENVAC_FOREACH_CELL_TYPE(OPENVAC_OPERATOR_USING_CELL_) \
-    using CellSharedPtr = SharedPtr< Cell >; \
-    using OpToCellDataCopier = OpenVac::OpToCellDataCopier<Geometry>; \
-    using CellToOpDataCopier = OpenVac::CellToOpDataCopier<Geometry>;
-
-// Type aliases specific to derived classes
-
-#define OPENVAC_OPERATOR_DECLARE_OPERATOR_TYPEDEF_ \
-    using Operator = OpenVac::Operator<Geometry>;
-
-#define OPENVAC_OPERATOR_DECLARE_TYPE_ALIASES_DERIVED_ONLY_ \
-    OPENVAC_OPERATOR_DECLARE_OPERATOR_TYPEDEF_
-
-
-/****** Private macros to introduce Operator methods to derived classes  *****/
-
-#define OPENVAC_OPERATOR_USING_NEW_CELL_(CellType) \
-    using Operator::new##CellType;
-
-#define OPENVAC_OPERATOR_USING_GET_CELL_(CellType) \
-    using Operator::get##CellType;
-
-#define OPENVAC_OPERATOR_USING_INHERITED_METHODS_ \
-    using Operator::canBeApplied; \
-    using Operator::newCells; \
-    using Operator::deletedCells; \
-    OPENVAC_FOREACH_FINAL_CELL_TYPE(OPENVAC_OPERATOR_USING_NEW_CELL_) \
-    OPENVAC_FOREACH_FINAL_CELL_TYPE(OPENVAC_OPERATOR_USING_GET_CELL_)
-
-
-/**** Private macro to override Operator::compute() and Operator::apply()  ***/
-
-#define OPENVAC_OPERATOR_OVERRIDE_COMPUTE_AND_APPLY_(OpName) \
-    OpName & compute(const Vac & vac) { Operator::compute(vac); return *this; } \
-    OpName & apply(Vac & vac)         { Operator::apply(vac);   return *this; }
-
-
-/********* Public macro that must appear in Operator derived classes *********/
-
-/// The OPENVAC_OPERATOR(OpName) macro must appear in the private section of
-/// classes inheriting Operator. It does the following:
-///
-///   * It declares type aliases for relevant OpenVac classes (e.g., 'using
-///     VacPtr = OpenVac::WeakPtr<Vac<Geometry>>;'). This allows to write types
-///     such as Operator, VacPtr, and KeyVertexHandle without specifying any
-///     template parameter, which makes the code more readable.
-///
-///   * It explicitely introduces member functions inherited from the Operator
-///     to the derived class definition, via using declarations (e.g., 'using
-///     Operator::isComputed;'). This allows to write function calls such as
-///     isComputed() instead of this->isComputed(), which would otherwise be
-///     necessary due to the nondependent name lookup rule of class templates
-///     (e.g., see <a href="https://isocpp.org/wiki/faq/templates#nondependent-name-lookup-members">
-///     this C++ FAQ entry</a>). This makes the code more readable.
-///
-///   * Finally, it overrides the Operator::compute() and Operator::apply()
-///     member functions, to change its return type from 'Operator &' to
-///     the derived type 'OpName &'
-///
-/// Note: the template parameter of OpName must be called Geometry, otherwise
-/// the macro won't work.
-///
-#define OPENVAC_OPERATOR(OpName) \
-    private: \
-        OPENVAC_OPERATOR_DECLARE_TYPE_ALIASES_COMMON_ \
-        OPENVAC_OPERATOR_DECLARE_TYPE_ALIASES_DERIVED_ONLY_ \
-    public: \
-        OPENVAC_OPERATOR_OVERRIDE_COMPUTE_AND_APPLY_(OpName) \
-        OPENVAC_OPERATOR_USING_INHERITED_METHODS_ \
-    private:
-
 namespace OpenVac
 {
 
-
-/*************************** UsingCellIdsAsCellRefs  *************************/
-
-/// \class UsingCellIdsAsCellRefs OpenVac/Operators/Operator.h
-///
-/// A class that declares CellType##Ref as an alias for CellType##Id, for
-/// each cell type. It is used as the T template argument of the Data classes
-/// used within the Operator classes.
-///
-class UsingCellIdsAsCellRefs
-{
-#define OPENVAC_OPERATOR_USING_ID_AS_REF_(CellType) \
-    using CellType##Ref = CellType##Id;
-
-public:
-    OPENVAC_FOREACH_CELL_TYPE(OPENVAC_OPERATOR_USING_ID_AS_REF_)
-};
-
-
-/********************************* Operator  *********************************/
-
-template <class Geometry> class Vac;
+class Vac;
 
 /// \class Operator OpenVac/Operators/Operator.h
 /// \brief The base class for all operators
 ///
+/// Note: methods of derived classes shouldn't take a Vac or Handles as
+/// parameters, and should instead use cell IDs. This ensures that any access
+/// of data in a Vac is done through the Operator base class, which is then
+/// aware of it and keep track what cells the derived class has touched.
 ///
-template <class Geometry>
 class Operator
 {
-private:
-    // Type aliases
-    OPENVAC_OPERATOR_DECLARE_TYPE_ALIASES_COMMON_
-    OPENVAC_OPERATOR_DECLARE_TYPE_ALIASES_BASE_ONLY_
-
 public:
     /// Constructs an Operator.
-    ///
-    /// Note: the constructors of derived classes must only take Cell IDs as
-    /// parameters. They shouldn't take a Vac, or Handles. This ensures that
-    /// any access of data in a Vac is done through Operator, and therefore
-    /// that Operator is aware of it and can later check that you didn't mess
-    /// up that data.
     ///
     Operator() :
         vac_(nullptr),
@@ -177,18 +45,18 @@ public:
         canBeApplied_(false),
         numIdRequested_(0)
     {
-        // Note: we can't call compute() directly in this constructor,
-        // before it calls virtual methods that won't be dispatched correctly.
-        // But that's actually a good thing: with a "auto-compute on construction"
-        // semantics, the client would have to pass a Vac as argument, and the
-        // constructor would be tempted to use it, breaking the design that all
-        // access to the actual Vac should be done indirectly via the base class
-        // that ensures to do the right thing.
+        // Note: we can't auto-call compute() in the constructor, since it
+        // calls virtual methods that won't be dispatched correctly, thus
+        // an "auto-compute on construction" semantics cannot be implemented.
+        // Though, that may be a good thing: if such semantics were
+        // implemented, then the client would have to pass a Vac as argument of
+        // the derived constructor, breaking the rule that methods of derived
+        // classes shouldn't take directly Vac or Handles as parameters.
     }
 
-    /// Determines whether it is legal to apply the operator to the given \p
+    /// Determines whether it is allowed to apply this operator to the given \p
     /// vac, and if yes computes and caches all the data required to apply the
-    /// operator.
+    /// operator. Returns this Operator to allow function chaining.
     ///
     /// Aborts if compute() has already been called on this instance. If you
     /// wish to compute the same operation (i.e., same input cell IDs that
@@ -200,14 +68,10 @@ public:
     /// This function is re-entrant, but obviously not thread-safe as it
     /// can only be call once anyway.
     ///
-    // XXX TODO: provide a clear() method to allow recomputation.
-    // this must call a virtual clear_ as well.
     Operator & compute(const Vac & vac)
     {
-        // XXX TODO acquire mutex here
         assert(canBeComputed_);
         canBeComputed_ = false;
-        // XXX TODO release mutex here
 
         vac_ = &vac;
         canBeApplied_ = compute_();
@@ -217,19 +81,13 @@ public:
     }
 
     /// Returns true if compute() has been called and has determined that it
-    /// was legal to apply this operator to the given \p vac.
+    /// was allowed to apply this operator to the given \p vac.
     ///
     /// \sa operator bool()
     ///
     bool canBeApplied() const { return canBeApplied_; }
 
-    /// Casts to a boolean whose value is equal to canBeApplied(). This method
-    /// is provided to allow the convenient syntax:
-    ///
-    /// \code
-    /// if (auto op = Operators::MakeKeyEdge(v1,v2).compute(vac))
-    ///     op.apply(
-    ///
+    /// Casts to a boolean whose value is equal to canBeApplied().
     ///
     /// \sa canBeApplied()
     ///
@@ -238,9 +96,10 @@ public:
     /// Applies the computed operator to the given \p vac. The given \p vac
     /// must be identical to the \p vac provided in the compute() function
     /// (i.e., same number of cells, same cell IDs, same topology, same
-    /// geometry), but it can be a different instance, or may have been modified and
-    /// come back to the same state (e.g., undo followed by redo). Otherwise, the
-    /// behavior is undefined.
+    /// geometry), but it can be a different instance, or may have been
+    /// modified and come back to the same state (e.g., undo followed by redo).
+    /// Otherwise, the behavior is undefined. Returns this Operator to allow
+    /// function chaining.
     ///
     /// This function is reentrant and thread-safe: two threads may
     /// concurrently call the apply() function of a shared Operator instance to
@@ -253,6 +112,7 @@ public:
         // Deallocate deleted cells
         for (CellId id: deletedCells_)
         {
+            // Remove cell from ID Manager
             vac.cellManager_.remove(id);
         }
 
@@ -260,29 +120,28 @@ public:
         for (CellId id: newCells_)
         {
             // Allocate cell
-            auto & data = cellsAfter_.at(id);
-            CellSharedPtr cell = make_shared_cell_(&vac, data->type(), id);
+            UniquePtr<CellData<Ids>> & data = cellsAfter_.at(id);
+            SharedPtr<Cell> cell = makeCell_(&vac, data->type(), id);
 
-            // Insert in ID Manager
+            // Insert cell to ID Manager
             vac.cellManager_.insert(id, cell);
         }
 
-        // Copy cell data from operator to VAC
-        OpToCellDataCopier copier(&vac);
-        for (auto & id_data_pair: cellsAfter_)
+        // Copy cell data from Operator to Vac
+        IdsToHandlesCopier copier(&vac);
+        for (auto & entry: cellsAfter_)
         {
-            // Get ID and new data of cell
-            CellId id = id_data_pair.first;
-            const OpCellData & opCellData = *id_data_pair.second;
+            // Get Id and CellData stored in Operator
+            CellId id = entry.first;
+            const CellData<Ids> & opCellData = *entry.second;
 
-            // Get handle of corresponding cell in VAC
-            CellHandle toCell = vac.cellManager_[id]; // XXX avoidable handle copy here?
+            // Get reference to CellData stored in Vac
+            SharedPtr<Cell> & cell = vac.cellManager_[id];
+            CellData<Handles> & vacCellData = cell->data();
 
-            // Copy cell data from operator to VAC
-            CellData & cellData = toCell->data();
-            copier.copy(opCellData, cellData);
+            // Copy cell data from operator to Vac
+            copier.copy(opCellData, vacCellData);
         }
-
 
         return *this;
     }
@@ -303,80 +162,36 @@ protected:
 
     /// Actual implementation of the operator. This method is called by
     /// compute(), and must be implemented by derived classes. It must
-    /// return whether or not the operation is legal.
+    /// return whether or not the operation is allowed.
     ///
     virtual bool compute_()=0;
 
-    // Methods to be used by derived classes
-    OpKeyVertexData * newKeyVertex(KeyVertexId * outId = nullptr) { return newCell_<OpKeyVertexData>(outId); }
-    OpKeyEdgeData   * newKeyEdge  (KeyEdgeId *   outId = nullptr) { return newCell_<OpKeyEdgeData>(outId); }
+    #define OPENVAC_OPERATOR_NEW_CELL_(CellType) \
+        /** Returns the cell data of a new CellType to be created by the */ \
+        /** Operator. This method is provided for use in the subclass    */ \
+        /** implementations of compute_().                               */ \
+        CellType##Data<Ids> * new##CellType(CellType##Id * outId = nullptr) \
+        { \
+            return newCell_<CellType##Data<Ids>>(outId); \
+        }
 
-    OpKeyVertexData * getKeyVertex(KeyVertexId id)
-    {
-        OpCellData * data = getCell_(id);
-        assert(data->type() == CellType::KeyVertex);
-        return static_cast<OpKeyVertexData *>(data);
-    }
+    OPENVAC_FOREACH_FINAL_CELL_TYPE(OPENVAC_OPERATOR_NEW_CELL_)
 
-    OpKeyEdgeData * getKeyEdge(KeyEdgeId id)
-    {
-        OpCellData * data = getCell_(id);
-        assert(data->type() == CellType::KeyEdge);
-        return static_cast<OpKeyEdgeData *>(data);
-    }
+    #define OPENVAC_OPERATOR_GET_CELL_(CellType) \
+        /** Returns the cell data of an existing CellType to be modified  */ \
+        /** by the Operator. Returns nullptr if no cell with the given ID */ \
+        /** exists, or if it exists but is not of the requested type.     */ \
+    /** Aborts if the requested cell has been deleted by the Operator */ \
+    /** subclass. */ \
+        /** This method is provided for use in the subclass               */ \
+        /** implementations of compute_().                                */ \
+        CellType##Data<Ids> * get##CellType(CellType##Id outId) \
+        { \
+            return getCell_<CellType##Data<Ids>>(outId); \
+        }
 
-    OpCellData * getCell_(CellId id)
-    {
-        OpCellData * res = nullptr;
+    OPENVAC_FOREACH_FINAL_CELL_TYPE(OPENVAC_OPERATOR_GET_CELL_)
 
-        // Is the data already in cellsAfter_?
-        auto it = cellsAfter_.find(id);
-        if (it != cellsAfter_.end())
-            return it->second.get();
-
-        // If not, then it musn't be in cellsBefore_ (that would
-        // mean the compute_() function called deleteCell(), which
-        // is the only way to have a cell ID in cellBefore_ but not
-        // in cellAfter_
-        assert(cellsBefore_.find(id) == cellsBefore_.end());
-
-        // And it must be in the VAC, otherwise the ID exists nowhere!
-        assert(vac_->cellManager_.contains(id)); // XXX can be optimized. Two lookups instead of one.
-
-        // Get cell data
-        CellHandle toCell = vac_->cellManager_[id]; // XXX avoidable handle copy here?
-        const CellData & cellData = toCell->data();
-
-        // Make op cell data before and after
-        CellType type = cellData.type();
-        OpCellData * opCellDataBefore =
-                new_cell_data<UsingCellIdsAsCellRefs, Geometry>(type);
-        OpCellData * opCellDataAfter =
-                new_cell_data<UsingCellIdsAsCellRefs, Geometry>(type);
-
-        // Make into unique pointers
-        auto opCellDataBefore_unique_ptr =
-                std::unique_ptr<OpCellData>(opCellDataBefore);
-        auto opCellDataAfter_unique_ptr =
-                std::unique_ptr<OpCellData>(opCellDataAfter);
-
-        // Move into operator maps
-        auto resBefore = cellsBefore_.insert(std::make_pair(
-                              id, std::move(opCellDataBefore_unique_ptr)));
-        auto resAfter = cellsAfter_.insert(std::make_pair(
-                              id, std::move(opCellDataAfter_unique_ptr)));
-
-        // Abort if ID already taken
-        assert(resBefore.second);
-        assert(resAfter.second);
-
-        // Copy data from cell data to op cell data
-        cellToOpDataCopier_.copy(cellData, *opCellDataBefore);
-        cellToOpDataCopier_.copy(cellData, *opCellDataAfter);
-
-        // Returns the relevant op cell data
-        return opCellDataAfter;
-    }
 
 private:
     // Temp member variable (to hide it from derived classes).
@@ -387,41 +202,132 @@ private:
     // Computation
     bool canBeComputed_;
     bool canBeApplied_;
-    std::map<CellId, std::unique_ptr<OpCellData>> cellsBefore_;
-    std::map<CellId, std::unique_ptr<OpCellData>> cellsAfter_;
+    std::map<CellId, UniquePtr<CellData<Ids>>> cellsBefore_;
+    std::map<CellId, UniquePtr<CellData<Ids>>> cellsAfter_;
     std::vector<CellId> newCells_;
     std::vector<CellId> deletedCells_;
 
     // VAC to Operator cell copier
-    CellToOpDataCopier cellToOpDataCopier_;
+    HandlesToIdsCopier handlesToIdsCopier_;
 
     // Keep track of requested IDs
     mutable unsigned int numIdRequested_;
 
-    // Private methods
-    template <class OpCellDataType>
-    OpCellDataType * newCell_(CellId * outId)
+    // High-level method to create a new cell. This allocates a new CellData
+    // and inserts it in cellsAfter_.
+    //
+    template <class CellDataType> // e.g., CellDataType = KeyVertexData<Ids>
+    CellDataType * newCell_(CellId * outId)
     {
         // Get available ID
         CellId id = getAvailableId_();
         if (outId)
             *outId = id;
 
-        // Allocate OpCellData
-        OpCellDataType * data = new OpCellDataType();
-        auto data_unique_ptr = std::unique_ptr<OpCellDataType>(data);
+        // Allocate cell data
+        CellDataType * cellData = new CellDataType();
+        UniquePtr<CellDataType> cellDataUniquePtr(cellData);
 
-        // Insert in cellsAfter_
-        auto res = cellsAfter_.insert(std::make_pair(id, std::move(data_unique_ptr)));
+        // Attempt to insert cellData in cellsAfter_. Ownership of cellData is
+        // transferred to cellAfter_.
+        auto inserted = cellsAfter_.insert(
+                 std::make_pair(id, std::move(cellDataUniquePtr)));
 
-        // Abort if ID already taken
-        assert(res.second);
+        // Abort if insertion failed (i.e., ID already taken)
+        assert(inserted.second);
 
         // Tag this ID as a cell created by the operator
         newCells_.push_back(id);
 
         // Return the allocated OpCellData
-        return data;
+        return cellData;
+    }
+
+    // High-level method to get an existing cell. It first determines whether
+    // a CellData with the given ID already exists in cellsAfter_, in which
+    // case it is returned. Otherwise, it finds the Cell with the given ID in
+    // the Vac, and creates a copy of its data both in cellsBefore_ and
+    // cellsAfter_. The copy in cellsAfter_ is static casted to the requested
+    // type and returned.
+    //
+    template <class CellDataType> // e.g., CellDataType = KeyVertexData<Ids>
+    CellDataType * getCell_(CellId id)
+    {
+        // Is the data already in cellsAfter_?
+        auto it = cellsAfter_.find(id);
+        if (it != cellsAfter_.end())
+        {
+            // If yes, just retrieve it
+            CellData<Ids> * cellDataAfter = it->second.get();
+
+            // Check that it has the same type
+            if (cellDataAfter->type() != CellDataType::static_type())
+            {
+                // That's a bug in compute_(): this cell has already
+                // been affected by compute_(), but now it's trying
+                // to get it again with a different type.
+                abort();
+            }
+
+            // Cast to correct type and return
+            return static_cast<CellDataType *>(cellDataAfter);
+        }
+
+        // If not, then it musn't be in cellsBefore_ (that would
+        // mean the compute_() function called deleteCell(), which
+        // is the only way to have a cell ID in cellBefore_ but not
+        // in cellAfter_. That's a bug in compute_() and therefore
+        // aborts.
+        assert(cellsBefore_.find(id) == cellsBefore_.end());
+
+        // And it must be in the VAC, otherwise the ID exists nowhere!
+        // That's not necessarilly a bug though, compute_() might just
+        // be querying if the cell exists to know whether the operation
+        // is legal or not.
+        auto it2 = vac_->cellManager_.find(id);
+        if (it2 == vac_->cellManager_.end())
+        {
+            return nullptr;
+        }
+
+        // Get Vac cell
+        const SharedPtr<Cell> & vacCell = it2->second;
+
+        // Check type
+        if (vacCell->type() != CellDataType::static_type())
+        {
+            // That's not necessarilly a bug. The compute_() might
+            // be testing whether the cell exists and has the correct
+            // type
+            return nullptr;
+        }
+
+        // Get Vac cell data
+        const CellData<Handles> & vacCellData = vacCell->data();
+
+        // Allocate Operator cell data before and after
+        CellDataType * opCellDataBefore = new CellDataType();
+        CellDataType * opCellDataAfter = new CellDataType();
+        UniquePtr<CellData<Ids>> opCellDataBeforeUniquePtr(opCellDataBefore);
+        UniquePtr<CellData<Ids>> opCellDataAfterUniquePtr(opCellDataAfter);
+
+        // Attempt to insert in cellsBefore_ and cellsAfter_. Ownership
+        // is transfered to these containers.
+        auto insertedBefore = cellsBefore_.insert(
+                std::make_pair(id, std::move(opCellDataBeforeUniquePtr)));
+        auto insertedAfter = cellsAfter_.insert(
+                std::make_pair(id, std::move(opCellDataAfterUniquePtr)));
+
+        // Abort if any insertion failed (i.e., ID already taken)
+        assert(insertedBefore.second);
+        assert(insertedAfter.second);
+
+        // Copy cell data from Vac to Operator
+        handlesToIdsCopier_.copy(vacCellData, *opCellDataBefore);
+        handlesToIdsCopier_.copy(vacCellData, *opCellDataAfter);
+
+        // Returns the relevant op cell data
+        return opCellDataAfter;
     }
 
     CellId getAvailableId_() const
@@ -445,27 +351,27 @@ private:
         return std::vector<CellId>(&ids[numIdRequested_-numIds], &ids[numIdRequested_]);
     }
 
-    CellSharedPtr make_shared_cell_(Vac * vac, CellType type, CellId id) const
+    SharedPtr<Cell> makeCell_(Vac * vac, CellType type, CellId id) const
     {
         #define OPENVAC_OPERATOR_RETURN_MAKE_SHARED_IF_TYPE_MATCHES_(CellType_) \
             if (type == CellType::CellType_) \
                 return std::make_shared<CellType_>(vac, id);
 
+        // Switch over cell types
         OPENVAC_FOREACH_FINAL_CELL_TYPE(
                     OPENVAC_OPERATOR_RETURN_MAKE_SHARED_IF_TYPE_MATCHES_)
+
+        // Abort if incorrect cell type
+        abort();
     }
 };
 
-/// \addtogroup Operators
-/// @{
-
 /// \namespace OpenVac::Operators
-/// \brief Free functions that construct or apply VAC operators.
+/// \brief Free functions to perform an in-place mofification of a Vac.
+///
 namespace Operators
 {
 }
-
-/// @} end addtogroup Operators
 
 }
 

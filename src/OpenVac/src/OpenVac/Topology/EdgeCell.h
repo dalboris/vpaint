@@ -17,25 +17,21 @@ namespace OpenVac
 /// \class EdgeCell OpenVac/Topology/EdgeCell.h
 /// \brief Virtual base class of KeyEdge and InbetweenEdge
 ///
-template <class Geometry>
-class EdgeCell: virtual public Cell<Geometry>
+class EdgeCell: virtual public Cell
 {
 public:
-    // Typedefs
-    OPENVAC_CELL_DECLARE_TYPE_ALIASES_
+    /// Constructs an EdgeCell.
+    EdgeCell(Vac * vac, CellId id) : Cell(vac, id) {}
 
-    // Constructor
-    EdgeCell(Vac * vac, CellId id) : Cell<Geometry>(vac, id) {}
-
-    // Virtual destructor
+    /// Destruct an EdgeCell.
     virtual ~EdgeCell() {}
 
 private:
     // Befriend Operator
-    friend Operator;
+    friend class Operator;
 
     // Casting
-    OPENVAC_DEFINE_CELL_CAST(EdgeCell)
+    OPENVAC_CELL_DEFINE_CAST_(EdgeCell)
 };
 
 } // end namespace OpenVac

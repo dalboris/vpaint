@@ -10,6 +10,7 @@
 #define OPENVAC_TKEYEDGEDATA_H
 
 #include <OpenVac/Data/CellData.h>
+#include <OpenVac/Geometry.h>
 
 namespace OpenVac
 {
@@ -18,25 +19,26 @@ namespace OpenVac
 /// \brief A class to store key edge raw data.
 ///
 /// \sa CellData
-
-template <class T, class Geometry>
-class KeyEdgeData : public CellData<T, Geometry>
+///
+template <class T>
+class KeyEdgeData : public CellData<T>
 {
 public:
-    // Type
-    CellType type() const { return CellType::KeyEdge; }
+    /// Returns CellType::KeyEdge.
+    static CellType static_type() { return CellType::KeyEdge; }
+    CellType type() const { return static_type(); }
 
     // Visitor pattern
-    void accept(CellDataVisitor<T, Geometry> & v) const { v.visit(*this); }
-    void accept(CellDataMutator<T, Geometry> & m)       { m.visit(*this); }
+    void accept(CellDataVisitor<T> & v) const { v.visit(*this); }
+    void accept(CellDataMutator<T> & m)       { m.visit(*this); }
 
     // Topological data
     typename T::KeyVertexRef startVertex;
     typename T::KeyVertexRef endVertex;
 
     // Geometric data
-    typename Geometry::Frame frame;
-    typename Geometry::KeyEdgeGeometry geometry;
+    Geometry::Frame frame;
+    Geometry::KeyEdgeGeometry geometry;
 };
 
 } // end namespace OpenVac

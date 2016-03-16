@@ -8,53 +8,32 @@
 
 #include "TestCellData.h"
 
-#include <OpenVac/Core/ForeachCellType.h>
 #include <OpenVac/Data/CellData.h>
 #include <OpenVac/Data/KeyVertexData.h>
 #include <OpenVac/Data/KeyEdgeData.h>
+#include <OpenVac/Operators/Util/Ids.h>
 
 #include <vector>
 
-namespace
-{
-class Geometry
-{
-public:
-    typedef int Frame;
-    struct KeyVertexGeometry { double position; };
-    struct KeyEdgeGeometry { std::vector<double> curve; };
-};
-
-class UintAsRefs
-{
-public:
-    using KeyVertexRef = unsigned int;
-    using KeyEdgeRef   = unsigned int;
-};
-}
-
-#define DECLARE_MY_CELL_DATA(CellType) \
-    using My##CellType##Data = OpenVac::CellType##Data<UintAsRefs, Geometry>;
-
-OPENVAC_FOREACH_CELL_DATA_TYPE(DECLARE_MY_CELL_DATA)
+using namespace OpenVac;
 
 void TestCellData::createCellDataObjects()
 {
-    MyKeyVertexData keyVertexData;
-    MyKeyEdgeData keyEdgeData;
+    KeyVertexData<Ids> keyVertexData;
+    KeyEdgeData<Ids> keyEdgeData;
 
-    MyCellData * cellData1 = new MyKeyVertexData();
-    MyCellData * cellData2 = &keyVertexData;
-    MyCellData * cellData3 = new MyKeyEdgeData();
-    MyCellData * cellData4 = &keyEdgeData;
+    CellData<Ids> * cellData1 = new KeyVertexData<Ids>();
+    CellData<Ids> * cellData2 = &keyVertexData;
+    CellData<Ids> * cellData3 = new KeyEdgeData<Ids>();
+    CellData<Ids> * cellData4 = &keyEdgeData;
 
-    QVERIFY(keyVertexData.type() == OpenVac::CellType::KeyVertex);
-    QVERIFY(cellData1->type()    == OpenVac::CellType::KeyVertex);
-    QVERIFY(cellData2->type()    == OpenVac::CellType::KeyVertex);
+    QVERIFY(keyVertexData.type() == CellType::KeyVertex);
+    QVERIFY(cellData1->type()    == CellType::KeyVertex);
+    QVERIFY(cellData2->type()    == CellType::KeyVertex);
 
-    QVERIFY(keyEdgeData.type()   == OpenVac::CellType::KeyEdge);
-    QVERIFY(cellData3->type()    == OpenVac::CellType::KeyEdge);
-    QVERIFY(cellData4->type()    == OpenVac::CellType::KeyEdge);
+    QVERIFY(keyEdgeData.type()   == CellType::KeyEdge);
+    QVERIFY(cellData3->type()    == CellType::KeyEdge);
+    QVERIFY(cellData4->type()    == CellType::KeyEdge);
 
     delete cellData1;
     delete cellData3;

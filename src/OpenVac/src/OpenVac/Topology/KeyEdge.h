@@ -9,6 +9,7 @@
 #ifndef OPENVAC_KEYEDGE_H
 #define OPENVAC_KEYEDGE_H
 
+#include <OpenVac/Data/KeyEdgeData.h>
 #include <OpenVac/Topology/KeyCell.h>
 #include <OpenVac/Topology/EdgeCell.h>
 
@@ -18,47 +19,46 @@ namespace OpenVac
 /// \class KeyEdge OpenVac/Topology/KeyEdge.h
 /// \brief A class that represents a key edge
 ///
-template <class Geometry>
-class KeyEdge: public KeyCell<Geometry>, public EdgeCell<Geometry>
+class KeyEdge: public KeyCell, public EdgeCell
 {
 public:
-    // Typedefs
-    OPENVAC_CELL_DECLARE_TYPE_ALIASES_
-
-    // Constructor
-    KeyEdge(Vac * vac, CellId id, const KeyEdgeData & data = KeyEdgeData()) :
-        Cell<Geometry>(vac, id),
-        KeyCell<Geometry>(vac, id),
-        EdgeCell<Geometry>(vac, id),
+    /// Constructs a KeyEdge.
+    KeyEdge(Vac * vac, CellId id, const KeyEdgeData<Handles> & data = KeyEdgeData<Handles>()) :
+        Cell(vac, id),
+        KeyCell(vac, id),
+        EdgeCell(vac, id),
         data_(data) {}
 
-    // Cell type
+    /// Returns the type of this cell, i.e. CellType::KeyEdge.
     CellType type() const { return CellType::KeyEdge; }
 
-    // Cell data
-    const KeyEdgeData & data() const { return data_; }
+    /// Accesses the KeyEdgeData of this KeyEdge.
+    const KeyEdgeData<Handles> & data() const { return data_; }
 
-    // Frame
-    Frame frame() const { return data().frame; }
-
-    // Start vertex
+    /// Accesses the start vertex of this KeyEdge.
     const KeyVertexHandle & startVertex() const { return data().startVertex; }
 
-    // End vertex
+    /// Accesses the end vertex of this KeyEdge.
     const KeyVertexHandle & endVertex() const { return data().endVertex; }
+
+    /// Accesses the Frame of this KeyEdge.
+    const Geometry::Frame & frame() const { return data().frame; }
+
+    /// Accesses the KeyEdgeGeometry of this KeyEdge.
+    const Geometry::KeyEdgeGeometry & geometry() const { return data().geometry; }
 
 private:
     // Data
-    KeyEdgeData data_;
+    KeyEdgeData<Handles> data_;
 
     // Non-const data access
-    CellData & data() { return data_; }
+    KeyEdgeData<Handles> & data() { return data_; }
 
     // Befriend Operator
-    friend Operator;
+    friend class Operator;
 
     // Casting
-    OPENVAC_DEFINE_CELL_CAST(KeyEdge)
+    OPENVAC_CELL_DEFINE_CAST_(KeyEdge)
 };
 
 } // end namespace OpenVac

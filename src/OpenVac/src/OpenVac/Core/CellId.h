@@ -19,6 +19,7 @@ namespace OpenVac
 {
 
 #define OPENVAC_USING_CELL_ID_(CellType) \
+    /** \typedef CellType##Id OpenVac/Core/CellId.h */ \
     using CellType##Id = unsigned int;
 
 OPENVAC_FOREACH_CELL_TYPE(OPENVAC_USING_CELL_ID_)

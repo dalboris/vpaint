@@ -11,43 +11,29 @@
 #include <OpenVac/Vac.h>
 #include <OpenVac/Topology/KeyVertex.h>
 #include <OpenVac/Topology/KeyEdge.h>
+#include <OpenVac/Topology/Util/Handles.h>
 
 #include <map>
 
-namespace
-{
-class Geometry
-{
-public:
-    typedef int Frame;
-    class Manager {};
-    class KeyVertexGeometry {};
-    class KeyEdgeGeometry {};
-};
-}
-
-using Vac = OpenVac::Vac<Geometry>;
-using KeyVertex = OpenVac::KeyVertex<Geometry>;
-using KeyEdge = OpenVac::KeyEdge<Geometry>;
-using CellSharedPtr = OpenVac::SharedPtr< OpenVac::Cell<Geometry> >;
+using namespace OpenVac;
 
 void TestCell::testAllocatingAndCasting()
 {
     // Some dummy data
     Vac * vac = nullptr;
-    Vac::CellId id1 = 1;
-    Vac::CellId id2 = 2;
-    Vac::KeyVertexData keyVertexData; keyVertexData.frame = 42;
-    Vac::KeyEdgeData   keyEdgeData;   keyEdgeData.frame = 43;
+    CellId id1 = 1;
+    CellId id2 = 2;
+    KeyVertexData<Handles> keyVertexData; keyVertexData.frame = 42;
+    KeyEdgeData<Handles>   keyEdgeData;   keyEdgeData.frame = 43;
 
     // Empty handles
     {
-        Vac::CellHandle cell;
-        Vac::KeyCellHandle keyCell;
-        Vac::VertexCellHandle vertexCell;
-        Vac::EdgeCellHandle edgeCell;
-        Vac::KeyVertexHandle keyVertex;
-        Vac::KeyEdgeHandle keyEdge;
+        CellHandle cell;
+        KeyCellHandle keyCell;
+        VertexCellHandle vertexCell;
+        EdgeCellHandle edgeCell;
+        KeyVertexHandle keyVertex;
+        KeyEdgeHandle keyEdge;
         QVERIFY(!cell);
         QVERIFY(!keyCell);
         QVERIFY(!vertexCell);
@@ -58,47 +44,47 @@ void TestCell::testAllocatingAndCasting()
 
     // cell shared pointers to derived type
     {
-        OpenVac::SharedPtr<KeyVertex> spv = std::make_shared<KeyVertex>(vac, id1, keyVertexData);
-        OpenVac::SharedPtr<KeyEdge> spe = std::make_shared<KeyEdge>(vac, id2, keyEdgeData);
+        SharedPtr<KeyVertex> spv = std::make_shared<KeyVertex>(vac, id1, keyVertexData);
+        SharedPtr<KeyEdge> spe = std::make_shared<KeyEdge>(vac, id2, keyEdgeData);
 
-        QVERIFY(spv->type() == OpenVac::CellType::KeyVertex);
-        QVERIFY(spe->type() == OpenVac::CellType::KeyEdge);
+        QVERIFY(spv->type() == CellType::KeyVertex);
+        QVERIFY(spe->type() == CellType::KeyEdge);
     }
 
     // cell shared pointers to base type
     {
-        CellSharedPtr spv = std::make_shared<KeyVertex>(vac, id1, keyVertexData);
-        CellSharedPtr spe = std::make_shared<KeyEdge>(vac, id2, keyEdgeData);
+        SharedPtr<Cell> spv = std::make_shared<KeyVertex>(vac, id1, keyVertexData);
+        SharedPtr<Cell> spe = std::make_shared<KeyEdge>(vac, id2, keyEdgeData);
 
-        QVERIFY(spv->type() == OpenVac::CellType::KeyVertex);
-        QVERIFY(spe->type() == OpenVac::CellType::KeyEdge);
+        QVERIFY(spv->type() == CellType::KeyVertex);
+        QVERIFY(spe->type() == CellType::KeyEdge);
     }
 
     // cell shared pointers to base type stored in map
     {
-        std::map<int, CellSharedPtr> map;
+        std::map<int, SharedPtr<Cell>> map;
         {
-            CellSharedPtr spv = std::make_shared<KeyVertex>(vac, id1, keyVertexData);
-            CellSharedPtr spe = std::make_shared<KeyEdge>(vac, id2, keyEdgeData);
+            SharedPtr<Cell> spv = std::make_shared<KeyVertex>(vac, id1, keyVertexData);
+            SharedPtr<Cell> spe = std::make_shared<KeyEdge>(vac, id2, keyEdgeData);
 
             map[1] = spv;
             map[2] = spe;
 
-            QVERIFY(spv->type() == OpenVac::CellType::KeyVertex);
-            QVERIFY(spe->type() == OpenVac::CellType::KeyEdge);
+            QVERIFY(spv->type() == CellType::KeyVertex);
+            QVERIFY(spe->type() == CellType::KeyEdge);
         }
 
-        CellSharedPtr spv = map[1];
-        CellSharedPtr spe = map[2];
+        SharedPtr<Cell> spv = map[1];
+        SharedPtr<Cell> spe = map[2];
 
-        QVERIFY(spv->type() == OpenVac::CellType::KeyVertex);
-        QVERIFY(spe->type() == OpenVac::CellType::KeyEdge);
+        QVERIFY(spv->type() == CellType::KeyVertex);
+        QVERIFY(spe->type() == CellType::KeyEdge);
     }
 
     // Allocating cell objects and managing them with upcasted cell shared pointers
     {
-        CellSharedPtr scell1 = std::make_shared<KeyVertex>(vac, id1, keyVertexData);
-        CellSharedPtr scell2 = std::make_shared<KeyEdge>(vac, id2, keyEdgeData);
+        SharedPtr<Cell> scell1 = std::make_shared<KeyVertex>(vac, id1, keyVertexData);
+        SharedPtr<Cell> scell2 = std::make_shared<KeyEdge>(vac, id2, keyEdgeData);
 
         QVERIFY((bool)scell1);
         QVERIFY((bool)scell2);
@@ -109,198 +95,196 @@ void TestCell::testAllocatingAndCasting()
         QVERIFY(scell1->id() == id1);
         QVERIFY(scell2->id() == id2);
 
-        QVERIFY(scell1->type() == OpenVac::CellType::KeyVertex);
-        QVERIFY(scell2->type() == OpenVac::CellType::KeyEdge);
+        QVERIFY(scell1->type() == CellType::KeyVertex);
+        QVERIFY(scell2->type() == CellType::KeyEdge);
     }
 
     // Get cell handles from upcasted cell shared pointers
     {
-        CellSharedPtr scell1 = std::make_shared<KeyVertex>(vac, id1, keyVertexData);
-        CellSharedPtr scell2 = std::make_shared<KeyEdge>(vac, id2, keyEdgeData);
+        SharedPtr<Cell> scell1 = std::make_shared<KeyVertex>(vac, id1, keyVertexData);
+        SharedPtr<Cell> scell2 = std::make_shared<KeyEdge>(vac, id2, keyEdgeData);
 
-        Vac::CellHandle cell1 = scell1;
-        Vac::CellHandle cell2 = scell2;
-        QVERIFY(cell1);
-        QVERIFY(cell2);
+        CellHandle cell1 = scell1;
+        CellHandle cell2 = scell2;
+        QVERIFY((bool)cell1);
+        QVERIFY((bool)cell2);
         QVERIFY(cell1->vac() == vac);
         QVERIFY(cell2->vac() == vac);
         QVERIFY(cell1->id() == id1);
         QVERIFY(cell2->id() == id2);
-        QVERIFY(cell1->type() == OpenVac::CellType::KeyVertex);
-        QVERIFY(cell2->type() == OpenVac::CellType::KeyEdge);
+        QVERIFY(cell1->type() == CellType::KeyVertex);
+        QVERIFY(cell2->type() == CellType::KeyEdge);
 
-        Vac::KeyCellHandle keyCell1 = scell1;
-        Vac::KeyCellHandle keyCell2 = scell2;
-        QVERIFY(keyCell1);
-        QVERIFY(keyCell2);
+        KeyCellHandle keyCell1 = scell1;
+        KeyCellHandle keyCell2 = scell2;
+        QVERIFY((bool)keyCell1);
+        QVERIFY((bool)keyCell2);
         QVERIFY(keyCell1->frame() == keyVertexData.frame);
         QVERIFY(keyCell2->frame() == keyEdgeData.frame);
 
-        Vac::VertexCellHandle vertexCell1 = scell1;
-        Vac::VertexCellHandle vertexCell2 = scell2;
-        QVERIFY(vertexCell1);
+        VertexCellHandle vertexCell1 = scell1;
+        VertexCellHandle vertexCell2 = scell2;
+        QVERIFY((bool)vertexCell1);
         QVERIFY(!vertexCell2);
 
-        Vac::EdgeCellHandle edgeCell1 = scell1;
-        Vac::EdgeCellHandle edgeCell2 = scell2;
+        EdgeCellHandle edgeCell1 = scell1;
+        EdgeCellHandle edgeCell2 = scell2;
         QVERIFY(!edgeCell1);
-        QVERIFY(edgeCell2);
+        QVERIFY((bool)edgeCell2);
 
-        Vac::KeyVertexHandle keyVertex1 = scell1;
-        Vac::KeyVertexHandle keyVertex2 = scell2;
-        QVERIFY(keyVertex1);
+        KeyVertexHandle keyVertex1 = scell1;
+        KeyVertexHandle keyVertex2 = scell2;
+        QVERIFY((bool)keyVertex1);
         QVERIFY(!keyVertex2);
 
-        Vac::KeyEdgeHandle keyEdge1 = scell1;
-        Vac::KeyEdgeHandle keyEdge2 = scell2;
+        KeyEdgeHandle keyEdge1 = scell1;
+        KeyEdgeHandle keyEdge2 = scell2;
         QVERIFY(!keyEdge1);
-        QVERIFY(keyEdge2);
+        QVERIFY((bool)keyEdge2);
 
         scell1.reset();
-        QVERIFY(!cell1);
-        QVERIFY(!keyCell1);
-        QVERIFY(!vertexCell1);
-        QVERIFY(!edgeCell1);
-        QVERIFY(!keyVertex1);
-        QVERIFY(!keyEdge1);
+        QVERIFY(cell1.expired());
+        QVERIFY(keyCell1.expired());
+        QVERIFY(vertexCell1.expired());
+        QVERIFY(edgeCell1.expired());
+        QVERIFY(keyVertex1.expired());
+        QVERIFY(keyEdge1.expired());
 
         scell2.reset();
-        QVERIFY(!cell2);
-        QVERIFY(!keyCell2);
-        QVERIFY(!vertexCell2);
-        QVERIFY(!edgeCell2);
-        QVERIFY(!keyVertex2);
-        QVERIFY(!keyEdge2);
+        QVERIFY(cell2.expired());
+        QVERIFY(keyCell2.expired());
+        QVERIFY(vertexCell2.expired());
+        QVERIFY(edgeCell2.expired());
+        QVERIFY(keyVertex2.expired());
+        QVERIFY(keyEdge2.expired());
     }
 
     // Upcasting cell handles
     {
-        CellSharedPtr scell1 = std::make_shared<KeyVertex>(vac, id1, keyVertexData);
-        CellSharedPtr scell2 = std::make_shared<KeyEdge>(vac, id2, keyEdgeData);
+        SharedPtr<Cell> scell1 = std::make_shared<KeyVertex>(vac, id1, keyVertexData);
+        SharedPtr<Cell> scell2 = std::make_shared<KeyEdge>(vac, id2, keyEdgeData);
 
-        Vac::KeyVertexHandle keyVertex = scell1;
-        Vac::KeyEdgeHandle keyEdge = scell2;
-        QVERIFY(keyVertex);
-        QVERIFY(keyEdge);
+        KeyVertexHandle keyVertex = scell1;
+        KeyEdgeHandle keyEdge = scell2;
+        QVERIFY((bool)keyVertex);
+        QVERIFY((bool)keyEdge);
 
-        Vac::CellHandle cell1 = keyVertex;
-        Vac::CellHandle cell2 = keyEdge;
-        QVERIFY(cell1);
-        QVERIFY(cell2);
+        CellHandle cell1 = keyVertex;
+        CellHandle cell2 = keyEdge;
+        QVERIFY((bool)cell1);
+        QVERIFY((bool)cell2);
         QVERIFY(cell1->vac() == vac);
         QVERIFY(cell2->vac() == vac);
         QVERIFY(cell1->id() == id1);
         QVERIFY(cell2->id() == id2);
-        QVERIFY(cell1->type() == OpenVac::CellType::KeyVertex);
-        QVERIFY(cell2->type() == OpenVac::CellType::KeyEdge);
+        QVERIFY(cell1->type() == CellType::KeyVertex);
+        QVERIFY(cell2->type() == CellType::KeyEdge);
 
-        Vac::KeyCellHandle keyCell1 = keyVertex;
-        Vac::KeyCellHandle keyCell2 = keyEdge;
-        QVERIFY(keyCell1);
-        QVERIFY(keyCell2);
+        KeyCellHandle keyCell1 = keyVertex;
+        KeyCellHandle keyCell2 = keyEdge;
+        QVERIFY((bool)keyCell1);
+        QVERIFY((bool)keyCell2);
         QVERIFY(keyCell1->frame() == keyVertexData.frame);
         QVERIFY(keyCell2->frame() == keyEdgeData.frame);
 
-        Vac::VertexCellHandle vertexCell1 = keyVertex;
-        Vac::VertexCellHandle vertexCell2 = keyEdge;
-        QVERIFY(vertexCell1);
+        VertexCellHandle vertexCell1 = keyVertex;
+        VertexCellHandle vertexCell2 = keyEdge;
+        QVERIFY((bool)vertexCell1);
         QVERIFY(!vertexCell2);
 
-        Vac::EdgeCellHandle edgeCell1 = keyVertex;
-        Vac::EdgeCellHandle edgeCell2 = keyEdge;
+        EdgeCellHandle edgeCell1 = keyVertex;
+        EdgeCellHandle edgeCell2 = keyEdge;
         QVERIFY(!edgeCell1);
-        QVERIFY(edgeCell2);
+        QVERIFY((bool)edgeCell2);
 
-        Vac::KeyVertexHandle keyVertex1 = keyVertex;
-        Vac::KeyVertexHandle keyVertex2 = keyEdge;
-        QVERIFY(keyVertex1);
+        KeyVertexHandle keyVertex1 = keyVertex;
+        KeyVertexHandle keyVertex2 = keyEdge;
+        QVERIFY((bool)keyVertex1);
         QVERIFY(!keyVertex2);
 
-        Vac::KeyEdgeHandle keyEdge1 = keyVertex;
-        Vac::KeyEdgeHandle keyEdge2 = keyEdge;
+        KeyEdgeHandle keyEdge1 = keyVertex;
+        KeyEdgeHandle keyEdge2 = keyEdge;
         QVERIFY(!keyEdge1);
-        QVERIFY(keyEdge2);
+        QVERIFY((bool)keyEdge2);
 
-        Vac::CellHandle cell3 = keyCell1;
-        Vac::CellHandle cell4 = keyCell2;
-        Vac::CellHandle cell5 = vertexCell1;
-        Vac::CellHandle cell6 = vertexCell2;
-        Vac::CellHandle cell7 = edgeCell1;
-        Vac::CellHandle cell8 = edgeCell2;
-        QVERIFY(cell3);
-        QVERIFY(cell4);
-        QVERIFY(cell5);
+        CellHandle cell3 = keyCell1;
+        CellHandle cell4 = keyCell2;
+        CellHandle cell5 = vertexCell1;
+        CellHandle cell6 = vertexCell2;
+        CellHandle cell7 = edgeCell1;
+        CellHandle cell8 = edgeCell2;
+        QVERIFY((bool)cell3);
+        QVERIFY((bool)cell4);
+        QVERIFY((bool)cell5);
         QVERIFY(!cell6);
         QVERIFY(!cell7);
-        QVERIFY(cell8);
+        QVERIFY((bool)cell8);
 
-        Vac::KeyEdgeHandle keyEdge3 = keyVertex2;
+        KeyEdgeHandle keyEdge3 = keyVertex2;
         QVERIFY(!keyEdge3);
     }
 
     // Downcasting cell handles
     {
-        CellSharedPtr scell1 = std::make_shared<KeyVertex>(vac, id1, keyVertexData);
-        CellSharedPtr scell2 = std::make_shared<KeyEdge>(vac, id2, keyEdgeData);
-        Vac::CellHandle cell1 = scell1;
-        Vac::CellHandle cell2 = scell2;
+        SharedPtr<Cell> scell1 = std::make_shared<KeyVertex>(vac, id1, keyVertexData);
+        SharedPtr<Cell> scell2 = std::make_shared<KeyEdge>(vac, id2, keyEdgeData);
+        CellHandle cell1 = scell1;
+        CellHandle cell2 = scell2;
 
-        Vac::CellHandle cell3 = cell1;
-        Vac::CellHandle cell4 = cell2;
-        QVERIFY(cell3);
-        QVERIFY(cell4);
+        CellHandle cell3 = cell1;
+        CellHandle cell4 = cell2;
+        QVERIFY((bool)cell3);
+        QVERIFY((bool)cell4);
 
-        Vac::KeyCellHandle keyCell1 = cell1;
-        Vac::KeyCellHandle keyCell2 = cell2;
-        QVERIFY(keyCell1);
-        QVERIFY(keyCell2);
+        KeyCellHandle keyCell1 = cell1;
+        KeyCellHandle keyCell2 = cell2;
+        QVERIFY((bool)keyCell1);
+        QVERIFY((bool)keyCell2);
         QVERIFY(keyCell1->frame() == keyVertexData.frame);
         QVERIFY(keyCell2->frame() == keyEdgeData.frame);
 
-        Vac::VertexCellHandle vertexCell1 = cell1;
-        Vac::VertexCellHandle vertexCell2 = cell2;
-        QVERIFY(vertexCell1);
+        VertexCellHandle vertexCell1 = cell1;
+        VertexCellHandle vertexCell2 = cell2;
+        QVERIFY((bool)vertexCell1);
         QVERIFY(!vertexCell2);
 
-        Vac::EdgeCellHandle edgeCell1 = cell1;
-        Vac::EdgeCellHandle edgeCell2 = cell2;
+        EdgeCellHandle edgeCell1 = cell1;
+        EdgeCellHandle edgeCell2 = cell2;
         QVERIFY(!edgeCell1);
-        QVERIFY(edgeCell2);
+        QVERIFY((bool)edgeCell2);
 
-        Vac::KeyVertexHandle keyVertex1 = cell1;
-        Vac::KeyVertexHandle keyVertex2 = cell2;
-        Vac::KeyVertexHandle keyVertex3 = keyCell1;
-        Vac::KeyVertexHandle keyVertex4 = keyCell2;
-        Vac::KeyVertexHandle keyVertex5 = vertexCell1;
-        Vac::KeyVertexHandle keyVertex6 = vertexCell2;
-        Vac::KeyVertexHandle keyVertex7 = edgeCell1;
-        Vac::KeyVertexHandle keyVertex8 = edgeCell2;
-        QVERIFY(keyVertex1);
+        KeyVertexHandle keyVertex1 = cell1;
+        KeyVertexHandle keyVertex2 = cell2;
+        KeyVertexHandle keyVertex3 = keyCell1;
+        KeyVertexHandle keyVertex4 = keyCell2;
+        KeyVertexHandle keyVertex5 = vertexCell1;
+        KeyVertexHandle keyVertex6 = vertexCell2;
+        KeyVertexHandle keyVertex7 = edgeCell1;
+        KeyVertexHandle keyVertex8 = edgeCell2;
+        QVERIFY((bool)keyVertex1);
         QVERIFY(!keyVertex2);
-        QVERIFY(keyVertex3);
+        QVERIFY((bool)keyVertex3);
         QVERIFY(!keyVertex4);
-        QVERIFY(keyVertex5);
+        QVERIFY((bool)keyVertex5);
         QVERIFY(!keyVertex6);
         QVERIFY(!keyVertex7);
         QVERIFY(!keyVertex8);
 
-        Vac::KeyEdgeHandle keyEdge1 = cell1;
-        Vac::KeyEdgeHandle keyEdge2 = cell2;
-        Vac::KeyEdgeHandle keyEdge3 = keyCell1;
-        Vac::KeyEdgeHandle keyEdge4 = keyCell2;
-        Vac::KeyEdgeHandle keyEdge5 = vertexCell1;
-        Vac::KeyEdgeHandle keyEdge6 = vertexCell2;
-        Vac::KeyEdgeHandle keyEdge7 = edgeCell1;
-        Vac::KeyEdgeHandle keyEdge8 = edgeCell2;
+        KeyEdgeHandle keyEdge1 = cell1;
+        KeyEdgeHandle keyEdge2 = cell2;
+        KeyEdgeHandle keyEdge3 = keyCell1;
+        KeyEdgeHandle keyEdge4 = keyCell2;
+        KeyEdgeHandle keyEdge5 = vertexCell1;
+        KeyEdgeHandle keyEdge6 = vertexCell2;
+        KeyEdgeHandle keyEdge7 = edgeCell1;
+        KeyEdgeHandle keyEdge8 = edgeCell2;
         QVERIFY(!keyEdge1);
-        QVERIFY(keyEdge2);
+        QVERIFY((bool)keyEdge2);
         QVERIFY(!keyEdge3);
-        QVERIFY(keyEdge4);
+        QVERIFY((bool)keyEdge4);
         QVERIFY(!keyEdge5);
         QVERIFY(!keyEdge6);
         QVERIFY(!keyEdge7);
-        QVERIFY(keyEdge8);
+        QVERIFY((bool)keyEdge8);
     }
 }
-
-

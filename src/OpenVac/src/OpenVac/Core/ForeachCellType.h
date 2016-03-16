@@ -9,6 +9,9 @@
 #ifndef OPENVAC_FOREACHCELLTYPE_H
 #define OPENVAC_FOREACHCELLTYPE_H
 
+/// \file OpenVac/Core/ForeachCellType.h
+/// \brief Defines macros to loop over each cell type
+
 
 /***************************** Without arguments *****************************/
 
