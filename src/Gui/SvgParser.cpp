@@ -651,100 +651,250 @@ bool SvgParser::readPath_(XmlStreamReader &xml)
 
     QString d = xml.attributes().value("d").toString();
 
-    parsePath(d, pa);
-
-    return true;
+    return parsePath(d, pa);
 }
 
-void SvgParser::parsePath(QString &data, const SvgPresentationAttributes & pa, const Eigen::Vector2d startPos) {
-    QVector<VectorAnimationComplex::EdgeSample> samples;
+// TODO refactor tail recursion
+bool SvgParser::parsePath(QString &data, const SvgPresentationAttributes & pa, const Eigen::Vector2d startPos) {
+    QList<PotentialPoint> samples;
 
-    data = data.trimmed();
+    // Remove whitespace characters from the beginning
+    trimFront(data);
+
+    // Add startPos as the first point if the first command is not a move
     if(data[0] != 'M' && data[0] != 'm')
     {
-        samples.append(VectorAnimationComplex::EdgeSample(startPos[0], startPos[1]));
+        samples.append(PotentialPoint(startPos, pa.strokeWidth));
     }
 
-    for(int startPos = 0; startPos < data.length();)
+    bool ok = true;
+
+    while(!data.isEmpty())
     {
         bool relative = true;
-        switch(data[startPos].cell()) {
+        char c = data[0].cell();
+        data.remove(0, 1);
+        switch(c) {
+        // Ignore whitespace characters
         case 0x20:
         case 0x9:
         case 0xD:
         case 0xA:
             break;
+        // Move
         case 'M':
             relative = false;
         case 'm':
-            addMoveto(samples, data, relative);
+        {
+            trimFront(data);
+            Eigen::Vector2d start = getNextCoordinatePair(data, &ok);
+            if(!ok) return false;
+            if(samples.isEmpty())
+            {
+                // If this is the first command add it as the first point
+                samples.append(PotentialPoint(start[0], start[1], pa.strokeWidth));
+            }
+            else
+            {
+                // If this is not the first command, finish the existing path and start a new subpath
+                Eigen::Vector2d end = finishPath(samples, pa);
+                if(relative) {
+                    start += end;
+                }
+                return parsePath(data, pa, start);
+            }
             break;
+        }
         case 'L':
             relative = false;
         case 'l':
-            addLineto(samples, data, relative);
+            ok = addLineTo(samples, data, pa, relative);
             break;
         case 'V':
             relative = false;
         case 'v':
-            addVerticalLineto(samples, data, relative);
+            ok = addVerticalLineTo(samples, data, pa, relative);
             break;
         case 'H':
             relative = false;
         case 'h':
-            addVerticalLineto(samples, data, relative);
+            ok = addHorizontalLineTo(samples, data, pa, relative);
             break;
         case 'C':
             relative = false;
         case 'c':
-            addCurveto(samples, data, relative);
+            ok = addCurveTo(samples, data, relative);
             break;
         case 'S':
             relative = false;
         case 's':
-            addSmoothCurveto(samples, data, relative);
+            ok = addSmoothCurveTo(samples, data, relative);
             break;
         case 'Q':
             relative = false;
         case 'q':
-            addQuadraticBezierCurveto(samples, data, relative);
+            ok = addQuadraticBezierCurveTo(samples, data, relative);
             break;
         case 'T':
             relative = false;
         case 't':
-            addSmoothQuadraticBezierCurveto(samples, data, relative);
+            ok = addSmoothQuadraticBezierCurveTo(samples, data, relative);
             break;
         case 'A':
             relative = false;
         case 'a':
-            addEllipticalArc(samples, data, relative);
+            ok = addEllipticalArc(samples, data, relative);
             break;
         case 'Z':
         case 'z':
-            data.remove(0, 1);
-            parsePath(data, pa, finishPath(samples, pa, true));
-            return;
+            return parsePath(data, pa, finishPath(samples, pa, true));
             break;
         }
+        if(!ok) return false;
     }
-    if(samples.size() > 1)
+    finishPath(samples, pa);
+    return true;
+}
+
+bool SvgParser::addLineTo(QList<PotentialPoint> & samplingPoints, QString & data, const SvgPresentationAttributes & pa, bool relative)
+{
+    bool hasLooped = false;
+    bool ok;
+    Eigen::Vector2d pos;
+    while(true)
     {
-        finishPath(samples, pa);
+        trimFront(data);
+        pos = getNextCoordinatePair(data, &ok);
+        if(!ok) return hasLooped;
+        hasLooped = true;
+
+        // Don't bother drawing anything if the length is 0
+        if((relative && pos == Eigen::Vector2d(0, 0)) || (!relative && samplingPoints.last().getX() == pos[0] && samplingPoints.last().getY() == pos[1])) continue;
+
+        double x, y, deltaX, deltaY;
+        if(relative) {
+            x = samplingPoints.last().getX() + pos[0];
+            y = samplingPoints.last().getY() + pos[1];
+            deltaX = pos[0];
+            deltaY = pos[1];
+        }
+        else {
+            x = pos[0];
+            y = pos[1];
+            deltaX = x - samplingPoints.last().getX();
+            deltaY = y - samplingPoints.last().getY();
+        }
+
+        samplingPoints.last().setRightTangent(qAtan2(deltaY, deltaX));
+        samplingPoints.append(PotentialPoint(x, y, pa.strokeWidth));
+        samplingPoints.last().setLeftTangent(qAtan2(-deltaY, -deltaX));
     }
 }
 
-void SvgParser::addMoveto(QVector<VectorAnimationComplex::EdgeSample> & samplingPoints, QString & data, bool relative) {}
-void SvgParser::addLineto(QVector<VectorAnimationComplex::EdgeSample> & samplingPoints, QString & data, bool relative) {}
-void SvgParser::addVerticalLineto(QVector<VectorAnimationComplex::EdgeSample> & samplingPoints, QString & data, bool relative) {}
-void SvgParser::addHorizontalLineto(QVector<VectorAnimationComplex::EdgeSample> & samplingPoints, QString & data, bool relative) {}
-void SvgParser::addCurveto(QVector<VectorAnimationComplex::EdgeSample> & samplingPoints, QString & data, bool relative) {}
-void SvgParser::addSmoothCurveto(QVector<VectorAnimationComplex::EdgeSample> & samplingPoints, QString & data, bool relative) {}
-void SvgParser::addQuadraticBezierCurveto(QVector<VectorAnimationComplex::EdgeSample> & samplingPoints, QString & data, bool relative) {}
-void SvgParser::addSmoothQuadraticBezierCurveto(QVector<VectorAnimationComplex::EdgeSample> & samplingPoints, QString & data, bool relative) {}
-void SvgParser::addEllipticalArc(QVector<VectorAnimationComplex::EdgeSample> & samplingPoints, QString & data, bool relative) {}
-Eigen::Vector2d SvgParser::finishPath(QVector<VectorAnimationComplex::EdgeSample> & samplingPoints, const SvgPresentationAttributes pa, bool closed)
+bool SvgParser::addVerticalLineTo(QList<PotentialPoint> & samplingPoints, QString & data, const SvgPresentationAttributes & pa, bool relative)
 {
-    return Eigen::Vector2d(0, 0);
+    bool hasLooped = false, ok;
+    double dist;
+    while(true) {
+        // Try to find number
+        dist = getNextDouble(data, &ok);
+        if(!ok) break;
+
+        if(!addLineTo(samplingPoints, QString::number(relative ? 0 : samplingPoints.last().getX()).append(",").append(QString::number(dist)), pa, relative))
+        {
+            return false;
+        }
+        hasLooped = true;
+    }
+    return hasLooped;
+}
+
+bool SvgParser::addHorizontalLineTo(QList<PotentialPoint> & samplingPoints, QString & data, const SvgPresentationAttributes & pa, bool relative)
+{
+    bool hasLooped = false, ok;
+    double dist;
+    while(true) {
+        // Try to find number
+        dist = getNextDouble(data, &ok);
+        if(!ok) break;
+
+        if(!addLineTo(samplingPoints, QString::number(dist).append(",").append(QString::number(relative ? 0 : samplingPoints.last().getY())), pa, relative))
+        {
+            return false;
+        }
+        hasLooped = true;
+    }
+    return hasLooped;
+}
+
+bool SvgParser::addCurveTo(QList<PotentialPoint> & samplingPoints, QString & data, bool relative) {}
+bool SvgParser::addSmoothCurveTo(QList<PotentialPoint> & samplingPoints, QString & data, bool relative) {}
+bool SvgParser::addQuadraticBezierCurveTo(QList<PotentialPoint> & samplingPoints, QString & data, bool relative) {}
+bool SvgParser::addSmoothQuadraticBezierCurveTo(QList<PotentialPoint> & samplingPoints, QString & data, bool relative) {}
+bool SvgParser::addEllipticalArc(QList<PotentialPoint> & samplingPoints, QString & data, bool relative) {}
+
+/** Finishes a path (or subpath), closing and creating faces as necessary
+ *
+ * @returns Position of end point
+ */
+Eigen::Vector2d SvgParser::finishPath(QList<PotentialPoint> & samplingPoints, const SvgPresentationAttributes pa, bool closed)
+{
+    if(samplingPoints.size() < 2) {
+        return Eigen::Vector2d(0, 0);
+    }
+
+    // If the endpoints are not the same, join endpoints on a closed path or a path with a face
+    // TODO consider making EdgeSample equality operators
+    if((closed || pa.hasFill()) && samplingPoints.first().distanceTo(samplingPoints.last()) == 0) {
+        if(!addLineTo(samplingPoints, QString::number(samplingPoints.first().getX()).append(",").append(QString::number(samplingPoints.first().getY())), pa, false)) {
+            return Eigen::Vector2d(0, 0);
+        }
+    }
+
+    QVector<VectorAnimationComplex::KeyVertex *> v;
+    QVector<VectorAnimationComplex::KeyEdge *> e;
+
+    SculptCurve::Curve<VectorAnimationComplex::EdgeSample> curC;
+    for(PotentialPoint point : samplingPoints)
+    {
+        if(!point.isSmooth()) {
+            // The point is non-smooth, so close off the current curve if necessary and make a new vertex
+            VectorAnimationComplex::KeyVertex * newV = global()->currentVAC()->newKeyVertex(global()->activeTime(), Eigen::Vector2d(point.getX(), point.getY()));
+            if(curC.size() != 0)
+            {
+                curC.continueSketch(point.getEdgeSample());
+                curC.endSketch();
+                e.push_back(global()->currentVAC()->newKeyEdge(global()->activeTime(), v.last(), newV, (new VectorAnimationComplex::LinearSpline(curC)), pa.strokeWidth));
+                e.last()->setColor(pa.stroke);
+            }
+            v.push_back(newV);
+            curC.beginSketch(point.getEdgeSample());
+        }
+        else {
+            curC.continueSketch(point.getEdgeSample());
+        }
+    }
+
+    if(closed) {
+        e.push_back(global()->currentVAC()->newKeyEdge(global()->activeTime(), v.last(), v.first(), new VectorAnimationComplex::LinearSpline(SculptCurve::Curve<VectorAnimationComplex::EdgeSample>(samplingPoints.last().getEdgeSample(), samplingPoints.first().getEdgeSample())), pa.strokeWidth));
+        e.last()->setColor(pa.stroke);
+    }
+    else if(pa.hasFill()) {
+        e.push_back(global()->currentVAC()->newKeyEdge(global()->activeTime(), v.last(), v.first(), new VectorAnimationComplex::LinearSpline(SculptCurve::Curve<VectorAnimationComplex::EdgeSample>(samplingPoints.last().getEdgeSample(), samplingPoints.first().getEdgeSample())), 0));
+        e.last()->setColor(QColor());
+    }
+
+    if(pa.hasFill()) {
+        QList<VectorAnimationComplex::KeyHalfedge> halfEdges;
+        for(auto edge : e) {
+            halfEdges.append(VectorAnimationComplex::KeyHalfedge(edge, true));
+        }
+        VectorAnimationComplex::Cycle cycle(halfEdges);
+        VectorAnimationComplex::KeyFace * face = global()->currentVAC()->newKeyFace(cycle);
+        face->setColor(pa.fill);
+    }
+
+    return Eigen::Vector2d(samplingPoints.last().getX(), samplingPoints.last().getY());
 }
 
 void SvgParser::readSvg_(XmlStreamReader & xml)
@@ -778,6 +928,10 @@ void SvgParser::readSvg_(XmlStreamReader & xml)
                 {
                     if(!readEllipse_(xml)) return;
                 }
+                else if(xml.name() == "path")
+                {
+                    if(!readPath_(xml)) return;
+                }
 
                 xml.skipCurrentElement();
             }
@@ -798,8 +952,7 @@ SvgPresentationAttributes::SvgPresentationAttributes(XmlStreamReader &xml, SvgPa
     if(!okay) strokeWidth = 1;
 
     // Fill (color)
-    fill = xml.attributes().hasAttribute("fill") ? parser.parseColor_(xml.attributes().value("fill").toString()) : QColor("black");
-    if(!fill.isValid()) fill = QColor("black");
+    fill = xml.attributes().hasAttribute("fill") ? parser.parseColor_(xml.attributes().value("fill").toString()) : QColor();
 
     // Stroke (color)
     stroke = xml.attributes().hasAttribute("stroke") ? parser.parseColor_(xml.attributes().value("stroke").toString()) : QColor("none");
@@ -828,49 +981,67 @@ SvgPresentationAttributes::SvgPresentationAttributes(XmlStreamReader &xml, SvgPa
     }
 }
 
-// For coordinate pair detection *with optional comma-wsp* which applies only to path elements, not polylines/polygons
-Eigen::Vector2d SvgParser::getNextCoordinatePair(QString & orig, bool * ok)
+double SvgParser::getNextDouble(QString & source, bool *ok)
 {
-    QString s(static_cast<const QString>(orig));
-
-    // Find first number
     QRegExp realNumberExp("[+\\-]?(([0-9]+\\.?[0-9]*) | (\\.[0-9]+))([Ee][0-9]+)?");
-    if(realNumberExp.indexIn(s) != 0)
+    if(realNumberExp.indexIn(source) != 0)
     {
         *ok = false;
-        return Eigen::Vector2d(0, 0);
+        return 1;
     }
-    double x = realNumberExp.cap(0).toDouble(ok);
-    if(!ok)
+
+    double res = realNumberExp.cap(0).toDouble(ok);
+    if(!*ok)
     {
-        return Eigen::Vector2d(0, 0);
+        return 1;
     }
-    s.remove(0, realNumberExp.cap(0).length());
+
+    source.remove(0, realNumberExp.cap(0).length());
+
+    return res;
+}
+
+// For coordinate pair detection *with optional comma-wsp* which applies only to path elements, not polylines/polygons
+Eigen::Vector2d SvgParser::getNextCoordinatePair(QString & source, bool * ok)
+{
+    QString s(static_cast<const QString>(source));
+
+    // Find first number
+    double x = getNextDouble(source, ok);
+    if(!*ok) return Eigen::Vector2d(0, 0);
 
     // Move past whitespace
-    while(!s.isEmpty() && (s[0] == 0x20 || s[0] == 0x9 || s[0] == 0xD || s[0] == 0xA)) s.remove(0, 1);
+    trimFront(s);
     // Check for comma
     if(s[0] == ',')
     {
         s.remove(0, 1);
         // Move past whitespace
-        while(!s.isEmpty() && (s[0] == 0x20 || s[0] == 0x9 || s[0] == 0xD || s[0] == 0xA)) s.remove(0, 1);
+        trimFront(s);
     }
 
     // Find second number
-    if(realNumberExp.indexIn(s) != 0)
-    {
-        *ok = false;
-        return Eigen::Vector2d(0, 0);
-    }
-    double y = realNumberExp.cap(0).toDouble(ok);
-    if(!ok)
-    {
-        return Eigen::Vector2d(0, 0);
-    }
-    s.remove(0, realNumberExp.cap(0).length());
+    double y = getNextDouble(source, ok);
+    if(!*ok) return Eigen::Vector2d(0, 0);
 
-    orig = s;
+    source = s;
     *ok = true;
     return Eigen::Vector2d(x, y);
+}
+
+void SvgParser::trimFront(QString & string, QVector<QChar> charactersToRemove) {
+    int i = 0;
+    while(charactersToRemove.contains(string.at(0))) i++;
+    if(i > 0) string.remove(0, i);
+}
+
+void SvgParser::populateSamplesRecursive(double paramVal, double paramSpan, QList<PotentialPoint> & edgeSamples, QList<PotentialPoint>::iterator pointLoc, double strokeWidth, double ds, std::function<Eigen::Vector2d (double)> getPoint)
+{
+    if((*pointLoc).distanceTo(*(pointLoc+1)) <= ds) return;
+
+    Eigen::Vector2d newPoint = getPoint(paramVal);
+    edgeSamples.insert(pointLoc, VectorAnimationComplex::EdgeSample(newPoint[0], newPoint[1]));
+
+    populateSamplesRecursive(paramVal + paramSpan / 4, paramSpan / 2, edgeSamples, pointLoc, strokeWidth, ds, getPoint);
+    populateSamplesRecursive(paramVal - paramSpan / 4, paramSpan / 2, edgeSamples, pointLoc-1, strokeWidth, ds, getPoint);
 }
