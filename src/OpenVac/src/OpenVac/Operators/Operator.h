@@ -177,17 +177,19 @@ protected:
 
     OPENVAC_FOREACH_FINAL_CELL_TYPE(OPENVAC_OPERATOR_NEW_CELL_)
 
+    /// Comment to un-confuse Doxygen
+
     #define OPENVAC_OPERATOR_GET_CELL_(CellType) \
         /** Returns the cell data of an existing CellType to be modified  */ \
         /** by the Operator. Returns nullptr if no cell with the given ID */ \
         /** exists, or if it exists but is not of the requested type.     */ \
-    /** Aborts if the requested cell has been deleted by the Operator */ \
-    /** subclass. */ \
+        /** Aborts if the requested cell has been deleted by the Operator */ \
+        /** subclass.                                                     */ \
         /** This method is provided for use in the subclass               */ \
         /** implementations of compute_().                                */ \
-        CellType##Data<Ids> * get##CellType(CellType##Id outId) \
+        CellType##Data<Ids> * get##CellType(CellType##Id id) \
         { \
-            return getCell_<CellType##Data<Ids>>(outId); \
+            return getCell_<CellType##Data<Ids>>(id); \
         }
 
     OPENVAC_FOREACH_FINAL_CELL_TYPE(OPENVAC_OPERATOR_GET_CELL_)

@@ -20,12 +20,13 @@ namespace OpenVac
 class OpMakeKeyVertex: public Operator
 {
 public:
-    // Override compute and apply.
+    /// Overrides compute to return derived type.
     OpMakeKeyVertex & compute(const Vac & vac) { Operator::compute(vac); return *this; }
+
+    /// Overrides apply to return derived type.
     OpMakeKeyVertex & apply(Vac & vac)         { Operator::apply(vac);   return *this; }
 
     /// Constructs an OpMakeKeyVertex.
-    ///
     OpMakeKeyVertex(
             const Geometry::Frame & frame = Geometry::Frame(),
             const Geometry::KeyVertexGeometry & geometry = Geometry::KeyVertexGeometry()) :
@@ -35,7 +36,6 @@ public:
     }
 
     /// Returns the ID of the created key vertex. Aborts if can't be applied.
-    ///
     KeyVertexId keyVertexId() const
     {
         assert(canBeApplied());

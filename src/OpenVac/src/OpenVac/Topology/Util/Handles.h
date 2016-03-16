@@ -15,10 +15,11 @@
 namespace OpenVac
 {
 
-/************* Forward declare Cell and CellHandle classes *******************/
+/************* Define and CellHandle classes *******************/
 
 #define OPENVAC_HANDLES_FORWARD_DECLARE_CELL_(CellType) \
     class CellType; \
+    /** Type alias for Handle<CellType> */ \
     using CellType##Handle = Handle<CellType>;
 
 OPENVAC_FOREACH_CELL_TYPE(OPENVAC_HANDLES_FORWARD_DECLARE_CELL_)
@@ -27,7 +28,7 @@ OPENVAC_FOREACH_CELL_TYPE(OPENVAC_HANDLES_FORWARD_DECLARE_CELL_)
 /********************************* Handles ***********************************/
 
 /// \class Handles OpenVac/Topology/Util/Handles.h
-/// \brief Class that declares CellType##Ref as an alias for
+/// \brief Class that declares CellTypeRef as an alias for
 /// Handle<CellType>, for each cell type.
 ///
 /// Handles is used as the T template argument of the Data classes stored
@@ -36,6 +37,7 @@ OPENVAC_FOREACH_CELL_TYPE(OPENVAC_HANDLES_FORWARD_DECLARE_CELL_)
 class Handles
 {
 #define OPENVAC_HANDLES_USING_HANDLE_AS_REF_(CellType) \
+    /** Type alias for CellType##Handle */ \
     using CellType##Ref = CellType##Handle;
 
 public:

@@ -74,7 +74,7 @@ public:
     {
     }
 
-    /// Copy the given cell data \p 'from' into the given cell data \o 'to',
+    /// Copy the given cell data \p 'from' into the given cell data \p 'to',
     /// translating its references using the \p translator given to the
     /// constructor of this CellDataCopier. Assumes that \p 'from' and
     /// \p 'to' have the same data type, and aborts otherwise.

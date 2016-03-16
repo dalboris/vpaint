@@ -15,7 +15,7 @@
 namespace OpenVac
 {
 
-/// \class Ids OpenVac/Operator/Util/Ids.h
+/// \class Ids OpenVac/Operators/Util/Ids.h
 /// \brief Class that declares CellTypeRef as an alias for CellTypeId, for
 /// each cell type.
 ///
@@ -25,8 +25,7 @@ namespace OpenVac
 class Ids
 {
 #define OPENVAC_IDS_USING_ID_AS_REF_(CellType) \
-    /** \typedef CellType##Ref OpenVac/Core/CellId.h */ \
-    /** Some doc. */ \
+    /** Type alias for CellType##Id */ \
     using CellType##Ref = CellType##Id;
 
 public:

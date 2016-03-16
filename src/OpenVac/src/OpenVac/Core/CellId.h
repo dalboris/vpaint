@@ -7,7 +7,7 @@
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
 /// \file OpenVac/Core/CellId.h
-/// \brief For each cell type CellType, declares CellType##Id as an alias for
+/// \brief For each cell type CellType, declares CellTypeId as an alias for
 ///  unsigned int.
 
 #ifndef OPENVAC_CELL_ID_H
@@ -19,7 +19,7 @@ namespace OpenVac
 {
 
 #define OPENVAC_USING_CELL_ID_(CellType) \
-    /** \typedef CellType##Id OpenVac/Core/CellId.h */ \
+    /** Convenient type alias for unsigned int, for readability */ \
     using CellType##Id = unsigned int;
 
 OPENVAC_FOREACH_CELL_TYPE(OPENVAC_USING_CELL_ID_)

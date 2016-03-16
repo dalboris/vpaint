@@ -22,18 +22,14 @@ namespace OpenVac
 
 /******************************** SharedPtr **********************************/
 
-/// \typedef OpenVac::UniquePtr OpenVac/Core/Memory.h
-/// \brief Alias for std::unique_ptr
-///
+/// Alias for std::unique_ptr.
 template <class T>
 using UniquePtr = std::unique_ptr<T>;
 
 
 /******************************** SharedPtr **********************************/
 
-/// \typedef OpenVac::SharedPtr OpenVac/Core/Memory.h
-/// \brief Alias for std::shared_ptr
-///
+/// Alias for std::shared_ptr.
 template <class T>
 using SharedPtr = std::shared_ptr<T>;
 

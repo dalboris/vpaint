@@ -21,12 +21,13 @@ namespace OpenVac
 class OpMakeKeyOpenEdge: public Operator
 {
 public:
-    // Override compute and apply.
+    /// Overrides compute to return derived type.
     OpMakeKeyOpenEdge & compute(const Vac & vac) { Operator::compute(vac); return *this; }
+
+    /// Overrides apply to return derived type.
     OpMakeKeyOpenEdge & apply(Vac & vac)         { Operator::apply(vac);   return *this; }
 
     /// Constructs an OpMakeKeyOpenEdge.
-    ///
     OpMakeKeyOpenEdge(
             KeyVertexId startVertexId,
             KeyVertexId endVertexId,
@@ -38,7 +39,6 @@ public:
     }
 
     /// Returns the ID of created key edge. Aborts if can't be applied.
-    ///
     KeyEdgeId keyEdgeId() const
     {
         assert(canBeApplied());
