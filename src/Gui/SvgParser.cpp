@@ -496,30 +496,24 @@ bool SvgParser::readCircle_(XmlStreamReader &xml)
     v.push_back(global()->currentVAC()->newKeyVertex(global()->activeTime(), Eigen::Vector2d(cx, cy + r)));
     v.push_back(global()->currentVAC()->newKeyVertex(global()->activeTime(), Eigen::Vector2d(cx - r, cy)));
     v.push_back(global()->currentVAC()->newKeyVertex(global()->activeTime(), Eigen::Vector2d(cx, cy - r)));
-    QVector<SculptCurve::Curve<VectorAnimationComplex::EdgeSample> > c(4);
     QVector<VectorAnimationComplex::KeyEdge *> e(4);
 
-    // The number of sampling segments in a quarter of a circle
-    double quarterSegments = qCeil(r * M_PI_2 / c[0].ds());
-    // Angle with at most arc length of ds
-    double dsAngle = M_PI_2 / quarterSegments;
-
     for(int i = 0; i < 4; i++) {
-        // Set vertex color
-        v[i]->setColor(pa.stroke);
+        QList<PotentialPoint> es;
+        es.push_back(PotentialPoint(v[i]->pos(), pa.strokeWidth));
+        es.push_back(PotentialPoint(v[(i+1)%4]->pos(), pa.strokeWidth));
+        SculptCurve::Curve<VectorAnimationComplex::EdgeSample> newC;
 
-        // Create curve
-        c[i].setEndPoints(VectorAnimationComplex::EdgeSample(v[i]->pos()[0], v[i]->pos()[1], pa.strokeWidth), VectorAnimationComplex::EdgeSample(v[(i+1)%4]->pos()[0], v[(i+1)%4]->pos()[1], pa.strokeWidth));
-        c[i].beginSketch(VectorAnimationComplex::EdgeSample(v[i]->pos()[0], v[i]->pos()[1], pa.strokeWidth));
-        for(int j = 1; j < quarterSegments; j++) {
-            c[i].continueSketch(VectorAnimationComplex::EdgeSample(cx + r * qCos(j * dsAngle + M_PI_2 * i), cy + r * qSin(j * dsAngle + M_PI_2 * i), pa.strokeWidth));
+        populateSamplesRecursive((i + 0.5) * (M_PI / 2), M_PI / 2, es, es.begin(), pa.strokeWidth, newC.ds(), [&] (const double t) -> Eigen::Vector2d { return Eigen::Vector2d(r * qCos(t) + cx, r * qSin(t) + cy); });
+
+        newC.beginSketch(es.first().getEdgeSample());
+        for(int j = 1; j < es.size(); j++) {
+            newC.continueSketch(es[j].getEdgeSample());
         }
-        c[i].continueSketch(VectorAnimationComplex::EdgeSample(v[(i+1)%4]->pos()[0], v[(i+1)%4]->pos()[1], pa.strokeWidth));
-        c[i].endSketch();
+        newC.endSketch();
 
-        // Create KeyEdge
-        e[i] = global()->currentVAC()->newKeyEdge(global()->activeTime(), v[i], v[(i+1)%4], (new VectorAnimationComplex::LinearSpline(c[i])), pa.strokeWidth);
-        e[i]->setColor(pa.stroke);
+        e.push_back(global()->currentVAC()->newKeyEdge(global()->activeTime(), v[i], v[(i+1)%4], (new VectorAnimationComplex::LinearSpline(newC)), pa.strokeWidth));
+        e.last()->setColor(pa.stroke);
     }
 
     // Add fill
@@ -537,7 +531,6 @@ bool SvgParser::readCircle_(XmlStreamReader &xml)
     return true;
 }
 
-// TODO properly implement this instead of using a stretched circle
 bool SvgParser::readEllipse_(XmlStreamReader &xml)
 {
     // Check to make sure we are reading an ellipse object
