@@ -214,7 +214,7 @@ bool SvgParser::readRect_(XmlStreamReader & xml)
     // Check to make sure we are reading a rect object
     if(xml.name() != "rect") return true;
 
-    bool okay;
+    bool okay = true;
 
     // Get attributes
 
@@ -316,7 +316,7 @@ bool SvgParser::readLine_(XmlStreamReader & xml)
     // Check to make sure we are reading a line object
     if(xml.name() != "line") return true;
 
-    bool okay;
+    bool okay = true;
 
     // Get attributes
 
@@ -358,7 +358,7 @@ bool SvgParser::readPolyline_(XmlStreamReader &xml)
     // Check to make sure we are reading a polyline object
     if(xml.name() != "polyline" || !xml.attributes().hasAttribute("points")) return true;
 
-    bool okay;
+    bool okay = true;
 
     // Get presentation attributes
     SvgPresentationAttributes pa(xml, *this);
@@ -401,7 +401,7 @@ bool SvgParser::readPolygon_(XmlStreamReader &xml)
     // Check to make sure we are reading a polygon object
     if(xml.name() != "polygon" || !xml.attributes().hasAttribute("points")) return true;
 
-    bool okay;
+    bool okay = true;
 
     // Get presentation attributes
     SvgPresentationAttributes pa(xml, *this);
@@ -465,7 +465,7 @@ bool SvgParser::readCircle_(XmlStreamReader &xml)
     // Check to make sure we are reading a circle object
     if(xml.name() != "circle") return true;
 
-    bool okay;
+    bool okay = true;
 
     // Get attributes
 
@@ -543,9 +543,7 @@ bool SvgParser::readEllipse_(XmlStreamReader &xml)
     // Check to make sure we are reading an ellipse object
     if(xml.name() != "ellipse") return true;
 
-    bool okay;
-
-    double r = 500;
+    bool okay = true;
 
     // Get attributes
 
@@ -577,55 +575,34 @@ bool SvgParser::readEllipse_(XmlStreamReader &xml)
 
     // Build verticies and edges
     QVector<VectorAnimationComplex::KeyVertex *> v;
-    v.push_back(global()->currentVAC()->newKeyVertex(global()->activeTime(), Eigen::Vector2d(cx + r, cy)));
-    v.push_back(global()->currentVAC()->newKeyVertex(global()->activeTime(), Eigen::Vector2d(cx, cy + r)));
-    v.push_back(global()->currentVAC()->newKeyVertex(global()->activeTime(), Eigen::Vector2d(cx - r, cy)));
-    v.push_back(global()->currentVAC()->newKeyVertex(global()->activeTime(), Eigen::Vector2d(cx, cy - r)));
-    QVector<SculptCurve::Curve<VectorAnimationComplex::EdgeSample> > c(4);
+    v.push_back(global()->currentVAC()->newKeyVertex(global()->activeTime(), Eigen::Vector2d(cx + rx, cy)));
+    v.push_back(global()->currentVAC()->newKeyVertex(global()->activeTime(), Eigen::Vector2d(cx, cy + ry)));
+    v.push_back(global()->currentVAC()->newKeyVertex(global()->activeTime(), Eigen::Vector2d(cx - rx, cy)));
+    v.push_back(global()->currentVAC()->newKeyVertex(global()->activeTime(), Eigen::Vector2d(cx, cy - ry)));
     QVector<VectorAnimationComplex::KeyEdge *> e(4);
 
-    // The number of sampling segments in a quarter of a circle
-    double quarterSegments = qCeil(r * M_PI_2 / c[0].ds());
-    // Angle with at most arc length of ds
-    double dsAngle = M_PI_2 / quarterSegments;
-
-    Eigen::Translation2d pivot(cx, cy);
-    Eigen::Affine2d transformation(Eigen::Scaling(0.002 * rx, 0.002 * ry));
-    transformation = pivot * transformation * pivot.inverse();
-
     for(int i = 0; i < 4; i++) {
-        // Set vertex color
-        v[i]->setColor(pa.stroke);
+        QList<PotentialPoint> es;
+        es.push_back(PotentialPoint(v[i]->pos(), pa.strokeWidth));
+        es.push_back(PotentialPoint(v[(i+1)%4]->pos(), pa.strokeWidth));
+        SculptCurve::Curve<VectorAnimationComplex::EdgeSample> newC;
 
-        // Create curve
-        c[i].setEndPoints(VectorAnimationComplex::EdgeSample(v[i]->pos()[0], v[i]->pos()[1], pa.strokeWidth), VectorAnimationComplex::EdgeSample(v[(i+1)%4]->pos()[0], v[(i+1)%4]->pos()[1], pa.strokeWidth));
-        c[i].beginSketch(VectorAnimationComplex::EdgeSample(v[i]->pos()[0], v[i]->pos()[1], pa.strokeWidth));
-        for(int j = 1; j < quarterSegments; j++) {
-            c[i].continueSketch(VectorAnimationComplex::EdgeSample(cx + r * qCos(j * dsAngle + M_PI_2 * i), cy + r * qSin(j * dsAngle + M_PI_2 * i), pa.strokeWidth));
+        populateSamplesRecursive((i + 0.5) * (M_PI / 2), M_PI / 2, es, es.begin(), pa.strokeWidth, newC.ds(), [&] (const double t) -> Eigen::Vector2d { return Eigen::Vector2d(rx * qCos(t) + cx, ry * qSin(t) + cy); });
+
+        newC.beginSketch(es.first().getEdgeSample());
+        for(int j = 1; j < es.size(); j++) {
+            newC.continueSketch(es[j].getEdgeSample());
         }
-        c[i].continueSketch(VectorAnimationComplex::EdgeSample(v[(i+1)%4]->pos()[0], v[(i+1)%4]->pos()[1], pa.strokeWidth));
-        c[i].endSketch();
+        newC.endSketch();
 
-        // Create KeyEdge
-        e[i] = global()->currentVAC()->newKeyEdge(global()->activeTime(), v[i], v[(i+1)%4], (new VectorAnimationComplex::LinearSpline(c[i])), pa.strokeWidth);
-        e[i]->setColor(pa.stroke);
-
-        e[i]->prepareAffineTransform();
-        e[i]->performAffineTransform(transformation);
-    }
-
-    for(VectorAnimationComplex::KeyVertex * vertex : v) {
-        vertex->prepareAffineTransform();
-        vertex->performAffineTransform(transformation);
-    }
-
-    for(VectorAnimationComplex::KeyVertex * vertex : v) {
-        vertex->correctEdgesGeometry();
+        e.push_back(global()->currentVAC()->newKeyEdge(global()->activeTime(), v[i], v[(i+1)%4], (new VectorAnimationComplex::LinearSpline(newC)), pa.strokeWidth));
+        e.last()->setColor(pa.stroke);
     }
 
     // Add fill
-    if(xml.attributes().value("fill").trimmed() != "none")
+    if(pa.hasFill())
     {
+        qDebug() << "has fill" << endl;
         QList<VectorAnimationComplex::KeyHalfedge> edges;
         for(VectorAnimationComplex::KeyEdge * edge : e)
         {
@@ -945,7 +922,7 @@ void SvgParser::readSvg_(XmlStreamReader & xml)
 }
 
 SvgPresentationAttributes::SvgPresentationAttributes(XmlStreamReader &xml, SvgParser & parser) {
-    bool okay;
+    bool okay = true;
 
     // Stroke width
     strokeWidth = xml.attributes().hasAttribute("stroke-width") ? qMax(0.0, xml.attributes().value("stroke-width").toDouble(&okay)) : 1;
@@ -1035,13 +1012,16 @@ void SvgParser::trimFront(QString & string, QVector<QChar> charactersToRemove) {
     if(i > 0) string.remove(0, i);
 }
 
-void SvgParser::populateSamplesRecursive(double paramVal, double paramSpan, QList<PotentialPoint> & edgeSamples, QList<PotentialPoint>::iterator pointLoc, double strokeWidth, double ds, std::function<Eigen::Vector2d (double)> getPoint)
+QList<PotentialPoint>::iterator SvgParser::populateSamplesRecursive(double paramVal, double paramSpan, QList<PotentialPoint> & edgeSamples, QList<PotentialPoint>::iterator pointLoc, double strokeWidth, double ds, std::function<Eigen::Vector2d (double)> getPoint)
 {
-    if((*pointLoc).distanceTo(*(pointLoc+1)) <= ds) return;
+    //if((*pointLoc).distanceTo(*(pointLoc+1)) <= ds) return;
 
     Eigen::Vector2d newPoint = getPoint(paramVal);
-    edgeSamples.insert(pointLoc, VectorAnimationComplex::EdgeSample(newPoint[0], newPoint[1]));
+    VectorAnimationComplex::EdgeSample newSample(newPoint[0], newPoint[1], strokeWidth);
+    if(newSample.distanceTo(pointLoc->getEdgeSample()) < ds / 2 || newSample.distanceTo((pointLoc+1)->getEdgeSample()) < ds / 2) return pointLoc;
+    pointLoc = edgeSamples.insert(pointLoc+1, newSample);
 
-    populateSamplesRecursive(paramVal + paramSpan / 4, paramSpan / 2, edgeSamples, pointLoc, strokeWidth, ds, getPoint);
-    populateSamplesRecursive(paramVal - paramSpan / 4, paramSpan / 2, edgeSamples, pointLoc-1, strokeWidth, ds, getPoint);
+    pointLoc = populateSamplesRecursive(paramVal + paramSpan / 4, paramSpan / 2, edgeSamples, pointLoc, strokeWidth, ds, getPoint);
+    pointLoc = populateSamplesRecursive(paramVal - paramSpan / 4, paramSpan / 2, edgeSamples, pointLoc-1, strokeWidth, ds, getPoint);
+    return pointLoc;
 }

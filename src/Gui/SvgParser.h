@@ -76,7 +76,7 @@ public:
     double getNextDouble(QString & source, bool * ok = 0);
     Eigen::Vector2d getNextCoordinatePair(QString & source, bool * ok = 0);
     void trimFront(QString & string, QVector<QChar> chars = { 0x20, 0x9, 0xD, 0xA });
-    void populateSamplesRecursive(double paramVal, double paramSpan, QList<PotentialPoint> & edgeSamples, QList<PotentialPoint>::iterator pointLoc, double strokeWidth, double ds, std::function<Eigen::Vector2d (double)> getPoint);
+    QList<PotentialPoint>::iterator populateSamplesRecursive(double paramVal, double paramSpan, QList<PotentialPoint> & edgeSamples, QList<PotentialPoint>::iterator pointLoc, double strokeWidth, double ds, std::function<Eigen::Vector2d (double)> getPoint);
 
     // Path things
     bool parsePath(QString & data, const SvgPresentationAttributes & pa, const Eigen::Vector2d startPos = Eigen::Vector2d(0, 0));
