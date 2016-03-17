@@ -83,7 +83,7 @@ public:
     bool addLineTo(QList<PotentialPoint> & samplingPoints, QString & data, const SvgPresentationAttributes & pa, bool relative);
     bool addVerticalLineTo(QList<PotentialPoint> & samplingPoints, QString & data, const SvgPresentationAttributes & pa, bool relative);
     bool addHorizontalLineTo(QList<PotentialPoint> & samplingPoints, QString & data, const SvgPresentationAttributes & pa, bool relative);
-    bool addCurveTo(QList<PotentialPoint> & samplingPoints, QString & data, bool relative);
+    bool addCurveTo(QList<PotentialPoint> & samplingPoints, QString & data, const SvgPresentationAttributes &pa, bool relative);
     bool addSmoothCurveTo(QList<PotentialPoint> & samplingPoints, QString & data, bool relative);
     bool addQuadraticBezierCurveTo(QList<PotentialPoint> & samplingPoints, QString & data, bool relative);
     bool addSmoothQuadraticBezierCurveTo(QList<PotentialPoint> & samplingPoints, QString & data, bool relative);
