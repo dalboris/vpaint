@@ -20,7 +20,7 @@ class QScrollArea;
 class Scene;
 class GLWidget;
 class MultiView;
-class View;
+class ViewOld;
 class View3D;
 class Timeline;
 class DevSettings;
@@ -51,8 +51,8 @@ public:
     ~MainWindow();
 
     Scene * scene() const;
-    View * activeView() const;
-    View * hoveredView() const;
+    ViewOld * activeView() const;
+    ViewOld * hoveredView() const;
     Timeline * timeline() const;
 
     bool isShowCanvasChecked() const;

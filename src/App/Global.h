@@ -35,7 +35,7 @@ class ToolModeAction;
 class ColorSelector;
 class QColor;
 class SettingsDialog;
-class View;
+class ViewOld;
 class Timeline;
 class Scene;
 
@@ -115,8 +115,8 @@ public:
     bool showCanvas() const;
 
     // Active View and time
-    View * activeView() const;
-    View * hoveredView() const;
+    ViewOld * activeView() const;
+    ViewOld * hoveredView() const;
     Time activeTime() const;
     Timeline * timeline() const;
 

@@ -19,7 +19,7 @@
 
 #include <QWidget>
 
-class View;
+class ViewOld;
 class Scene;
 
 class ViewMacOsX: public QWidget
@@ -28,10 +28,10 @@ class ViewMacOsX: public QWidget
 
 public:
     ViewMacOsX(Scene * scene, QWidget *parent);
-    View * view() const;
+    ViewOld * view() const;
 
 private:
-    View * view_;
+    ViewOld * view_;
 };
 
 #endif // VIEWMACOSX_H

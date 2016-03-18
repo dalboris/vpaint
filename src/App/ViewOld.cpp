@@ -6,7 +6,7 @@
 // license terms and conditions in the LICENSE.MIT file found in the top-level
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
-#include "View.h"
+#include "ViewOld.h"
 
 #include "Scene.h"
 #include "Timeline.h"
@@ -47,7 +47,7 @@
 
 #define  PAINT_ACTION                                       400
 
-View::View(Scene * scene, QWidget * parent) :
+ViewOld::ViewOld(Scene * scene, QWidget * parent) :
     GLWidget(parent, true),
     scene_(scene),
     pickingImg_(0),
@@ -82,12 +82,12 @@ View::View(Scene * scene, QWidget * parent) :
     connect(global(), SIGNAL(keyboardModifiersChanged()), this, SLOT(handleNewKeyboardModifiers()));
 }
 
-View::~View()
+ViewOld::~ViewOld()
 {
     deletePicking();
 }
 
-void View::initCamera()
+void ViewOld::initCamera()
 {
     // Set 100% zoom and center canvas in view
     GLWidget_Camera2D camera;
@@ -97,12 +97,12 @@ void View::initCamera()
     setCamera2D(camera);
 }
 
-Scene * View::scene()
+Scene * ViewOld::scene()
 {
     return scene_;
 }
 
-void View::resizeEvent(QResizeEvent * event)
+void ViewOld::resizeEvent(QResizeEvent * event)
 {
     if(autoCenterScene_)
         initCamera();
@@ -110,24 +110,24 @@ void View::resizeEvent(QResizeEvent * event)
     GLWidget::resizeEvent(event);
 }
 
-void View::resizeGL(int width, int height)
+void ViewOld::resizeGL(int width, int height)
 {
     GLWidget::resizeGL(width, height);
     updatePicking();
 }
 
-void View::keyPressEvent(QKeyEvent *event)
+void ViewOld::keyPressEvent(QKeyEvent *event)
 {
     event->ignore();
 }
 
 
-void View::keyReleaseEvent(QKeyEvent *event)
+void ViewOld::keyReleaseEvent(QKeyEvent *event)
 {
     event->ignore();
 }
 
-void View::handleNewKeyboardModifiers()
+void ViewOld::handleNewKeyboardModifiers()
 {
     vac_ = scene_->vectorAnimationComplex();
 
@@ -141,7 +141,7 @@ void View::handleNewKeyboardModifiers()
     emit allViewsNeedToUpdate();
 }
 
-MouseEvent View::mouseEvent() const
+MouseEvent ViewOld::mouseEvent() const
 {
     MouseEvent me;
     me.x = mouse_Event_XScene_;
@@ -155,7 +155,7 @@ MouseEvent View::mouseEvent() const
     return me;
 }
 
-void View::update()
+void ViewOld::update()
 {
     GLWidget_Camera2D c = camera2D();
     c.setZoom(viewSettings_.zoom());
@@ -163,7 +163,7 @@ void View::update()
     updateGL();
 }
 
-void View::updateZoomFromView()
+void ViewOld::updateZoomFromView()
 {
     viewSettings_.setZoom(zoom());
     viewSettingsWidget_->updateWidgetFromSettings();
@@ -173,7 +173,7 @@ void View::updateZoomFromView()
     setCamera2D(c);
 }
 
-int View::decideClicAction()
+int ViewOld::decideClicAction()
 {
     vac_ = scene_->vectorAnimationComplex();
 
@@ -241,7 +241,7 @@ int View::decideClicAction()
     return GLWidget::decideClicAction();
 }
 
-int View::decidePMRAction()
+int ViewOld::decidePMRAction()
 {
     vac_ = scene_->vectorAnimationComplex();
 
@@ -370,28 +370,28 @@ int View::decidePMRAction()
     return GLWidget::decidePMRAction();
 }
 
-int View::activeFrame() const
+int ViewOld::activeFrame() const
 {
     return std::floor(viewSettings_.time().floatTime());
 }
 
-Time View::activeTime() const
+Time ViewOld::activeTime() const
 {
     return viewSettings_.time();
 }
 
-void View::setActiveTime(Time t)
+void ViewOld::setActiveTime(Time t)
 {
     viewSettings_.setTime(t);
     viewSettingsWidget_->updateWidgetFromSettings();
 }
 
-void View::setActive(bool isActive)
+void ViewOld::setActive(bool isActive)
 {
     viewSettingsWidget_->setActive(isActive);
 }
 
-void View::ClicEvent(int action, double x, double y)
+void ViewOld::ClicEvent(int action, double x, double y)
 {
     // It is View's responsibility to call update() or updatePicking()
 
@@ -491,7 +491,7 @@ void View::ClicEvent(int action, double x, double y)
     }
 }
 
-void View::MoveEvent(double x, double y)
+void ViewOld::MoveEvent(double x, double y)
 {
     // Boolean deciding if the scene must be redrawn even though only the mouse
     // has moved with no action performed. This is possible because depending on
@@ -550,13 +550,13 @@ void View::MoveEvent(double x, double y)
     }
 }
 
-Time View::interactiveTime() const
+Time ViewOld::interactiveTime() const
 {
     return viewSettings_.time();
 }
 
 
-void View::PMRPressEvent(int action, double x, double y)
+void ViewOld::PMRPressEvent(int action, double x, double y)
 {
     currentAction_ = action;
 
@@ -707,7 +707,7 @@ void View::PMRPressEvent(int action, double x, double y)
         GLWidget::PMRPressEvent(action, x, y);
 }
 
-void View::PMRMoveEvent(int action, double x, double y)
+void ViewOld::PMRMoveEvent(int action, double x, double y)
 {
     global()->setSceneCursorPos(Eigen::Vector2d(x,y));
 
@@ -874,7 +874,7 @@ void View::PMRMoveEvent(int action, double x, double y)
     else
         GLWidget::PMRMoveEvent(action, x, y);
 }
-void View::PMRReleaseEvent(int action, double x, double y)
+void ViewOld::PMRReleaseEvent(int action, double x, double y)
 {
     currentAction_ = 0;
 
@@ -961,7 +961,7 @@ void View::PMRReleaseEvent(int action, double x, double y)
  *              DRAWING
  */
 
-void View::drawBackground_(Background * background, int frame)
+void ViewOld::drawBackground_(Background * background, int frame)
 {
     backgroundRenderers_[background]->draw(
                 frame,
@@ -970,7 +970,7 @@ void View::drawBackground_(Background * background, int frame)
                 xSceneMin(), xSceneMax(), ySceneMin(), ySceneMax());
 }
 
-void View::drawScene()
+void ViewOld::drawScene()
 {
     if(!mouse_HideCursor_)
     {
@@ -1057,45 +1057,45 @@ void View::drawScene()
     }
 }
 
-void View::toggleOutline()
+void ViewOld::toggleOutline()
 {
     viewSettings_.toggleOutline();
     viewSettingsWidget_->updateWidgetFromSettings();
     update();
 }
 
-void View::toggleOutlineOnly()
+void ViewOld::toggleOutlineOnly()
 {
     viewSettings_.toggleOutlineOnly();
     viewSettingsWidget_->updateWidgetFromSettings();
     update();
 }
 
-void View::setDisplayMode(ViewSettings::DisplayMode displayMode)
+void ViewOld::setDisplayMode(ViewSettings::DisplayMode displayMode)
 {
     viewSettings_.setDisplayMode(displayMode);
     viewSettingsWidget_->updateWidgetFromSettings();
     update();
 }
 
-void View::setOnionSkinningEnabled(bool enabled)
+void ViewOld::setOnionSkinningEnabled(bool enabled)
 {
     viewSettings_.setOnionSkinningIsEnabled(enabled);
     viewSettingsWidget_->updateWidgetFromSettings();
     update();
 }
 
-void View::fitAllInWindow()
+void ViewOld::fitAllInWindow()
 {
     // TODO
 }
 
-void View::fitSelectionInWindow()
+void ViewOld::fitSelectionInWindow()
 {
     // TODO
 }
 
-double View::zoom() const
+double ViewOld::zoom() const
 {
     return camera2D().zoom();
 }
@@ -1109,17 +1109,17 @@ double View::zoom() const
 //       where the (xi,yi)'s are the four corners of the viewport in
 //       scene coordinate, which in general will not be axis-aligned
 
-double  View::xSceneMin() const
+double  ViewOld::xSceneMin() const
 {
     return - camera2D().x() / zoom();
 }
 
-double  View::ySceneMin() const
+double  ViewOld::ySceneMin() const
 {
     return - camera2D().y() / zoom();
 }
 
-double  View::xSceneMax() const
+double  ViewOld::xSceneMax() const
 {
     double x = xSceneMin();
     double w = width();
@@ -1128,7 +1128,7 @@ double  View::xSceneMax() const
     return x+w/z;
 }
 
-double  View::ySceneMax() const
+double  ViewOld::ySceneMax() const
 {
     double x = ySceneMin();
     double w = height();
@@ -1137,12 +1137,12 @@ double  View::ySceneMax() const
     return x+w/z;
 }
 
-ViewSettings View::viewSettings() const
+ViewSettings ViewOld::viewSettings() const
 {
     return viewSettings_;
 }
 
-ViewSettingsWidget * View::viewSettingsWidget() const
+ViewSettingsWidget * ViewOld::viewSettingsWidget() const
 {
     return viewSettingsWidget_;
 }
@@ -1152,7 +1152,7 @@ ViewSettingsWidget * View::viewSettingsWidget() const
  *              PICKING
  */
 
-void View::drawPick()
+void ViewOld::drawPick()
 {
     Time t = activeTime();
     {
@@ -1189,7 +1189,7 @@ void View::drawPick()
     }
 }
 
-bool View::updateHoveredObject(int x, int y)
+bool ViewOld::updateHoveredObject(int x, int y)
 {
     // make sure this does NOT redraw the scene, just change its highlighted status.
 
@@ -1235,14 +1235,14 @@ bool View::updateHoveredObject(int x, int y)
     return hasChanged;
 }
 
-uchar * View::pickingImg(int x, int y)
+uchar * ViewOld::pickingImg(int x, int y)
 {
     int k = 4*( (WINDOW_SIZE_Y_ - y - 1)*WINDOW_SIZE_X_ + x);
     return &pickingImg_[k];
 }
 
 // This method must be very fast. Assumes x and y in range
-Picking::Object View::getCloserObject(int x, int y)
+Picking::Object ViewOld::getCloserObject(int x, int y)
 {
     // First look directly whether there's an object right at mouse position
     uchar * p = pickingImg(x,y);
@@ -1310,7 +1310,7 @@ Picking::Object View::getCloserObject(int x, int y)
     }
 }
 
-void View::deletePicking()
+void ViewOld::deletePicking()
 {
     if(pickingImg_)
     {
@@ -1325,7 +1325,7 @@ void View::deletePicking()
     }
 }
 
-void View::newPicking()
+void ViewOld::newPicking()
 {
     //  code adapted from http://www.songho.ca/opengl/gl_fbo.html
 
@@ -1398,12 +1398,12 @@ void View::newPicking()
 #include <QElapsedTimer>
 #include <QtDebug>
 
-void View::enablePicking()
+void ViewOld::enablePicking()
 {
     pickingIsEnabled_ = true;
 }
 
-void View::disablePicking()
+void ViewOld::disablePicking()
 {
     pickingIsEnabled_ = false;
 }
@@ -1419,12 +1419,12 @@ void imageCleanupHandler(void * info)
 
 }
 
-QImage View::drawToImage(double x, double y, double w, double h, int imgW, int imgH)
+QImage ViewOld::drawToImage(double x, double y, double w, double h, int imgW, int imgH)
 {
     return drawToImage(activeTime(), x, y, w, h, imgW, imgH);
 }
 
-QImage View::drawToImage(Time t, double x, double y, double w, double h, int imgW, int imgH)
+QImage ViewOld::drawToImage(Time t, double x, double y, double w, double h, int imgW, int imgH)
 {
     // Test availability of OpenGL functionality
     if(!GLEW_VERSION_2_0) {
@@ -1635,7 +1635,7 @@ QImage View::drawToImage(Time t, double x, double y, double w, double h, int img
     return res;
 }
 
-void View::updatePicking()
+void ViewOld::updatePicking()
 {
     // Remove previously highlighted object
     hoveredObject_ = Picking::Object();

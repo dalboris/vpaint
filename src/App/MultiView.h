@@ -14,7 +14,7 @@
 #include <QGridLayout>
 
 class Scene;
-class View;
+class ViewOld;
 class ViewMacOsX;
 class QSplitter;
 class GLWidget;
@@ -23,7 +23,7 @@ class GLWidget;
 #ifdef Q_OS_MAC
 typedef ViewMacOsX ViewWidget;
 #else
-typedef View       ViewWidget;
+typedef ViewOld       ViewWidget;
 #endif
 
 #include "ViewSettings.h"
@@ -39,12 +39,12 @@ public:
     void keyPressEvent(QKeyEvent *event);
     void keyReleaseEvent(QKeyEvent *event);
 
-    View * activeView() const;
-    View * hoveredView() const;
+    ViewOld * activeView() const;
+    ViewOld * hoveredView() const;
     double zoom() const;
     int numViews() const;
 
-    void setActiveView(View * view);
+    void setActiveView(ViewOld * view);
 
 public slots:
     void update();        // update only the views in MultiView (not the 3D view)
@@ -84,16 +84,16 @@ private slots:
 private:
     // private members
     QList<ViewWidget*> views_;
-    View * activeView_;
-    View * hoveredView_;
+    ViewOld * activeView_;
+    ViewOld * hoveredView_;
     Scene * scene_;
 
     // helper methods
-    View * createView_();
-    void deleteView_(View * view);
+    ViewOld * createView_();
+    void deleteView_(ViewOld * view);
     void split_(Qt::Orientation orientation);
-    void split_(View * view, Qt::Orientation orientation);
-    void splitClose_(View * view);
+    void split_(ViewOld * view, Qt::Orientation orientation);
+    void splitClose_(ViewOld * view);
 };
 
 #endif

@@ -8,22 +8,6 @@
 
 #include "OpenGLWidget.h"
 
-static const char *vertexShaderSource =
-    "#version 150\n"
-    "in vec4 vertex;\n"
-    "uniform mat4 projMatrix;\n"
-    "uniform mat4 viewMatrix;\n"
-    "void main() {\n"
-    "   gl_Position = projMatrix * viewMatrix * vertex;\n"
-    "}\n";
-
-static const char *fragmentShaderSource =
-    "#version 150\n"
-    "out highp vec4 fragColor;\n"
-    "void main() {\n"
-    "   fragColor = vec4(1.0, 0.0, 0.0, 1.0);\n"
-    "}\n";
-
 OpenGLWidget::OpenGLWidget(QWidget *parent) :
     QOpenGLWidget(parent),
     shaderProgram_(0)
@@ -36,6 +20,46 @@ OpenGLWidget::OpenGLWidget(QWidget *parent) :
 OpenGLWidget::~OpenGLWidget()
 {
     cleanup();
+}
+
+const QMatrix4x4 & OpenGLWidget::projectionMatrix() const
+{
+    return projMatrix_;
+}
+
+const QMatrix4x4 & OpenGLWidget::projectionMatrixInverse() const
+{
+    if (projMatrixInv_.isDirty())
+    {
+        projMatrixInv_.setValue(projMatrix_.inverted());
+    }
+    return projMatrixInv_.value();
+}
+
+void OpenGLWidget::setProjectionMatrix(const QMatrix4x4 & projectionMatrix)
+{
+    projMatrix_ = projectionMatrix;
+    projMatrixInv_.setDirty();
+}
+
+const QMatrix4x4 & OpenGLWidget::viewMatrix() const
+{
+    return viewMatrix_;
+}
+
+const QMatrix4x4 & OpenGLWidget::viewMatrixInverse() const
+{
+    if (viewMatrixInv_.isDirty())
+    {
+        viewMatrixInv_.setValue(viewMatrix_.inverted());
+    }
+    return viewMatrixInv_.value();
+}
+
+void OpenGLWidget::setViewMatrix(const QMatrix4x4 & viewMatrix)
+{
+    viewMatrix_ = viewMatrix;
+    viewMatrixInv_.setDirty();
 }
 
 void OpenGLWidget::cleanup()
@@ -60,8 +84,8 @@ void OpenGLWidget::initializeGL()
 
     // Allocate shader program
     shaderProgram_ = new QOpenGLShaderProgram;
-    shaderProgram_->addShaderFromSourceCode(QOpenGLShader::Vertex, vertexShaderSource);
-    shaderProgram_->addShaderFromSourceCode(QOpenGLShader::Fragment, fragmentShaderSource);
+    shaderProgram_->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/OpenGL/Shaders/Helloworld.v.glsl");
+    shaderProgram_->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/OpenGL/Shaders/Helloworld.f.glsl");
     shaderProgram_->bindAttributeLocation("vertex", 0);
     shaderProgram_->link();
 
@@ -94,17 +118,25 @@ void OpenGLWidget::initializeGL()
 void OpenGLWidget::resizeGL(int w, int h)
 {
     // Set projection matrix
-    projMatrix_.setToIdentity();
-    projMatrix_.ortho(0.0f, (float)w, (float)h, 0.0f, -1.0f, 1.0f);
+    const float left   = 0.0f;
+    const float right  = w;
+    const float bottom = h;
+    const float top    = 0.0f;
+    const float near   = -1.0f;
+    const float far    = 1.0f;
+    QMatrix4x4 projMat;
+    projMat.ortho(left, right, bottom, top, near, far);
+    setProjectionMatrix(projMat);
+
+    // Set view matrix
+    QMatrix4x4 viewMat;     // = identity
+    setViewMatrix(viewMat);
 }
 
 void OpenGLWidget::paintGL()
 {
     // Clear color and depth buffer
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    // Set view matrix
-    viewMatrix_.setToIdentity();
 
     // Bind VAO and shader program
     QOpenGLVertexArrayObject::Binder vaoBinder(&vao_);

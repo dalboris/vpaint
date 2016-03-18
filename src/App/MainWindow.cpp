@@ -12,7 +12,7 @@
 
 #include "Scene.h"
 #include "View3D.h"
-#include "View.h"
+#include "ViewOld.h"
 #include "MultiView.h"
 #include "Timeline.h"
 #include "DevSettings.h"
@@ -48,7 +48,7 @@
 #include <QDesktopServices>
 #include <QShortcut>
 
-#include <OpenGLWidget.h>
+#include "Views/View2D.h"
 
 
 /*********************************************************************
@@ -86,8 +86,7 @@ MainWindow::MainWindow() :
     editCanvasSizeDialog_(0),
     exportingPng_(false)
 {
-    OpenGLWidget * openGLWidget = new OpenGLWidget(this);
-    setCentralWidget(openGLWidget);
+    setCentralWidget(new View2D());
 
     /* FACTORED_OUT
     // Global object
@@ -187,12 +186,12 @@ void MainWindow::updateObjectProperties()
     inspector->setObjects(scene()->getVAC_()->selectedCells());
 }
 
-View * MainWindow::activeView() const
+ViewOld * MainWindow::activeView() const
 {
     return multiView_->activeView();
 }
 
-View * MainWindow::hoveredView() const
+ViewOld * MainWindow::hoveredView() const
 {
     return multiView_->hoveredView();
 }

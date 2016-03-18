@@ -73,6 +73,8 @@ OPENVAC_SRC       = $$PWD/../OpenVac/src
 OPENVAC_OUT_UNIX  = $$OUT_PWD/../OpenVac
 OPENVAC_OUT_WIN32 = $$OUT_PWD/../OpenVac/$$RELEASE_OR_DEBUG
 
+message($$OPENVAC_SRC)
+
 INCLUDEPATH += $$OPENVAC_SRC/
 DEPENDPATH += $$OPENVAC_SRC/
 !win32: QMAKE_CXXFLAGS += $$QMAKE_CFLAGS_ISYSTEM $$OPENVAC_SRC/
@@ -136,7 +138,6 @@ HEADERS += MainWindow.h \
     KeyFrame.h \
     Scene.h \
     MultiView.h \
-    View.h \
     View3D.h \
     Timeline.h \
     Global.h \
@@ -217,7 +218,17 @@ HEADERS += MainWindow.h \
     UpdateCheck.h \
     VectorAnimationComplex/BoundingBox.h \
     VectorAnimationComplex/TransformTool.h \
-    OpenGLWidget.h
+    OpenGL/OpenGLWidget.h \
+    Views/View.h \
+    Views/View2D.h \
+    Views/View2DMouseEvent.h \
+    Views/View2DMouseAction.h \
+    Views/ViewMouseEvent.h \
+    Core/Cache.h \
+    Views/ViewMouseAction.h \
+    Core/Memory.h \
+    Views/TestAction.h \
+    ViewOld.h
 
 SOURCES += main.cpp \
     SaveAndLoad.cpp \
@@ -233,7 +244,6 @@ SOURCES += main.cpp \
     KeyFrame.cpp \
     Scene.cpp \
     MultiView.cpp \
-    View.cpp \
     View3D.cpp \
     Timeline.cpp \
     Global.cpp \
@@ -308,4 +318,16 @@ SOURCES += main.cpp \
     UpdateCheck.cpp \
     VectorAnimationComplex/BoundingBox.cpp \
     VectorAnimationComplex/TransformTool.cpp \
-    OpenGLWidget.cpp
+    OpenGL/OpenGLWidget.cpp \
+    Views/View.cpp \
+    Views/View2D.cpp \
+    Views/View2DMouseEvent.cpp \
+    Views/View2DMouseAction.cpp \
+    Views/ViewMouseEvent.cpp \
+    Views/ViewMouseAction.cpp \
+    Views/TestAction.cpp \
+    ViewOld.cpp
+
+DISTFILES += \
+    OpenGL/Shaders/Helloworld.v.glsl \
+    OpenGL/Shaders/Helloworld.f.glsl

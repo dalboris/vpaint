@@ -12,7 +12,7 @@
 #include <QtDebug>
 #include "OpenGL.h"
 #include "Global.h"
-#include "View.h"
+#include "ViewOld.h"
 #include "Background/Background.h"
 #include "Background/BackgroundRenderer.h"
 

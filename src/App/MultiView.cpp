@@ -7,7 +7,7 @@
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
 #include "MultiView.h"
-#include "View.h"
+#include "ViewOld.h"
 #include "ViewMacOsX.h"
 #include "Scene.h"
 #include "Timeline.h"
@@ -28,7 +28,7 @@
 namespace
 {
 
-ViewWidget * viewWidgetFromView_(View * view)
+ViewWidget * viewWidgetFromView_(ViewOld * view)
 {
 #ifdef Q_OS_MAC
     return qobject_cast<ViewWidget*>(view->parentWidget());
@@ -37,7 +37,7 @@ ViewWidget * viewWidgetFromView_(View * view)
 #endif
 }
 
-View * viewFromViewWidget_(ViewWidget * viewWidget)
+ViewOld * viewFromViewWidget_(ViewWidget * viewWidget)
 {
 #ifdef Q_OS_MAC
     return viewWidget->view();
@@ -75,7 +75,7 @@ MultiView::MultiView(Scene *scene, QWidget *parent) :
     scene_(scene)
 {
     // create initial view and splitter
-    View * view = createView_();
+    ViewOld * view = createView_();
     QSplitter * splitter = new QSplitter();
     splitter->addWidget(viewWidgetFromView_(view));
 
@@ -91,10 +91,10 @@ MultiView::MultiView(Scene *scene, QWidget *parent) :
     connect(this, SIGNAL(hoveredViewChanged()), this, SIGNAL(allViewsNeedToUpdate()));
 }
 
-View * MultiView::createView_()
+ViewOld * MultiView::createView_()
 {
     ViewWidget * viewWidget = new ViewWidget(scene_, this);
-    View * view = viewFromViewWidget_(viewWidget);
+    ViewOld * view = viewFromViewWidget_(viewWidget);
     views_ << viewWidget;
     setActiveView(view);
     hoveredView_ = 0;
@@ -119,7 +119,7 @@ View * MultiView::createView_()
 }
 
 
-void MultiView::deleteView_(View * view)
+void MultiView::deleteView_(ViewOld * view)
 {
     views_.removeAll(viewWidgetFromView_(view));
     Timeline * timeline = global()->timeline();
@@ -140,7 +140,7 @@ void MultiView::deleteView_(View * view)
     }
 }
 
-void MultiView::setActiveView(View * view)
+void MultiView::setActiveView(ViewOld * view)
 {
     if(view && (activeView_!=view))
     {
@@ -156,15 +156,15 @@ void MultiView::setActiveView(View * view)
 
 void MultiView::setActive(GLWidget * w)
 {
-    View * view =  qobject_cast<View*>(w);
+    ViewOld * view =  qobject_cast<ViewOld*>(w);
     setActiveView(view);
 }
 
 void MultiView::setHovered(GLWidget * w)
 {
-    View * oldHoveredView =  hoveredView_;
+    ViewOld * oldHoveredView =  hoveredView_;
 
-    View * view =  qobject_cast<View*>(w);
+    ViewOld * view =  qobject_cast<ViewOld*>(w);
     if(view)
     {
         hoveredView_ = view;
@@ -180,7 +180,7 @@ void MultiView::setHovered(GLWidget * w)
 
 void MultiView::unsetHovered(GLWidget * /*w*/)
 {
-    View * oldHoveredView =  hoveredView_;
+    ViewOld * oldHoveredView =  hoveredView_;
 
     hoveredView_ = 0;
 
@@ -189,7 +189,7 @@ void MultiView::unsetHovered(GLWidget * /*w*/)
 }
 
 
-void MultiView::split_(View * view, Qt::Orientation orientation)
+void MultiView::split_(ViewOld * view, Qt::Orientation orientation)
 {
     // Schematic view of what happens
     //   _________________________________
@@ -224,7 +224,7 @@ void MultiView::split_(View * view, Qt::Orientation orientation)
     assert(splitterParent);
 
     // create view
-    View * view2 = createView_();
+    ViewOld * view2 = createView_();
 
     // Create two new splitters
     QSplitter * splitter1 = new QSplitter;
@@ -238,7 +238,7 @@ void MultiView::split_(View * view, Qt::Orientation orientation)
     splitter2->addWidget(viewWidgetFromView_(view2));
 }
 
-void MultiView::splitClose_(View * view)
+void MultiView::splitClose_(ViewOld * view)
 {
     assert( numViews() >= 2);
 
@@ -309,13 +309,13 @@ void MultiView::splitClose_(View * view)
 void MultiView::split_(Qt::Orientation orientation)
 {
     // Get current splitter and view
-    View * view1 = activeView();
+    ViewOld * view1 = activeView();
     QSplitter * s = getParentSplitter_(view1);
 
     if(s)
     {
         // create view
-        View * view2 = createView_();
+        ViewOld * view2 = createView_();
 
         // Create two new splitters
         QSplitter * s1 = new QSplitter;
@@ -347,7 +347,7 @@ int MultiView::numViews() const
 
 void MultiView::splitClose()
 {
-    View * view = activeView();
+    ViewOld * view = activeView();
     if(view && numViews() >= 2)
     {
         splitClose_(view);
@@ -356,7 +356,7 @@ void MultiView::splitClose()
 
 void MultiView::splitOne()
 {
-    View * view = activeView();
+    ViewOld * view = activeView();
     if(view && numViews() >= 2)
     {
         QList<ViewWidget*> viewsToClose = views_;
@@ -370,12 +370,12 @@ void MultiView::splitOne()
 
 
 
-View * MultiView::activeView() const
+ViewOld * MultiView::activeView() const
 {
     return activeView_;
 }
 
-View * MultiView::hoveredView() const
+ViewOld * MultiView::hoveredView() const
 {
     return hoveredView_;
 }
@@ -388,7 +388,7 @@ void MultiView::update()
 {
     foreach(ViewWidget * viewWidget, views_)
     {
-        View * view = viewFromViewWidget_(viewWidget);
+        ViewOld * view = viewFromViewWidget_(viewWidget);
         if(view->isVisible())
             view->update();
     }
@@ -398,7 +398,7 @@ void MultiView::updatePicking()
 {
     foreach(ViewWidget * viewWidget, views_)
     {
-        View * view = viewFromViewWidget_(viewWidget);
+        ViewOld * view = viewFromViewWidget_(viewWidget);
         if(view->isVisible())
             view->updatePicking();
     }

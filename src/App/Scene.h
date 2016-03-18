@@ -17,7 +17,7 @@
 #include "ViewSettings.h"
 
 class Background;
-class View;
+class ViewOld;
 struct MouseEvent;
 class QKeyEvent;
 class SceneObject;

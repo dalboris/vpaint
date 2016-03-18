@@ -69,7 +69,7 @@ public:
     ///
     void setDirty()
     {
-        return isDirty_ = true;
+        isDirty_ = true;
     }
 
     /// Sets a new value for the cached. Also specifies that the cache is

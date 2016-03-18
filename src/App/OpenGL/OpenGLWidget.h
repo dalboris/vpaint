@@ -9,6 +9,8 @@
 #ifndef OPENGLWIDGET_H
 #define OPENGLWIDGET_H
 
+#include "Core/Cache.h"
+
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions>
 
@@ -20,13 +22,24 @@
 #include <vector>
 #include <glm/vec2.hpp>
 
+/// \class OpenGLWidget
+/// \brief A widget that sets up an OpenGL context and initialize shaders
+///
 class OpenGLWidget: public QOpenGLWidget, protected QOpenGLFunctions
 {
     Q_OBJECT
 
 public:
-    OpenGLWidget(QWidget * parent);
+    OpenGLWidget(QWidget * parent = nullptr);
     ~OpenGLWidget();
+
+    const QMatrix4x4 & projectionMatrix() const;
+    const QMatrix4x4 & projectionMatrixInverse() const;
+    void setProjectionMatrix(const QMatrix4x4 & projectionMatrix);
+
+    const QMatrix4x4 & viewMatrix() const;
+    const QMatrix4x4 & viewMatrixInverse() const;
+    void setViewMatrix(const QMatrix4x4 & viewMatrix);
 
 public slots:
     void cleanup();
@@ -43,6 +56,8 @@ private:
     // Projection and view matrices
     QMatrix4x4 projMatrix_;
     QMatrix4x4 viewMatrix_;
+    mutable Cache<QMatrix4x4> projMatrixInv_;
+    mutable Cache<QMatrix4x4> viewMatrixInv_;
 
     // GPU resources
     QOpenGLVertexArrayObject vao_;

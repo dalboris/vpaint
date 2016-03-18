@@ -6,8 +6,8 @@
 // license terms and conditions in the LICENSE.MIT file found in the top-level
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
-#ifndef VIEW_H
-#define VIEW_H
+#ifndef VIEWOLD_H
+#define VIEWOLD_H
 
 #include "OpenGL.h"
 
@@ -49,13 +49,13 @@ struct MouseEvent
     bool alt, control, shift;
 };
 
-class View: public GLWidget
+class ViewOld: public GLWidget
 {
     Q_OBJECT
     
 public:
-    View(Scene *scene, QWidget *parent);
-    virtual ~View();
+    ViewOld(Scene *scene, QWidget *parent);
+    virtual ~ViewOld();
 
     void initCamera();
 

@@ -20,7 +20,7 @@ namespace OpenVac
 /// the semantics of SharedPtr, WeakPtr, and Handle.
 
 
-/******************************** SharedPtr **********************************/
+/******************************** UniquePtr **********************************/
 
 /// Alias for std::unique_ptr.
 template <class T>

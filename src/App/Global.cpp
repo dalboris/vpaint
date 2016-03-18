@@ -10,7 +10,7 @@
 
 #include "DevSettings.h"
 #include "Scene.h"
-#include "View.h"
+#include "ViewOld.h"
 #include "MainWindow.h"
 #include "SettingsDialog.h"
 #include "DevSettings.h"
@@ -471,12 +471,12 @@ Global::DisplayMode Global::displayMode() const
     return currentDisplayMode_;
 }
 
-View * Global::activeView() const
+ViewOld * Global::activeView() const
 {
     return mainWindow()->activeView();
 }
 
-View * Global::hoveredView() const
+ViewOld * Global::hoveredView() const
 {
     return mainWindow()->hoveredView();
 }

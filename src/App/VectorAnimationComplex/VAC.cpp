@@ -37,7 +37,7 @@
 #include "../DevSettings.h"
 #include "../Global.h"
 #include "../MainWindow.h"
-#include "../View.h"
+#include "../ViewOld.h"
 #include "../Color.h"
 #include "../Scene.h"
 

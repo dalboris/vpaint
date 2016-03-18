@@ -25,7 +25,7 @@
 #include <QtDebug>
 
 #include "Scene.h"
-#include "View.h"
+#include "ViewOld.h"
 #include "Global.h"
 
 #include "VectorAnimationComplex/VAC.h"
@@ -102,7 +102,7 @@ void Timeline_HBar::paintEvent (QPaintEvent * /*event*/)
     // current frames
     painter.setBrush(Qt::red);
     painter.setPen(Qt::NoPen);
-    foreach(View * view, w_->views_)
+    foreach(ViewOld * view, w_->views_)
     {
         painter.drawRect(10*(view->activeTime().floatTime()) - w_->totalPixelOffset_ + 1, 1, 9, height()-2);
     }
@@ -703,11 +703,11 @@ void Timeline::play()
         playingDirection_ = true;
 
     playedViews_.clear();
-    View * view = global()->activeView();
+    ViewOld * view = global()->activeView();
     if(view)
     {
         playedViews_ << global()->activeView();
-        foreach(View * view, playedViews())
+        foreach(ViewOld * view, playedViews())
             view->disablePicking();
         elapsedTimer_.start();
         timer_->start();
@@ -718,7 +718,7 @@ void Timeline::play()
 void Timeline::pause()
 {
     timer_->stop();
-    foreach(View * view, playedViews())
+    foreach(ViewOld * view, playedViews())
         view->enablePicking();
     roundPlayedViews();
     playPauseButton_->setIcon(QIcon(":/images/go-play.png"));
@@ -735,7 +735,7 @@ void Timeline::playPause()
 
 void Timeline::roundPlayedViews()
 {
-    foreach(View * view, playedViews())
+    foreach(ViewOld * view, playedViews())
     {
         Time t = view->activeTime();
         double floatFrame = t.floatTime();
@@ -761,7 +761,7 @@ void Timeline::goToFirstFrame()
     goToFirstFrame(global()->activeView());
 }
 
-void Timeline::goToFirstFrame(View * view)
+void Timeline::goToFirstFrame(ViewOld * view)
 {
     goToFrame(view, firstFrame());
 }
@@ -771,7 +771,7 @@ void Timeline::goToLastFrame()
     goToLastFrame(global()->activeView());
 }
 
-void Timeline::goToLastFrame(View * view)
+void Timeline::goToLastFrame(ViewOld * view)
 {
     goToFrame(view, lastFrame());
 }
@@ -833,7 +833,7 @@ void Timeline::timerTimeout()
 
     elapsedTimer_.restart();
 
-    foreach(View * view, playedViews())
+    foreach(ViewOld * view, playedViews())
     {
         if(isPlaying() && subframeInbetweening())
         {
@@ -925,7 +925,7 @@ void Timeline::goToNextFrame()
 // See https://github.com/dalboris/vpaint/pull/4#issuecomment-130426290 for more details
 // Will likely be configurable through preferences one day
 // Implementation 1
-void Timeline::goToNextFrame(View * view)
+void Timeline::goToNextFrame(ViewOld * view)
 {
     int currentFrame = view->activeTime().floatTime();
 
@@ -1015,7 +1015,7 @@ void Timeline::goToPreviousFrame()
 
 // See comment above goToNextFrame
 // Implementation 1
-void Timeline::goToPreviousFrame(View * view)
+void Timeline::goToPreviousFrame(ViewOld * view)
 {
     int currentFrame = view->activeTime().floatTime();
 
@@ -1098,28 +1098,28 @@ void Timeline::goToPreviousFrame(View * view)
     }
 }*/
 
-void Timeline::goToFrame(View * view, double frame)
+void Timeline::goToFrame(ViewOld * view, double frame)
 {
     view->setActiveTime(Time(frame)); // float time
     hbar_->repaint();
     emit timeChanged();
 }
 
-void Timeline::goToFrame(View * view, int frame)
+void Timeline::goToFrame(ViewOld * view, int frame)
 {
     view->setActiveTime(Time(frame)); // exact frame
     hbar_->repaint();
     emit timeChanged();
 }
 
-void Timeline::addView(View * view)
+void Timeline::addView(ViewOld * view)
 {
     views_ << view;
     connect(view, SIGNAL(settingsChanged()), this, SLOT(update()));
     hbar_->update();
 }
 
-void Timeline::removeView(View * view)
+void Timeline::removeView(ViewOld * view)
 {
     views_.removeAll(view);
     hbar_->update();
@@ -1130,7 +1130,7 @@ bool Timeline::isPlaying() const
     return timer_->isActive();
 }
 
-QSet<View*> Timeline::playedViews() const
+QSet<ViewOld*> Timeline::playedViews() const
 {
     return playedViews_;
 }

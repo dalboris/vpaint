@@ -23,7 +23,7 @@ class QSpinBox;
 class QTimer;
 class QHBoxLayout;
 class QCheckBox;
-class View;
+class ViewOld;
 class Scene;
 class XmlStreamWriter;
 class XmlStreamReader;
@@ -129,8 +129,8 @@ public:
     void setT2(double t2);
 
     // Set which View's time this timeline control
-    void addView(View * view);
-    void removeView(View * view);
+    void addView(ViewOld * view);
+    void removeView(ViewOld * view);
 
     // Get playback settings
     int firstFrame() const;
@@ -141,7 +141,7 @@ public:
 
     // Current state
     bool isPlaying() const;
-    QSet<View*> playedViews() const;
+    QSet<ViewOld*> playedViews() const;
 
     // Visualization
     int firstVisibleFrame() const;
@@ -171,12 +171,12 @@ public slots:
     void realTimePlayingChanged();
 
 private slots:
-    void goToFirstFrame(View * view);
-    void goToPreviousFrame(View * view);
-    void goToNextFrame(View * view);
-    void goToLastFrame(View * view);
-    void goToFrame(View * view, int frame);
-    void goToFrame(View * view, double frame);
+    void goToFirstFrame(ViewOld * view);
+    void goToPreviousFrame(ViewOld * view);
+    void goToNextFrame(ViewOld * view);
+    void goToLastFrame(ViewOld * view);
+    void goToFrame(ViewOld * view, int frame);
+    void goToFrame(ViewOld * view, double frame);
 
     void timerTimeout();
     void roundPlayedViews();
@@ -199,8 +199,8 @@ private:
     Scene * scene_;
 
     // The views whose times are controlled by this timeline
-    QList<View*> views_;
-    QSet<View*> playedViews_;
+    QList<ViewOld*> views_;
+    QSet<ViewOld*> playedViews_;
     
     // Delegate timeline painting and mouse events handling
     friend class Timeline_HBar;

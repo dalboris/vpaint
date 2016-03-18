@@ -8,7 +8,7 @@
 
 #include "ViewMacOsX.h"
 
-#include "View.h"
+#include "ViewOld.h"
 
 #include <QVBoxLayout>
 #include <QPushButton>
@@ -16,7 +16,7 @@
 ViewMacOsX::ViewMacOsX(Scene *scene, QWidget *parent) :
     QWidget(parent)
 {
-    view_ = new View(scene, this);
+    view_ = new ViewOld(scene, this);
 
     QVBoxLayout * layout = new QVBoxLayout();
     layout->setMargin(0);
@@ -26,7 +26,7 @@ ViewMacOsX::ViewMacOsX(Scene *scene, QWidget *parent) :
     setLayout(layout);
 }
 
-View * ViewMacOsX::view() const
+ViewOld * ViewMacOsX::view() const
 {
     return view_;
 }
