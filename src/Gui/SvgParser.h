@@ -73,10 +73,13 @@ public:
 
     // Utilities
     QColor parseColor_(QString s);
+    bool getNextFlag(QString & source, bool * ok = 0);
     double getNextDouble(QString & source, bool * ok = 0);
     Eigen::Vector2d getNextCoordinatePair(QString & source, bool * ok = 0);
     void trimFront(QString & string, QVector<QChar> chars = { 0x20, 0x9, 0xD, 0xA });
+    void trimCommaWspFront(QString & string);
     QList<PotentialPoint>::iterator populateSamplesRecursive(double paramVal, double paramSpan, QList<PotentialPoint> & edgeSamples, QList<PotentialPoint>::iterator pointLoc, double strokeWidth, double ds, std::function<Eigen::Vector2d (double)> getPoint);
+    void printVec(const Eigen::Vector2d & v, QString name);
 
     // Path things
     bool parsePath(QString & data, const SvgPresentationAttributes & pa, const Eigen::Vector2d startPos = Eigen::Vector2d(0, 0));
@@ -85,9 +88,9 @@ public:
     bool addHorizontalLineTo(QList<PotentialPoint> & samplingPoints, QString & data, const SvgPresentationAttributes & pa, bool relative);
     bool addCurveTo(QList<PotentialPoint> & samplingPoints, QString & data, const SvgPresentationAttributes &pa, bool relative);
     bool addSmoothCurveTo(QList<PotentialPoint> & samplingPoints, QString & data, bool relative);
-    bool addQuadraticBezierCurveTo(QList<PotentialPoint> & samplingPoints, QString & data, bool relative);
+    bool addQuadraticBezierCurveTo(QList<PotentialPoint> & samplingPoints, QString & data, const SvgPresentationAttributes &pa, bool relative);
     bool addSmoothQuadraticBezierCurveTo(QList<PotentialPoint> & samplingPoints, QString & data, bool relative);
-    bool addEllipticalArc(QList<PotentialPoint> & samplingPoints, QString & data, bool relative);
+    bool addEllipticalArc(QList<PotentialPoint> & samplingPoints, QString & data, const SvgPresentationAttributes & pa, bool relative);
     Eigen::Vector2d finishPath(QList<PotentialPoint> & samplingPoints, const SvgPresentationAttributes pa, bool closed = false);
 };
 

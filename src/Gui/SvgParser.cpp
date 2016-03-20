@@ -643,7 +643,6 @@ bool SvgParser::parsePath(QString &data, const SvgPresentationAttributes & pa, c
         bool relative = true;
         char c = data[0].cell();
         data.remove(0, 1);
-        qDebug() << "c = " << c << endl;
         switch(c) {
         // Ignore whitespace characters
         case 0x20:
@@ -704,7 +703,7 @@ bool SvgParser::parsePath(QString &data, const SvgPresentationAttributes & pa, c
         case 'Q':
             relative = false;
         case 'q':
-            ok = addQuadraticBezierCurveTo(samples, data, relative);
+            ok = addQuadraticBezierCurveTo(samples, data, pa, relative);
             break;
         case 'T':
             relative = false;
@@ -714,7 +713,7 @@ bool SvgParser::parsePath(QString &data, const SvgPresentationAttributes & pa, c
         case 'A':
             relative = false;
         case 'a':
-            ok = addEllipticalArc(samples, data, relative);
+            ok = addEllipticalArc(samples, data, pa, relative);
             break;
         case 'Z':
         case 'z':
@@ -809,10 +808,10 @@ bool SvgParser::addCurveTo(QList<PotentialPoint> & samplingPoints, QString & dat
 
         Eigen::Vector2d cp1 = getNextCoordinatePair(data, &ok);
         if(!ok) break;
-        trimFront(data);
+        trimCommaWspFront(data);
         Eigen::Vector2d cp2 = getNextCoordinatePair(data, &ok);
         if(!ok) break;
-        trimFront(data);
+        trimCommaWspFront(data);
         Eigen::Vector2d endLoc = getNextCoordinatePair(data, &ok);
         if(!ok) break;
         if(relative)
@@ -825,12 +824,8 @@ bool SvgParser::addCurveTo(QList<PotentialPoint> & samplingPoints, QString & dat
             endLoc[1] += startLoc.getY();
         }
 
-        //qDebug() << "curveto: " << startLoc.getX() << "," << startLoc.getY() << " " << cp1[0] << "," << cp1[1] << " " << cp2[0] << "," << cp2[1] << " " << endLoc[0] << "," << endLoc[1] << endl;
-
         SculptCurve::Curve<VectorAnimationComplex::EdgeSample> curve;
         samplingPoints.push_back(PotentialPoint(endLoc, pa.strokeWidth));
-        //auto test = [&] (const double t) -> Eigen::Vector2d { const double ti = 1-t; return Eigen::Vector2d(ti*ti*ti*startLoc.getX()+3*ti*ti*t*cp1[0]+3*ti*t*t*cp2[0]+t*t*t*endLoc[0], ti*ti*ti*startLoc.getY()+3*ti*ti*t*cp1[1]+3*ti*t*t*cp2[1]+t*t*t*endLoc[1]); };
-        //qDebug() << test(0)[0] << test(0)[1] << test(0.5)[0] << test(0.5)[1] << test(1)[0] << test(1)[1];
 
         populateSamplesRecursive(0.5, 1.0, samplingPoints, samplingPoints.end()-2, pa.strokeWidth, curve.ds(), [&] (const double t) -> Eigen::Vector2d { const double ti = 1-t; return Eigen::Vector2d(ti*ti*ti*startLoc.getX()+3*ti*ti*t*cp1[0]+3*ti*t*t*cp2[0]+t*t*t*endLoc[0], ti*ti*ti*startLoc.getY()+3*ti*ti*t*cp1[1]+3*ti*t*t*cp2[1]+t*t*t*endLoc[1]); });
 
@@ -840,9 +835,134 @@ bool SvgParser::addCurveTo(QList<PotentialPoint> & samplingPoints, QString & dat
 }
 
 bool SvgParser::addSmoothCurveTo(QList<PotentialPoint> & samplingPoints, QString & data, bool relative) {}
-bool SvgParser::addQuadraticBezierCurveTo(QList<PotentialPoint> & samplingPoints, QString & data, bool relative) {}
+
+bool SvgParser::addQuadraticBezierCurveTo(QList<PotentialPoint> & samplingPoints, QString & data, const SvgPresentationAttributes & pa, bool relative)
+{
+    trimFront(data);
+    bool hasLooped = false, ok;
+    while(true)
+    {
+        PotentialPoint startLoc = samplingPoints.last();
+
+        Eigen::Vector2d cp = getNextCoordinatePair(data, &ok);
+        if(!ok) break;
+        trimCommaWspFront(data);
+        Eigen::Vector2d endLoc = getNextCoordinatePair(data, &ok);
+        if(!ok) break;
+        if(relative)
+        {
+            cp[0] += startLoc.getX();
+            cp[1] += startLoc.getY();
+            endLoc[0] += startLoc.getX();
+            endLoc[1] += startLoc.getY();
+        }
+
+        SculptCurve::Curve<VectorAnimationComplex::EdgeSample> curve;
+        samplingPoints.push_back(PotentialPoint(endLoc, pa.strokeWidth));
+
+        populateSamplesRecursive(0.5, 1.0, samplingPoints, samplingPoints.end()-2, pa.strokeWidth, curve.ds(), [&] (const double t) -> Eigen::Vector2d { const double ti = 1-t; return Eigen::Vector2d(ti*ti*startLoc.getX()+2*ti*t*cp[0]+t*t*endLoc[0], ti*ti*startLoc.getY()+2*ti*t*cp[1]+t*t*endLoc[1]); });
+
+        hasLooped = true;
+    }
+    return hasLooped;
+}
+
 bool SvgParser::addSmoothQuadraticBezierCurveTo(QList<PotentialPoint> & samplingPoints, QString & data, bool relative) {}
-bool SvgParser::addEllipticalArc(QList<PotentialPoint> & samplingPoints, QString & data, bool relative) {}
+
+void SvgParser::printVec(const Eigen::Vector2d & v, QString name)
+{
+    qDebug() << name << "=" << v[0] << "," << v[1];
+}
+
+bool SvgParser::addEllipticalArc(QList<PotentialPoint> & samplingPoints, QString & data, const SvgPresentationAttributes & pa, bool relative)
+{
+    trimFront(data);
+    bool hasLooped = false, ok;
+    while(true)
+    {
+        Eigen::Vector2d startLoc(samplingPoints.last().getX(), samplingPoints.last().getY());
+
+        double rx = qAbs(getNextDouble(data, &ok));
+        if(!ok) break;
+        trimCommaWspFront(data);
+        double ry = qAbs(getNextDouble(data, &ok));
+        if(!ok) break;
+
+        trimCommaWspFront(data);
+        double rot = getNextDouble(data, &ok);
+        if(!ok) break;
+
+        // Comma-wsp is required so run check before trimming
+        if(!(data.at(0) == ',' || data.at(0) == 0x20 || data.at(0) == 0x9 || data.at(0) == 0xD || data.at(0) == 0xA)) return false;
+        trimCommaWspFront(data);
+
+        bool largeArc = getNextFlag(data, &ok);
+        if(!ok) break;
+        trimCommaWspFront(data);
+        bool positiveSweep = getNextFlag(data, &ok);
+        if(!ok) break;
+        trimCommaWspFront(data);
+
+        Eigen::Vector2d endLoc = getNextCoordinatePair(data, &ok);
+        if(!ok) break;
+        if(relative)
+        {
+            endLoc += startLoc;
+        }
+        if(startLoc == endLoc) return true;
+
+        // TODO use Eigen for applying transformation matricies
+        Eigen::Matrix2d rotationForward, rotationBackwards;
+        rotationForward << qCos(rot), qSin(rot), -qSin(rot), qCos(rot);
+        rotationBackwards << qCos(rot), -qSin(rot), qSin(rot), qCos(rot);
+
+        Eigen::Vector2d midLoc((startLoc[0] - endLoc[0]) / 2, (startLoc[1] - endLoc[1]) / 2);
+        midLoc = rotationForward * midLoc;
+        double sFactor = midLoc[0]*midLoc[0]/(rx*rx) + midLoc[1]*midLoc[1]/(ry*ry);
+        if(sFactor > 1)
+        {
+            rx *= qSqrt(sFactor);
+            ry *= qSqrt(sFactor);
+        }
+        double cCoeff = qSqrt((rx*rx*ry*ry-rx*rx*midLoc[1]*midLoc[1]-ry*ry*midLoc[0]*midLoc[0]) / (rx*rx*midLoc[1]*midLoc[1]+ry*ry*midLoc[0]*midLoc[0]));
+        if(largeArc == positiveSweep) cCoeff *= -1;
+        Eigen::Vector2d center(cCoeff * rx * midLoc[1] / ry, cCoeff * -ry * midLoc[0] / rx);
+        Eigen::Vector2d centerRot(qCos(rot) * center[0] - qSin(rot) * center[1] + (startLoc[0] + endLoc[0]) / 2, qSin(rot) * center[0] + qCos(rot) * center[1] + (startLoc[1] + endLoc[1]) / 2);
+        Eigen::Vector2d u((midLoc[0] - center[0]) / rx, (midLoc[1] - center[1]) / ry), v((-midLoc[0] - center[0]) / rx, (-midLoc[1] - center[1]) / ry);
+        double startAngle = qAcos(((midLoc[0] - center[0]) / rx) / u.norm());
+        if((midLoc[1] - center[1]) / ry < 0) startAngle *= -1;
+        double angleDelta = std::fmod(qAcos(u.dot(v) / (u.norm() * v.norm())), 2 * M_PI);
+        if(u[0] * v[1] - u[1] * v[0] < 0) angleDelta *= -1;
+        if(!positiveSweep && angleDelta > 0) angleDelta -= 2 * M_PI;
+        else if (positiveSweep && angleDelta < 0) angleDelta += 2 * M_PI;
+
+        printVec(startLoc, "startLoc");
+        printVec(endLoc, "endLoc");
+        printVec(midLoc, "midLoc");
+        qDebug() << "cCoeff = " << cCoeff;
+        printVec(center, "center");
+        printVec(centerRot, "centerRot");
+        qDebug() << "startAngle = " << startAngle << endl << "angleDelta = " << angleDelta;
+        qDebug() << (midLoc[1] - center[1]) / ry;
+
+        //qDebug() << midLocRot[0] << "," << midLocRot[1] << "-" << center[0] << "," << center[1] << "-" << startAngle << "-" << angleDelta;
+        //qDebug() << qSqrt(qPow((midLocRot[0] - center[0]) / rx, 2) + qPow((midLocRot[1] - center[1]) / ry, 2));
+
+        SculptCurve::Curve<VectorAnimationComplex::EdgeSample> curve;
+        samplingPoints.push_back(PotentialPoint(endLoc, pa.strokeWidth));
+
+        populateSamplesRecursive(startAngle + angleDelta / 2, qAbs(angleDelta), samplingPoints, samplingPoints.end()-2, pa.strokeWidth, curve.ds(), [&] (const double t) -> Eigen::Vector2d
+        {
+            double newT = t;
+            if(angleDelta < 0) newT = startAngle + angleDelta - (t - startAngle);
+            double baseX = rx * qCos(newT), baseY = ry * qSin(newT);
+            return Eigen::Vector2d(qCos(rot) * baseX - qSin(rot) * baseY + centerRot[0], qSin(rot) * baseX + qCos(rot) * baseY + centerRot[1]);
+        });
+
+        hasLooped = true;
+    }
+    return hasLooped;
+}
 
 /** Finishes a path (or subpath), closing and creating faces as necessary
  *
@@ -891,7 +1011,11 @@ Eigen::Vector2d SvgParser::finishPath(QList<PotentialPoint> & samplingPoints, co
         e.last()->setColor(pa.stroke);
     }
     else if(pa.hasFill()) {
-        e.push_back(global()->currentVAC()->newKeyEdge(global()->activeTime(), v.last(), v.first(), new VectorAnimationComplex::LinearSpline(SculptCurve::Curve<VectorAnimationComplex::EdgeSample>(samplingPoints.last().getEdgeSample(), samplingPoints.first().getEdgeSample())), 0));
+        VectorAnimationComplex::EdgeSample start(samplingPoints.last().getEdgeSample()), end(samplingPoints.first().getEdgeSample());
+        start.setWidth(0);
+        end.setWidth(0);
+
+        e.push_back(global()->currentVAC()->newKeyEdge(global()->activeTime(), v.last(), v.first(), new VectorAnimationComplex::LinearSpline(SculptCurve::Curve<VectorAnimationComplex::EdgeSample>(start, end)), 0));
         e.last()->setColor(QColor());
     }
 
@@ -941,7 +1065,6 @@ void SvgParser::readSvg_(XmlStreamReader & xml)
                 }
                 else if(xml.name() == "path")
                 {
-                    qDebug() << "Found a path" << endl;
                     if(!readPath_(xml)) return;
                 }
 
@@ -993,7 +1116,19 @@ SvgPresentationAttributes::SvgPresentationAttributes(XmlStreamReader &xml, SvgPa
     }
 }
 
-double SvgParser::getNextDouble(QString & source, bool *ok)
+bool SvgParser::getNextFlag(QString & source, bool * ok)
+{
+    if(source.isEmpty())
+    {
+        *ok = false;
+        return false;
+    }
+    bool res = source.at(0) != '0';
+    source.remove(0, 1);
+    return res;
+}
+
+double SvgParser::getNextDouble(QString & source, bool * ok)
 {
     QRegExp realNumberExp("[+\\-]?(([0-9]+\\.?[0-9]*)|(\\.[0-9]+))([Ee][0-9]+)?");
     if(realNumberExp.indexIn(source) != 0)
@@ -1022,15 +1157,8 @@ Eigen::Vector2d SvgParser::getNextCoordinatePair(QString & source, bool * ok)
     double x = getNextDouble(s, ok);
     if(!*ok) return Eigen::Vector2d(0, 0);
 
-    // Move past whitespace
-    trimFront(s);
-    // Check for comma
-    if(s[0] == ',')
-    {
-        s.remove(0, 1);
-        // Move past whitespace
-        trimFront(s);
-    }
+    // Remove /\s*,\s/
+    trimCommaWspFront(s);
 
     // Find second number
     double y = getNextDouble(s, ok);
@@ -1045,6 +1173,15 @@ void SvgParser::trimFront(QString & string, QVector<QChar> charactersToRemove) {
     int i = 0;
     while(!string.isEmpty() && charactersToRemove.contains(string.at(i))) i++;
     if(i > 0) string.remove(0, i);
+}
+
+void SvgParser::trimCommaWspFront(QString & string) {
+    trimFront(string);
+    if(!string.isEmpty() && string.at(0) == ',')
+    {
+        string.remove(0, 1);
+        trimFront(string);
+    }
 }
 
 QList<PotentialPoint>::iterator SvgParser::populateSamplesRecursive(double paramVal, double paramSpan, QList<PotentialPoint> & edgeSamples, QList<PotentialPoint>::iterator pointLoc, double strokeWidth, double ds, std::function<Eigen::Vector2d (double)> getPoint)
