@@ -24,7 +24,7 @@
 #include <QMouseEvent>
 #include <QtDebug>
 
-#include "Scene.h"
+#include "SceneOld.h"
 #include "ViewOld.h"
 #include "Global.h"
 
@@ -489,7 +489,7 @@ QPushButton * makeButton_(const QString & iconPath, QAction * action)
 
 }
 
-Timeline::Timeline(Scene *scene, QWidget *parent) :
+Timeline::Timeline(SceneOld *scene, QWidget *parent) :
     QWidget(parent),
     scene_(scene)
 {

@@ -8,14 +8,14 @@
 
 #include "EditCanvasSizeDialog.h"
 
-#include "Scene.h"
+#include "SceneOld.h"
 
 #include <QDoubleSpinBox>
 #include <QVBoxLayout>
 #include <QDialogButtonBox>
 #include <QFormLayout>
 
-EditCanvasSizeDialog::EditCanvasSizeDialog(Scene * scene) :
+EditCanvasSizeDialog::EditCanvasSizeDialog(SceneOld * scene) :
     scene_(scene),
     ignoreSceneChanged_(false)
 {
@@ -84,7 +84,7 @@ void EditCanvasSizeDialog::setVisible(bool visible)
     QDialog::setVisible(visible);
 }
 
-Scene * EditCanvasSizeDialog::scene() const
+SceneOld * EditCanvasSizeDialog::scene() const
 {
     return scene_;
 }

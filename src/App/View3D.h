@@ -25,7 +25,7 @@
 
 // pre-declarations
 
-class Scene;
+class SceneOld;
 namespace VectorAnimationComplex { class VAC; }
 class Background;
 class BackgroundRenderer;
@@ -35,7 +35,7 @@ class View3D: public GLWidget
     Q_OBJECT
     
 public:
-    View3D(Scene *scene, QWidget *parent);
+    View3D(SceneOld *scene, QWidget *parent);
     virtual ~View3D();
 
     virtual void keyPressEvent(QKeyEvent *event);
@@ -94,7 +94,7 @@ struct MouseEvent
     bool alt, control, shift;
 };
 
-    Scene *scene_;
+    SceneOld *scene_;
     QList<int> displayedTimes_;
     
     // Mouse event related members

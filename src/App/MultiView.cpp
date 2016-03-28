@@ -9,7 +9,7 @@
 #include "MultiView.h"
 #include "ViewOld.h"
 #include "ViewMacOsX.h"
-#include "Scene.h"
+#include "SceneOld.h"
 #include "Timeline.h"
 #include "Global.h"
 
@@ -67,7 +67,7 @@ QSplitter * getParentSplitter_(View * w)
 
 }
 
-MultiView::MultiView(Scene *scene, QWidget *parent) :
+MultiView::MultiView(SceneOld *scene, QWidget *parent) :
     QWidget(parent),
     views_(),
     activeView_(0),

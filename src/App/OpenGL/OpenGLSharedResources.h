@@ -6,29 +6,20 @@
 // license terms and conditions in the LICENSE.MIT file found in the top-level
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
-#ifndef SELECTIONINFOWIDGET_H
-#define SELECTIONINFOWIDGET_H
+#ifndef OPENGLSHAREDRESOURCES_H
+#define OPENGLSHAREDRESOURCES_H
 
-#include <QWidget>
-#include <QGridLayout>
-#include <QLabel>
+class QOpenGLContext;
 
-class SceneOld;
-
-class SelectionInfoWidget : public QWidget
+class OpenGLSharedResources
 {
-    Q_OBJECT
 public:
-    explicit SelectionInfoWidget(QWidget *parent = 0);
+    OpenGLSharedResources(QOpenGLContext * context);
 
-signals:
-
-public slots:
-    void updateInfo();
+    QOpenGLContext * context() const;
 
 private:
-    QLabel * labelSelected_;
-    QGridLayout * mainLayout_;
+    QOpenGLContext * context_;
 };
 
-#endif // SELECTIONINFOWIDGET_H
+#endif // OPENGLSHAREDRESOURCES_H

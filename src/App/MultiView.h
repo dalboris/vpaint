@@ -13,7 +13,7 @@
 #include <QList>
 #include <QGridLayout>
 
-class Scene;
+class SceneOld;
 class ViewOld;
 class ViewMacOsX;
 class QSplitter;
@@ -33,7 +33,7 @@ class MultiView: public QWidget
     Q_OBJECT
     
 public:
-    MultiView(Scene *scene, QWidget *parent);
+    MultiView(SceneOld *scene, QWidget *parent);
     ~MultiView();
 
     void keyPressEvent(QKeyEvent *event);
@@ -86,7 +86,7 @@ private:
     QList<ViewWidget*> views_;
     ViewOld * activeView_;
     ViewOld * hoveredView_;
-    Scene * scene_;
+    SceneOld * scene_;
 
     // helper methods
     ViewOld * createView_();

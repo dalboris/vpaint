@@ -6,29 +6,24 @@
 // license terms and conditions in the LICENSE.MIT file found in the top-level
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
-#ifndef SELECTIONINFOWIDGET_H
-#define SELECTIONINFOWIDGET_H
+#ifndef SCENE_H
+#define SCENE_H
 
-#include <QWidget>
-#include <QGridLayout>
-#include <QLabel>
+#include "Scene/SceneData.h"
 
-class SceneOld;
+#include <QObject>
 
-class SelectionInfoWidget : public QWidget
+class Scene: public QObject
 {
+private:
     Q_OBJECT
+    Q_DISABLE_COPY(Scene)
+
 public:
-    explicit SelectionInfoWidget(QWidget *parent = 0);
-
-signals:
-
-public slots:
-    void updateInfo();
+    Scene(QObject * parent);
 
 private:
-    QLabel * labelSelected_;
-    QGridLayout * mainLayout_;
+    SceneData data_;
 };
 
-#endif // SELECTIONINFOWIDGET_H
+#endif // SCENE_H

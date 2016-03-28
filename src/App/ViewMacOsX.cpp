@@ -13,7 +13,7 @@
 #include <QVBoxLayout>
 #include <QPushButton>
 
-ViewMacOsX::ViewMacOsX(Scene *scene, QWidget *parent) :
+ViewMacOsX::ViewMacOsX(SceneOld *scene, QWidget *parent) :
     QWidget(parent)
 {
     view_ = new ViewOld(scene, this);

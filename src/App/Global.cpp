@@ -9,7 +9,7 @@
 #include "Global.h"
 
 #include "DevSettings.h"
-#include "Scene.h"
+#include "SceneOld.h"
 #include "ViewOld.h"
 #include "MainWindow.h"
 #include "SettingsDialog.h"
@@ -289,7 +289,7 @@ void Global::createToolBars()
     //actionChangeColor_->setShortcut(QKeySequence(Qt::Key_C));
     actionChangeColor_->setShortcutContext(Qt::ApplicationShortcut);
     mainWindow()->addAction(actionChangeColor_);
-    connect(actionChangeColor_, SIGNAL(triggered()), mainWindow()->scene(), SLOT(changeColor()));
+    connect(actionChangeColor_, SIGNAL(triggered()), mainWindow()->sceneOld(), SLOT(changeColor()));
 
     // ---------------------   Edges   ------------------------
 
@@ -300,7 +300,7 @@ void Global::createToolBars()
     actionChangeEdgeWidth_->setShortcut(QKeySequence(Qt::Key_W));
     actionChangeEdgeWidth_->setShortcutContext(Qt::ApplicationShortcut);
     mainWindow()->addAction(actionChangeEdgeWidth_);
-    connect(actionChangeEdgeWidth_, SIGNAL(triggered()), mainWindow()->scene(), SLOT(changeEdgeWidth()));
+    connect(actionChangeEdgeWidth_, SIGNAL(triggered()), mainWindow()->sceneOld(), SLOT(changeEdgeWidth()));
 
 
     // ---------------------   Faces   ------------------------
@@ -312,7 +312,7 @@ void Global::createToolBars()
     actionCreateFace_->setShortcut(QKeySequence(Qt::Key_F));
     actionCreateFace_->setShortcutContext(Qt::ApplicationShortcut);
     mainWindow()->addAction(actionCreateFace_);
-    connect(actionCreateFace_, SIGNAL(triggered()), mainWindow()->scene(), SLOT(createFace()));
+    connect(actionCreateFace_, SIGNAL(triggered()), mainWindow()->sceneOld(), SLOT(createFace()));
 
     actionAddCycles_ = new QAction(this);
     actionAddCycles_->setText(tr("Add Holes (H)"));
@@ -321,7 +321,7 @@ void Global::createToolBars()
     actionAddCycles_->setShortcut(QKeySequence(Qt::Key_H));
     actionAddCycles_->setShortcutContext(Qt::ApplicationShortcut);
     mainWindow()->addAction(actionAddCycles_);
-    connect(actionAddCycles_, SIGNAL(triggered()), mainWindow()->scene(), SLOT(addCyclesToFace()));
+    connect(actionAddCycles_, SIGNAL(triggered()), mainWindow()->sceneOld(), SLOT(addCyclesToFace()));
 
     actionRemoveCycles_ = new QAction(this);
     actionRemoveCycles_->setText(tr("Remove Holes (Ctrl+H)"));
@@ -330,7 +330,7 @@ void Global::createToolBars()
     actionRemoveCycles_->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_H));
     actionRemoveCycles_->setShortcutContext(Qt::ApplicationShortcut);
     mainWindow()->addAction(actionRemoveCycles_);
-    connect(actionRemoveCycles_, SIGNAL(triggered()), mainWindow()->scene(), SLOT(removeCyclesFromFace()));
+    connect(actionRemoveCycles_, SIGNAL(triggered()), mainWindow()->sceneOld(), SLOT(removeCyclesFromFace()));
 
     // ---------------------   Topological operations   ------------------------
 
@@ -342,7 +342,7 @@ void Global::createToolBars()
     actionGlue_->setShortcut(QKeySequence(Qt::Key_G));
     actionGlue_->setShortcutContext(Qt::ApplicationShortcut);
     mainWindow()->addAction(actionGlue_);
-    connect(actionGlue_, SIGNAL(triggered()), mainWindow()->scene(), SLOT(glue()));
+    connect(actionGlue_, SIGNAL(triggered()), mainWindow()->sceneOld(), SLOT(glue()));
 
     actionUnglue_ = new QAction(this);
     actionUnglue_->setText(tr("Explode"));
@@ -353,7 +353,7 @@ void Global::createToolBars()
     actionUnglue_->setShortcut(QKeySequence(Qt::Key_E));
     actionUnglue_->setShortcutContext(Qt::ApplicationShortcut);
     mainWindow()->addAction(actionUnglue_);
-    connect(actionUnglue_, SIGNAL(triggered()), mainWindow()->scene(), SLOT(unglue()));
+    connect(actionUnglue_, SIGNAL(triggered()), mainWindow()->sceneOld(), SLOT(unglue()));
 
     actionUncut_ = new QAction(this);
     actionUncut_->setText(tr("Simplify"));
@@ -363,7 +363,7 @@ void Global::createToolBars()
     actionUncut_->setShortcut(QKeySequence(Qt::Key_Backspace));
     actionUncut_->setShortcutContext(Qt::ApplicationShortcut);
     mainWindow()->addAction(actionUncut_);
-    connect(actionUncut_, SIGNAL(triggered()), mainWindow()->scene(), SLOT(uncut()));
+    connect(actionUncut_, SIGNAL(triggered()), mainWindow()->sceneOld(), SLOT(uncut()));
 
     // Desired icon size
     double sideLength = 40;
@@ -800,8 +800,8 @@ void Global::updateStatusBarHelp()
 DevSettings * Global::devSettings() { return DevSettings::instance(); }
 MainWindow * Global::mainWindow() const { return mainWindow_; }
 Settings & Global::settings() { return preferences_; }
-VectorAnimationComplex::VAC * Global::currentVAC() { return mainWindow()->scene()->getVAC_(); }
-Scene * Global::scene() const {return mainWindow()->scene();}
+VectorAnimationComplex::VAC * Global::currentVAC() { return mainWindow()->sceneOld()->getVAC_(); }
+SceneOld * Global::scene() const {return mainWindow()->sceneOld();}
 
 QColor Global::edgeColor()
 {

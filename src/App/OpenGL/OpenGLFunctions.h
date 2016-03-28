@@ -6,29 +6,11 @@
 // license terms and conditions in the LICENSE.MIT file found in the top-level
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
-#ifndef SELECTIONINFOWIDGET_H
-#define SELECTIONINFOWIDGET_H
+#ifndef OPENGLFUNCTIONS_H
+#define OPENGLFUNCTIONS_H
 
-#include <QWidget>
-#include <QGridLayout>
-#include <QLabel>
+#include <QOpenGLFunctions_3_2_Core>
 
-class SceneOld;
+using OpenGLFunctions = QOpenGLFunctions_3_2_Core;
 
-class SelectionInfoWidget : public QWidget
-{
-    Q_OBJECT
-public:
-    explicit SelectionInfoWidget(QWidget *parent = 0);
-
-signals:
-
-public slots:
-    void updateInfo();
-
-private:
-    QLabel * labelSelected_;
-    QGridLayout * mainLayout_;
-};
-
-#endif // SELECTIONINFOWIDGET_H
+#endif // OPENGLFUNCTIONS_H

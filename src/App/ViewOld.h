@@ -27,7 +27,7 @@
 #include "ViewSettings.h"
 
 
-class Scene;
+class SceneOld;
 namespace VectorAnimationComplex
 {
 class VAC;
@@ -54,12 +54,12 @@ class ViewOld: public GLWidget
     Q_OBJECT
     
 public:
-    ViewOld(Scene *scene, QWidget *parent);
+    ViewOld(SceneOld *scene, QWidget *parent);
     virtual ~ViewOld();
 
     void initCamera();
 
-    Scene * scene();
+    SceneOld * scene();
 
     virtual void keyPressEvent(QKeyEvent *event);
     virtual void keyReleaseEvent(QKeyEvent *event);
@@ -142,7 +142,7 @@ signals:
 private:
     // What scene to draw
     // Note: which frame to render is specified in viewSettings
-    Scene *scene_;
+    SceneOld *scene_;
 
     // Different times might be drawn concurently, either because there are several
     // timeline or a timeline has several time. The method below gives the time to

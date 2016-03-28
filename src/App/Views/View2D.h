@@ -12,12 +12,18 @@
 #include "Views/View.h"
 #include "Views/View2DMouseEvent.h"
 
-class View2DMouseEvent;
+class View2DRenderer;
+class SceneRenderer;
 
 class View2D: public View
 {
+private:
+    Q_OBJECT
+    Q_DISABLE_COPY(View2D)
+
 public:
-    View2D(QWidget * parent = nullptr);
+    View2D(SceneRenderer * sceneRenderer,
+           QWidget * parent);
 
 protected:
     View2DMouseEvent * makeMouseEvent();

@@ -20,8 +20,7 @@ CONFIG += qt c++11
 QT += opengl network
 
 # App version
-MYVAR = 1.6
-VERSION = $$MYVAR
+VERSION = 1.6
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"
 
 # App resources
@@ -136,7 +135,6 @@ HEADERS += MainWindow.h \
     SceneObject_Example.h \
     SceneObjectVisitor.h \
     KeyFrame.h \
-    Scene.h \
     MultiView.h \
     View3D.h \
     Timeline.h \
@@ -228,7 +226,15 @@ HEADERS += MainWindow.h \
     Views/ViewMouseAction.h \
     Core/Memory.h \
     Views/TestAction.h \
-    ViewOld.h
+    ViewOld.h \
+    SceneOld.h \
+    Scene/SceneData.h \
+    Scene/Scene.h \
+    OpenGL/OpenGLRenderer.h \
+    OpenGL/OpenGLSharedResources.h \
+    OpenGL/OpenGLFunctions.h \
+    Views/View2DRenderer.h \
+    Scene/SceneRenderer.h
 
 SOURCES += main.cpp \
     SaveAndLoad.cpp \
@@ -242,7 +248,6 @@ SOURCES += main.cpp \
     SceneObject.cpp \
     SceneObjectVisitor.cpp \
     KeyFrame.cpp \
-    Scene.cpp \
     MultiView.cpp \
     View3D.cpp \
     Timeline.cpp \
@@ -326,7 +331,14 @@ SOURCES += main.cpp \
     Views/ViewMouseEvent.cpp \
     Views/ViewMouseAction.cpp \
     Views/TestAction.cpp \
-    ViewOld.cpp
+    ViewOld.cpp \
+    SceneOld.cpp \
+    Scene/SceneData.cpp \
+    Scene/Scene.cpp \
+    OpenGL/OpenGLRenderer.cpp \
+    OpenGL/OpenGLSharedResources.cpp \
+    Views/View2DRenderer.cpp \
+    Scene/SceneRenderer.cpp
 
 DISTFILES += \
     OpenGL/Shaders/Helloworld.v.glsl \

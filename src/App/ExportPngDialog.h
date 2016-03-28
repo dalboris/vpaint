@@ -14,20 +14,20 @@
 class QCheckBox;
 class QSpinBox;
 class QDoubleSpinBox;
-class Scene;
+class SceneOld;
 
 class ExportPngDialog: public QDialog
 {
     Q_OBJECT
 
 public:
-    ExportPngDialog(Scene * scene);
+    ExportPngDialog(SceneOld * scene);
 
     // Reimplements from QDialog
     void setVisible(bool visible);
 
     // Access linked scene
-    Scene * scene() const;
+    SceneOld * scene() const;
 
     // Access canvas settings
     double left() const;
@@ -57,7 +57,7 @@ private slots:
     void processPreserveAspectRatioChanged_(bool b);
 
 private:
-    Scene * scene_;
+    SceneOld * scene_;
 
     QDoubleSpinBox * topSpinBox_;
     QDoubleSpinBox * leftSpinBox_;

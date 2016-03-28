@@ -7,7 +7,7 @@
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
 #include "Timeline.h"
-#include "Scene.h"
+#include "SceneOld.h"
 #include "SceneObject.h"
 #include <QKeyEvent>
 
@@ -23,7 +23,7 @@
 #include "OpenGL.h"
 #include "Global.h"
 
-Scene::Scene() :
+SceneOld::SceneOld() :
     left_(0),
     top_(0),
     width_(1280),
@@ -38,56 +38,56 @@ Scene::Scene() :
     indexHovered_ = -1;
 }
 
-double Scene::left() const
+double SceneOld::left() const
 {
     return left_;
 }
 
-double Scene::top() const
+double SceneOld::top() const
 {
     return top_;
 }
 
-double Scene::width() const
+double SceneOld::width() const
 {
     return width_;
 }
 
-double Scene::height() const
+double SceneOld::height() const
 {
     return height_;
 }
 
-void Scene::setLeft(double x)
+void SceneOld::setLeft(double x)
 {
     left_ = x;
     emitChanged();
 }
 
-void Scene::setTop(double y)
+void SceneOld::setTop(double y)
 {
     top_ = y;
     emitChanged();
 }
 
-void Scene::setWidth(double w)
+void SceneOld::setWidth(double w)
 {
     width_ = w;
     emitChanged();
 }
 
-void Scene::setHeight(double h)
+void SceneOld::setHeight(double h)
 {
     height_ = h;
     emitChanged();
 }
 
-Background * Scene::background() const
+Background * SceneOld::background() const
 {
     return background_;
 }
 
-void Scene::setCanvasDefaultValues()
+void SceneOld::setCanvasDefaultValues()
 {
     left_ = 0;
     top_ = 0;
@@ -97,7 +97,7 @@ void Scene::setCanvasDefaultValues()
     // Don't emit changed on purpose
 }
 
-void Scene::copyFrom(Scene * other)
+void SceneOld::copyFrom(SceneOld * other)
 {
     // XXX
     // In this method, here's is what's wrong:
@@ -136,7 +136,7 @@ void Scene::copyFrom(Scene * other)
     }
 }
 
-void Scene::clear(bool silent)
+void SceneOld::clear(bool silent)
 {
     VectorAnimationComplex::VAC * vac = getVAC_();
     if(vac)
@@ -160,7 +160,7 @@ void Scene::clear(bool silent)
     }
 }
 
-Scene::~Scene()
+SceneOld::~SceneOld()
 {
     clear(true);
 }
@@ -168,7 +168,7 @@ Scene::~Scene()
 // ----------------------- Save and Load -------------------------
 #include "SaveAndLoad.h"
 
-void Scene::save(QTextStream & out)
+void SceneOld::save(QTextStream & out)
 {
     out << Save::newField("SceneObjects");
     out << "\n" << Save::indent() << "[";
@@ -184,7 +184,7 @@ void Scene::save(QTextStream & out)
 }
 
 
-void Scene::exportSVG(Time t, QTextStream & out)
+void SceneOld::exportSVG(Time t, QTextStream & out)
 {
     // Export background
     background_->exportSVG(t.frame(), out,
@@ -198,7 +198,7 @@ void Scene::exportSVG(Time t, QTextStream & out)
 }
 
 
-void Scene::read(QTextStream & in)
+void SceneOld::read(QTextStream & in)
 {
     clear(true);
     
@@ -225,7 +225,7 @@ void Scene::read(QTextStream & in)
     emit selectionChanged();
 }
 
-void Scene::write(XmlStreamWriter & xml)
+void SceneOld::write(XmlStreamWriter & xml)
 {
     // Background
     xml.writeStartElement("background");
@@ -238,7 +238,7 @@ void Scene::write(XmlStreamWriter & xml)
     xml.writeEndElement();
 }
 
-void Scene::read(XmlStreamReader & xml)
+void SceneOld::read(XmlStreamReader & xml)
 {
     blockSignals(true);
 
@@ -270,7 +270,7 @@ void Scene::read(XmlStreamReader & xml)
     emit selectionChanged();
 }
 
-void Scene::readCanvas(XmlStreamReader & xml)
+void SceneOld::readCanvas(XmlStreamReader & xml)
 {
     setCanvasDefaultValues();
 
@@ -293,13 +293,13 @@ void Scene::readCanvas(XmlStreamReader & xml)
     xml.skipCurrentElement();
 }
 
-void Scene::writeCanvas(XmlStreamWriter & xml)
+void SceneOld::writeCanvas(XmlStreamWriter & xml)
 {
     xml.writeAttribute("position", QString().setNum(left()) + " " + QString().setNum(top()));
     xml.writeAttribute("size", QString().setNum(width()) + " " + QString().setNum(height()));
 }
 
-void Scene::relativeRemap(const QDir & oldDir, const QDir & newDir)
+void SceneOld::relativeRemap(const QDir & oldDir, const QDir & newDir)
 {
     background()->relativeRemap(oldDir, newDir);
 }
@@ -308,7 +308,7 @@ void Scene::relativeRemap(const QDir & oldDir, const QDir & newDir)
 
 // XXX Refactor this: move it to View. Even better, have a Canvas and
 // CanvasRenderer class
-void Scene::drawCanvas(ViewSettings & /*viewSettings*/)
+void SceneOld::drawCanvas(ViewSettings & /*viewSettings*/)
 {
     double x = left();
     double y = top();
@@ -352,7 +352,7 @@ void Scene::drawCanvas(ViewSettings & /*viewSettings*/)
     }
 }
 
-void Scene::draw(Time time, ViewSettings & viewSettings)
+void SceneOld::draw(Time time, ViewSettings & viewSettings)
 {
     // Draw VAC
     // XXX this was over-engineered. Should revert to something simpler:
@@ -366,7 +366,7 @@ void Scene::draw(Time time, ViewSettings & viewSettings)
     }
 }
 
-void Scene::drawPick(Time time, ViewSettings & viewSettings)
+void SceneOld::drawPick(Time time, ViewSettings & viewSettings)
 {
     for(int i=0; i<sceneObjects_.size(); i++)
     {
@@ -382,14 +382,14 @@ void Scene::drawPick(Time time, ViewSettings & viewSettings)
 // is trigerred by View or View3D, and hence they can decide themselves what do they
 // need to update
 
-void Scene::setHoveredObject(Time time, int index, int id)
+void SceneOld::setHoveredObject(Time time, int index, int id)
 {
     setNoHoveredObject();
     indexHovered_ = index;
     sceneObjects_[index]->setHoveredObject(time, id);
 }
 
-void Scene::setNoHoveredObject()
+void SceneOld::setNoHoveredObject()
 {
     if(indexHovered_ != -1)
     {
@@ -397,29 +397,29 @@ void Scene::setNoHoveredObject()
         indexHovered_ = -1;
     }
 }
-void Scene::select(Time time, int index, int id)
+void SceneOld::select(Time time, int index, int id)
 {
     sceneObjects_[index]->select(time, id);
 }
-void Scene::deselect(Time time, int index, int id)
+void SceneOld::deselect(Time time, int index, int id)
 {
     sceneObjects_[index]->deselect(time, id);
 }
-void Scene::toggle(Time time, int index, int id)
+void SceneOld::toggle(Time time, int index, int id)
 {
     sceneObjects_[index]->toggle(time, id);
 }
-void Scene::deselectAll(Time time)
+void SceneOld::deselectAll(Time time)
 {
     foreach(SceneObject * so, sceneObjects_)
         so->deselectAll(time);
 }
-void Scene::deselectAll()
+void SceneOld::deselectAll()
 {
     foreach(SceneObject * so, sceneObjects_)
         so->deselectAll();
 }
-void Scene::invertSelection()
+void SceneOld::invertSelection()
 {
     foreach(SceneObject * so, sceneObjects_)
         so->invertSelection();
@@ -429,7 +429,7 @@ void Scene::invertSelection()
 // ---------------- VAC specific Selection -----------------------
 
 
-void Scene::selectAll()
+void SceneOld::selectAll()
 {
     if(!sceneObjects_.isEmpty())
     {
@@ -442,7 +442,7 @@ void Scene::selectAll()
     }
 }
 
-void Scene::selectConnected()
+void SceneOld::selectConnected()
 {
     if(!sceneObjects_.isEmpty())
     {
@@ -455,7 +455,7 @@ void Scene::selectConnected()
     }
 }
 
-void Scene::selectClosure()
+void SceneOld::selectClosure()
 {
     if(!sceneObjects_.isEmpty())
     {
@@ -468,7 +468,7 @@ void Scene::selectClosure()
     }
 }
 
-void Scene::selectVertices()
+void SceneOld::selectVertices()
 {
     if(!sceneObjects_.isEmpty())
     {
@@ -481,7 +481,7 @@ void Scene::selectVertices()
     }
 }
 
-void Scene::selectEdges()
+void SceneOld::selectEdges()
 {
     if(!sceneObjects_.isEmpty())
     {
@@ -494,7 +494,7 @@ void Scene::selectEdges()
     }
 }
 
-void Scene::selectFaces()
+void SceneOld::selectFaces()
 {
     if(!sceneObjects_.isEmpty())
     {
@@ -507,7 +507,7 @@ void Scene::selectFaces()
     }
 }
 
-void Scene::deselectVertices()
+void SceneOld::deselectVertices()
 {
     if(!sceneObjects_.isEmpty())
     {
@@ -520,7 +520,7 @@ void Scene::deselectVertices()
     }
 }
 
-void Scene::deselectEdges()
+void SceneOld::deselectEdges()
 {
     if(!sceneObjects_.isEmpty())
     {
@@ -533,7 +533,7 @@ void Scene::deselectEdges()
     }
 }
 
-void Scene::deselectFaces()
+void SceneOld::deselectFaces()
 {
     if(!sceneObjects_.isEmpty())
     {
@@ -549,22 +549,22 @@ void Scene::deselectFaces()
 
 // ----------------------- User Interactions -------------------------
 
-void Scene::keyPressEvent(QKeyEvent *event)
+void SceneOld::keyPressEvent(QKeyEvent *event)
 {
     event->ignore();
 }
 
-void Scene::keyReleaseEvent(QKeyEvent *event)
+void SceneOld::keyReleaseEvent(QKeyEvent *event)
 {
     event->ignore();
 }
 
-VectorAnimationComplex::VAC * Scene::vectorAnimationComplex()
+VectorAnimationComplex::VAC * SceneOld::vectorAnimationComplex()
 {
     return getVAC_();
 }
 
-void Scene::addSceneObject(SceneObject * sceneObject, bool silent)
+void SceneOld::addSceneObject(SceneObject * sceneObject, bool silent)
 {
     sceneObjects_ << sceneObject;
     connect(sceneObject, SIGNAL(changed()),
@@ -582,7 +582,7 @@ void Scene::addSceneObject(SceneObject * sceneObject, bool silent)
 
 #include <QToolBar>
 
-void Scene::populateToolBar(QToolBar * toolBar)
+void SceneOld::populateToolBar(QToolBar * toolBar)
 {
     // Actions of the whole scene
     // put undo redo here
@@ -591,7 +591,7 @@ void Scene::populateToolBar(QToolBar * toolBar)
     VectorAnimationComplex::VAC::populateToolBar(toolBar, this);
 }
 
-void Scene::deleteSelectedCells()
+void SceneOld::deleteSelectedCells()
 {
     if(!sceneObjects_.isEmpty())
     {
@@ -608,7 +608,7 @@ void Scene::deleteSelectedCells()
     
 }
 
-void Scene::test()
+void SceneOld::test()
 {
     if(!sceneObjects_.isEmpty())
     {
@@ -625,7 +625,7 @@ void Scene::test()
 
 }
 
-void Scene::smartDelete()
+void SceneOld::smartDelete()
 {
     if(!sceneObjects_.isEmpty())
     {
@@ -642,7 +642,7 @@ void Scene::smartDelete()
 
 }
 
-VectorAnimationComplex::VAC * Scene::getVAC_()
+VectorAnimationComplex::VAC * SceneOld::getVAC_()
 {
     using VectorAnimationComplex::VAC;
 
@@ -658,7 +658,7 @@ VectorAnimationComplex::VAC * Scene::getVAC_()
     }
 }
 
-VectorAnimationComplex::InbetweenFace * Scene::createInbetweenFace()
+VectorAnimationComplex::InbetweenFace * SceneOld::createInbetweenFace()
 {
     VectorAnimationComplex::VAC * vac = getVAC_();
 
@@ -674,7 +674,7 @@ VectorAnimationComplex::InbetweenFace * Scene::createInbetweenFace()
     }
 }
 
-void Scene::cut(VectorAnimationComplex::VAC* & clipboard)
+void SceneOld::cut(VectorAnimationComplex::VAC* & clipboard)
 {
     VectorAnimationComplex::VAC * vac = getVAC_();
     if(vac)
@@ -683,7 +683,7 @@ void Scene::cut(VectorAnimationComplex::VAC* & clipboard)
     }
 }
 
-void Scene::copy(VectorAnimationComplex::VAC* & clipboard)
+void SceneOld::copy(VectorAnimationComplex::VAC* & clipboard)
 {
     VectorAnimationComplex::VAC * vac = getVAC_();
     if(vac)
@@ -692,7 +692,7 @@ void Scene::copy(VectorAnimationComplex::VAC* & clipboard)
     }
 }
 
-void Scene::paste(VectorAnimationComplex::VAC* & clipboard)
+void SceneOld::paste(VectorAnimationComplex::VAC* & clipboard)
 {
     VectorAnimationComplex::VAC * vac = getVAC_();
     if(vac)
@@ -701,7 +701,7 @@ void Scene::paste(VectorAnimationComplex::VAC* & clipboard)
     }
 }
 
-void Scene::motionPaste(VectorAnimationComplex::VAC* & clipboard)
+void SceneOld::motionPaste(VectorAnimationComplex::VAC* & clipboard)
 {
     VectorAnimationComplex::VAC * vac = getVAC_();
     if(vac)
@@ -711,7 +711,7 @@ void Scene::motionPaste(VectorAnimationComplex::VAC* & clipboard)
 }
 
 
-void Scene::createFace()
+void SceneOld::createFace()
 {
 
     if(!sceneObjects_.isEmpty())
@@ -731,7 +731,7 @@ void Scene::createFace()
 
 }
 
-void Scene::addCyclesToFace()
+void SceneOld::addCyclesToFace()
 {
     if(!sceneObjects_.isEmpty())
     {
@@ -750,7 +750,7 @@ void Scene::addCyclesToFace()
 
 }
 
-void Scene::removeCyclesFromFace()
+void SceneOld::removeCyclesFromFace()
 {
     if(!sceneObjects_.isEmpty())
     {
@@ -769,7 +769,7 @@ void Scene::removeCyclesFromFace()
 
 }
 
-void Scene::changeColor()
+void SceneOld::changeColor()
 {
     if(!sceneObjects_.isEmpty())
     {
@@ -787,7 +787,7 @@ void Scene::changeColor()
     }
 
 }
-void Scene::raise()
+void SceneOld::raise()
 {
     if(!sceneObjects_.isEmpty())
     {
@@ -805,7 +805,7 @@ void Scene::raise()
     }
 
 }
-void Scene::lower()
+void SceneOld::lower()
 {
     if(!sceneObjects_.isEmpty())
     {
@@ -824,7 +824,7 @@ void Scene::lower()
 
 }
 
-void Scene::raiseToTop()
+void SceneOld::raiseToTop()
 {
     if(!sceneObjects_.isEmpty())
     {
@@ -842,7 +842,7 @@ void Scene::raiseToTop()
     }
 
 }
-void Scene::lowerToBottom()
+void SceneOld::lowerToBottom()
 {
     if(!sceneObjects_.isEmpty())
     {
@@ -860,7 +860,7 @@ void Scene::lowerToBottom()
     }
 
 }
-void Scene::altRaise()
+void SceneOld::altRaise()
 {
     if(!sceneObjects_.isEmpty())
     {
@@ -878,7 +878,7 @@ void Scene::altRaise()
     }
 
 }
-void Scene::altLower()
+void SceneOld::altLower()
 {
     if(!sceneObjects_.isEmpty())
     {
@@ -897,7 +897,7 @@ void Scene::altLower()
 
 }
 
-void Scene::altRaiseToTop()
+void SceneOld::altRaiseToTop()
 {
     if(!sceneObjects_.isEmpty())
     {
@@ -915,7 +915,7 @@ void Scene::altRaiseToTop()
     }
 
 }
-void Scene::altLowerToBottom()
+void SceneOld::altLowerToBottom()
 {
     if(!sceneObjects_.isEmpty())
     {
@@ -934,7 +934,7 @@ void Scene::altLowerToBottom()
 
 }
 
-void Scene::changeEdgeWidth()
+void SceneOld::changeEdgeWidth()
 {
     if(!sceneObjects_.isEmpty())
     {
@@ -953,7 +953,7 @@ void Scene::changeEdgeWidth()
 
 }
 
-void Scene::glue()
+void SceneOld::glue()
 {
 
     if(!sceneObjects_.isEmpty())
@@ -973,7 +973,7 @@ void Scene::glue()
 
 }
 
-void Scene::unglue()
+void SceneOld::unglue()
 {
 
     if(!sceneObjects_.isEmpty())
@@ -993,7 +993,7 @@ void Scene::unglue()
 
 }
 
-void Scene::uncut()
+void SceneOld::uncut()
 {
 
     if(!sceneObjects_.isEmpty())
@@ -1013,7 +1013,7 @@ void Scene::uncut()
 
 }
 
-void Scene::inbetweenSelection()
+void SceneOld::inbetweenSelection()
 {
     if(!sceneObjects_.isEmpty())
     {
@@ -1031,7 +1031,7 @@ void Scene::inbetweenSelection()
     }
 }
 
-void Scene::keyframeSelection()
+void SceneOld::keyframeSelection()
 {
     if(!sceneObjects_.isEmpty())
     {
@@ -1050,7 +1050,7 @@ void Scene::keyframeSelection()
 }
 
 
-void Scene::resetCellsToConsiderForCutting()
+void SceneOld::resetCellsToConsiderForCutting()
 {
 
     if(!sceneObjects_.isEmpty())
@@ -1070,7 +1070,7 @@ void Scene::resetCellsToConsiderForCutting()
 
 }
 
-void Scene::updateCellsToConsiderForCutting()
+void SceneOld::updateCellsToConsiderForCutting()
 {
 
     if(!sceneObjects_.isEmpty())

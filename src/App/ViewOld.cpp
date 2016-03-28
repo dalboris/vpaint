@@ -8,7 +8,7 @@
 
 #include "ViewOld.h"
 
-#include "Scene.h"
+#include "SceneOld.h"
 #include "Timeline.h"
 #include "DevSettings.h"
 #include "Global.h"
@@ -47,7 +47,7 @@
 
 #define  PAINT_ACTION                                       400
 
-ViewOld::ViewOld(Scene * scene, QWidget * parent) :
+ViewOld::ViewOld(SceneOld * scene, QWidget * parent) :
     GLWidget(parent, true),
     scene_(scene),
     pickingImg_(0),
@@ -97,7 +97,7 @@ void ViewOld::initCamera()
     setCamera2D(camera);
 }
 
-Scene * ViewOld::scene()
+SceneOld * ViewOld::scene()
 {
     return scene_;
 }

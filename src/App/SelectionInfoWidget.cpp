@@ -12,7 +12,7 @@
 #include <QPushButton>
 #include "Global.h"
 #include "MainWindow.h"
-#include "Scene.h"
+#include "SceneOld.h"
 #include "VectorAnimationComplex/VAC.h"
 
 SelectionInfoWidget::SelectionInfoWidget(QWidget *parent) :
@@ -33,7 +33,7 @@ void SelectionInfoWidget::updateInfo()
     QString text;
 
     using namespace VectorAnimationComplex;
-    VAC * vac = global()->mainWindow()->scene()->vectorAnimationComplex();
+    VAC * vac = global()->mainWindow()->sceneOld()->vectorAnimationComplex();
     if(vac)
     {
         foreach(Cell * c, vac->selectedCells())

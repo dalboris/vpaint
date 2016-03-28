@@ -8,7 +8,7 @@
 
 #include "ExportPngDialog.h"
 
-#include "Scene.h"
+#include "SceneOld.h"
 
 #include <cmath>
 
@@ -19,7 +19,7 @@
 #include <QCheckBox>
 #include <QLabel>
 
-ExportPngDialog::ExportPngDialog(Scene * scene) :
+ExportPngDialog::ExportPngDialog(SceneOld * scene) :
     scene_(scene),
     ignoreSceneChanged_(false),
     ignoreWidthHeightChanged_(false)
@@ -211,7 +211,7 @@ void ExportPngDialog::setVisible(bool visible)
     QDialog::setVisible(visible);
 }
 
-Scene * ExportPngDialog::scene() const
+SceneOld * ExportPngDialog::scene() const
 {
     return scene_;
 }

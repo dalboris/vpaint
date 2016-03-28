@@ -10,7 +10,7 @@
 
 #include "Global.h"
 
-#include "Scene.h"
+#include "SceneOld.h"
 #include "View3D.h"
 #include "ViewOld.h"
 #include "MultiView.h"
@@ -48,6 +48,8 @@
 #include <QDesktopServices>
 #include <QShortcut>
 
+#include "Scene/Scene.h"
+#include "Scene/SceneRenderer.h"
 #include "Views/View2D.h"
 
 
@@ -56,8 +58,15 @@
  */
 
 
-MainWindow::MainWindow() :
-    scene_(0),
+MainWindow::MainWindow(QWidget * parent) :
+
+    QMainWindow(parent),
+
+    scene_(nullptr),
+    view2D_(nullptr),
+
+
+    sceneOld_(0),
     multiView_(0),
 
     aboutDialog_(0),
@@ -86,7 +95,11 @@ MainWindow::MainWindow() :
     editCanvasSizeDialog_(0),
     exportingPng_(false)
 {
-    setCentralWidget(new View2D());
+    scene_         = new Scene(this);
+    sceneRenderer_ = new SceneRenderer(scene_, this);
+    view2D_        = new View2D(sceneRenderer_, this);
+
+    setCentralWidget(view2D_);
 
     /* FACTORED_OUT
     // Global object
@@ -183,7 +196,7 @@ MainWindow::MainWindow() :
 
 void MainWindow::updateObjectProperties()
 {
-    inspector->setObjects(scene()->getVAC_()->selectedCells());
+    inspector->setObjects(sceneOld()->getVAC_()->selectedCells());
 }
 
 ViewOld * MainWindow::activeView() const
@@ -326,6 +339,11 @@ Scene * MainWindow::scene() const
     return scene_;
 }
 
+SceneOld * MainWindow::sceneOld() const
+{
+    return sceneOld_;
+}
+
 
 void MainWindow::addToUndoStack()
 {
@@ -335,8 +353,8 @@ void MainWindow::addToUndoStack()
         delete undoStack_[j].second;
         undoStack_.removeLast();
     }
-    undoStack_ << qMakePair(global()->documentDir(), new Scene());
-    undoStack_[undoIndex_].second->copyFrom(scene_);
+    undoStack_ << qMakePair(global()->documentDir(), new SceneOld());
+    undoStack_[undoIndex_].second->copyFrom(sceneOld_);
 
     // Update window title
     updateWindowTitle_();
@@ -373,7 +391,7 @@ void MainWindow::goToUndoIndex_(int undoIndex)
     }
 
     // Set scene data from undo history
-    scene_->copyFrom(undoStack_[undoIndex].second);
+    sceneOld_->copyFrom(undoStack_[undoIndex].second);
 
     // Update window title
     updateWindowTitle_();
@@ -405,22 +423,22 @@ void MainWindow::redo()
 
 void MainWindow::cut()
 {
-    scene_->cut(clipboard_);
+    sceneOld_->cut(clipboard_);
 }
 
 void MainWindow::copy()
 {
-    scene_->copy(clipboard_);
+    sceneOld_->copy(clipboard_);
 }
 
 void MainWindow::paste()
 {
-    scene_->paste(clipboard_);
+    sceneOld_->paste(clipboard_);
 }
 
 void MainWindow::motionPaste()
 {
-    scene_->motionPaste(clipboard_);
+    sceneOld_->motionPaste(clipboard_);
 }
 
 void MainWindow::editAnimatedCycle(VectorAnimationComplex::InbetweenFace * inbetweenFace, int indexCycle)
@@ -440,7 +458,7 @@ void MainWindow::editAnimatedCycle(VectorAnimationComplex::InbetweenFace * inbet
 void MainWindow::createInbetweenFace()
 {
     // Create inbetween face with one (invalid for now) animated cycle
-    InbetweenFace * inbetweenFace = scene_->createInbetweenFace();
+    InbetweenFace * inbetweenFace = sceneOld_->createInbetweenFace();
     inbetweenFace->addAnimatedCycle();
 
     // Set as edited cycle
@@ -504,7 +522,7 @@ void MainWindow::editCanvasSize()
 
     if(!editCanvasSizeDialog_)
     {
-        editCanvasSizeDialog_ = new EditCanvasSizeDialog(scene());
+        editCanvasSizeDialog_ = new EditCanvasSizeDialog(sceneOld());
         editCanvasSizeDialog_->setParent(this, Qt::Dialog);
         editCanvasSizeDialog_->setModal(false);
     }
@@ -608,8 +626,8 @@ void MainWindow::newDocument()
         setDocumentFilePath_("");
 
         // Set empty scene
-        Scene * newScene = new Scene();
-        scene_->copyFrom(newScene);
+        SceneOld * newScene = new SceneOld();
+        sceneOld_->copyFrom(newScene);
         delete newScene;
 
         // Add to undo stack
@@ -714,7 +732,7 @@ bool MainWindow::exportPNG()
 
     if(!exportPngDialog_)
     {
-        exportPngDialog_ = new ExportPngDialog(scene());
+        exportPngDialog_ = new ExportPngDialog(sceneOld());
         exportPngDialog_->setParent(this, Qt::Dialog);
         exportPngDialog_->setModal(false);
         connect(exportPngDialog_, SIGNAL(accepted()), this, SLOT(acceptExportPNG()));
@@ -861,7 +879,7 @@ bool MainWindow::save_(const QString & filePath, bool relativeRemap)
         if (oldDocumentDir != newDocumentDir)
         {
             global()->setDocumentDir(newDocumentDir);
-            scene()->relativeRemap(oldDocumentDir, newDocumentDir);
+            sceneOld()->relativeRemap(oldDocumentDir, newDocumentDir);
         }
     }
 
@@ -897,7 +915,7 @@ void MainWindow::read_DEPRECATED(QTextStream & in)
     // Scene
     field = Read::field(in);
     Read::skipBracket(in);
-    scene_->read(in);
+    sceneOld_->read(in);
     Read::skipBracket(in);
 }
 
@@ -915,7 +933,7 @@ void MainWindow::write_DEPRECATED(QTextStream & out)
     // Scene
     out << Save::newField("Scene");
     out << Save::openCurlyBrackets();
-    scene_->save(out);
+    sceneOld_->save(out);
     out << Save::closeCurlyBrackets();
 }
 
@@ -956,12 +974,12 @@ void MainWindow::write(XmlStreamWriter &xml)
 
         // Canvas
         xml.writeStartElement("canvas");
-        scene()->writeCanvas(xml);
+        sceneOld()->writeCanvas(xml);
         xml.writeEndElement();
 
         // Layer
         xml.writeStartElement("layer");
-        scene()->write(xml);
+        sceneOld()->write(xml);
         xml.writeEndElement();
     }
     xml.writeEndElement();
@@ -994,7 +1012,7 @@ void MainWindow::read(XmlStreamReader & xml)
             // Canvas
             else if (xml.name() == "canvas")
             {
-                scene_->readCanvas(xml);
+                sceneOld_->readCanvas(xml);
             }
 
             // Layer
@@ -1005,7 +1023,7 @@ void MainWindow::read(XmlStreamReader & xml)
                 ++numLayer;
                 if(numLayer == 1)
                 {
-                    scene_->read(xml);
+                    sceneOld_->read(xml);
                 }
                 else
                 {
@@ -1040,15 +1058,15 @@ bool MainWindow::doExportSVG(const QString & filename)
                 "  xmlns=\"http://www.w3.org/2000/svg\"\n"
                 "  xmlns:xlink=\"http://www.w3.org/1999/xlink\">\n")
 
-                .arg(scene_->left())
-                .arg(scene_->top())
-                .arg(scene_->width())
-                .arg(scene_->height());
+                .arg(sceneOld_->left())
+                .arg(sceneOld_->top())
+                .arg(sceneOld_->width())
+                .arg(sceneOld_->height());
 
         QString footer = "</svg>";
 
         out << header;
-        scene_->exportSVG(multiView_->activeView()->activeTime(), out);
+        sceneOld_->exportSVG(multiView_->activeView()->activeTime(), out);
         out << footer;
 
         statusBar()->showMessage(tr("File %1 successfully saved.").arg(filename));
@@ -1068,7 +1086,7 @@ bool MainWindow::doExportPNG(const QString & filename)
         // Export single frame
 
         QImage img = multiView_->activeView()->drawToImage(
-                    scene()->left(), scene()->top(), scene()->width(), scene()->height(),
+                    sceneOld()->left(), sceneOld()->top(), sceneOld()->width(), sceneOld()->height(),
                     exportPngDialog_->pngWidth(), exportPngDialog_->pngHeight());
 
         img.save(filename);
@@ -1122,7 +1140,7 @@ bool MainWindow::doExportPNG(const QString & filename)
 
             QImage img = multiView_->activeView()->drawToImage(
                         Time(i),
-                        scene()->left(), scene()->top(), scene()->width(), scene()->height(),
+                        sceneOld()->left(), sceneOld()->top(), sceneOld()->width(), sceneOld()->height(),
                         exportPngDialog_->pngWidth(), exportPngDialog_->pngHeight());
 
             img.save(filePath);
@@ -1375,21 +1393,21 @@ void MainWindow::createActions()
     actionSmartDelete->setShortcut(QKeySequence::Delete);
 #endif
     actionSmartDelete->setShortcutContext(Qt::ApplicationShortcut);
-    connect(actionSmartDelete, SIGNAL(triggered()), scene_, SLOT(smartDelete()));
+    connect(actionSmartDelete, SIGNAL(triggered()), sceneOld_, SLOT(smartDelete()));
 
     // Hard Delete
     actionHardDelete = new QAction(tr("Hard Delete"), this);
     actionHardDelete->setStatusTip(tr("Delete the selected objects and adjacent objects together."));
     actionHardDelete->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Delete));
     actionHardDelete->setShortcutContext(Qt::ApplicationShortcut);
-    connect(actionHardDelete, SIGNAL(triggered()), scene_, SLOT(deleteSelectedCells()));
+    connect(actionHardDelete, SIGNAL(triggered()), sceneOld_, SLOT(deleteSelectedCells()));
 
     // Hard Delete
     actionTest = new QAction(tr("Test"), this);
     actionTest->setStatusTip(tr("For development tests: quick and dirty function."));
     actionTest->setShortcut(QKeySequence(Qt::Key_T));
     actionTest->setShortcutContext(Qt::ApplicationShortcut);
-    connect(actionTest, SIGNAL(triggered()), scene_, SLOT(test()));
+    connect(actionTest, SIGNAL(triggered()), sceneOld_, SLOT(test()));
 
     ///////////////        VIEW        ///////////////
 
@@ -1531,77 +1549,77 @@ void MainWindow::createActions()
     actionSelectAll->setStatusTip(tr("Select all the objects."));
     actionSelectAll->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_A));
     actionSelectAll->setShortcutContext(Qt::ApplicationShortcut);
-    connect(actionSelectAll, SIGNAL(triggered()), scene_, SLOT(selectAll()));
+    connect(actionSelectAll, SIGNAL(triggered()), sceneOld_, SLOT(selectAll()));
 
     // Deselect All
     actionDeselectAll = new QAction(tr("Deselect all"), this);
     actionDeselectAll->setStatusTip(tr("Deselect all the objects."));
     actionDeselectAll->setShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_A));
     actionDeselectAll->setShortcutContext(Qt::ApplicationShortcut);
-    connect(actionDeselectAll, SIGNAL(triggered()), scene_, SLOT(deselectAll()));
+    connect(actionDeselectAll, SIGNAL(triggered()), sceneOld_, SLOT(deselectAll()));
 
     // Invert Selection
     actionInvertSelection = new QAction(tr("Invert Selection"), this);
     actionInvertSelection->setStatusTip(tr("Deselect all the selected objects and select all the other objects."));
     actionInvertSelection->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_I));
     actionInvertSelection->setShortcutContext(Qt::ApplicationShortcut);
-    connect(actionInvertSelection, SIGNAL(triggered()), scene_, SLOT(invertSelection()));
+    connect(actionInvertSelection, SIGNAL(triggered()), sceneOld_, SLOT(invertSelection()));
 
     // Select Connected Objects
     actionSelectConnected = new QAction(tr("Select connected objects"), this);
     actionSelectConnected->setStatusTip(tr("Select all the objects that are connected to at least one selected object."));
     actionSelectConnected->setShortcut(Qt::Key_Tab);
     actionSelectConnected->setShortcutContext(Qt::ApplicationShortcut);
-    connect(actionSelectConnected, SIGNAL(triggered()), scene_, SLOT(selectConnected()));
+    connect(actionSelectConnected, SIGNAL(triggered()), sceneOld_, SLOT(selectConnected()));
 
     // Select Closure
     actionSelectClosure = new QAction(tr("Add boundary to selection"), this);
     actionSelectClosure->setStatusTip(tr("Add the boundary of the selected objects to the selection."));
     actionSelectClosure->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Tab));
     actionSelectClosure->setShortcutContext(Qt::ApplicationShortcut);
-    connect(actionSelectClosure, SIGNAL(triggered()), scene_, SLOT(selectClosure()));
+    connect(actionSelectClosure, SIGNAL(triggered()), sceneOld_, SLOT(selectClosure()));
 
     // Select Vertices
     actionSelectVertices = new QAction(tr("Select vertices"), this);
     actionSelectVertices->setStatusTip(tr("Deselect all the objects in the current selection other than vertices."));
     actionSelectVertices->setShortcut(QKeySequence(Qt::Key_S, Qt::Key_V));
     actionSelectVertices->setShortcutContext(Qt::ApplicationShortcut);
-    connect(actionSelectVertices, SIGNAL(triggered()), scene_, SLOT(selectVertices()));
+    connect(actionSelectVertices, SIGNAL(triggered()), sceneOld_, SLOT(selectVertices()));
 
     // Select Edges
     actionSelectEdges = new QAction(tr("Select edges"), this);
     actionSelectEdges->setStatusTip(tr("Deselect all the objects in the current selection other than edges."));
     actionSelectEdges->setShortcut(QKeySequence(Qt::Key_S, Qt::Key_E));
     actionSelectEdges->setShortcutContext(Qt::ApplicationShortcut);
-    connect(actionSelectEdges, SIGNAL(triggered()), scene_, SLOT(selectEdges()));
+    connect(actionSelectEdges, SIGNAL(triggered()), sceneOld_, SLOT(selectEdges()));
 
     // Select Faces
     actionSelectFaces = new QAction(tr("Select faces"), this);
     actionSelectFaces->setStatusTip(tr("Deselect all the objects in the current selection other than faces."));
     actionSelectFaces->setShortcut(QKeySequence(Qt::Key_S, Qt::Key_F));
     actionSelectFaces->setShortcutContext(Qt::ApplicationShortcut);
-    connect(actionSelectFaces, SIGNAL(triggered()), scene_, SLOT(selectFaces()));
+    connect(actionSelectFaces, SIGNAL(triggered()), sceneOld_, SLOT(selectFaces()));
 
     // Deselect Vertices
     actionDeselectVertices = new QAction(tr("Deselect vertices"), this);
     actionDeselectVertices->setStatusTip(tr("Deselect all vertices."));
     actionDeselectVertices->setShortcut(QKeySequence(Qt::Key_S, Qt::SHIFT + Qt::Key_V));
     actionDeselectVertices->setShortcutContext(Qt::ApplicationShortcut);
-    connect(actionDeselectVertices, SIGNAL(triggered()), scene_, SLOT(deselectVertices()));
+    connect(actionDeselectVertices, SIGNAL(triggered()), sceneOld_, SLOT(deselectVertices()));
 
     // Deselect Edges
     actionDeselectEdges = new QAction(tr("Deselect edges"), this);
     actionDeselectEdges->setStatusTip(tr("Deselect all edges."));
     actionDeselectEdges->setShortcut(QKeySequence(Qt::Key_S, Qt::SHIFT + Qt::Key_E));
     actionDeselectEdges->setShortcutContext(Qt::ApplicationShortcut);
-    connect(actionDeselectEdges, SIGNAL(triggered()), scene_, SLOT(deselectEdges()));
+    connect(actionDeselectEdges, SIGNAL(triggered()), sceneOld_, SLOT(deselectEdges()));
 
     // Deselect Faces
     actionDeselectFaces = new QAction(tr("Deselect faces"), this);
     actionDeselectFaces->setStatusTip(tr("Deselect all faces."));
     actionDeselectFaces->setShortcut(QKeySequence(Qt::Key_S, Qt::SHIFT + Qt::Key_F));
     actionDeselectFaces->setShortcutContext(Qt::ApplicationShortcut);
-    connect(actionDeselectFaces, SIGNAL(triggered()), scene_, SLOT(deselectFaces()));
+    connect(actionDeselectFaces, SIGNAL(triggered()), sceneOld_, SLOT(deselectFaces()));
 
     ///////////////        DEPTH        ///////////////
 
@@ -1610,28 +1628,28 @@ void MainWindow::createActions()
     actionRaise->setStatusTip(tr("Raise the selected objects."));
     actionRaise->setShortcut(QKeySequence(Qt::Key_PageUp));
     actionRaise->setShortcutContext(Qt::ApplicationShortcut);
-    connect(actionRaise, SIGNAL(triggered()), scene_, SLOT(raise()));
+    connect(actionRaise, SIGNAL(triggered()), sceneOld_, SLOT(raise()));
 
     // Lower
     actionLower = new QAction(tr("Lower"), this);
     actionLower->setStatusTip(tr("Lower the selected objects."));
     actionLower->setShortcut(QKeySequence(Qt::Key_PageDown));
     actionLower->setShortcutContext(Qt::ApplicationShortcut);
-    connect(actionLower, SIGNAL(triggered()), scene_, SLOT(lower()));
+    connect(actionLower, SIGNAL(triggered()), sceneOld_, SLOT(lower()));
 
     // Raise To Top
     actionRaiseToTop = new QAction(tr("Raise to top"), this);
     actionRaiseToTop->setStatusTip(tr("Raise the selected objects to the foreground."));
     actionRaiseToTop->setShortcut(QKeySequence(Qt::Key_Home));
     actionRaiseToTop->setShortcutContext(Qt::ApplicationShortcut);
-    connect(actionRaiseToTop, SIGNAL(triggered()), scene_, SLOT(raiseToTop()));
+    connect(actionRaiseToTop, SIGNAL(triggered()), sceneOld_, SLOT(raiseToTop()));
 
     // Lower To Bottom
     actionLowerToBottom = new QAction(tr("Lower to bottom"), this);
     actionLowerToBottom->setStatusTip(tr("Lower the selected objects to the background."));
     actionLowerToBottom->setShortcut(QKeySequence(Qt::Key_End));
     actionLowerToBottom->setShortcutContext(Qt::ApplicationShortcut);
-    connect(actionLowerToBottom, SIGNAL(triggered()), scene_, SLOT(lowerToBottom()));
+    connect(actionLowerToBottom, SIGNAL(triggered()), sceneOld_, SLOT(lowerToBottom()));
 
     // Alternative Raise
     actionAltRaise = new QAction(tr("Alternative Raise"), this);
@@ -1639,7 +1657,7 @@ void MainWindow::createActions()
                                     "without enforcing that they stay below their boundary."));
     actionAltRaise->setShortcut(QKeySequence(Qt::ALT + Qt::Key_PageUp));
     actionAltRaise->setShortcutContext(Qt::ApplicationShortcut);
-    connect(actionAltRaise, SIGNAL(triggered()), scene_, SLOT(altRaise()));
+    connect(actionAltRaise, SIGNAL(triggered()), sceneOld_, SLOT(altRaise()));
 
     // Alternative Lower
     actionAltLower = new QAction(tr("Alternative Lower"), this);
@@ -1647,7 +1665,7 @@ void MainWindow::createActions()
                                     "without enforcing that they stay below their boundary."));
     actionAltLower->setShortcut(QKeySequence(Qt::ALT + Qt::Key_PageDown));
     actionAltLower->setShortcutContext(Qt::ApplicationShortcut);
-    connect(actionAltLower, SIGNAL(triggered()), scene_, SLOT(altLower()));
+    connect(actionAltLower, SIGNAL(triggered()), sceneOld_, SLOT(altLower()));
 
     // Alternative Raise To Top
     actionAltRaiseToTop = new QAction(tr("Alternative Raise to top"), this);
@@ -1655,7 +1673,7 @@ void MainWindow::createActions()
                                          "without enforcing that they stay below their boundary."));
     actionAltRaiseToTop->setShortcut(QKeySequence(Qt::ALT + Qt::Key_Home));
     actionAltRaiseToTop->setShortcutContext(Qt::ApplicationShortcut);
-    connect(actionAltRaiseToTop, SIGNAL(triggered()), scene_, SLOT(altRaiseToTop()));
+    connect(actionAltRaiseToTop, SIGNAL(triggered()), sceneOld_, SLOT(altRaiseToTop()));
 
     // Alternative Lower To Bottom
     actionAltLowerToBottom = new QAction(tr("Alternative Lower to bottom"), this);
@@ -1663,7 +1681,7 @@ void MainWindow::createActions()
                                             "without enforcing that they stay below their boundary."));
     actionAltLowerToBottom->setShortcut(QKeySequence(Qt::ALT + Qt::Key_End));
     actionAltLowerToBottom->setShortcutContext(Qt::ApplicationShortcut);
-    connect(actionAltLowerToBottom, SIGNAL(triggered()), scene_, SLOT(altLowerToBottom()));
+    connect(actionAltLowerToBottom, SIGNAL(triggered()), sceneOld_, SLOT(altLowerToBottom()));
 
 
     ///////////////        ANIMATION        ///////////////
@@ -1673,7 +1691,7 @@ void MainWindow::createActions()
     actionKeyframeSelection->setStatusTip(tr("Insert a key to all selected objects at current time."));
     actionKeyframeSelection->setShortcut(QKeySequence(Qt::Key_K));
     actionKeyframeSelection->setShortcutContext(Qt::ApplicationShortcut);
-    connect(actionKeyframeSelection, SIGNAL(triggered()), scene_, SLOT(keyframeSelection()));
+    connect(actionKeyframeSelection, SIGNAL(triggered()), sceneOld_, SLOT(keyframeSelection()));
 
     // Motion Paste
     actionMotionPaste = new QAction(tr("Motion paste"), this);
@@ -1687,7 +1705,7 @@ void MainWindow::createActions()
     actionInbetweenSelection->setStatusTip(tr("Automatically create inbetweens to interpolate the selection."));
     actionInbetweenSelection->setShortcut(QKeySequence(Qt::Key_I));
     actionInbetweenSelection->setShortcutContext(Qt::ApplicationShortcut);
-    connect(actionInbetweenSelection, SIGNAL(triggered()), scene_, SLOT(inbetweenSelection()));
+    connect(actionInbetweenSelection, SIGNAL(triggered()), sceneOld_, SLOT(inbetweenSelection()));
 
     // Create inbetween Face
     actionCreateInbetweenFace = new QAction(tr("Create inbetween face [Beta]"), this);
@@ -1906,7 +1924,7 @@ void MainWindow::createDocks()
     dockInspector->hide();
 
     // Signal/Slot connection
-    connect(scene(),SIGNAL(selectionChanged()),this,SLOT(updateObjectProperties()));
+    connect(sceneOld(),SIGNAL(selectionChanged()),this,SLOT(updateObjectProperties()));
 
     // ----- Animated cycle editor ---------
 
@@ -1924,7 +1942,7 @@ void MainWindow::createDocks()
 
     // Widget
     backgroundWidget = new BackgroundWidget();
-    backgroundWidget->setBackground(scene()->background());
+    backgroundWidget->setBackground(sceneOld()->background());
 
     // Dock
     dockBackgroundWidget = new QDockWidget(tr("Background"));

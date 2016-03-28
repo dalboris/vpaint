@@ -9,10 +9,14 @@
 #include "View2D.h"
 
 #include "Views/TestAction.h"
+#include "Views/View2DRenderer.h"
 
-View2D::View2D(QWidget * parent):
+View2D::View2D(SceneRenderer * sceneRenderer, QWidget * parent):
     View(parent)
 {
+    View2DRenderer * renderer = new View2DRenderer(sceneRenderer, this);
+    setRenderer(renderer);
+
     addMouseAction<TestAction>();
 }
 

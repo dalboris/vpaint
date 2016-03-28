@@ -6,15 +6,26 @@
 // license terms and conditions in the LICENSE.MIT file found in the top-level
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
-#include "OpenGLWidget.h"
+#include "OpenGL/OpenGLWidget.h"
+#include "OpenGL/OpenGLRenderer.h"
+#include "OpenGL/OpenGLFunctions.h"
 
-OpenGLWidget::OpenGLWidget(QWidget *parent) :
+#include <cassert>
+
+#include <QtDebug>
+
+OpenGLWidget::OpenGLWidget(QWidget * parent) :
     QOpenGLWidget(parent),
+    renderer_(nullptr)
+  /*,
     shaderProgram_(0)
+      */
 {
+    /*
     data_.push_back(glm::vec2(50, 50));
     data_.push_back(glm::vec2(50, 100));
     data_.push_back(glm::vec2(100, 50));
+    */
 }
 
 OpenGLWidget::~OpenGLWidget()
@@ -22,6 +33,77 @@ OpenGLWidget::~OpenGLWidget()
     cleanup();
 }
 
+void OpenGLWidget::setRenderer(OpenGLRenderer * renderer)
+{
+    assert(renderer);
+    renderer_ = renderer;
+}
+
+OpenGLRenderer * OpenGLWidget::renderer() const
+{
+    assert(renderer_);
+    return renderer_;
+}
+
+OpenGLFunctions * OpenGLWidget::functions() const
+{
+    QOpenGLContext * c = context();
+    assert(c);
+
+    OpenGLFunctions * f = c->versionFunctions<OpenGLFunctions>();
+    assert(f);
+
+    return f;
+}
+
+void OpenGLWidget::cleanup()
+{
+    makeCurrent();
+    OpenGLFunctions * f = functions();
+    renderer()->cleanup(f);
+    doneCurrent();
+}
+
+void OpenGLWidget::initializeGL()
+{
+    OpenGLFunctions * f = functions();
+    f->initializeOpenGLFunctions();
+    renderer()->initialize(f);
+}
+
+void OpenGLWidget::resizeGL(int w, int h)
+{
+    OpenGLFunctions * f = functions();
+    renderer()->resize(f, w, h);
+
+    // XXX todo
+    // -> this is state that depends on each view!
+    // So each View2D must have a "View2DRenderer"
+    // with its own state, and implementation of
+    // resize(). This renderer should forward render()
+    // to the shared SceneRenderer()->render2D()
+}
+
+void OpenGLWidget::paintGL()
+{
+    qint64 elapsed = elapsedTimer_.elapsed();
+    elapsedTimer_.restart();
+    qDebug() << "OpenGLWidget::paintGL() elapsed =" << elapsed;
+
+    OpenGLFunctions * f = functions();
+    renderer()->render(f);
+}
+
+
+
+
+
+
+
+
+
+
+/*
 const QMatrix4x4 & OpenGLWidget::projectionMatrix() const
 {
     return projMatrix_;
@@ -61,18 +143,23 @@ void OpenGLWidget::setViewMatrix(const QMatrix4x4 & viewMatrix)
     viewMatrix_ = viewMatrix;
     viewMatrixInv_.setDirty();
 }
+*/
 
+/*
 void OpenGLWidget::cleanup()
 {
     makeCurrent();
+    renderer_->cleanup();
     vbo_.destroy();
-    delete shaderProgram_;
-    shaderProgram_ = 0;
+    vao_.reset();
+    shaderProgram_.reset();
     doneCurrent();
 }
 
 void OpenGLWidget::initializeGL()
 {
+    QOpenGLFunctions * glFuncs = QOpenGLContext::currentContext()->functions();
+
     // Ensure proper cleanup
     connect(context(), &QOpenGLContext::aboutToBeDestroyed, this, &OpenGLWidget::cleanup);
 
@@ -96,9 +183,10 @@ void OpenGLWidget::initializeGL()
     projMatrixLoc_ = shaderProgram_->uniformLocation("projMatrix");
     viewMatrixLoc_ = shaderProgram_->uniformLocation("viewMatrix");
 
-    // Create VAO
-    vao_.create();
-    QOpenGLVertexArrayObject::Binder vaoBinder(&vao_);
+    // Create and bind VAO
+    vao_.reset(new QOpenGLVertexArrayObject());
+    vao_->create();
+    QOpenGLVertexArrayObject::Binder vaoBinder(vao_.get());
 
     // Create and allocate VBO
     vbo_.create();
@@ -139,7 +227,7 @@ void OpenGLWidget::paintGL()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Bind VAO and shader program
-    QOpenGLVertexArrayObject::Binder vaoBinder(&vao_);
+    QOpenGLVertexArrayObject::Binder vaoBinder(vao_.get());
     shaderProgram_->bind();
 
     // Set shader uniform values
@@ -152,3 +240,4 @@ void OpenGLWidget::paintGL()
     // Release Shader program
     shaderProgram_->release();
 }
+*/

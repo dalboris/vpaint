@@ -6,8 +6,8 @@
 // license terms and conditions in the LICENSE.MIT file found in the top-level
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
-#ifndef SCENE_H
-#define SCENE_H
+#ifndef SCENEOLD_H
+#define SCENEOLD_H
 
 #include <QObject>
 #include <QMap>
@@ -32,15 +32,15 @@ class InbetweenFace;
 }
 class QDir;
 
-class Scene: public QObject
+class SceneOld: public QObject
 {
     Q_OBJECT
     
 public:
-    Scene();
-    void copyFrom(Scene * other);
+    SceneOld();
+    void copyFrom(SceneOld * other);
     void clear(bool silent = false);
-    ~Scene();
+    ~SceneOld();
 
     QList<SceneObject*> sceneObjects() {return sceneObjects_;}
 

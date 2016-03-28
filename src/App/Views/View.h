@@ -16,17 +16,24 @@
 
 #include <vector>
 
+class Scene;
+class Timeline;
+
 /// \class View
 /// \brief A subclass of OpenGLWidget that provides mouse event management.
 ///
 /// This class listens to the low-level Qt mouse events and provides
-/// higher-level event handling from then.
-/// By design, does not handle multiple clics.
+/// higher-level event handling from them. By design, it does not handle
+/// multiple clicks.
 ///
 class View: public OpenGLWidget
 {
+private:
+    Q_OBJECT
+    Q_DISABLE_COPY(View)
+
 public:
-    View(QWidget * parent = nullptr);
+    View(QWidget * parent);
 
 protected:
     template <class Action>
@@ -37,6 +44,10 @@ protected:
         mouseActions_.push_back(std::move(ptr));
     }
 
+    /// Must be implemented by derived classes. Must allocate a new
+    /// ViewMouseEvent and returns it. Ownership is transferred to
+    /// caller. The pointer will be used polymorphically.
+    ///
     virtual ViewMouseEvent * makeMouseEvent() = 0;
 
 protected slots:

@@ -12,16 +12,16 @@
 #include <QDialog>
 
 class QDoubleSpinBox;
-class Scene;
+class SceneOld;
 
 class EditCanvasSizeDialog: public QDialog
 {
     Q_OBJECT
 
 public:
-    EditCanvasSizeDialog(Scene * scene);
+    EditCanvasSizeDialog(SceneOld * scene);
 
-    Scene * scene() const;
+    SceneOld * scene() const;
 
     // Reimplements from QDialog to set oldValues
     void setVisible(bool visible);
@@ -36,7 +36,7 @@ public slots:
     void reject();
 
 private:
-    Scene * scene_;
+    SceneOld * scene_;
 
     QDoubleSpinBox * topSpinBox_;
     QDoubleSpinBox * leftSpinBox_;

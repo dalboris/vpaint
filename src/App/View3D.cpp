@@ -7,7 +7,7 @@
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
 #include "View3D.h"
-#include "Scene.h"
+#include "SceneOld.h"
 #include "Timeline.h"
 #include <QtDebug>
 #include "OpenGL.h"
@@ -28,7 +28,7 @@
 #define TOGGLESELECT_ACTION 23
 #define DESELECTALL_ACTION 24
 
-View3D::View3D(Scene *scene, QWidget *parent) :
+View3D::View3D(SceneOld *scene, QWidget *parent) :
     GLWidget(parent, false), // Difference from View here
     scene_(scene),
     displayedTimes_(),

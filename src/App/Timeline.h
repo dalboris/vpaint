@@ -24,7 +24,7 @@ class QTimer;
 class QHBoxLayout;
 class QCheckBox;
 class ViewOld;
-class Scene;
+class SceneOld;
 class XmlStreamWriter;
 class XmlStreamReader;
 class QAction;
@@ -116,7 +116,7 @@ class Timeline : public QWidget
     Q_OBJECT
 
 public:
-    Timeline(Scene * scene, QWidget *parent = 0);
+    Timeline(SceneOld * scene, QWidget *parent = 0);
     ~Timeline();
 
     void read(XmlStreamReader & xml);
@@ -196,7 +196,7 @@ private:
     double t2_;
 
     // Linked scene
-    Scene * scene_;
+    SceneOld * scene_;
 
     // The views whose times are controlled by this timeline
     QList<ViewOld*> views_;

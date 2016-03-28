@@ -11,7 +11,6 @@
 View::View(QWidget * parent) :
     OpenGLWidget(parent)
 {
-
 }
 
 void View::mousePressEvent(QMouseEvent *event)
@@ -106,6 +105,7 @@ void View::mouseMoveEvent(QMouseEvent *event)
         if(!mouseClickAction_)
         {
             mousePMRAction_->moveEvent(mouseEvent_.get());
+            update();
         }
     }
     else

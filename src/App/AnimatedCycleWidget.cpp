@@ -22,7 +22,7 @@
 
 #include "Global.h"
 #include "MainWindow.h"
-#include "Scene.h"
+#include "SceneOld.h"
 
 #include "Random.h"
 
@@ -512,7 +512,7 @@ void AnimatedCycleWidget::createItem(AnimatedCycleNode * node)
 
 void AnimatedCycleWidget::addSelectedCells()
 {
-    CellSet selectedCells = global()->mainWindow()->scene()->getVAC_()->selectedCells();
+    CellSet selectedCells = global()->mainWindow()->sceneOld()->getVAC_()->selectedCells();
 
     foreach(Cell * cell, selectedCells)
         createNodeAndItem(cell);

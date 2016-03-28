@@ -39,7 +39,7 @@
 #include "../MainWindow.h"
 #include "../ViewOld.h"
 #include "../Color.h"
-#include "../Scene.h"
+#include "../SceneOld.h"
 
 #include "../XmlStreamWriter.h"
 #include "../XmlStreamReader.h"
@@ -6712,13 +6712,13 @@ void VAC::test()
 
 #include <QAction>
 #include <QToolBar>
-#include "../Scene.h"
+#include "../SceneOld.h"
 #include "../ColorSelector.h"
 
 namespace VectorAnimationComplex
 {
 
-void VAC::populateToolBar(QToolBar * /*toolBar*/, Scene * /*scene*/)
+void VAC::populateToolBar(QToolBar * /*toolBar*/, SceneOld * /*scene*/)
 {
 }
 

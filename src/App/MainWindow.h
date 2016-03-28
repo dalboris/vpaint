@@ -17,7 +17,7 @@
 #include <QDir>
 
 class QScrollArea;
-class Scene;
+class SceneOld;
 class GLWidget;
 class MultiView;
 class ViewOld;
@@ -33,6 +33,10 @@ class ExportPngDialog;
 class AboutDialog;
 class BackgroundWidget;
 
+class Scene;
+class SceneRenderer;
+class View2D;
+
 namespace VectorAnimationComplex
 {
 class VAC;
@@ -44,13 +48,23 @@ class AnimatedCycleWidget;
 
 class MainWindow : public QMainWindow
 {
+private:
     Q_OBJECT
+    Q_DISABLE_COPY(MainWindow)
 
 public:
-    MainWindow();
+    MainWindow(QWidget * parent = nullptr);
     ~MainWindow();
 
     Scene * scene() const;
+
+
+
+
+
+
+
+    SceneOld * sceneOld() const;
     ViewOld * activeView() const;
     ViewOld * hoveredView() const;
     Timeline * timeline() const;
@@ -143,6 +157,10 @@ private:
     // --------- Other properties and widgets --------
     // Scene and View
     Scene * scene_;
+    SceneRenderer * sceneRenderer_;
+    View2D * view2D_;
+
+    SceneOld * sceneOld_;
     MultiView * multiView_;
     // Help
     AboutDialog * aboutDialog_;
@@ -153,7 +171,7 @@ private:
     void clearUndoStack_();
     void resetUndoStack_();
     void goToUndoIndex_(int undoIndex);
-    typedef QPair<QDir,Scene*> UndoItem;
+    typedef QPair<QDir,SceneOld*> UndoItem;
     QList<UndoItem> undoStack_;
     int undoIndex_;
     int savedUndoIndex_;

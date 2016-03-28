@@ -15,8 +15,7 @@
 
 int main(int argc, char *argv[])
 {
-    // Create and initialize application
-    Application app(argc, argv);
+    /*********************** OpenGL configuration ****************************/
 
     // Set OpenGL 3.2, core profile
     QSurfaceFormat format;
@@ -25,6 +24,18 @@ int main(int argc, char *argv[])
     format.setVersion(3, 2);
     format.setProfile(QSurfaceFormat::CoreProfile);
     QSurfaceFormat::setDefaultFormat(format);
+
+    // Share OpenGL context between all QOpenGLWidgets  (i.e., not only those
+    // that belong to the same window). See paragraph "Context Sharing" in the
+    // QOpenGLWidget documentation. This attribute must be set before
+    // instanciating QApplication
+    QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
+
+
+    /******************** Create and launch application **********************/
+
+    // Create and initialize application
+    Application app(argc, argv);
 
     // Create and show main window
     MainWindow mainWindow;

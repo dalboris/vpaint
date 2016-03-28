@@ -20,14 +20,14 @@
 #include <QWidget>
 
 class ViewOld;
-class Scene;
+class SceneOld;
 
 class ViewMacOsX: public QWidget
 {
     Q_OBJECT
 
 public:
-    ViewMacOsX(Scene * scene, QWidget *parent);
+    ViewMacOsX(SceneOld * scene, QWidget *parent);
     ViewOld * view() const;
 
 private:
