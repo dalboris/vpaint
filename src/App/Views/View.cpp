@@ -149,6 +149,6 @@ void View::mouseReleaseEvent(QMouseEvent *event)
         // Reinitialize
         mouseClickAction_ = nullptr;
         mousePMRAction_ = nullptr;
-        mouseEvent_.release();
+        mouseEvent_.reset();
     }
 }

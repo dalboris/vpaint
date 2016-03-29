@@ -36,10 +36,11 @@ public:
     View(QWidget * parent);
 
 protected:
-    template <class Action>
-    void addMouseAction()
+    /// Adds a ViewMouseAction to the view. The View takes ownership of the
+    /// action.
+    ///
+    void addMouseAction(ViewMouseAction * action)
     {
-        ViewMouseAction * action = new Action();
         UniquePtr<ViewMouseAction> ptr(action);
         mouseActions_.push_back(std::move(ptr));
     }

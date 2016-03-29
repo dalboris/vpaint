@@ -11,11 +11,13 @@
 
 #include <QObject>
 
-/*
+#include "Core/Memory.h"
+#include "OpenGL/OpenGLFunctions.h"
+
 #include <QOpenGLShaderProgram>
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLBuffer>
-*/
+#include <QMatrix4x4>
 
 class Scene;
 
@@ -29,31 +31,28 @@ public:
     SceneRenderer(Scene * scene,
                   QObject * parent);
 
-    /* XXX TODO
-    void initialize(...);
-    void render2D(...);
-    void render3D(...);
-    void cleanup(...);
-    */
+    ~SceneRenderer();
+
+    Scene * scene() const;
+
+    void initialize(OpenGLFunctions * f);
+    void render2D(OpenGLFunctions * f, const QMatrix4x4 & projMatrix, const QMatrix4x4 & viewMatrix);
+    void render3D(OpenGLFunctions * f);
+    void cleanup(OpenGLFunctions * f);
 
 private:
     // Scene to render
     Scene * scene_;
 
-    /*
-
-    // OpenGL context
-    QOpenGLContext * context_;
-
     // GPU resources
-    QOpenGLVertexArrayObject vao_;
     QOpenGLBuffer vbo_;
-    QOpenGLShaderProgram *shaderProgram_;
+    UniquePtr<QOpenGLVertexArrayObject> vao_;
+    UniquePtr<QOpenGLShaderProgram> shaderProgram_;
 
-    // Shader uniform locations
+    // Shader locations
+    int vertexLoc_;
     int projMatrixLoc_;
     int viewMatrixLoc_;
-    */
 };
 
 #endif // SCENERENDERER_H

@@ -9,9 +9,12 @@
 #ifndef VIEW2DRENDERER_H
 #define VIEW2DRENDERER_H
 
+#include "Core/Cache.h"
 #include "OpenGL/OpenGLRenderer.h"
 
-class OpenGLSharedResources;
+#include <QMatrix4x4>
+
+//class OpenGLSharedResources;
 class SceneRenderer;
 
 /// \class View2DRenderer
@@ -24,14 +27,27 @@ private:
     Q_DISABLE_COPY(View2DRenderer)
 
 public:
+    /**************************** Constructor ********************************/
+
     /// Constructs a View2DRenderer.
     ///
     View2DRenderer(SceneRenderer * sceneRenderer,
                    QObject * parent);
 
+    /// Destructs this View2DRenderer. It is important that the SceneRenderer
+    /// is still alive
+    ///
+    virtual ~View2DRenderer() {}
+
+
+    /***************************** Accessors *********************************/
+
     /// Returns the SceneRenderer of this View2DRenderer.
     ///
     SceneRenderer * sceneRenderer();
+
+
+    /********** Implementations of OpenGLRenderer virtual functions **********/
 
     /// Implements OpenGLRenderer::initialize().
     ///
@@ -50,6 +66,7 @@ public:
     virtual void cleanup(OpenGLFunctions * f);
 
 private:
+    // Owned data members
     SceneRenderer * sceneRenderer_;
 };
 

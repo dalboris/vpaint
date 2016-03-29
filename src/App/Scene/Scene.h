@@ -22,7 +22,7 @@ private:
 public:
     Scene(QObject * parent);
 
-private:
+//private:
     SceneData data_;
 };
 

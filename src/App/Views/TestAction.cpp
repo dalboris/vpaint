@@ -8,7 +8,34 @@
 
 #include "TestAction.h"
 
-TestAction::TestAction()
+#include "Scene/Scene.h"
+
+TestAction::TestAction(Scene * scene):
+    scene_(scene)
 {
 
+}
+
+void TestAction::pressEvent(const View2DMouseEvent * event)
+{
+    qDebug() << "TestAction pressEvent" << event->viewPos();
+
+    scene_->data_.clear();
+    scene_->data_.addSample(glm::vec2(
+                                (float) event->scenePos().x(),
+                                (float) event->scenePos().y()));
+}
+
+void TestAction::moveEvent(const View2DMouseEvent * event)
+{
+    qDebug() << "TestAction moveEvent" << event->viewPos();
+
+    scene_->data_.addSample(glm::vec2(
+                                (float) event->scenePos().x(),
+                                (float) event->scenePos().y()));
+}
+
+void TestAction::releaseEvent(const View2DMouseEvent * event)
+{
+    qDebug() << "TestAction releaseEvent" << event->viewPos();
 }

@@ -11,6 +11,8 @@
 
 #include "ViewMouseEvent.h"
 
+class View2D;
+
 /// \class View2DMouseEvent
 /// \brief A suclass of ViewMouseEvent for View2D
 ///
@@ -20,10 +22,14 @@
 class View2DMouseEvent: public ViewMouseEvent
 {
 public:
-    QPointF scenePos() const;        ///< Returns the current mouse position, in view coordinates.
-    QPointF scenePosAtPress() const; ///< Returns the mouse position at mouse press, in view coordinates.
+    View2DMouseEvent(View2D * view2D);
+
+    QPointF scenePos() const;        ///< Returns the current mouse position, in scene coordinates.
+    QPointF scenePosAtPress() const; ///< Returns the mouse position at mouse press, in scene coordinates.
 
 private:
+    View2D * view2D_;
+
     void computeSceneAttributes();
     void computeSceneAttributesAtPress();
     QPointF computeScenePos_(const QPointF & viewPos);

@@ -12,3 +12,43 @@ OpenGLRenderer::OpenGLRenderer(QObject * parent) :
     QObject(parent)
 {
 }
+
+const QMatrix4x4 & OpenGLRenderer::projectionMatrix() const
+{
+    return projMatrix_;
+}
+
+const QMatrix4x4 & OpenGLRenderer::projectionMatrixInverse() const
+{
+    if (projMatrixInv_.isDirty())
+    {
+        projMatrixInv_.setValue(projMatrix_.inverted());
+    }
+    return projMatrixInv_.value();
+}
+
+void OpenGLRenderer::setProjectionMatrix(const QMatrix4x4 & projectionMatrix)
+{
+    projMatrix_ = projectionMatrix;
+    projMatrixInv_.setDirty();
+}
+
+const QMatrix4x4 & OpenGLRenderer::viewMatrix() const
+{
+    return viewMatrix_;
+}
+
+const QMatrix4x4 & OpenGLRenderer::viewMatrixInverse() const
+{
+    if (viewMatrixInv_.isDirty())
+    {
+        viewMatrixInv_.setValue(viewMatrix_.inverted());
+    }
+    return viewMatrixInv_.value();
+}
+
+void OpenGLRenderer::setViewMatrix(const QMatrix4x4 & viewMatrix)
+{
+    viewMatrix_ = viewMatrix;
+    viewMatrixInv_.setDirty();
+}

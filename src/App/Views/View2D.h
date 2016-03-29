@@ -27,6 +27,9 @@ public:
 
 protected:
     View2DMouseEvent * makeMouseEvent();
+
+private:
+    View2DRenderer * view2DRenderer_;
 };
 
 #endif // VIEW2D_H

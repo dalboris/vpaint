@@ -55,9 +55,41 @@ public:
     ///
     void setRenderer(OpenGLRenderer * renderer);
 
-    /// Destructs this OpenGLWidget, ensuring proper cleanup.
+    /// Destructs this OpenGLWidget, ensuring proper cleanup. It is important
+    /// that the OpenGLRenderer (e.g., of derived type View2DRenderer), is
+    /// still alive when this destructor is called. This means that indirectly,
+    /// it is also important that SceneRenderer is still alive.
     ///
-    ~OpenGLWidget();
+    /// Example of what happens:
+    ///   - ~View2D() calls ~View()
+    ///   - ~View() calls ~OpenGLWidget()
+    ///   - ~OpenGLWidget() calls OpenGLWidget::cleanup()
+    ///   - OpenGLWidget::cleanup() calls renderer()->cleanup(f);
+    ///   - View2DRenderer::cleanup(f) calls sceneRenderer()->cleanup(f);
+    ///   - SceneRenderer::cleanup(f) does its things.
+    ///
+    /// In particular, this means that the Scene object, and the SceneRenderer
+    /// objects can't be QObject children of MainWindow. Otherwise, since the
+    /// View2D is also a children of MainWindow (no choice as a subwidget),
+    /// then View2D and Scene/SceneRenderer will be deleted in an unspecified
+    /// order.
+    ///
+    /// Also, the Scene/SceneRenderer can't be explicitely deleted in
+    /// ~MainWindow, since the View2D will be deleted in ~QObject, *after*
+    /// ~MainWindow.
+    ///
+    /// One option can be to delete explicitely all the views (View2D, View3D)
+    /// in ~MainWindow, but that's ugly.
+    ///
+    /// Conclusion: the only clean solutions are:
+    ///   1. construct and destruct Scene/SceneRenderer outside of MainWindow, or
+    ///   2. not call cleanup in ~OpenGLWidget(), i.e. rely on client to call it.
+    ///
+    /// XXX In any case, it is still necessary to design a proper system so
+    ///     that SceneRenderer::cleanup() is only called when the last View is
+    ///     destructed.
+    ///
+    virtual ~OpenGLWidget();
 
     OpenGLRenderer * renderer() const;
     OpenGLFunctions * functions() const;

@@ -194,6 +194,20 @@ MainWindow::MainWindow(QWidget * parent) :
     */
 }
 
+MainWindow::~MainWindow()
+{
+    // Explicitely delete children to ensure the deletion
+    // occurs in the correct order.
+    //
+    // XXX refactor to avoid this.
+    delete view2D_;
+    delete sceneRenderer_;
+    delete scene_;
+
+    clearUndoStack_();
+    autosaveEnd();
+}
+
 void MainWindow::updateObjectProperties()
 {
     inspector->setObjects(sceneOld()->getVAC_()->selectedCells());
@@ -326,12 +340,6 @@ void MainWindow::autosaveEnd()
     {
         autosaveDir_.remove(autosaveFilename_);
     }
-}
-
-MainWindow::~MainWindow()
-{
-    clearUndoStack_();
-    autosaveEnd();
 }
 
 Scene * MainWindow::scene() const

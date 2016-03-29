@@ -11,33 +11,27 @@
 
 #include "Views/View2DMouseAction.h"
 
+class Scene;
+
 #include <QtDebug>
 
 class TestAction: public View2DMouseAction
 {
 public:
-    TestAction();
+    TestAction(Scene * scene);
 
 protected:
-    bool acceptPMREvent(const View2DMouseEvent * event)
+    bool acceptPMREvent(const View2DMouseEvent * /*event*/)
     {
         return true;
     }
 
-    void pressEvent(const View2DMouseEvent * event)
-    {
-        qDebug() << "TestAction pressEvent" << event->viewPos();
-    }
+    void pressEvent(const View2DMouseEvent * event);
+    void moveEvent(const View2DMouseEvent * event);
+    void releaseEvent(const View2DMouseEvent * event);
 
-    void moveEvent(const View2DMouseEvent * event)
-    {
-        qDebug() << "TestAction moveEvent" << event->viewPos();
-    }
-
-    void releaseEvent(const View2DMouseEvent * event)
-    {
-        qDebug() << "TestAction releaseEvent" << event->viewPos();
-    }
+private:
+    Scene * scene_;
 };
 
 #endif // TESTACTION_H

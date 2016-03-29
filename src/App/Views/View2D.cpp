@@ -10,17 +10,20 @@
 
 #include "Views/TestAction.h"
 #include "Views/View2DRenderer.h"
+#include "Scene/SceneRenderer.h"
 
 View2D::View2D(SceneRenderer * sceneRenderer, QWidget * parent):
     View(parent)
 {
-    View2DRenderer * renderer = new View2DRenderer(sceneRenderer, this);
-    setRenderer(renderer);
+    view2DRenderer_ = new View2DRenderer(sceneRenderer, this);
+    setRenderer(view2DRenderer_);
 
-    addMouseAction<TestAction>();
+    Scene * scene = sceneRenderer->scene();
+
+    addMouseAction(new TestAction(scene));
 }
 
 View2DMouseEvent * View2D::makeMouseEvent()
 {
-    return new View2DMouseEvent();
+    return new View2DMouseEvent(this);
 }

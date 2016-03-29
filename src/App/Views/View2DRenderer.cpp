@@ -7,6 +7,7 @@
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
 #include "View2DRenderer.h"
+#include "Scene/SceneRenderer.h"
 
 #include <QOpenGLContext>
 #include <QtDebug>
@@ -30,24 +31,43 @@ void View2DRenderer::initialize(OpenGLFunctions * f)
 {
     qDebug() << "View2DRenderer::initialize()"
              << "context =" << QOpenGLContext::currentContext();
+
+    sceneRenderer()->initialize(f);
 }
 
-void View2DRenderer::resize(OpenGLFunctions * f, int w, int h)
+void View2DRenderer::resize(OpenGLFunctions * /*f*/, int w, int h)
 {
     qDebug() << "View2DRenderer::resize()"
              << "context =" << QOpenGLContext::currentContext();
+
+    // Set projection matrix
+    const float left   = 0.0f;
+    const float right  = w;
+    const float bottom = h;
+    const float top    = 0.0f;
+    const float near   = -1.0f;
+    const float far    = 1.0f;
+    QMatrix4x4 projMat;
+    projMat.ortho(left, right, bottom, top, near, far);
+    setProjectionMatrix(projMat);
+
+    // Set view matrix
+    QMatrix4x4 viewMat;     // = identity
+    setViewMatrix(viewMat);
 }
 
 void View2DRenderer::render(OpenGLFunctions * f)
 {
-    // XXX TODO call sceneRenderer()->render2D(f);
-
     qDebug() << "View2DRenderer::render()"
              << "context =" << QOpenGLContext::currentContext();
+
+    sceneRenderer()->render2D(f, projectionMatrix(), viewMatrix());
 }
 
 void View2DRenderer::cleanup(OpenGLFunctions * f)
 {
     qDebug() << "View2DRenderer::cleanup()"
              << "context =" << QOpenGLContext::currentContext();
+
+    sceneRenderer()->cleanup(f);
 }
