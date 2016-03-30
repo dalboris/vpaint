@@ -10,7 +10,6 @@
 #define SCENERENDERERSHAREDRESOURCES_H
 
 #include "OpenGL/OpenGLFunctions.h"
-#include "Core/Memory.h"
 
 #include <QObject>
 #include <QOpenGLBuffer>
@@ -45,7 +44,7 @@ private:
     Scene * scene_;
 
     // GPU resources
-    UniquePtr<QOpenGLShaderProgram> shaderProgram_;
+    QOpenGLShaderProgram shaderProgram_;
     QOpenGLBuffer vbo_;
 
     // Shader locations

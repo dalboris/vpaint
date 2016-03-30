@@ -44,7 +44,7 @@ private:
     SceneRendererSharedResources * sharedResources_;
 
     // Context-specific resources
-    UniquePtr<QOpenGLVertexArrayObject> vao_;
+    QOpenGLVertexArrayObject vao_;
 };
 
 #endif // SCENERENDERER_H

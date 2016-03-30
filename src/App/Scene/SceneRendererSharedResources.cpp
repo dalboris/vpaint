@@ -25,22 +25,21 @@ void SceneRendererSharedResources::setDirty()
     isDirty_ = true;
 }
 
-void SceneRendererSharedResources::initialize(OpenGLFunctions * f)
+void SceneRendererSharedResources::initialize(OpenGLFunctions * /*f*/)
 {
     if (refCount_ == 0)
     {
-        // Create shader program
-        shaderProgram_.reset(new QOpenGLShaderProgram());
-        shaderProgram_->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/OpenGL/Shaders/Helloworld.v.glsl");
-        shaderProgram_->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/OpenGL/Shaders/Helloworld.f.glsl");
-        shaderProgram_->link();
+        // Initialize shader program
+        shaderProgram_.addShaderFromSourceFile(QOpenGLShader::Vertex, ":/OpenGL/Shaders/Helloworld.v.glsl");
+        shaderProgram_.addShaderFromSourceFile(QOpenGLShader::Fragment, ":/OpenGL/Shaders/Helloworld.f.glsl");
+        shaderProgram_.link();
 
         // Get shader locations
-        shaderProgram_->bind();
-        vertexLoc_     = shaderProgram_->attributeLocation("vertex");
-        projMatrixLoc_ = shaderProgram_->uniformLocation("projMatrix");
-        viewMatrixLoc_ = shaderProgram_->uniformLocation("viewMatrix");
-        shaderProgram_->release();
+        shaderProgram_.bind();
+        vertexLoc_     = shaderProgram_.attributeLocation("vertex");
+        projMatrixLoc_ = shaderProgram_.uniformLocation("projMatrix");
+        viewMatrixLoc_ = shaderProgram_.uniformLocation("viewMatrix");
+        shaderProgram_.release();
 
         // Create VBO
         vbo_.create();
@@ -49,7 +48,7 @@ void SceneRendererSharedResources::initialize(OpenGLFunctions * f)
     ++refCount_;
 }
 
-void SceneRendererSharedResources::update(OpenGLFunctions * f)
+void SceneRendererSharedResources::update(OpenGLFunctions * /*f*/)
 {
     if (isDirty_)
     {
@@ -68,7 +67,6 @@ void SceneRendererSharedResources::cleanup(OpenGLFunctions * /*f*/)
 
     if (refCount_ == 0)
     {
-        shaderProgram_.reset();
         vbo_.destroy();
     }
 }

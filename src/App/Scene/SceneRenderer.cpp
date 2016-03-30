@@ -12,7 +12,7 @@
 
 #include <QtDebug>
 
-SceneRenderer::SceneRenderer(SceneRendererSharedResources *sharedResources,
+SceneRenderer::SceneRenderer(SceneRendererSharedResources * sharedResources,
                              QObject * parent) :
     QObject(parent),
     sharedResources_(sharedResources)
@@ -33,15 +33,14 @@ void SceneRenderer::initialize(OpenGLFunctions * f)
     glClearColor(1, 1, 1, 1);
 
     // Create VAO
-    vao_.reset(new QOpenGLVertexArrayObject());
-    vao_->create();
+    vao_.create();
 
     // Store attribute bindings in VAO
     auto & vbo = sharedResources_->vbo_;
     auto & vertexLoc = sharedResources_->vertexLoc_;
     GLsizei  stride  = sizeof(SceneDataSample) / 2;
     GLvoid * pointer = reinterpret_cast<void*>(offsetof(SceneDataSample, leftBoundary));
-    vao_->bind();
+    vao_.bind();
     vbo.bind();
     f->glEnableVertexAttribArray(vertexLoc);
     f->glVertexAttribPointer(
@@ -52,7 +51,7 @@ void SceneRenderer::initialize(OpenGLFunctions * f)
                 stride,    // byte offset between consecutive vertex attributes
                 pointer);  // byte offset between the first attribute and the pointer given to allocate()
     vbo.release();
-    vao_->release();
+    vao_.release();
 
 }
 
@@ -71,21 +70,21 @@ void SceneRenderer::render2D(OpenGLFunctions * f, const QMatrix4x4 & projMatrix,
     f->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Bind shader program
-    shaderProgram->bind();
+    shaderProgram.bind();
 
     // Set uniform values
-    shaderProgram->setUniformValue(projMatrixLoc, projMatrix);
-    shaderProgram->setUniformValue(viewMatrixLoc, viewMatrix);
+    shaderProgram.setUniformValue(projMatrixLoc, projMatrix);
+    shaderProgram.setUniformValue(viewMatrixLoc, viewMatrix);
 
     // Draw triangles
-    vao_->bind();
+    vao_.bind();
     f->glDrawArrays(GL_TRIANGLE_STRIP,   // mode
                     0,                   // starting index
                     samples.size() * 2); // number of indices
-    vao_->release();
+    vao_.release();
 
     // Release shader program
-    shaderProgram->release();
+    shaderProgram.release();
 }
 
 void SceneRenderer::render3D(OpenGLFunctions * /*f*/)
@@ -98,5 +97,6 @@ void SceneRenderer::cleanup(OpenGLFunctions * f)
     // Cleanup shared resources
     sharedResources_->cleanup(f);
 
-    vao_.reset();
+    // Cleanup context-specific resources
+    vao_.destroy();
 }
