@@ -13,29 +13,25 @@
 TestAction::TestAction(Scene * scene):
     scene_(scene)
 {
-
 }
 
 void TestAction::pressEvent(const View2DMouseEvent * event)
 {
-    qDebug() << "TestAction pressEvent" << event->viewPos();
+    glm::vec2 centerline((float) event->scenePos().x(),
+                         (float) event->scenePos().y());
 
-    scene_->data_.clear();
-    scene_->data_.addSample(glm::vec2(
-                                (float) event->scenePos().x(),
-                                (float) event->scenePos().y()));
+    scene_->beginStroke(centerline);
 }
 
 void TestAction::moveEvent(const View2DMouseEvent * event)
 {
-    qDebug() << "TestAction moveEvent" << event->viewPos();
+    glm::vec2 centerline((float) event->scenePos().x(),
+                         (float) event->scenePos().y());
 
-    scene_->data_.addSample(glm::vec2(
-                                (float) event->scenePos().x(),
-                                (float) event->scenePos().y()));
+    scene_->continueStroke(centerline);
 }
 
 void TestAction::releaseEvent(const View2DMouseEvent * event)
 {
-    qDebug() << "TestAction releaseEvent" << event->viewPos();
+    scene_->endStroke();
 }

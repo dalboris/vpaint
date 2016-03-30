@@ -11,16 +11,23 @@
 #include "Views/TestAction.h"
 #include "Views/View2DRenderer.h"
 #include "Scene/SceneRenderer.h"
+#include "Scene/Scene.h"
 
-View2D::View2D(SceneRenderer * sceneRenderer, QWidget * parent):
+#define SLOT_(Class, SlotName, Params) \
+    static_cast<void (Class::*) (Params)> (&Class::SlotName)
+
+View2D::View2D(SceneRendererSharedResources * sceneRendererSharedResources, QWidget * parent):
     View(parent)
 {
-    view2DRenderer_ = new View2DRenderer(sceneRenderer, this);
+    sceneRenderer_ = new SceneRenderer(sceneRendererSharedResources, this);
+    view2DRenderer_ = new View2DRenderer(sceneRenderer_, this);
     setRenderer(view2DRenderer_);
 
-    Scene * scene = sceneRenderer->scene();
+    Scene * scene = sceneRenderer_->scene();
 
     addMouseAction(new TestAction(scene));
+
+    connect(scene, &Scene::changed, this, SLOT_(QWidget, update, ));
 }
 
 View2DMouseEvent * View2D::makeMouseEvent()

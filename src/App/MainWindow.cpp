@@ -49,9 +49,9 @@
 #include <QShortcut>
 
 #include "Scene/Scene.h"
-#include "Scene/SceneRenderer.h"
+#include "Scene/SceneRendererSharedResources.h"
 #include "Views/View2D.h"
-
+#include <QSplitter>
 
 /*********************************************************************
  *                             Constructor
@@ -96,10 +96,16 @@ MainWindow::MainWindow(QWidget * parent) :
     exportingPng_(false)
 {
     scene_         = new Scene(this);
-    sceneRenderer_ = new SceneRenderer(scene_, this);
-    view2D_        = new View2D(sceneRenderer_, this);
 
-    setCentralWidget(view2D_);
+    sceneRendererSharedResources_ = new SceneRendererSharedResources(scene_, this);
+    view2D_  = new View2D(sceneRendererSharedResources_, this);
+    view2D2_ = new View2D(sceneRendererSharedResources_, this);
+
+    QSplitter * splitter = new QSplitter();
+    splitter->addWidget(view2D_);
+    splitter->addWidget(view2D2_);
+
+    setCentralWidget(splitter);
 
     /* FACTORED_OUT
     // Global object
@@ -201,7 +207,8 @@ MainWindow::~MainWindow()
     //
     // XXX refactor to avoid this.
     delete view2D_;
-    delete sceneRenderer_;
+    delete view2D2_;
+    delete sceneRendererSharedResources_;
     delete scene_;
 
     clearUndoStack_();

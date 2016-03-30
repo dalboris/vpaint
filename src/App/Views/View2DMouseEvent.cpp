@@ -10,9 +10,7 @@
 #include "Views/View2D.h"
 #include "OpenGL/OpenGLRenderer.h"
 
-#include <QtDebug>
-
-View2DMouseEvent::View2DMouseEvent(View2D *view2D) :
+View2DMouseEvent::View2DMouseEvent(View2D * view2D) :
     ViewMouseEvent(),
     view2D_(view2D)
 {
@@ -31,9 +29,6 @@ QPointF View2DMouseEvent::scenePosAtPress() const
 void View2DMouseEvent::computeSceneAttributes()
 {
     scenePos_ = computeScenePos_(viewPos());
-
-    qDebug() << "viewPos =" << viewPos();
-    qDebug() << "scenePos =" << scenePos();
 }
 
 void View2DMouseEvent::computeSceneAttributesAtPress()
@@ -43,17 +38,5 @@ void View2DMouseEvent::computeSceneAttributesAtPress()
 
 QPointF View2DMouseEvent::computeScenePos_(const QPointF & viewPos)
 {
-    return view2D_->renderer()->viewMatrixInverse() * viewPos;;
-
-
-    /*
-    // convert to scene coordinates
-    if(isOnly2D_)
-    {
-        Eigen::Vector3d p = camera2D_.viewMatrixInverse() * Eigen::Vector3d(mouse_PressEvent_X_, mouse_PressEvent_Y_, 0);
-        mouse_PressEvent_XScene_ = p[0];
-        mouse_PressEvent_YScene_ = p[1];
-    }
-    */
-
+    return view2D_->renderer()->viewMatrixInverse() * viewPos;
 }

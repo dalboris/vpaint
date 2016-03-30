@@ -41,9 +41,6 @@ struct SceneData
     std::vector<SceneDataSample> samples;
     std::vector<float> arclengths;
     std::vector<glm::vec2> tangents;
-    size_t size() const;
-    void clear();
-    void addSample(const glm::vec2 & centerline);
 };
 
 #endif // SCENEDATA_H

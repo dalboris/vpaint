@@ -22,8 +22,22 @@ private:
 public:
     Scene(QObject * parent);
 
-//private:
+    // XXX TEMP
+    void beginStroke(const glm::vec2 & centerline);
+    void continueStroke(const glm::vec2 & centerline);
+    void endStroke();
+    const std::vector<SceneDataSample> & samples();
+
+signals:
+    void changed();
+
+private:
     SceneData data_;
+
+    // XXX TEMP
+    size_t size() const;
+    void clear();
+    void addSample(const glm::vec2 & centerline);
 };
 
 #endif // SCENE_H

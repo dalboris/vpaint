@@ -8,87 +8,74 @@
 
 #include "Scene/Scene.h"
 #include "Scene/SceneRenderer.h"
+#include "Scene/SceneRendererSharedResources.h"
 
 #include <QtDebug>
 
-SceneRenderer::SceneRenderer(Scene * scene,
+SceneRenderer::SceneRenderer(SceneRendererSharedResources *sharedResources,
                              QObject * parent) :
     QObject(parent),
-    scene_(scene)
+    sharedResources_(sharedResources)
 {
-
-}
-
-SceneRenderer::~SceneRenderer()
-{
-    qDebug() << "SceneRenderer::~SceneRenderer()";
 }
 
 Scene * SceneRenderer::scene() const
 {
-    return scene_;
+    return sharedResources_->scene();
 }
 
 void SceneRenderer::initialize(OpenGLFunctions * f)
 {
+    // Initialize shared resources
+    sharedResources_->initialize(f);
+
     // Set clear color
     glClearColor(1, 1, 1, 1);
-
-    // Create shader program
-    shaderProgram_.reset(new QOpenGLShaderProgram());
-    shaderProgram_->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/OpenGL/Shaders/Helloworld.v.glsl");
-    shaderProgram_->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/OpenGL/Shaders/Helloworld.f.glsl");
-    shaderProgram_->link();
-
-    // Get shader locations
-    shaderProgram_->bind();
-    vertexLoc_     = shaderProgram_->attributeLocation("vertex");
-    projMatrixLoc_ = shaderProgram_->uniformLocation("projMatrix");
-    viewMatrixLoc_ = shaderProgram_->uniformLocation("viewMatrix");
-    shaderProgram_->release();
-
-    // Create VBO
-    vbo_.create();
 
     // Create VAO
     vao_.reset(new QOpenGLVertexArrayObject());
     vao_->create();
 
     // Store attribute bindings in VAO
+    auto & vbo = sharedResources_->vbo_;
+    auto & vertexLoc = sharedResources_->vertexLoc_;
     GLsizei  stride  = sizeof(SceneDataSample) / 2;
     GLvoid * pointer = reinterpret_cast<void*>(offsetof(SceneDataSample, leftBoundary));
     vao_->bind();
-    vbo_.bind();
-    f->glEnableVertexAttribArray(vertexLoc_);
+    vbo.bind();
+    f->glEnableVertexAttribArray(vertexLoc);
     f->glVertexAttribPointer(
-                vertexLoc_, // index of the generic vertex attribute
-                2,          // number of components   (x and y components)
-                GL_FLOAT,   // type of each component
-                GL_FALSE,   // should it be normalized
-                stride,     // byte offset between consecutive vertex attributes
-                pointer);   // byte offset between the first attribute and the pointer given to allocate()
-    vbo_.release();
+                vertexLoc, // index of the generic vertex attribute
+                2,         // number of components   (x and y components)
+                GL_FLOAT,  // type of each component
+                GL_FALSE,  // should it be normalized
+                stride,    // byte offset between consecutive vertex attributes
+                pointer);  // byte offset between the first attribute and the pointer given to allocate()
+    vbo.release();
     vao_->release();
+
 }
 
 void SceneRenderer::render2D(OpenGLFunctions * f, const QMatrix4x4 & projMatrix, const QMatrix4x4 & viewMatrix)
 {
+    // Update shared resources
+    sharedResources_->update(f);
+
+    // Get shared resources
+    auto & shaderProgram = sharedResources_->shaderProgram_;
+    auto & projMatrixLoc = sharedResources_->projMatrixLoc_;
+    auto & viewMatrixLoc = sharedResources_->viewMatrixLoc_;
+    const auto & samples = scene()->samples();
+
     // Clear color and depth buffer
     f->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // Send data to GPU
-    // XXX TODO: do it only if data changed
-    std::vector<SceneDataSample> & samples = scene()->data_.samples;
-    vbo_.bind();
-    vbo_.allocate(samples.data(), samples.size() * sizeof(SceneDataSample));
-    vbo_.release();
-
     // Bind shader program
-    shaderProgram_->bind();
+    shaderProgram->bind();
 
     // Set uniform values
-    shaderProgram_->setUniformValue(projMatrixLoc_, projMatrix);
-    shaderProgram_->setUniformValue(viewMatrixLoc_, viewMatrix);
+    shaderProgram->setUniformValue(projMatrixLoc, projMatrix);
+    shaderProgram->setUniformValue(viewMatrixLoc, viewMatrix);
 
     // Draw triangles
     vao_->bind();
@@ -98,7 +85,7 @@ void SceneRenderer::render2D(OpenGLFunctions * f, const QMatrix4x4 & projMatrix,
     vao_->release();
 
     // Release shader program
-    shaderProgram_->release();
+    shaderProgram->release();
 }
 
 void SceneRenderer::render3D(OpenGLFunctions * /*f*/)
@@ -106,9 +93,10 @@ void SceneRenderer::render3D(OpenGLFunctions * /*f*/)
     // XXX TODO
 }
 
-void SceneRenderer::cleanup(OpenGLFunctions * /*f*/)
+void SceneRenderer::cleanup(OpenGLFunctions * f)
 {
-    //vbo_.destroy(); // XXX SegFault. Why? Maybe because allocate wasn't call?
+    // Cleanup shared resources
+    sharedResources_->cleanup(f);
+
     vao_.reset();
-    shaderProgram_.reset();
 }

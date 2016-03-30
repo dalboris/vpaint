@@ -23,6 +23,7 @@ int main(int argc, char *argv[])
     format.setStencilBufferSize(8);
     format.setVersion(3, 2);
     format.setProfile(QSurfaceFormat::CoreProfile);
+    format.setSamples(16);
     QSurfaceFormat::setDefaultFormat(format);
 
     // Share OpenGL context between all QOpenGLWidgets  (i.e., not only those

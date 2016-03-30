@@ -13,6 +13,7 @@
 #include "Views/View2DMouseEvent.h"
 
 class View2DRenderer;
+class SceneRendererSharedResources;
 class SceneRenderer;
 
 class View2D: public View
@@ -22,7 +23,7 @@ private:
     Q_DISABLE_COPY(View2D)
 
 public:
-    View2D(SceneRenderer * sceneRenderer,
+    View2D(SceneRendererSharedResources * sceneRendererSharedResources,
            QWidget * parent);
 
 protected:
@@ -30,6 +31,7 @@ protected:
 
 private:
     View2DRenderer * view2DRenderer_;
+    SceneRenderer * sceneRenderer_;
 };
 
 #endif // VIEW2D_H

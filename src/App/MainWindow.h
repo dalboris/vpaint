@@ -35,6 +35,7 @@ class BackgroundWidget;
 
 class Scene;
 class SceneRenderer;
+class SceneRendererSharedResources;
 class View2D;
 
 namespace VectorAnimationComplex
@@ -157,8 +158,9 @@ private:
     // --------- Other properties and widgets --------
     // Scene and View
     Scene * scene_;
-    SceneRenderer * sceneRenderer_;
+    SceneRendererSharedResources * sceneRendererSharedResources_;
     View2D * view2D_;
+    View2D * view2D2_;
 
     SceneOld * sceneOld_;
     MultiView * multiView_;

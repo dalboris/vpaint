@@ -20,6 +20,7 @@
 #include <QMatrix4x4>
 
 class Scene;
+class SceneRendererSharedResources;
 
 class SceneRenderer: public QObject
 {
@@ -28,10 +29,8 @@ private:
     Q_DISABLE_COPY(SceneRenderer)
 
 public:
-    SceneRenderer(Scene * scene,
+    SceneRenderer(SceneRendererSharedResources * sharedResources,
                   QObject * parent);
-
-    ~SceneRenderer();
 
     Scene * scene() const;
 
@@ -41,18 +40,11 @@ public:
     void cleanup(OpenGLFunctions * f);
 
 private:
-    // Scene to render
-    Scene * scene_;
+    // Shared resources
+    SceneRendererSharedResources * sharedResources_;
 
-    // GPU resources
-    QOpenGLBuffer vbo_;
+    // Context-specific resources
     UniquePtr<QOpenGLVertexArrayObject> vao_;
-    UniquePtr<QOpenGLShaderProgram> shaderProgram_;
-
-    // Shader locations
-    int vertexLoc_;
-    int projMatrixLoc_;
-    int viewMatrixLoc_;
 };
 
 #endif // SCENERENDERER_H

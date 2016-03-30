@@ -15,9 +15,7 @@
 View2DRenderer::View2DRenderer(
         SceneRenderer * sceneRenderer,
         QObject * parent) :
-
     OpenGLRenderer(parent),
-
     sceneRenderer_(sceneRenderer)
 {
 }
@@ -29,17 +27,11 @@ SceneRenderer * View2DRenderer::sceneRenderer()
 
 void View2DRenderer::initialize(OpenGLFunctions * f)
 {
-    qDebug() << "View2DRenderer::initialize()"
-             << "context =" << QOpenGLContext::currentContext();
-
     sceneRenderer()->initialize(f);
 }
 
 void View2DRenderer::resize(OpenGLFunctions * /*f*/, int w, int h)
 {
-    qDebug() << "View2DRenderer::resize()"
-             << "context =" << QOpenGLContext::currentContext();
-
     // Set projection matrix
     const float left   = 0.0f;
     const float right  = w;
@@ -58,16 +50,10 @@ void View2DRenderer::resize(OpenGLFunctions * /*f*/, int w, int h)
 
 void View2DRenderer::render(OpenGLFunctions * f)
 {
-    qDebug() << "View2DRenderer::render()"
-             << "context =" << QOpenGLContext::currentContext();
-
     sceneRenderer()->render2D(f, projectionMatrix(), viewMatrix());
 }
 
 void View2DRenderer::cleanup(OpenGLFunctions * f)
 {
-    qDebug() << "View2DRenderer::cleanup()"
-             << "context =" << QOpenGLContext::currentContext();
-
     sceneRenderer()->cleanup(f);
 }
