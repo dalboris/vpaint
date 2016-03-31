@@ -72,8 +72,6 @@ OPENVAC_SRC       = $$PWD/../OpenVac/src
 OPENVAC_OUT_UNIX  = $$OUT_PWD/../OpenVac
 OPENVAC_OUT_WIN32 = $$OUT_PWD/../OpenVac/$$RELEASE_OR_DEBUG
 
-message($$OPENVAC_SRC)
-
 INCLUDEPATH += $$OPENVAC_SRC/
 DEPENDPATH += $$OPENVAC_SRC/
 !win32: QMAKE_CXXFLAGS += $$QMAKE_CFLAGS_ISYSTEM $$OPENVAC_SRC/
@@ -238,7 +236,9 @@ HEADERS += MainWindow.h \
     Scene/SceneRendererSharedResources.h \
     Layer/Layer.h \
     Core/DataObject.h \
-    Layer/LayerData.h
+    Layer/LayerData.h \
+    Vac/Vac.h \
+    Vac/VacData.h
 
 SOURCES += main.cpp \
     SaveAndLoad.cpp \
@@ -345,7 +345,9 @@ SOURCES += main.cpp \
     Scene/SceneRenderer.cpp \
     Scene/SceneRendererSharedResources.cpp \
     Layer/Layer.cpp \
-    Layer/LayerData.cpp
+    Layer/LayerData.cpp \
+    Vac/Vac.cpp \
+    Vac/VacData.cpp
 
 DISTFILES += \
     OpenGL/Shaders/Helloworld.v.glsl \

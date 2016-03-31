@@ -31,7 +31,7 @@ void TestAction::moveEvent(const View2DMouseEvent * event)
     scene_->continueStroke(centerline);
 }
 
-void TestAction::releaseEvent(const View2DMouseEvent * event)
+void TestAction::releaseEvent(const View2DMouseEvent * /*event*/)
 {
     scene_->endStroke();
 }

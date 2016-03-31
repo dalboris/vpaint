@@ -6,14 +6,24 @@
 // license terms and conditions in the LICENSE.MIT file found in the top-level
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
-#ifndef LAYERDATA_H
-#define LAYERDATA_H
+#ifndef VAC_H
+#define VAC_H
 
-#include "Vac/Vac.h"
+#include "Core/DataObject.h"
+#include "Vac/VacData.h"
 
-struct LayerData
+/// \class Vac
+/// \brief A DataObject subclass that represents a vector animation complex.
+///
+class Vac: public DataObject<VacData>
 {
-    DataObjectPtr<Vac> vac;
+private:
+    Q_OBJECT
+    Q_DISABLE_COPY(Vac)
+
+public:
+    Vac() {}
+
 };
 
-#endif // LAYERDATA_H
+#endif // VAC_H

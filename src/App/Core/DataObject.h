@@ -357,7 +357,7 @@ public:
     const TData & data() const { return data_; }
     void setData(const TData & data) { data_ = data; emit changed(); }
 
-private:
+protected:
     TData data_;
 };
 

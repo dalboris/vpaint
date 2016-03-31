@@ -95,7 +95,7 @@ MainWindow::MainWindow(QWidget * parent) :
     editCanvasSizeDialog_(0),
     exportingPng_(false)
 {
-    scene_         = new Scene(this);
+    scene_         = new Scene();
 
     sceneRendererSharedResources_ = new SceneRendererSharedResources(scene_, this);
     view2D_  = new View2D(sceneRendererSharedResources_, this);

@@ -21,9 +21,9 @@ public:
     TestAction(Scene * scene);
 
 protected:
-    bool acceptPMREvent(const View2DMouseEvent * /*event*/)
+    bool acceptPMREvent(const View2DMouseEvent * event)
     {
-        return true;
+        return event->button() == Qt::RightButton;
     }
 
     void pressEvent(const View2DMouseEvent * event);

@@ -9,18 +9,17 @@
 #ifndef SCENE_H
 #define SCENE_H
 
+#include "Core/DataObject.h"
 #include "Scene/SceneData.h"
 
-#include <QObject>
-
-class Scene: public QObject
+class Scene: public DataObject<SceneData>
 {
 private:
     Q_OBJECT
     Q_DISABLE_COPY(Scene)
 
 public:
-    Scene(QObject * parent);
+    Scene() {}
 
     // XXX TEMP
     void beginStroke(const glm::vec2 & centerline);
@@ -32,8 +31,6 @@ signals:
     void changed();
 
 private:
-    SceneData data_;
-
     // XXX TEMP
     size_t size() const;
     void clear();

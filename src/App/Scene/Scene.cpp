@@ -10,11 +10,6 @@
 
 #include <glm/geometric.hpp>
 
-Scene::Scene(QObject * parent) :
-    QObject(parent)
-{
-}
-
 const std::vector<SceneDataSample> & Scene::samples()
 {
     return data_.samples;

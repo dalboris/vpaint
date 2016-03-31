@@ -6,14 +6,4 @@
 // license terms and conditions in the LICENSE.MIT file found in the top-level
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
-#ifndef LAYERDATA_H
-#define LAYERDATA_H
-
-#include "Vac/Vac.h"
-
-struct LayerData
-{
-    DataObjectPtr<Vac> vac;
-};
-
-#endif // LAYERDATA_H
+#include "Vac.h"
