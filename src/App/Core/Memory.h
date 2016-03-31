@@ -11,11 +11,19 @@
 
 #include <OpenVac/Core/Memory.h>
 
+/****************************** UniquePtr ************************************/
+
 template <class T>
 using UniquePtr = OpenVac::UniquePtr<T>;
 
+
+/****************************** SharedPtr ************************************/
+
 template <class T>
 using SharedPtr = OpenVac::SharedPtr<T>;
+
+
+/******************************* WeakPtr *************************************/
 
 template <class T>
 using WeakPtr = OpenVac::WeakPtr<T>;

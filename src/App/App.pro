@@ -235,7 +235,10 @@ HEADERS += MainWindow.h \
     OpenGL/OpenGLFunctions.h \
     Views/View2DRenderer.h \
     Scene/SceneRenderer.h \
-    Scene/SceneRendererSharedResources.h
+    Scene/SceneRendererSharedResources.h \
+    Layer/Layer.h \
+    Core/DataObject.h \
+    Layer/LayerData.h
 
 SOURCES += main.cpp \
     SaveAndLoad.cpp \
@@ -340,7 +343,9 @@ SOURCES += main.cpp \
     OpenGL/OpenGLSharedResources.cpp \
     Views/View2DRenderer.cpp \
     Scene/SceneRenderer.cpp \
-    Scene/SceneRendererSharedResources.cpp
+    Scene/SceneRendererSharedResources.cpp \
+    Layer/Layer.cpp \
+    Layer/LayerData.cpp
 
 DISTFILES += \
     OpenGL/Shaders/Helloworld.v.glsl \

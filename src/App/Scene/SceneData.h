@@ -9,14 +9,10 @@
 #ifndef SCENEDATA_H
 #define SCENEDATA_H
 
-#include "Core/Memory.h"
+#include "Layer/Layer.h"
 
 #include <vector>
 #include <glm/vec2.hpp>
-
-class Canvas;
-class Layer;
-class Vac;
 
 struct SceneDataSample
 {
@@ -31,11 +27,14 @@ struct SceneDataSample
 
 struct SceneData
 {
+    /*
     // Canvas
     Canvas * canvas = nullptr;
+    */
 
     // Layers
-    std::vector<Layer*> layers;
+    //std::vector<DataObjectPtr<Layer>> layers;
+    DataObjectPtr<Layer> layers;
 
     // XXX TEMP for experimentation
     std::vector<SceneDataSample> samples;
