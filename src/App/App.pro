@@ -238,7 +238,8 @@ HEADERS += MainWindow.h \
     Core/DataObject.h \
     Layer/LayerData.h \
     Vac/Vac.h \
-    Vac/VacData.h
+    Vac/VacData.h \
+    Tools/Sketch/SketchAction.h
 
 SOURCES += main.cpp \
     SaveAndLoad.cpp \
@@ -347,7 +348,8 @@ SOURCES += main.cpp \
     Layer/Layer.cpp \
     Layer/LayerData.cpp \
     Vac/Vac.cpp \
-    Vac/VacData.cpp
+    Vac/VacData.cpp \
+    Tools/Sketch/SketchAction.cpp
 
 DISTFILES += \
     OpenGL/Shaders/Helloworld.v.glsl \

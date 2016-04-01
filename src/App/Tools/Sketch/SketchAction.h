@@ -6,17 +6,17 @@
 // license terms and conditions in the LICENSE.MIT file found in the top-level
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
-#ifndef TESTACTION_H
-#define TESTACTION_H
+#ifndef SKETCHACTION_H
+#define SKETCHACTION_H
 
 #include "Views/View2DMouseAction.h"
 
 class Scene;
 
-class TestAction: public View2DMouseAction
+class SketchAction: public View2DMouseAction
 {
 public:
-    TestAction(Scene * scene);
+    SketchAction(Scene * scene);
 
 protected:
     bool acceptPMREvent(const View2DMouseEvent * event);
@@ -28,4 +28,4 @@ private:
     Scene * scene_;
 };
 
-#endif // TESTACTION_H
+#endif // SKETCHACTION_H

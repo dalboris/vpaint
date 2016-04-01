@@ -95,16 +95,22 @@ MainWindow::MainWindow(QWidget * parent) :
     editCanvasSizeDialog_(0),
     exportingPng_(false)
 {
+    // Allocate scene
     scene_         = new Scene();
 
+    // Allocate resources shared between all SceneRenderers
     sceneRendererSharedResources_ = new SceneRendererSharedResources(scene_, this);
-    view2D_  = new View2D(sceneRendererSharedResources_, this);
-    view2D2_ = new View2D(sceneRendererSharedResources_, this);
 
+    // Allocate Views
+    view2D_  = new View2D(scene_, sceneRendererSharedResources_, this);
+    view2D2_ = new View2D(scene_, sceneRendererSharedResources_, this);
+
+    // Create splitter with side-by-side views
     QSplitter * splitter = new QSplitter();
     splitter->addWidget(view2D_);
     splitter->addWidget(view2D2_);
 
+    // Set splitter as central widget
     setCentralWidget(splitter);
 
     /* FACTORED_OUT

@@ -23,15 +23,26 @@ private:
     Q_DISABLE_COPY(View2D)
 
 public:
-    View2D(SceneRendererSharedResources * sceneRendererSharedResources,
+    View2D(Scene * scene,
+           SceneRendererSharedResources * sceneRendererSharedResources,
            QWidget * parent);
 
 protected:
     View2DMouseEvent * makeMouseEvent();
 
 private:
+    // Observed QObjects
+    Scene * scene_;
+    SceneRendererSharedResources * sceneRendererSharedResources_;
+
+    // Child QObjects
     View2DRenderer * view2DRenderer_;
     SceneRenderer * sceneRenderer_;
+
+    // Helper methods
+    void createRenderers_();
+    void addActions_();
+    void updateViewOnSceneChange_();
 };
 
 #endif // VIEW2D_H

@@ -10,13 +10,24 @@
 
 #include "Scene/Scene.h"
 
+#include <QtDebug>
+
 TestAction::TestAction(Scene * scene):
     scene_(scene)
 {
 }
 
+bool TestAction::acceptPMREvent(const View2DMouseEvent * event)
+{
+    qDebug() << "TestAction::acceptPMREvent";
+
+    return event->button() == Qt::RightButton;
+}
+
 void TestAction::pressEvent(const View2DMouseEvent * event)
 {
+    qDebug() << "TestAction::pressEvent";
+
     glm::vec2 centerline((float) event->scenePos().x(),
                          (float) event->scenePos().y());
 
@@ -25,6 +36,8 @@ void TestAction::pressEvent(const View2DMouseEvent * event)
 
 void TestAction::moveEvent(const View2DMouseEvent * event)
 {
+    qDebug() << "TestAction::moveEvent";
+
     glm::vec2 centerline((float) event->scenePos().x(),
                          (float) event->scenePos().y());
 
@@ -33,5 +46,7 @@ void TestAction::moveEvent(const View2DMouseEvent * event)
 
 void TestAction::releaseEvent(const View2DMouseEvent * /*event*/)
 {
+    qDebug() << "TestAction::releaseEvent";
+
     scene_->endStroke();
 }

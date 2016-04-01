@@ -13,6 +13,12 @@ View::View(QWidget * parent) :
 {
 }
 
+void View::addMouseAction(ViewMouseAction * action)
+{
+    UniquePtr<ViewMouseAction> ptr(action);
+    mouseActions_.push_back(std::move(ptr));
+}
+
 void View::mousePressEvent(QMouseEvent *event)
 {
     // emit mousePressed(this); XXX (to connect to "MultiView::setActive")

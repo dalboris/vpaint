@@ -8,29 +8,54 @@
 
 #include "View2D.h"
 
-#include "Views/TestAction.h"
-#include "Views/View2DRenderer.h"
 #include "Scene/SceneRenderer.h"
 #include "Scene/Scene.h"
+#include "Views/TestAction.h"
+#include "Views/View2DRenderer.h"
+#include "Tools/Sketch/SketchAction.h"
 
-#define SLOT_(Class, SlotName, Params) \
-    static_cast<void (Class::*) (Params)> (&Class::SlotName)
+View2D::View2D(Scene *scene,
+               SceneRendererSharedResources * sceneRendererSharedResources,
+               QWidget * parent):
 
-View2D::View2D(SceneRendererSharedResources * sceneRendererSharedResources, QWidget * parent):
-    View(parent)
+    View(parent),
+
+    scene_(scene), // XXX move to View?
+    sceneRendererSharedResources_(sceneRendererSharedResources)
 {
-    sceneRenderer_ = new SceneRenderer(sceneRendererSharedResources, this);
-    view2DRenderer_ = new View2DRenderer(sceneRenderer_, this);
-    setRenderer(view2DRenderer_);
-
-    Scene * scene = sceneRenderer_->scene();
-
-    addMouseAction(new TestAction(scene));
-
-    connect(scene, &Scene::changed, this, SLOT_(QWidget, update, ));
+    createRenderers_();
+    addActions_();
+    updateViewOnSceneChange_(); // XXX move to View?
 }
 
 View2DMouseEvent * View2D::makeMouseEvent()
 {
     return new View2DMouseEvent(this);
+}
+
+void View2D::createRenderers_()
+{
+    sceneRenderer_ = new SceneRenderer(sceneRendererSharedResources_, this);
+    view2DRenderer_ = new View2DRenderer(sceneRenderer_, this);
+    setRenderer(view2DRenderer_);
+
+}
+
+void View2D::addActions_()
+{
+    addMouseAction(new TestAction(scene_));
+    addMouseAction(new SketchAction(scene_));
+}
+
+void View2D::updateViewOnSceneChange_() // XXX move to View?
+{
+    // Note: This is just a regular signal/slot connection, but we need a
+    // static_cast here to resolve overload ambiguity, i.e. to tell the compiler
+    // to use 'update()' and not, for instance, 'update(const QRect &)'.
+
+    // Type of 'void QWidget::update()'
+    using update_t = void (QWidget::*) ();
+
+    // Create connection
+    connect(scene_, &Scene::changed, this, static_cast<update_t>(&QWidget::update));
 }

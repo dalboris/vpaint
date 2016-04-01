@@ -39,11 +39,7 @@ protected:
     /// Adds a ViewMouseAction to the view. The View takes ownership of the
     /// action.
     ///
-    void addMouseAction(ViewMouseAction * action)
-    {
-        UniquePtr<ViewMouseAction> ptr(action);
-        mouseActions_.push_back(std::move(ptr));
-    }
+    void addMouseAction(ViewMouseAction * action);
 
     /// Must be implemented by derived classes. Must allocate a new
     /// ViewMouseEvent and returns it. Ownership is transferred to
