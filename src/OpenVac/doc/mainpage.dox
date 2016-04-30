@@ -22,9 +22,11 @@ an overview of what OpenVAC is capable of!
 \image html teaser-vac.png
 
 \htmlonly
+<div class="videos">
 <iframe width="250" src="https://www.youtube.com/embed/NdQFAMe7TlY" frameborder="0" allowfullscreen></iframe>
 <iframe width="250" src="https://www.youtube.com/embed/-XONNPyeb5U" frameborder="0" allowfullscreen></iframe>
 <iframe width="250" src="https://www.youtube.com/embed/Xk1_CugdytI" frameborder="0" allowfullscreen></iframe>
+</div>
 \endhtmlonly
 
 <H2>What OpenVAC is not?</H2>

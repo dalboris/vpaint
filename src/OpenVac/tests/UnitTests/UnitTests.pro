@@ -9,6 +9,7 @@
 QT -= core gui
 QT += testlib
 CONFIG += c++11
+# Shoudn't we add: 'CONFIG += testcase'  too?
 
 OPENVAC_SRC       = $$PWD/../../src
 OPENVAC_OUT_UNIX  = $$OUT_PWD/../..

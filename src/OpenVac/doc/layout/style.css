@@ -155,11 +155,14 @@ html, body {
     padding-right: 60px;
 }
 
-
 #content div.image {
     text-align: center;
     margin-top: 20px;
     margin-bottom: 20px;
+}
+
+#content div.videos {
+    margin-left: 60px;
 }
 
 #content p {

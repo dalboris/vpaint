@@ -9,34 +9,17 @@
 #include <QCoreApplication>
 #include "Test.h"
 
-#include <TestCell.h>
-#include <TestCellData.h>
-
 int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
     app.setAttribute(Qt::AA_Use96Dpi, true);
     QTEST_SET_MAIN_SOURCE_PATH
 
-    TestCell * test1 = new TestCell();
-    TestCellData * test2 = new TestCellData();
-
-#define QT_NO_DEBUG_OUTPUT
-#define QT_NO_WARNING_OUTPUT
-
-    bool fail = false;
-    fail = fail || QTest::qExec(test1, argc, argv);
-    fail = fail || QTest::qExec(test2, argc, argv);
-    return fail;
-
-            /*
     bool fail = false;
     foreach(QObject * test, testList())
     {
         fail = fail || QTest::qExec(test, argc, argv);
     }
-            */
 
-
-
+    return fail;
 }

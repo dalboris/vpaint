@@ -6,19 +6,13 @@
 # license terms and conditions in the LICENSE.MIT file found in the top-level
 # directory of this distribution and at http://opensource.org/licenses/MIT
 
-# Basic Qt configuration
 TEMPLATE = subdirs
 
 SUBDIRS += \
-    GLEW \
     VecGeometry \
-    OpenVac \
-    App
+    UnitTests
 
-GLEW.subdir        = Third/GLEW
-VecGeometry.subdir = VecGeometry
-OpenVac.subdir     = OpenVac
-App.subdir         = App
+VecGeometry.subdir = src/VecGeometry
+UnitTests.subdir = tests/UnitTests
 
-OpenVac.depends = VecGeometry
-App.depends = GLEW OpenVac
+UnitTests.depends = VecGeometry
