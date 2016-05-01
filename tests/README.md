@@ -74,11 +74,11 @@ this is auto-magically taken care for you.
 If you're using QtCreator, which I recommend, select the "runtests"
 application in the "Build and Run Kit Selector" and run it (Ctrl+R).
 
-![kit-selector](kit-selector.png)
+![run-selector](run-selector.png)
 
 Here is how it looks:
 
-![runtests-screenshot](runtests-screenshot.png)
+(TODO: add a screenshot here)
 
 Simply navigate to your test using the tree view on the left, and click the
 corresponding run button (green arrow). Your test will be compiled and run,
