@@ -1,0 +1,178 @@
+#include "DependencyAnalyzer.h"
+#include "DirUtils.h"
+
+#include <QRegularExpression>
+#include <cassert>
+
+#include <QtDebug>
+
+namespace
+{
+struct SDepends
+{
+    QStringList qt;
+    QStringList third;
+    QStringList lib;
+};
+
+SDepends getHeaderSDepends(const QString & headerIncludePath)
+{
+    
+}
+}
+
+
+DependencyAnalyzer::DependencyAnalyzer(const QString & sourceFileContent)
+{
+    // RegExp to find included files
+    // It's not perfect but should work in any sane case.
+    // For instance, it would fail to correctly parse:
+    //     #include <foo"bar.h>
+    //     #include "foo<bar.h"
+    //     #include /* some comment */ <Foo/Bar.h>
+    // but it would be silly to have a header file with a quote or bracket character,
+    // or insert a comment between include and the file path
+    QRegularExpression includeRegExp("#[ \\t]*include[ \\t]+[\"<]([^\\n\"<>]*)[\">]");
+
+    // List of sdepends
+    QList<QStringList> LIB_SDEPENDS_list;
+    QList<QStringList> THIRD_SDEPENDS_list;
+
+    // Find regexp matches and traverse them
+    QRegularExpressionMatchIterator i = includeRegExp.globalMatch(sourceFileContent);
+    while (i.hasNext()) {
+        // Get header rel path (e.g., "Gui/Widgets/Subdir/Widget.h"
+        QRegularExpressionMatch match = i.next();
+        QString headerIncludePath = match.captured(1);
+
+        // Split into components ["Gui", "Widgets", "Subdir", "Widget.h"]
+        QStringList headerComponents = headerRelPath.split('/');
+
+        // Find if there is a corresponding project in root/src/libs
+        // Note that the project is not necessarily the last dir!
+        // Example: project is in root/src/libs/Gui/Widgets
+        //          no .pro project file in root/src/libs/Gui/Widgets/Subdir
+        //          (though, there might be a .pri file)
+        //
+        //          => indexLibsFound = 2;
+        int indexLibFound = 0;
+        QDir libDir = DirUtils::rootDir();
+        DirUtils::cd(libDir, "src");
+        DirUtils::cd(libDir, "libs");
+        while (indexLibFound < headerComponents.size()-1 &&
+               libDir.exists(headerComponents[indexLibFound]))
+        {
+            QString dirName = headerComponents[indexLibFound];
+            DirUtils::cd(libDir, dirName);
+
+            QString proFileName = dirName + ".pro";
+            if (libDir.exists(proFileName))
+            {
+                ++indexLibFound;
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        if (indexLibFound > 0)
+        {
+            qDebug() << "Lib found:" << libDir.absolutePath();
+
+            // Find generated config file
+            QDir libOutDir = DirUtils::rootOutDir();
+            DirUtils::cd(libOutDir, "src");
+            DirUtils::cd(libOutDir, "libs");
+            for (int j=0; j<indexLibFound; ++j)
+                DirUtils::cd(libOutDir, headerComponents[j]);
+            assert(libOutDir.exists(".config.pri"));
+
+            // Read config file
+            QFile libConfigFile(libOutDir.absoluteFilePath(".config.pri"));
+            assert(libConfigFile.open(QIODevice::ReadOnly));
+            QTextStream libConfigTextStream(&libConfigFile);
+            QString libConfigContent = libConfigTextStream.readAll();
+
+            qDebug() << "Lib config = ";
+            qDebug() << libConfigContent;
+
+            // Read lib dependencies
+            qDebug() << "Lib dependencies =" << getQMakeVariable("LIB_SDEPENDS", libConfigContent);
+        }
+    }
+}
+
+namespace
+{
+QStringList qmakeStringToList_(const QString & string)
+{
+    QStringList res;
+
+    QRegularExpression re("[/\\w']+");
+    QRegularExpressionMatchIterator i = re.globalMatch(string);
+    while (i.hasNext())
+    {
+        QRegularExpressionMatch match = i.next();
+        res << match.captured(0);
+    }
+
+    return res;
+}
+}
+
+QStringList DependencyAnalyzer::getQMakeVariable(
+        const QString & variableName,
+        const QString & inputConfig)
+{
+    // RegExp patterns
+    QString regexPattern = variableName +
+            "\\s*_SIGN_([^\\n\\\\]*(\\\\[^\\S\\n]*\\n[^\\n\\\\]*)*)";
+
+    QString regexPatternEqual = regexPattern;
+    regexPatternEqual.replace("_SIGN_", "=");
+
+    QString regexPatternPlusEqual = regexPattern;
+    regexPatternPlusEqual.replace("_SIGN_", "\\+=");
+
+    QString regexPatternMinusEqual = regexPattern;
+    regexPatternMinusEqual.replace("_SIGN_", "-=");
+
+    // RegExps
+    QRegularExpression equalRegExp(regexPatternEqual);
+    QRegularExpression plusEqualRegExp(regexPatternPlusEqual);
+    QRegularExpression minusEqualRegExp(regexPatternMinusEqual);
+
+    // Search for regex
+    QRegularExpressionMatch equal = equalRegExp.match(inputConfig);
+    QRegularExpressionMatchIterator iPlusEqual = plusEqualRegExp.globalMatch(inputConfig);
+    QRegularExpressionMatchIterator iMinusEqual = minusEqualRegExp.globalMatch(inputConfig);
+
+    // Initial value
+    QStringList res;
+
+    // Override if '=' found
+    if (equal.hasMatch())
+    {
+        QString matched = equal.captured(1);
+        res = qmakeStringToList_(matched);
+    }
+
+    // XXX TODO
+
+    /*
+
+    # Add all '+=' found
+    for match in matchPlusEqual:
+        string = match[0]
+        values.extend(qmakeStringToList(string))
+
+    # Remove all '-=' found
+    for match in matchMinusEqual:
+        string = match[0]
+        strings = qmakeStringToList(string)
+        values = [ s for s in values if (s not in strings) ]
+        */
+
+    return res;
+}

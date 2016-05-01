@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file>runicon.png</file>
+    </qresource>
+</RCC>

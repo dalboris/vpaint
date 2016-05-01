@@ -1,0 +1,43 @@
+<RCC>
+    <qresource prefix="/">
+        <file>images/refresh.png</file>
+        <file>images/go-first-view.png</file>
+        <file>images/go-first.png</file>
+        <file>images/go-previous.png</file>
+        <file>images/go-play.png</file>
+        <file>images/go-pause.png</file>
+        <file>images/go-next.png</file>
+        <file>images/go-last.png</file>
+        <file>images/go-last-view.png</file>
+        <file>images/sketch.png</file>
+        <file>images/select.png</file>
+        <file>images/sculpt.png</file>
+        <file>images/change-color.png</file>
+        <file>images/change-width.png</file>
+        <file>images/create-face.png</file>
+        <file>images/glue.png</file>
+        <file>images/unglue.png</file>
+        <file>images/remove-cycles.png</file>
+        <file>images/add-cycles.png</file>
+        <file>images/simplify.png</file>
+        <file>images/planar-map-off.png</file>
+        <file>images/planar-map-on.png</file>
+        <file>images/pressure-off.png</file>
+        <file>images/pressure-on.png</file>
+        <file>images/snapping-off.png</file>
+        <file>images/snapping-on.png</file>
+        <file>images/pressure.png</file>
+        <file>images/paint.png</file>
+        <file>images/view-settings.png</file>
+        <file>images/display-mode-normal.png</file>
+        <file>images/display-mode-normal-outline.png</file>
+        <file>images/display-mode-outline.png</file>
+        <file>images/onion-skinning-off.png</file>
+        <file>images/onion-skinning-on.png</file>
+        <file>images/view-settings-active.png</file>
+        <file>images/logo_currentversion.png</file>
+        <file>images/icon-256.png</file>
+        <file>OpenGL/Shaders/Helloworld.f.glsl</file>
+        <file>OpenGL/Shaders/Helloworld.v.glsl</file>
+    </qresource>
+</RCC>
