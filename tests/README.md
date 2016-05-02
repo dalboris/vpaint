@@ -1,7 +1,7 @@
 
-# Why writing unit tests?
+# Why and when write a unit test?
 
-Writing a unit test for each C++ class is highly encouraged for a few reasons:
+Writing a unit test for every C++ class is highly encouraged for a few reasons:
 
   1. It is a sanity check that the class works as intended before usage by client code.
   2. It documents how to use the class.
@@ -9,22 +9,23 @@ Writing a unit test for each C++ class is highly encouraged for a few reasons:
   4. It encourages good class design, and especially decoupling between classes, 
      since it is harder to write unit tests for coupled classes.
 
-Though, there are indeed many cases when writing a unit test would be very
-time consuming and might not be worth doing, especially for Gui code. For each
-line of code you write, use your best judgement and common-sense to decide
-whether it is worth testing.
+However, realistically, there are cases when writing a unit test would be very
+time consuming and might not be worth doing (especially for Gui code). For each
+function you write, use your best judgement and common-sense to decide whether it
+is worth to write a test function for it. As a guideline, try to spend 10% of your
+development time on writing unit tests.
 
 It is a good practice to systematically write one or two lines of testing code
-every 30 minutes or so. This actually makes  programming more fun
+at the end of every hour of development. This actually makes  programming more fun
 (satisfaction to see the code doing what's intended!), instead of the daunting
 task of writing tests for a whole new class after a week of programming.
 
-Note: Code in src/app/ cannot be tested because it does not generate a library
+Note that code in src/app/ cannot be tested because it does not generate a library
 that can be linked against. That's why most of the code should be in src/libs/.
 
 # How to write a unit test?
 
-Writing a unit test is dead simple. Just create a .cpp file whose name starts with 'tst_', anywhere
+Writing a unit test for VPaint is as simple as it gets. Just create a .cpp file whose name starts with 'tst_', anywhere
 in the tests/unit/ folder (for instance: tests/unit/MyLib/tst_Foo.cpp), with the following content:
 
 ```cpp
