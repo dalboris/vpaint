@@ -22,6 +22,9 @@ Application::Application(int& argc, char** argv) :
 
     // Set application version
     setApplicationVersion(APP_VERSION);
+
+    // Init resources
+    Q_INIT_RESOURCE(VPaint);
 }
 
 bool Application::event(QEvent* event)

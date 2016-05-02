@@ -666,5 +666,10 @@ for relDir in projects:
                                 .replace('%libname',   libProject.name))
         content += addThisLib
 
+    # Add depedencies to Qt libraries
+    if project.template == "lib" or project.template == "app":
+        content += "\n# Add dependencies to Qt libraries.\n"
+        content += "QT += " + " ".join(project.qt_sdepends)    + "\n"
+
     # Writes content to .config.pri
     buildutils.writeToFileIfDifferent(project.priFilePath, content)

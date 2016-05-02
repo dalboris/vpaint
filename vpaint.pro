@@ -5,4 +5,3 @@ include(configure/configure.pri)
 TEMPLATE = subdirs
 CONFIG += ordered
 SUBDIRS = src tests
-

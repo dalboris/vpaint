@@ -9,6 +9,9 @@
 TEMPLATE = lib
 CONFIG -= qt
 
+LIB_DEPENDS = \
+    VecGeometry
+
 SOURCES +=
 
 HEADERS += \

@@ -1,6 +1,7 @@
 TEMPLATE = subdirs
 SUBDIRS = \
+    OpenVac \
     VecGeometry \
-    OpenVac
+    VPaint
     
 include($$OUT_PWD/.config.pri)
