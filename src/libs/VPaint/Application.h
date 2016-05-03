@@ -11,12 +11,15 @@
 
 #include <QApplication>
 
+class MainWindow;
+
 class Application : public QApplication
 {
     Q_OBJECT
 
 public:
     Application(int &argc, char **argv);
+    ~Application();
 
     bool event(QEvent* event);
     void emitOpenFileRequest();
@@ -25,6 +28,8 @@ signals:
     void openFileRequested(const QString & filename);
 
 private:
+    MainWindow * mainWindow_;
+
     QString startPath_;
 };
 
