@@ -373,8 +373,10 @@ private:
 ///
 namespace Operators
 {
+    // Nothing  here, that's intended. This namespace is only
+    // open as a placeholder to write some Doxygen documentation.
+}
 }
 
-}
 
 #endif // OPENVAC_OPERATOR_H

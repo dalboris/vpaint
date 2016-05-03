@@ -92,7 +92,7 @@ namespace Operators
 /// KeyEdgeHandle keyEdge = Operators::makeKeyOpenEdge(startVertex, endVertex);
 /// \endcode
 ///
-KeyEdgeHandle makeKeyOpenEdge(
+inline KeyEdgeHandle makeKeyOpenEdge(
         const KeyVertexHandle & startVertex,
         const KeyVertexHandle & endVertex,
         const Geometry::KeyEdgeGeometry & geometry = Geometry::KeyEdgeGeometry())

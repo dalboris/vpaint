@@ -16,4 +16,9 @@ INCLUDEPATH += ../../src/libs/
 INCLUDEPATH += ../testlib/
 
 # List of all unit tests
-SOURCES +=
+SOURCES += \
+    OpenVac/tst_Cell.cpp \
+    OpenVac/tst_CellData.cpp \
+    OpenVac/tst_Frame.cpp \
+    OpenVac/tst_Memory.cpp \
+    OpenVac/tst_Operators.cpp

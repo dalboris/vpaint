@@ -71,7 +71,7 @@ namespace Operators
 /// KeyVertexHandle keyVertex = Operators::makeKeyVertex(vac, frame, geometry);
 /// \endcode
 ///
-KeyVertexHandle makeKeyVertex(
+inline KeyVertexHandle makeKeyVertex(
         Vac & vac,
         const Geometry::Frame & frame = Geometry::Frame(),
         const Geometry::KeyVertexGeometry & geometry = Geometry::KeyVertexGeometry())
