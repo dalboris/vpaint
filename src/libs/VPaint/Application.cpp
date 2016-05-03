@@ -14,7 +14,6 @@
 
 #include <QFileOpenEvent>
 #include <QSurfaceFormat>
-#include <QTimer>
 
 Application::Application(int& argc, char** argv) :
     QApplication(argc, argv)
