@@ -9,23 +9,18 @@
 #include "View2D.h"
 
 #include "Scene/SceneRenderer.h"
-#include "Scene/Scene.h"
 #include "Views/TestAction.h"
 #include "Views/View2DRenderer.h"
 #include "Tools/Sketch/SketchAction.h"
 
-View2D::View2D(Scene *scene,
+View2D::View2D(Scene * scene,
                SceneRendererSharedResources * sceneRendererSharedResources,
                QWidget * parent):
-
-    View(parent),
-
-    scene_(scene), // XXX move to View?
+    View(scene, parent),
     sceneRendererSharedResources_(sceneRendererSharedResources)
 {
     createRenderers_();
     addActions_();
-    updateViewOnSceneChange_(); // XXX move to View?
 }
 
 View2DMouseEvent * View2D::makeMouseEvent()
@@ -43,19 +38,6 @@ void View2D::createRenderers_()
 
 void View2D::addActions_()
 {
-    addMouseAction(new TestAction(scene_));
-    addMouseAction(new SketchAction(scene_));
-}
-
-void View2D::updateViewOnSceneChange_() // XXX move to View?
-{
-    // Note: This is just a regular signal/slot connection, but we need a
-    // static_cast here to resolve overload ambiguity, i.e. to tell the compiler
-    // to use 'update()' and not, for instance, 'update(const QRect &)'.
-
-    // Type of 'void QWidget::update()'
-    using update_t = void (QWidget::*) ();
-
-    // Create connection
-    connect(scene_, &Scene::changed, this, static_cast<update_t>(&QWidget::update));
+    addMouseAction(new TestAction(scene()));
+    addMouseAction(new SketchAction(scene()));
 }

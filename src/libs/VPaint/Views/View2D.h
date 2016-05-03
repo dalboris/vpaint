@@ -31,18 +31,17 @@ protected:
     View2DMouseEvent * makeMouseEvent();
 
 private:
-    // Observed QObjects
-    Scene * scene_;
-    SceneRendererSharedResources * sceneRendererSharedResources_;
+    // Helper methods
+    void createRenderers_();
+    void addActions_();
 
+private:
     // Child QObjects
     View2DRenderer * view2DRenderer_;
     SceneRenderer * sceneRenderer_;
 
-    // Helper methods
-    void createRenderers_();
-    void addActions_();
-    void updateViewOnSceneChange_();
+    // Observed QObjects
+    SceneRendererSharedResources * sceneRendererSharedResources_;
 };
 
 #endif // VIEW2D_H
