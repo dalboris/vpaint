@@ -6,32 +6,26 @@
 // license terms and conditions in the LICENSE.MIT file found in the top-level
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
-#ifndef SCENE_H
-#define SCENE_H
+#ifndef VIEW2DCAMERA_H
+#define VIEW2DCAMERA_H
 
 #include "Core/DataObject.h"
-#include "Scene/SceneData.h"
+#include "Views/View2DCameraData.h"
 
-class Scene: public DataObject<SceneData>
+/// \class View2DCamera
+/// \brief A class to represent a 2D camera object.
+///
+class View2DCamera: public DataObject<View2DCameraData>
 {
 private:
     Q_OBJECT
-    Q_DISABLE_COPY(Scene)
+    Q_DISABLE_COPY(View2DCamera)
 
 public:
-    Scene() {}
-
-    // XXX TEMP
-    void beginStroke(const glm::vec2 & centerline);
-    void continueStroke(const glm::vec2 & centerline);
-    void endStroke();
-    const std::vector<SceneDataSample> & samples();
+    View2DCamera() {}
 
 private:
-    // XXX TEMP
-    size_t size() const;
-    void clear();
-    void addSample(const glm::vec2 & centerline);
+    View2DCameraData data_;
 };
 
-#endif // SCENE_H
+#endif // VIEW2DCAMERA_H

@@ -188,7 +188,7 @@ signals:
 ///     therefore this information should appear in LayerData
 ///
 ///   - Calling setData() is now not enough to change and copy *all* the data
-///     store in the layer.
+///     stored in the layer.
 ///
 /// Therefore, the general approach that we adopt is to store the Background
 /// object inside the LayerData object. This means that LayerData is not "pure"

@@ -152,7 +152,9 @@ HEADERS += MainWindow.h \
     Layer/LayerData.h \
     Vac/Vac.h \
     Vac/VacData.h \
-    Tools/Sketch/SketchAction.h
+    Tools/Sketch/SketchAction.h \
+    Views/View2DCamera.h \
+    Views/View2DCameraData.h
 
 SOURCES += \
     SaveAndLoad.cpp \
@@ -262,7 +264,9 @@ SOURCES += \
     Layer/LayerData.cpp \
     Vac/Vac.cpp \
     Vac/VacData.cpp \
-    Tools/Sketch/SketchAction.cpp
+    Tools/Sketch/SketchAction.cpp \
+    Views/View2DCamera.cpp \
+    Views/View2DCameraData.cpp
 
 DISTFILES += \
     OpenGL/Shaders/Helloworld.v.glsl \
