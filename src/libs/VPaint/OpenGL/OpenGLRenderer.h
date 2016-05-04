@@ -16,8 +16,6 @@
 
 #include <QMatrix4x4>
 
-// XXX Should this class be renamed ViewRenderer?
-
 /// \class OpenGLRenderer
 /// \brief A class to render graphical data via OpenGL calls.
 ///
@@ -78,43 +76,6 @@ public:
     /// caller to ensure that context() is the current OpenGL context.
     ///
     virtual void cleanup(OpenGLFunctions * f)=0;
-
-
-    /******************** Projection and view matrices ***********************/
-
-    /// Returns the projection matrix associated with this 2D View.
-    ///
-    const QMatrix4x4 & projectionMatrix() const;
-
-    /// Returns the inverse of the projection matrix associated with this 2D
-    /// View.
-    ///
-    const QMatrix4x4 & projectionMatrixInverse() const;
-
-    /// Returns the view matrix associated with this 2D View.
-    ///
-    const QMatrix4x4 & viewMatrix() const;
-
-    /// Returns the inverse of the view matrix associated with this 2D View.
-    ///
-    const QMatrix4x4 & viewMatrixInverse() const;
-
-protected:
-    /// Sets projection matrix. Subclasses should typically call this in their
-    /// reimplementation of resize().
-    ///
-    void setProjectionMatrix(const QMatrix4x4 & projectionMatrix);
-
-    /// Sets view matrix. Subclasses should typically call this in their
-    /// reimplementation of resize().
-    ///
-    void setViewMatrix(const QMatrix4x4 & viewMatrix);
-
-private:
-    QMatrix4x4 projMatrix_;
-    QMatrix4x4 viewMatrix_;
-    mutable Cache<QMatrix4x4> projMatrixInv_;
-    mutable Cache<QMatrix4x4> viewMatrixInv_;
 };
 
 #endif // OPENGLRENDERER_H

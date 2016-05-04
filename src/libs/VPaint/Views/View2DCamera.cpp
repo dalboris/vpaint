@@ -7,3 +7,14 @@
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
 #include "View2DCamera.h"
+
+View2DCamera::View2DCamera()
+{
+}
+
+
+QMatrix4x4 View2DCamera::toMatrix() const
+{
+    return QMatrix4x4(); // identity
+}
+

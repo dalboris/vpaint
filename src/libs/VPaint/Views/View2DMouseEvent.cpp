@@ -28,15 +28,10 @@ QPointF View2DMouseEvent::scenePosAtPress() const
 
 void View2DMouseEvent::computeSceneAttributes()
 {
-    scenePos_ = computeScenePos_(viewPos());
+    scenePos_ = view2D_->mapToScene(viewPos());
 }
 
 void View2DMouseEvent::computeSceneAttributesAtPress()
 {
-    scenePosAtPress_ = computeScenePos_(viewPosAtPress());
-}
-
-QPointF View2DMouseEvent::computeScenePos_(const QPointF & viewPos)
-{
-    return view2D_->renderer()->viewMatrixInverse() * viewPos;
+    scenePosAtPress_ = view2D_->mapToScene(viewPos());
 }

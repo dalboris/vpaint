@@ -10,8 +10,6 @@
 #include <QVector>
 #include <QProcess>
 
-#include <QtDebug>
-
 namespace
 {
 

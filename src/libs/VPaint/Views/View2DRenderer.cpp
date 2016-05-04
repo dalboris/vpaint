@@ -7,17 +7,20 @@
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
 #include "View2DRenderer.h"
-#include "Scene/SceneRenderer.h"
 
-#include <QOpenGLContext>
-#include <QtDebug>
+#include "Scene/SceneRenderer.h"
+#include "Views/View2DCamera.h"
 
 View2DRenderer::View2DRenderer(
-        SceneRenderer * sceneRenderer,
+        SceneRendererSharedResources * sceneRendererSharedResources,
+        View2DCamera * view2DCamera,
         QObject * parent) :
+
     OpenGLRenderer(parent),
-    sceneRenderer_(sceneRenderer)
+
+    view2DCamera_(view2DCamera)
 {
+    sceneRenderer_ = new SceneRenderer(sceneRendererSharedResources, this);
 }
 
 SceneRenderer * View2DRenderer::sceneRenderer()
@@ -32,20 +35,15 @@ void View2DRenderer::initialize(OpenGLFunctions * f)
 
 void View2DRenderer::resize(OpenGLFunctions * /*f*/, int w, int h)
 {
-    // Set projection matrix
     const float left   = 0.0f;
     const float right  = w;
     const float bottom = h;
     const float top    = 0.0f;
     const float near   = -1.0f;
     const float far    = 1.0f;
-    QMatrix4x4 projMat;
-    projMat.ortho(left, right, bottom, top, near, far);
-    setProjectionMatrix(projMat);
 
-    // Set view matrix
-    QMatrix4x4 viewMat;     // = identity
-    setViewMatrix(viewMat);
+    projectionMatrix_.setToIdentity();
+    projectionMatrix_.ortho(left, right, bottom, top, near, far);
 }
 
 void View2DRenderer::render(OpenGLFunctions * f)
@@ -56,4 +54,14 @@ void View2DRenderer::render(OpenGLFunctions * f)
 void View2DRenderer::cleanup(OpenGLFunctions * f)
 {
     sceneRenderer()->cleanup(f);
+}
+
+QMatrix4x4 View2DRenderer::projectionMatrix() const
+{
+    return projectionMatrix_;
+}
+
+QMatrix4x4 View2DRenderer::viewMatrix() const
+{
+    return view2DCamera_->toMatrix();
 }

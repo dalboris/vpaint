@@ -6,8 +6,6 @@
 #include <QTextStream>
 #include <QTimer>
 
-#include <QtDebug>
-
 CommandLineApplication::CommandLineApplication(int & argc, char ** argv) :
 
     QCoreApplication(argc, argv),

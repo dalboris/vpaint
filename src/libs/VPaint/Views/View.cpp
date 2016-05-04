@@ -14,7 +14,11 @@ View::View(Scene *scene, QWidget * parent) :
     OpenGLWidget(parent),
     scene_(scene)
 {
-    updateViewOnSceneChange_();
+    // Resolve ambiguity: use 'update()' and not 'update(const QRect &)'
+    //using update_t = void (QWidget::*) ();
+    //update_t update = static_cast<update_t>(&QWidget::update);
+
+    connect(scene_, &Scene::changed, this, &View::update);
 }
 
 Scene * View::scene() const
@@ -165,17 +169,4 @@ void View::mouseReleaseEvent(QMouseEvent *event)
         mousePMRAction_ = nullptr;
         mouseEvent_.reset();
     }
-}
-
-void View::updateViewOnSceneChange_()
-{
-    // Note: This is just a regular signal/slot connection, but we need a
-    // static_cast here to resolve overload ambiguity, i.e. to tell the compiler
-    // to use 'update()' and not, for instance, 'update(const QRect &)'.
-
-    // Type of 'void QWidget::update()'
-    using update_t = void (QWidget::*) ();
-
-    // Create connection
-    connect(scene_, &Scene::changed, this, static_cast<update_t>(&QWidget::update));
 }

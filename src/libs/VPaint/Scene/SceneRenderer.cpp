@@ -10,8 +10,6 @@
 #include "Scene/SceneRenderer.h"
 #include "Scene/SceneRendererSharedResources.h"
 
-#include <QtDebug>
-
 SceneRenderer::SceneRenderer(SceneRendererSharedResources * sharedResources,
                              QObject * parent) :
     QObject(parent),

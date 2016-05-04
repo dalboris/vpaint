@@ -9,13 +9,13 @@
 #ifndef VIEW2DRENDERER_H
 #define VIEW2DRENDERER_H
 
-#include "Core/Cache.h"
 #include "OpenGL/OpenGLRenderer.h"
 
 #include <QMatrix4x4>
 
-//class OpenGLSharedResources;
 class SceneRenderer;
+class SceneRendererSharedResources;
+class View2DCamera;
 
 /// \class View2DRenderer
 /// \brief The renderer object owned by each View2D.
@@ -31,7 +31,8 @@ public:
 
     /// Constructs a View2DRenderer.
     ///
-    View2DRenderer(SceneRenderer * sceneRenderer,
+    View2DRenderer(SceneRendererSharedResources * sceneRendererSharedResources,
+                   View2DCamera * view2DCamera,
                    QObject * parent);
 
     /// Destructs this View2DRenderer. It is important that the SceneRenderer
@@ -65,9 +66,26 @@ public:
     ///
     virtual void cleanup(OpenGLFunctions * f);
 
+
+    /**************************** Other useful methods ***********************/
+
+    /// Returns the projection matrix of this renderer.
+    ///
+    QMatrix4x4 projectionMatrix() const;
+
+    /// Returns the view matrix of this renderer.
+    ///
+    QMatrix4x4 viewMatrix() const;
+
 private:
-    // Owned data members
+    // Owned QObjects
     SceneRenderer * sceneRenderer_;
+
+    // Observed DataObjects
+    View2DCamera * view2DCamera_;
+
+    // Other member variables
+    QMatrix4x4 projectionMatrix_;
 };
 
 #endif // VIEW2DRENDERER_H

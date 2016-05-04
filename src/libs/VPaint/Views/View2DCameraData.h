@@ -12,13 +12,24 @@
 #include <QPointF>
 
 /// \class View2DCamera
-/// \brief A class to store 2D camera data.
+/// \brief A struct to store 2D camera data.
 ///
 struct View2DCameraData
 {
-    QPointF position; ///< 2D scene coordinate at the View's centerpoint
-    double rotation;  ///< (rotation == pi/4) => the canvas appears rotated 45 degrees anti-clockwise
-    double scale;     ///< (scale == 2)       => each vector unit appears as 2 pixels on screen
+    /// Position attribute of the camera. This is equal to the 2D scene
+    /// coordinate at the View's centerpoint.
+    ///
+    QPointF position = QPointF(0.0, 0.0);
+
+    /// Rotation attribute of the camera. If rotation == pi/4, then the canvas
+    /// appears rotated 45 degrees anti-clockwise on screen.
+    ///
+    double rotation = 0.0;
+
+    /// Scale attribute of the camera. If scale == 2, then unit in scene
+    /// coordiates appears as 2 pixels on screen.
+    ///
+    double scale = 1.0;
 };
 
 #endif // VIEW2DCAMERADATA_H

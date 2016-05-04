@@ -2,9 +2,8 @@
 #include "DirUtils.h"
 
 #include <QRegularExpression>
+#include <QTextStream>
 #include <cassert>
-
-#include <QtDebug>
 
 DependsUtils::SDepends DependsUtils::getSourceSDepends(const QString & sourceFileContent)
 {

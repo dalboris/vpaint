@@ -12,6 +12,8 @@
 #include "Core/DataObject.h"
 #include "Views/View2DCameraData.h"
 
+#include <QMatrix4x4>
+
 /// \class View2DCamera
 /// \brief A class to represent a 2D camera object.
 ///
@@ -22,10 +24,13 @@ private:
     Q_DISABLE_COPY(View2DCamera)
 
 public:
-    View2DCamera() {}
+    /// Constructs a View2DCamera.
+    ///
+    View2DCamera();
 
-private:
-    View2DCameraData data_;
+    /// Converts 2D camera data to 4x4 matrix
+    ///
+    QMatrix4x4 toMatrix() const;
 };
 
 #endif // VIEW2DCAMERA_H

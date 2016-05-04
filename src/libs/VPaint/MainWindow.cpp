@@ -212,6 +212,25 @@ MainWindow::~MainWindow()
     // occurs in the correct order.
     //
     // XXX refactor to avoid this.
+    //
+    // Though, I'm not sure what I can do. Indeed, since view2D_
+    // is a child widget of the MainWindow, it is automatically
+    // assigned as a child object too. Therefore, it will be
+    // deleted in the ~QObject base destructor of ~MainWindow. In
+    // particular, this means that it will be destructed AFTER
+    // the execution of ~MainWindow.
+    //
+    // Therefore, if scene_ is explicitely deleted in ~MainWindow (or is a
+    // smart pointer, or a member variable of MainWindow), then it
+    // is always gonna be deleted BEFORE the views that observe them if
+    // the views aren't explicitely deleted as well in ~MainWindow. The
+    // only clean solution would be that scene_ is not owned by MainWindow.
+    //
+    // Conclusion:
+    //
+    // XXX TODO Scene should be created by the Application class and passed
+    // as an argument to the constructor of MainWindow.
+
     delete view2D_;
     delete view2D2_;
     delete sceneRendererSharedResources_;

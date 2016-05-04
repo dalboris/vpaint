@@ -11,11 +11,18 @@
 
 #include "Views/View.h"
 #include "Views/View2DMouseEvent.h"
+#include "Views/View2DCamera.h"
+
+#include <QPointF>
 
 class View2DRenderer;
 class SceneRendererSharedResources;
 class SceneRenderer;
 
+/// \class View2D
+/// \brief A QWidget that displays a given Scene and provides mouse actions
+/// for 2D camera navigation.
+///
 class View2D: public View
 {
 private:
@@ -23,25 +30,33 @@ private:
     Q_DISABLE_COPY(View2D)
 
 public:
+    /// Constructs a View2D displaying the given \p scene. For performance
+    /// purposes, the caller must also pass a pointer to a
+    /// SceneRendererSharedResources. The View2D does not take ownership of the
+    /// SceneRendererSharedResources.
+    ///
     View2D(Scene * scene,
            SceneRendererSharedResources * sceneRendererSharedResources,
            QWidget * parent);
 
+    /// Returns the view coordinate \p viewPos mapped to scene coordinates.
+    ///
+    QPointF mapToScene(const QPointF & viewPos);
+
 protected:
+    /// Implements the pure virtual function View::makeMouseEvent().
+    ///
     View2DMouseEvent * makeMouseEvent();
 
 private:
-    // Helper methods
-    void createRenderers_();
     void addActions_();
 
 private:
-    // Child QObjects
-    View2DRenderer * view2DRenderer_;
-    SceneRenderer * sceneRenderer_;
+    // Owned DataObjects
+    DataObjectPtr<View2DCamera> view2DCamera_;
 
-    // Observed QObjects
-    SceneRendererSharedResources * sceneRendererSharedResources_;
+    // Owned QObjects
+    View2DRenderer * view2DRenderer_;
 };
 
 #endif // VIEW2D_H

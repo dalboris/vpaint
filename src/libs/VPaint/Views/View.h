@@ -74,9 +74,8 @@ protected slots:
     void mouseMoveEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);
 
-private:
-    // Helper methods
-    void updateViewOnSceneChange_();
+    // Hides update(const QRect &) to resolve ambiguity
+    void update() { OpenGLWidget::update(); }
 
 private:
     // Child QObjects
