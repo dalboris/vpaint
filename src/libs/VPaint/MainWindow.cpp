@@ -113,6 +113,10 @@ MainWindow::MainWindow(QWidget * parent) :
     // Set splitter as central widget
     setCentralWidget(splitter);
 
+    // Make window a reasonable size
+    resize(1000, 600);
+    move(200, 50);
+
     /* FACTORED_OUT
     // Global object
     Global::initialize(this);

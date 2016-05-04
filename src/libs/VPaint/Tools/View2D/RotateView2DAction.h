@@ -12,18 +12,37 @@
 #include "Views/View2DMouseAction.h"
 #include "Cameras/Camera2DData.h"
 
+#include <QTimer>
+#include <QElapsedTimer>
+
 class Camera2D;
 
 class RotateView2DAction: public View2DMouseAction
 {
+    Q_OBJECT
+
 public:
     RotateView2DAction(Camera2D * camera2D);
 
 protected:
+    // PMR = rotate the view
     bool acceptPMREvent(const View2DMouseEvent * event);
     void pressEvent(const View2DMouseEvent * event);
     void moveEvent(const View2DMouseEvent * event);
     void releaseEvent(const View2DMouseEvent * event);
+
+    // Click = reset rotation
+    bool acceptClickEvent(const View2DMouseEvent * event);
+    void clickEvent(const View2DMouseEvent * event);
+
+private slots:
+    void onTimeout_();
+
+private:
+    bool accept_(const View2DMouseEvent * event);
+    void storeDataAtPress_(const View2DMouseEvent * event);
+    void setRotation_(double rotation);
+    void completeAnimation_();
 
 private:
     // Observed DataObject
@@ -31,6 +50,10 @@ private:
 
     // Other member variables
     Camera2DData cameraDataAtPress_;
+    QPointF scenePivot_;
+    QPointF viewPivot_;
+    QTimer resetAnimationTimer_;
+    QElapsedTimer resetAnimationElapsedTimer_;
 };
 
 #endif // ROTATEVIEW2DACTION_H

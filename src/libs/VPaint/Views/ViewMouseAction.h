@@ -9,15 +9,26 @@
 #ifndef VIEWMOUSEACTION_H
 #define VIEWMOUSEACTION_H
 
-#include "Views/ViewMouseEvent.h"
+#include <QObject>
+
+class ViewMouseEvent;
 
 /// \class ViewMouseAction
 /// \brief Base class for mouse-triggered-in-view actions
 ///
-class ViewMouseAction
+class ViewMouseAction: public QObject
 {
+private:
+    Q_OBJECT
+    Q_DISABLE_COPY(ViewMouseAction)
+
 public:
-    // Virtual destructor
+    /// Constructs a ViewMouseAction
+    ///
+    ViewMouseAction() : QObject(nullptr) {}
+
+    /// Virtual destructor
+    ///
     ~ViewMouseAction() {}
 
 protected:
