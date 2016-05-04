@@ -12,6 +12,7 @@
 #include "Views/TestAction.h"
 #include "Views/View2DRenderer.h"
 #include "Tools/Sketch/SketchAction.h"
+#include "Tools/View2D/PanView2DAction.h"
 
 View2D::View2D(Scene * scene,
                SceneRendererSharedResources * sceneRendererSharedResources,
@@ -40,4 +41,5 @@ void View2D::addActions_()
 {
     addMouseAction(new TestAction(scene()));
     addMouseAction(new SketchAction(scene()));
+    addMouseAction(new PanView2DAction(camera2D_.get()));
 }

@@ -11,7 +11,7 @@
 
 #include "Views/View.h"
 #include "Views/View2DMouseEvent.h"
-#include "Views/View2DCamera.h"
+#include "Cameras/Camera2D.h"
 
 #include <QPointF>
 

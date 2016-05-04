@@ -23,6 +23,7 @@ private:
     Q_OBJECT
     Q_DISABLE_COPY(Camera2D)
 
+
 public:
     /// Constructs a View2DCamera.
     ///
@@ -31,6 +32,30 @@ public:
     /// Converts 2D camera data to 4x4 matrix
     ///
     QMatrix4x4 toMatrix() const;
+
+    /// Returns the position of the camera.
+    ///
+    QPointF position() const;
+
+    /// Sets the position of the camera. Emits changed().
+    ///
+    void setPosition(const QPointF & p);
+
+    /// Returns the rotation of the camera.
+    ///
+    double rotation() const;
+
+    /// Sets the rotation of the camera. Emits changed().
+    ///
+    void setRotation(double r);
+
+    /// Returns the scale of the camera.
+    ///
+    double scale() const;
+
+    /// Sets the scale of the camera. Emits changed().
+    ///
+    void setScale(double s);
 };
 
 #endif // CAMERA2D_H

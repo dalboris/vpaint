@@ -14,5 +14,40 @@ Camera2D::Camera2D()
 
 QMatrix4x4 Camera2D::toMatrix() const
 {
-    return QMatrix4x4(); // identity
+    QMatrix4x4 res;
+    res.translate(data().position.x(), data().position.y());
+    return res;
+}
+
+QPointF Camera2D::position() const
+{
+    return data().position;
+}
+
+void Camera2D::setPosition(const QPointF & p)
+{
+    data_.position = p;
+    emit changed();
+}
+
+double Camera2D::rotation() const
+{
+    return data().rotation;
+}
+
+void Camera2D::setRotation(double r)
+{
+    data_.rotation = r;
+    emit changed();
+}
+
+double Camera2D::scale() const
+{
+    return data().scale;
+}
+
+void Camera2D::setScale(double s)
+{
+    data_.scale = s;
+    emit changed();
 }

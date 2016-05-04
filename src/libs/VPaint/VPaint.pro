@@ -154,7 +154,8 @@ HEADERS += MainWindow.h \
     Vac/VacData.h \
     Tools/Sketch/SketchAction.h \
     Cameras/Camera2D.h \
-    Cameras/Camera2DData.h
+    Cameras/Camera2DData.h \
+    Tools/View2D/PanView2DAction.h
 
 SOURCES += \
     SaveAndLoad.cpp \
@@ -266,7 +267,8 @@ SOURCES += \
     Vac/VacData.cpp \
     Tools/Sketch/SketchAction.cpp \
     Cameras/Camera2D.cpp \
-    Cameras/Camera2DData.cpp
+    Cameras/Camera2DData.cpp \
+    Tools/View2D/PanView2DAction.cpp
 
 DISTFILES += \
     OpenGL/Shaders/Helloworld.v.glsl \
