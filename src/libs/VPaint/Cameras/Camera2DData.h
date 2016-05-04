@@ -10,14 +10,15 @@
 #define CAMERA2DDATA_H
 
 #include <QPointF>
+#include <QMatrix4x4>
 
 /// \class Camera2DData
 /// \brief A struct to store 2D camera data.
 ///
 struct Camera2DData
 {
-    /// Position attribute of the camera. This is equal to the 2D scene
-    /// coordinate at the View's centerpoint.
+    /// Position attribute of the camera. This is equal to the position in
+    /// view coordinates of the scene origin point (0.0, 0.0).
     ///
     QPointF position = QPointF(0.0, 0.0);
 
@@ -30,6 +31,18 @@ struct Camera2DData
     /// coordiates appears as 2 pixels on screen.
     ///
     double scale = 1.0;
+
+    /// Converts 2D camera data to 4x4 matrix
+    ///
+    QMatrix4x4 toMatrix() const;
+
+    /// Modifies the position attributes such that the given \p scenePos
+    /// appears at the given \p viewPos. After this operation, we have:
+    ///
+    ///     viewPos == toMatrix() * scenePos
+    ///
+    void translateScenePosToViewPos(const QPointF & scenePos,
+                                    const QPointF & viewPos);
 };
 
 #endif // CAMERA2DDATA_H

@@ -14,9 +14,7 @@ Camera2D::Camera2D()
 
 QMatrix4x4 Camera2D::toMatrix() const
 {
-    QMatrix4x4 res;
-    res.translate(data().position.x(), data().position.y());
-    return res;
+    return data().toMatrix();
 }
 
 QPointF Camera2D::position() const

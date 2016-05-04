@@ -8,7 +8,9 @@
 
 #include "SketchAction.h"
 
-#include <QtDebug>
+#include "Scene/Scene.h"
+
+#include <glm/vec2.hpp>
 
 SketchAction::SketchAction(Scene * scene) :
     scene_(scene)
@@ -17,22 +19,27 @@ SketchAction::SketchAction(Scene * scene) :
 
 bool SketchAction::acceptPMREvent(const View2DMouseEvent * event)
 {
-    qDebug() << "SketchAction::acceptPMREvent";
-
-    return event->button() == Qt::LeftButton;
+    return (event->modifiers() == Qt::NoModifier) &&
+           (event->button() == Qt::LeftButton);
 }
 
 void SketchAction::pressEvent(const View2DMouseEvent * event)
 {
-    qDebug() << "SketchAction::pressEvent";
+    glm::vec2 centerline((float) event->scenePos().x(),
+                         (float) event->scenePos().y());
+
+    scene_->beginStroke(centerline);
 }
 
 void SketchAction::moveEvent(const View2DMouseEvent * event)
 {
-    qDebug() << "SketchAction::moveEvent";
+    glm::vec2 centerline((float) event->scenePos().x(),
+                         (float) event->scenePos().y());
+
+    scene_->continueStroke(centerline);
 }
 
-void SketchAction::releaseEvent(const View2DMouseEvent * event)
+void SketchAction::releaseEvent(const View2DMouseEvent * /*event*/)
 {
-    qDebug() << "SketchAction::releaseEvent";
+    scene_->endStroke();
 }

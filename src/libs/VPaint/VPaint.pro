@@ -136,7 +136,6 @@ HEADERS += MainWindow.h \
     Core/Cache.h \
     Views/ViewMouseAction.h \
     Core/Memory.h \
-    Views/TestAction.h \
     ViewOld.h \
     SceneOld.h \
     Scene/SceneData.h \
@@ -155,7 +154,9 @@ HEADERS += MainWindow.h \
     Tools/Sketch/SketchAction.h \
     Cameras/Camera2D.h \
     Cameras/Camera2DData.h \
-    Tools/View2D/PanView2DAction.h
+    Tools/View2D/PanView2DAction.h \
+    Tools/View2D/ZoomView2DAction.h \
+    Tools/View2D/RotateView2DAction.h
 
 SOURCES += \
     SaveAndLoad.cpp \
@@ -251,7 +252,6 @@ SOURCES += \
     Views/View2DMouseAction.cpp \
     Views/ViewMouseEvent.cpp \
     Views/ViewMouseAction.cpp \
-    Views/TestAction.cpp \
     ViewOld.cpp \
     SceneOld.cpp \
     Scene/SceneData.cpp \
@@ -268,7 +268,9 @@ SOURCES += \
     Tools/Sketch/SketchAction.cpp \
     Cameras/Camera2D.cpp \
     Cameras/Camera2DData.cpp \
-    Tools/View2D/PanView2DAction.cpp
+    Tools/View2D/PanView2DAction.cpp \
+    Tools/View2D/ZoomView2DAction.cpp \
+    Tools/View2D/RotateView2DAction.cpp
 
 DISTFILES += \
     OpenGL/Shaders/Helloworld.v.glsl \

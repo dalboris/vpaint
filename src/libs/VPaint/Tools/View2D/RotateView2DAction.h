@@ -6,17 +6,18 @@
 // license terms and conditions in the LICENSE.MIT file found in the top-level
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
-#ifndef TESTACTION_H
-#define TESTACTION_H
+#ifndef ROTATEVIEW2DACTION_H
+#define ROTATEVIEW2DACTION_H
 
 #include "Views/View2DMouseAction.h"
+#include "Cameras/Camera2DData.h"
 
-class Scene;
+class Camera2D;
 
-class TestAction: public View2DMouseAction
+class RotateView2DAction: public View2DMouseAction
 {
 public:
-    TestAction(Scene * scene);
+    RotateView2DAction(Camera2D * camera2D);
 
 protected:
     bool acceptPMREvent(const View2DMouseEvent * event);
@@ -25,7 +26,11 @@ protected:
     void releaseEvent(const View2DMouseEvent * event);
 
 private:
-    Scene * scene_;
+    // Observed DataObject
+    Camera2D * camera2D_;
+
+    // Other member variables
+    Camera2DData cameraDataAtPress_;
 };
 
-#endif // TESTACTION_H
+#endif // ROTATEVIEW2DACTION_H

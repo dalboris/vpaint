@@ -6,18 +6,18 @@
 // license terms and conditions in the LICENSE.MIT file found in the top-level
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
-#ifndef PANVIEW2DACTION_H
-#define PANVIEW2DACTION_H
+#ifndef ZOOMVIEW2DACTION_H
+#define ZOOMVIEW2DACTION_H
 
 #include "Views/View2DMouseAction.h"
 #include "Cameras/Camera2DData.h"
 
 class Camera2D;
 
-class PanView2DAction: public View2DMouseAction
+class ZoomView2DAction: public View2DMouseAction
 {
 public:
-    PanView2DAction(Camera2D * camera2D);
+    ZoomView2DAction(Camera2D * camera2D);
 
 protected:
     bool acceptPMREvent(const View2DMouseEvent * event);
@@ -33,4 +33,4 @@ private:
     Camera2DData cameraDataAtPress_;
 };
 
-#endif // PANVIEW2DACTION_H
+#endif // ZOOMVIEW2DACTION_H

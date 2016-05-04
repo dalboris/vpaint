@@ -10,8 +10,6 @@
 
 #include "Cameras/Camera2D.h"
 
-#include <QtDebug>
-
 PanView2DAction::PanView2DAction(Camera2D * camera2D) :
     camera2D_(camera2D)
 {
@@ -19,30 +17,26 @@ PanView2DAction::PanView2DAction(Camera2D * camera2D) :
 
 bool PanView2DAction::acceptPMREvent(const View2DMouseEvent * event)
 {
-    qDebug() << "PanView2DAction::acceptPMREvent";
-
-    return event->button() == Qt::MidButton;
+    return (event->modifiers() & Qt::AltModifier) &&
+           (event->button() == Qt::MidButton);
 }
 
-void PanView2DAction::pressEvent(const View2DMouseEvent * event)
+void PanView2DAction::pressEvent(const View2DMouseEvent * /*event*/)
 {
-    qDebug() << "PanView2DAction::pressEvent";
-
-    cameraPositionAtPress_ = camera2D_->position();
+    cameraDataAtPress_ = camera2D_->data();
 }
 
 void PanView2DAction::moveEvent(const View2DMouseEvent * event)
 {
-    qDebug() << "PanView2DAction::moveEvent" << event->viewPos();
+    Camera2DData newCameraData = cameraDataAtPress_;
 
+    newCameraData.translateScenePosToViewPos(
+                event->scenePosAtPress(),
+                event->viewPos());
 
-    QPointF deltaPosition = event->viewPos() - event->viewPosAtPress();
-    QPointF newCameraPosition = cameraPositionAtPress_ + deltaPosition;
-
-    camera2D_->setPosition(newCameraPosition);
+    camera2D_->setData(newCameraData);
 }
 
-void PanView2DAction::releaseEvent(const View2DMouseEvent * event)
+void PanView2DAction::releaseEvent(const View2DMouseEvent * /*event*/)
 {
-    qDebug() << "PanView2DAction::releaseEvent";
 }

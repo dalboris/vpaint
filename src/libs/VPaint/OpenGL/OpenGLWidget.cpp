@@ -69,7 +69,6 @@ void OpenGLWidget::resizeGL(int w, int h)
 
 void OpenGLWidget::paintGL()
 {
-    qDebug("paintGL");
     OpenGLFunctions * f = functions();
     renderer()->render(f);
 }

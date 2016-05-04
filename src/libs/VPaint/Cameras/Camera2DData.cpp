@@ -7,3 +7,22 @@
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
 #include "Camera2DData.h"
+
+#include <cmath>
+
+QMatrix4x4 Camera2DData::toMatrix() const
+{
+    QMatrix4x4 res;
+    res.translate(position.x(), position.y());
+    res.rotate(rotation * 180.0 / M_PI, 0.0, 0.0, 1.0);
+    res.scale(scale);
+    return res;
+}
+
+void Camera2DData::translateScenePosToViewPos(
+        const QPointF & scenePos,
+        const QPointF & viewPos)
+{
+    const QPointF currentViewPos = toMatrix() * scenePos;
+    position += viewPos - currentViewPos;
+}

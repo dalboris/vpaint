@@ -9,7 +9,7 @@
 #include "View2DRenderer.h"
 
 #include "Scene/SceneRenderer.h"
-#include "Views/View2DCamera.h"
+#include "Cameras/Camera2D.h"
 
 View2DRenderer::View2DRenderer(
         SceneRendererSharedResources * sceneRendererSharedResources,
