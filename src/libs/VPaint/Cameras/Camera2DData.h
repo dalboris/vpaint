@@ -6,15 +6,15 @@
 // license terms and conditions in the LICENSE.MIT file found in the top-level
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
-#ifndef VIEW2DCAMERADATA_H
-#define VIEW2DCAMERADATA_H
+#ifndef CAMERA2DDATA_H
+#define CAMERA2DDATA_H
 
 #include <QPointF>
 
-/// \class View2DCamera
+/// \class Camera2DData
 /// \brief A struct to store 2D camera data.
 ///
-struct View2DCameraData
+struct Camera2DData
 {
     /// Position attribute of the camera. This is equal to the 2D scene
     /// coordinate at the View's centerpoint.
@@ -32,4 +32,4 @@ struct View2DCameraData
     double scale = 1.0;
 };
 
-#endif // VIEW2DCAMERADATA_H
+#endif // CAMERA2DDATA_H

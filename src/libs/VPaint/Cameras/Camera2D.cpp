@@ -6,4 +6,13 @@
 // license terms and conditions in the LICENSE.MIT file found in the top-level
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
-#include "View2DCameraData.h"
+#include "Camera2D.h"
+
+Camera2D::Camera2D()
+{
+}
+
+QMatrix4x4 Camera2D::toMatrix() const
+{
+    return QMatrix4x4(); // identity
+}

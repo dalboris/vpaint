@@ -53,7 +53,7 @@ private:
 
 private:
     // Owned DataObjects
-    DataObjectPtr<View2DCamera> view2DCamera_;
+    DataObjectPtr<Camera2D> camera2D_;
 
     // Owned QObjects
     View2DRenderer * view2DRenderer_;

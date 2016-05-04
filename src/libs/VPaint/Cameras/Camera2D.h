@@ -6,31 +6,31 @@
 // license terms and conditions in the LICENSE.MIT file found in the top-level
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
-#ifndef VIEW2DCAMERA_H
-#define VIEW2DCAMERA_H
+#ifndef CAMERA2D_H
+#define CAMERA2D_H
 
 #include "Core/DataObject.h"
-#include "Views/View2DCameraData.h"
+#include "Cameras/Camera2DData.h"
 
 #include <QMatrix4x4>
 
-/// \class View2DCamera
+/// \class Camera2D
 /// \brief A class to represent a 2D camera object.
 ///
-class View2DCamera: public DataObject<View2DCameraData>
+class Camera2D: public DataObject<Camera2DData>
 {
 private:
     Q_OBJECT
-    Q_DISABLE_COPY(View2DCamera)
+    Q_DISABLE_COPY(Camera2D)
 
 public:
     /// Constructs a View2DCamera.
     ///
-    View2DCamera();
+    Camera2D();
 
     /// Converts 2D camera data to 4x4 matrix
     ///
     QMatrix4x4 toMatrix() const;
 };
 
-#endif // VIEW2DCAMERA_H
+#endif // CAMERA2D_H

@@ -13,12 +13,12 @@
 
 View2DRenderer::View2DRenderer(
         SceneRendererSharedResources * sceneRendererSharedResources,
-        View2DCamera * view2DCamera,
+        Camera2D * camera2D,
         QObject * parent) :
 
     OpenGLRenderer(parent),
 
-    view2DCamera_(view2DCamera)
+    camera2D_(camera2D)
 {
     sceneRenderer_ = new SceneRenderer(sceneRendererSharedResources, this);
 }
@@ -63,5 +63,5 @@ QMatrix4x4 View2DRenderer::projectionMatrix() const
 
 QMatrix4x4 View2DRenderer::viewMatrix() const
 {
-    return view2DCamera_->toMatrix();
+    return camera2D_->toMatrix();
 }

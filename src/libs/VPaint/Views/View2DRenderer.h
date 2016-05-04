@@ -15,7 +15,7 @@
 
 class SceneRenderer;
 class SceneRendererSharedResources;
-class View2DCamera;
+class Camera2D;
 
 /// \class View2DRenderer
 /// \brief The renderer object owned by each View2D.
@@ -32,7 +32,7 @@ public:
     /// Constructs a View2DRenderer.
     ///
     View2DRenderer(SceneRendererSharedResources * sceneRendererSharedResources,
-                   View2DCamera * view2DCamera,
+                   Camera2D * camera2D,
                    QObject * parent);
 
     /// Destructs this View2DRenderer. It is important that the SceneRenderer
@@ -82,7 +82,7 @@ private:
     SceneRenderer * sceneRenderer_;
 
     // Observed DataObjects
-    View2DCamera * view2DCamera_;
+    Camera2D * camera2D_;
 
     // Other member variables
     QMatrix4x4 projectionMatrix_;

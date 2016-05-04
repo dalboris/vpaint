@@ -18,17 +18,17 @@ View2D::View2D(Scene * scene,
                QWidget * parent):
     View(scene, parent)
 {
-    view2DRenderer_ = new View2DRenderer(sceneRendererSharedResources, view2DCamera_.get(), this);
+    view2DRenderer_ = new View2DRenderer(sceneRendererSharedResources, camera2D_.get(), this);
     setRenderer(view2DRenderer_);
 
     addActions_();
 
-    connect(view2DCamera_.get(), &View2DCamera::changed, this, &View2D::update);
+    connect(camera2D_.get(), &Camera2D::changed, this, &View2D::update);
 }
 
 QPointF View2D::mapToScene(const QPointF & viewPos)
 {
-    return view2DCamera_->toMatrix().inverted() * viewPos;
+    return camera2D_->toMatrix().inverted() * viewPos;
 }
 
 View2DMouseEvent * View2D::makeMouseEvent()
