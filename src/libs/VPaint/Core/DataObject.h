@@ -367,51 +367,105 @@ protected:
 /// \class DataObjectPtr
 /// \brief A smart pointer to implement the semantics for owned sub-objects
 ///
-/// See the documentation of DataObject for more information
+/// See the documentation of DataObject for more information.
 ///
 template <class T>
 class DataObjectPtr
 {
 public:
-    // Object lifetime management
+    /// Constructs a DataObjectPtr<T>. This allocates a new \p T on the heap,
+    /// which can be later accessed via get().
+    ///
     DataObjectPtr()
     {
         p_ = new T();
     }
+
+    /// Destructs a DataObjectPtr<T>. This frees the memory that was allocated
+    /// in the constructor. All non-owning pointers stored by clients (obtained
+    /// via get()) will be dangling.
+    ///
     ~DataObjectPtr()
     {
         delete p_;
     }
 
-    // Copy semantics
-    DataObjectPtr(const DataObjectPtr<T> & other) : DataObjectPtr()
+    /// Copy-constructs a DataObjectPtr<T>. This allocates a new \p T on the
+    /// heap, then performs a deep copy of other->data() into this->data().
+    ///
+    DataObjectPtr(const DataObjectPtr<T> & other)
     {
+        p_ = new T();
         p_->setData(other.p_->data());
     }
+
+    /// Swaps two DataObjectPtr<T>. This simply swaps their underlying pointer,
+    /// no allocation or deallocation occurs. The value of first.get() after
+    /// the swap is equal to the value of second.get() before the swap (and
+    /// vice versa).
+    ///
     friend void swap(DataObjectPtr<T> & first, DataObjectPtr<T> & second)
     {
-        swap(first.p_, second.p_);
-    }
-    DataObjectPtr<T> & operator=(DataObjectPtr<T> other)
-    {
-        swap(*this, other);
-        return this;
-    }
-    DataObjectPtr<T>(DataObjectPtr<T> && other) : DataObjectPtr()
-    {
-        swap(*this, other);
+        std::swap(first.p_, second.p_);
     }
 
-    // Get underlying pointer
+    /// Assigns other to this, by performing a deep copy of other->data() into
+    /// this->data(). No allocation or deallocation occurs. Note: the
+    /// copy-and-swap idiom is not used because passing by value would
+    /// copy-construct a DataObjectPtr<T> and therefore make one unnecessary
+    /// allocation and deallocation of T.
+    ///
+    DataObjectPtr<T> & operator=(const DataObjectPtr<T> & other)
+    {
+        if (p_ != other.p_)
+            p_->setData(other.p_->data());
+
+        return *this;
+    }
+
+    /// Move-constructs a DataObjectPtr<T>. This set the underlying pointer of
+    /// this DataObjectPtr<T> to be equal to the underlying pointer of \p
+    /// other, then nullify the underlying pointer of \p other. No allocation
+    /// or deallocation occurs.
+    ///
+    /// Since it is marked noexcept, std::vector<DataObjectPtr<T>> is
+    /// guaranteed to use this provided move constructor whenever possible
+    /// (i.e., don't perform unnecessary allocations on push_back(), or
+    /// reserve(), etc).
+    ///
+    DataObjectPtr<T>(DataObjectPtr<T> && other) noexcept
+    {
+        p_ = other.p_;
+        other.p_ = nullptr;
+    }
+
+    /// Gets the underlying pointer.
+    ///
     T * get() const { return p_; }
+
+    /// Dereferences the underlying pointer.
+    ///
     T & operator*() const { return *p_; }
+
+    /// Dereferences the underlying pointer.
+    ///
     T * operator->() const { return p_; }
 
-    // Compare with other pointers
+    /// Returns true if the underlying pointers are equal; returns false
+    /// otherwise. Note that since each constructed DataObjectPtr automatically
+    /// allocates a new T, and since clients cannot change this underlying
+    /// pointer, then the underlying pointers are in fact unique to each
+    /// DataObjectPtr object. Therefore, (*this) == (other) is in fact
+    /// equivalent to (this == &other).
+    ///
     bool operator==(const DataObjectPtr<T> & other)
     {
         return p_ == other.p_;
     }
+
+    /// Returns true if the underlying pointers are different; returns true
+    /// otherwise.
+    ///
     bool operator!=(const DataObjectPtr<T> & other)
     {
         return p_ != other.p_;

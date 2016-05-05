@@ -33,8 +33,7 @@ struct SceneData
     */
 
     // Layers
-    //std::vector<DataObjectPtr<Layer>> layers;
-    DataObjectPtr<Layer> layers;
+    std::vector<DataObjectPtr<Layer>> layers;
 
     // XXX TEMP for experimentation
     std::vector<SceneDataSample> samples;

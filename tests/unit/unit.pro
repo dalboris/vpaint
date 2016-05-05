@@ -21,4 +21,5 @@ SOURCES += \
     OpenVac/tst_CellData.cpp \
     OpenVac/tst_Frame.cpp \
     OpenVac/tst_Memory.cpp \
-    OpenVac/tst_Operators.cpp
+    OpenVac/tst_Operators.cpp \
+    VPaint/Core/tst_DataObject.cpp

@@ -10,6 +10,16 @@
 
 #include <glm/geometric.hpp>
 
+Scene::Scene()
+{
+    data_.layers.push_back(DataObjectPtr<Layer>());
+}
+
+Layer * Scene::activeLayer() const
+{
+    return data().layers[0].get();
+}
+
 const std::vector<SceneDataSample> & Scene::samples()
 {
     return data_.samples;

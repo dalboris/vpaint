@@ -19,7 +19,10 @@ private:
     Q_DISABLE_COPY(Scene)
 
 public:
-    Scene() {}
+    Scene();
+
+    Layer * activeLayer() const;
+
 
     // XXX TEMP
     void beginStroke(const glm::vec2 & centerline);
