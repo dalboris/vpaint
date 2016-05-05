@@ -7,3 +7,13 @@
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
 #include "Layer.h"
+
+Layer::Layer()
+{
+    connect(data().vac.get(), &Vac::changed, this, &Layer::changed);
+}
+
+Vac * Layer::vac() const
+{
+    return data().vac.get();
+}

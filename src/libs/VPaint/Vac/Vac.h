@@ -15,6 +15,11 @@
 /// \class Vac
 /// \brief A DataObject subclass that represents a vector animation complex.
 ///
+/// This class is a wrapper around a OpenVac::Vac, which emits a changed()
+/// signal when modification are done to the underlying OpenVac::Vac.
+///
+/// Note: VacData is simply an alias for OpenVac::Vac.
+///
 class Vac: public DataObject<VacData>
 {
 private:
@@ -22,8 +27,13 @@ private:
     Q_DISABLE_COPY(Vac)
 
 public:
-    Vac() {}
+    /// Constructs a Vac.
+    ///
+    Vac();
 
+    /// Returns the underlying Vac. This is a convenient synonym of data().
+    ///
+    inline const VacData & vac() const { return data(); }
 };
 
 #endif // VAC_H

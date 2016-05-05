@@ -22,8 +22,11 @@ private:
     Q_DISABLE_COPY(Layer)
 
 public:
-    Layer() {}
+    Layer();
 
+    /// Returns the Vac associated with this layer.
+    ///
+    Vac * vac() const;
 };
 
 #endif // LAYER_H

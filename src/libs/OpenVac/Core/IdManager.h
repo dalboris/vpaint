@@ -165,6 +165,7 @@ public:
     /// Tries to locate an element with the given ID. Returns a read-only
     /// (constant) iterator pointing to sought-after element, or end() if not
     /// found.
+    ///
     const_iterator find(Id id) const
     {
         return map_.find(id);

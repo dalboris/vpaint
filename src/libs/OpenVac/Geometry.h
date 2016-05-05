@@ -14,6 +14,8 @@
 #ifndef OPENVAC_GEOMETRY_H
 #define OPENVAC_GEOMETRY_H
 
+#include "VecGeometry/EdgeGeometry.h"
+
 #include <OpenVac/Geometry/Frame.h>
 #include <vector>
 
@@ -36,12 +38,23 @@ namespace OpenVac
 namespace Geometry
 {
 
+/* OpenVac default geometry
+ *
 using Point = double[2];
 using Curve = std::vector<Point>;
 
 using Frame = OpenVac::Frame;
 class KeyVertexGeometry { Point pos; };
 class KeyEdgeGeometry { Curve curve; };
+class GeometryManager {};
+ *
+ */
+
+/* VPaint geometry */
+
+using Frame = OpenVac::Frame;
+class KeyVertexGeometry {};
+using KeyEdgeGeometry = ::EdgeGeometry;
 class GeometryManager {};
 
 } // end namespace Geometry

@@ -9,6 +9,7 @@
 #ifndef OPENVAC_MAKEKEYVERTEX_H
 #define OPENVAC_MAKEKEYVERTEX_H
 
+#include <OpenVac/Topology/KeyVertex.h>
 #include <OpenVac/Operators/Operator.h>
 
 namespace OpenVac

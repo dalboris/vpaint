@@ -46,6 +46,18 @@ public:
             return CellHandle();
     }
 
+    // XXX create CellHandleVector classes
+    std::vector<CellHandle> cells() const
+    {
+        std::vector<CellHandle> res;
+        for (const auto & pair: cellManager_)
+        {
+            const SharedPtr<Cell> & sp = pair.second;
+            res.push_back(CellHandle(sp));
+        }
+        return res;
+    }
+
 private:
     // Cell manager
     IdManager<SharedPtr<Cell>> cellManager_;

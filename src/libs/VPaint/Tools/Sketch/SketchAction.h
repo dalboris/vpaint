@@ -10,6 +10,7 @@
 #define SKETCHACTION_H
 
 #include "Views/View2DMouseAction.h"
+#include "OpenVac/Topology/KeyEdge.h"
 
 class Scene;
 
@@ -26,6 +27,7 @@ protected:
 
 private:
     Scene * scene_;
+    OpenVac::KeyEdgeHandle edge;
 };
 
 #endif // SKETCHACTION_H

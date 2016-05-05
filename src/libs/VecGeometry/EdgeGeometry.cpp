@@ -8,7 +8,140 @@
 
 #include "EdgeGeometry.h"
 
+#include <glm/geometric.hpp>
+
 EdgeGeometry::EdgeGeometry()
 {
 
+}
+
+const std::vector<EdgeGeometrySample> & EdgeGeometry::samples()
+{
+    return samples_;
+}
+
+size_t EdgeGeometry::size() const
+{
+    return samples_.size();
+}
+
+void EdgeGeometry::beginStroke(const glm::vec2 & centerline)
+{
+    clear();
+    addSample(centerline);
+}
+
+void EdgeGeometry::continueStroke(const glm::vec2 & centerline)
+{
+    addSample(centerline);
+}
+
+void EdgeGeometry::endStroke()
+{
+}
+
+void EdgeGeometry::clear()
+{
+    samples_.clear();
+    arclengths_.clear();
+    tangents_.clear();
+}
+
+void EdgeGeometry::addSample(const glm::vec2 & centerline)
+{
+    const glm::vec2 zero(0.0f, 0.0f);
+    const int n = size();
+    const float eps = 1e-6f;
+    const float width = 10.0f;
+
+    if (n == 0)
+    {
+        EdgeGeometrySample sample;
+
+        sample.centerline1   = centerline;
+        sample.normal1       = zero;
+        sample.leftBoundary  = centerline;
+
+        sample.centerline2   = centerline;
+        sample.normal2       = zero;
+        sample.rightBoundary = centerline;
+
+        samples_    .push_back(sample);
+        arclengths_ .push_back(0.0f);
+        tangents_   .push_back(zero);
+    }
+    else
+    {
+        // Compute last tangent and arclength
+        glm::vec2 tangent = centerline - samples_[n-1].centerline1;
+        const float length  = glm::length(tangent);
+
+        if (length > eps)
+        {
+            // Normalize tangent
+            tangent /= length;
+
+            // Compute normal
+            const glm::vec2 normal(-tangent.y, tangent.x);
+
+            // Compute sample
+            EdgeGeometrySample sample;
+
+            sample.centerline1   = centerline;
+            sample.normal1       = normal;
+            sample.leftBoundary  = centerline + width * normal;
+
+            sample.centerline2   = centerline;
+            sample.normal2       = -normal;
+            sample.rightBoundary = centerline - width * normal;
+
+            // Add sample
+            samples_    .push_back(sample);
+            arclengths_ .push_back(arclengths_[n-1] + length);
+            tangents_   .push_back(tangent);
+
+            // Compute updated tangent of previous sample.
+            // Notes: n = size() - 1.
+            //        P[n]   is the last element
+            //        P[n-1] is the element to update
+            glm::vec2 previousTangent;
+            if (n == 1)
+            {
+                // Size is now 2. We use P[1] - P[0] as tangent for P[0]
+                previousTangent = tangent;
+            }
+            else
+            {
+                // Size is now 3 or more. We use P[n] - P[n-2] as tangent for P[n-1]
+                previousTangent = centerline - samples_[n-2].centerline1;
+                float previousLength  = glm::length(previousTangent);
+                if (previousLength > eps)
+                {
+                    // Normalize tangent
+                    previousTangent /= previousLength;
+                }
+                else
+                {
+                    // Heuristic for degenerate case
+                    // XXX could/should we be smarter?
+                    previousTangent = normal;
+                }
+            }
+
+            // Compute updated normal of previous sample
+            const glm::vec2 previousNormal(-previousTangent.y, previousTangent.x);
+
+            // Update previous sample
+            EdgeGeometrySample & previousSample = samples_[n-1];
+            const glm::vec2 & previousCenterline = previousSample.centerline1;
+
+            previousSample.normal1       = previousNormal;
+            previousSample.leftBoundary  = previousCenterline + width * previousNormal;
+
+            previousSample.normal2       = -previousNormal;
+            previousSample.rightBoundary = previousCenterline - width * previousNormal;
+
+            tangents_[n-1] = previousTangent;
+        }
+    }
 }

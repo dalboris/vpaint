@@ -11,6 +11,8 @@
 #include "Scene/Scene.h"
 #include "Scene/SceneData.h"
 
+#include "OpenVac/Topology/KeyEdge.h"
+
 SceneRendererSharedResources::SceneRendererSharedResources(
         Scene * scene,
         QObject * parent) :
@@ -50,11 +52,44 @@ void SceneRendererSharedResources::initialize(OpenGLFunctions * /*f*/)
 
 void SceneRendererSharedResources::update(OpenGLFunctions * /*f*/)
 {
+
     if (isDirty_)
     {
-        const auto & samples = scene()->samples();
+        // Get all edges
+        std::vector<OpenVac::KeyEdgeHandle> edges;
+        std::vector<OpenVac::CellHandle> cells =  scene()->activeVac()->vac().cells();
+        for (const OpenVac::CellHandle & cell: cells)
+        {
+            OpenVac::KeyEdgeHandle edge = cell;
+            if (edge)
+                edges.push_back(edge);
+        }
+
+        // Get total num samples
+        int numSamples = 0;
+        for (const OpenVac::KeyEdgeHandle & edge: edges)
+        {
+            const auto & samples = edge->geometry().samples();
+            numSamples += samples.size();
+        }
+
+        // Allocate VBO (i.e., allocate memory in GPU)
         vbo_.bind();
-        vbo_.allocate(samples.data(), samples.size() * sizeof(SceneDataSample));
+        vbo_.allocate(numSamples * sizeof(EdgeGeometrySample));
+        vbo_.release();
+
+        // Write VBO (i.e., copy data from CPU to GPU)
+        int offset = 0;
+        vbo_.bind();
+        for (const OpenVac::KeyEdgeHandle & edge: edges)
+        {
+            const auto & samples = edge->geometry().samples();
+            int count = samples.size() * sizeof(EdgeGeometrySample);
+
+            vbo_.write(offset, samples.data(), count);
+
+            offset += count;
+        }
         vbo_.release();
     }
 

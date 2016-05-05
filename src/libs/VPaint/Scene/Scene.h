@@ -12,6 +12,9 @@
 #include "Core/DataObject.h"
 #include "Scene/SceneData.h"
 
+/// \class Scene
+/// \brief A class to represent the whole scene.
+///
 class Scene: public DataObject<SceneData>
 {
 private:
@@ -19,22 +22,19 @@ private:
     Q_DISABLE_COPY(Scene)
 
 public:
+    /// Constructs a Scene.
+    ///
     Scene();
 
+    /// Returns the active layer of this Scene. There is always a
+    /// non-null active layer, so this never returns nullptr.
+    ///
     Layer * activeLayer() const;
 
-
-    // XXX TEMP
-    void beginStroke(const glm::vec2 & centerline);
-    void continueStroke(const glm::vec2 & centerline);
-    void endStroke();
-    const std::vector<SceneDataSample> & samples();
-
-private:
-    // XXX TEMP
-    size_t size() const;
-    void clear();
-    void addSample(const glm::vec2 & centerline);
+    /// Returns the Vac of the active layer of this Scene. This never returns
+    /// nullptr.
+    ///
+    Vac * activeVac() const;
 };
 
 #endif // SCENE_H

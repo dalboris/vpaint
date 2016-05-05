@@ -65,8 +65,8 @@ public:
     /// cells would differ), you need to first create the Operator, make copies
     /// of it, and only then call compute() on each of them.
     ///
-    /// This function is re-entrant, but obviously not thread-safe as it
-    /// can only be call once anyway.
+    /// This function is re-entrant, but obviously not thread-safe since it
+    /// can only be called once anyway.
     ///
     Operator & compute(const Vac & vac)
     {

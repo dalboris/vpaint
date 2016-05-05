@@ -11,9 +11,6 @@
 
 #include "OpenVac/Vac.h"
 
-struct VacData
-{
-    OpenVac::Vac vac;
-};
+using VacData = OpenVac::Vac;
 
 #endif // VACDATA_H

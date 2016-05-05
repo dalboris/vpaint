@@ -35,6 +35,9 @@ signals:
 
 /****************************** DataObject ***********************************/
 
+// forward declaration
+template <class T> class DataObjectMutator;
+
 /// \class DataObject
 /// \brief A class template to define QObjects representing scene data.
 ///
@@ -354,13 +357,48 @@ private:
 public:
     DataObject() {}
 
-    const TData & data() const { return data_; }
-    void setData(const TData & data) { data_ = data; emit changed(); }
+    const TData & data() const
+    {
+        return data_;
+    }
+
+    void setData(const TData & data)
+    {
+        data_ = data;
+        emit changed();
+    }
+
+    void accept(DataObjectMutator<TData> & mutator)
+    {
+        mutator.exec(data_);
+        emit changed();
+    }
 
 protected:
     TData data_;
+
+private:
+    friend class DataObjectMutator<TData>;
 };
 
+
+/**************************** DataObjectMutator *****************************/
+
+/// \class DataObjectMutator
+/// \brief A class to allow modification of the data of a DataObject.
+///
+/// How to use:
+///   1. Create a class that derives from DataObjectMutator<TData>
+///   2. Reimplement its virtual exec() that can access and modifies the data.
+///   3. Call object->accept(mutator). This in turn will call exec() then
+///      emit changed().
+///
+template <class TData>
+class DataObjectMutator
+{
+public:
+    virtual void exec(TData & data)=0;
+};
 
 /**************************** DataObjectPtr **********************************/
 

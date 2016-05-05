@@ -47,6 +47,9 @@ public:
     /// Accesses the KeyEdgeGeometry of this KeyEdge.
     const Geometry::KeyEdgeGeometry & geometry() const { return data().geometry; }
 
+    /// Accesses and allows modification of the KeyEdgeGeometry of this KeyEdge.
+    Geometry::KeyEdgeGeometry & geometry() { return data().geometry; }
+
 private:
     // Data
     KeyEdgeData<Handles> data_;

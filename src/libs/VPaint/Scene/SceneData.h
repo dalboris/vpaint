@@ -12,33 +12,14 @@
 #include "Layer/Layer.h"
 
 #include <vector>
-#include <glm/vec2.hpp>
-
-struct SceneDataSample
-{
-    glm::vec2 centerline1;   // actual data
-    glm::vec2 normal1;       // computed normal
-    glm::vec2 leftBoundary;  // computed edge boundary (after join style + warping)
-
-    glm::vec2 centerline2;   // == centerline1 (duplicated for shader)
-    glm::vec2 normal2;       // == normal1     (duplicated for shader)
-    glm::vec2 rightBoundary; // computed edge boundary (after join style + warping)
-};
 
 struct SceneData
 {
-    /*
     // Canvas
-    Canvas * canvas = nullptr;
-    */
+    //Canvas * canvas = nullptr;
 
     // Layers
     std::vector<DataObjectPtr<Layer>> layers;
-
-    // XXX TEMP for experimentation
-    std::vector<SceneDataSample> samples;
-    std::vector<float> arclengths;
-    std::vector<glm::vec2> tangents;
 };
 
 #endif // SCENEDATA_H

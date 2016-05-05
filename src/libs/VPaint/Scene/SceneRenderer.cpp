@@ -10,6 +10,8 @@
 #include "Scene/SceneRenderer.h"
 #include "Scene/SceneRendererSharedResources.h"
 
+#include "OpenVac/Topology/KeyEdge.h"
+
 SceneRenderer::SceneRenderer(SceneRendererSharedResources * sharedResources,
                              QObject * parent) :
     QObject(parent),
@@ -36,8 +38,8 @@ void SceneRenderer::initialize(OpenGLFunctions * f)
     // Store attribute bindings in VAO
     auto & vbo = sharedResources_->vbo_;
     auto & vertexLoc = sharedResources_->vertexLoc_;
-    GLsizei  stride  = sizeof(SceneDataSample) / 2;
-    GLvoid * pointer = reinterpret_cast<void*>(offsetof(SceneDataSample, leftBoundary));
+    GLsizei  stride  = sizeof(EdgeGeometrySample) / 2;
+    GLvoid * pointer = reinterpret_cast<void*>(offsetof(EdgeGeometrySample, leftBoundary));
     vao_.bind();
     vbo.bind();
     f->glEnableVertexAttribArray(vertexLoc);
@@ -62,7 +64,6 @@ void SceneRenderer::render2D(OpenGLFunctions * f, const QMatrix4x4 & projMatrix,
     auto & shaderProgram = sharedResources_->shaderProgram_;
     auto & projMatrixLoc = sharedResources_->projMatrixLoc_;
     auto & viewMatrixLoc = sharedResources_->viewMatrixLoc_;
-    const auto & samples = scene()->samples();
 
     // Clear color and depth buffer
     f->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -74,12 +75,42 @@ void SceneRenderer::render2D(OpenGLFunctions * f, const QMatrix4x4 & projMatrix,
     shaderProgram.setUniformValue(projMatrixLoc, projMatrix);
     shaderProgram.setUniformValue(viewMatrixLoc, viewMatrix);
 
-    // Draw triangles
+    // ---- Draw triangles ----
+    // XXX note: all of this should be refactored: the Vac shouldn't be
+    // parsed again. Instead, the shared resources should stored the
+    // indices in which the VBO is "cut" into different GL_TRIANGLE_STRIP.
+
+
     vao_.bind();
-    f->glDrawArrays(GL_TRIANGLE_STRIP,   // mode
-                    0,                   // starting index
-                    samples.size() * 2); // number of indices
+
+    // Get all edges
+    std::vector<OpenVac::KeyEdgeHandle> edges;
+    std::vector<OpenVac::CellHandle> cells =  scene()->activeVac()->vac().cells();
+    for (const OpenVac::CellHandle & cell: cells)
+    {
+        OpenVac::KeyEdgeHandle edge = cell;
+        if (edge)
+            edges.push_back(edge);
+    }
+
+    // For each edge, draw partial vbo
+    int firstIndex = 0;
+    for (const OpenVac::KeyEdgeHandle & edge: edges)
+    {
+        const auto & samples = edge->geometry().samples();
+        int numIndices = samples.size() * 2;
+
+        f->glDrawArrays(GL_TRIANGLE_STRIP, // mode
+                        firstIndex,        // first index
+                        numIndices);       // number of indices
+
+        firstIndex += numIndices;
+    }
+
     vao_.release();
+
+    // ---- End draw triangles ----
+
 
     // Release shader program
     shaderProgram.release();

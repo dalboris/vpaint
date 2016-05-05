@@ -103,7 +103,7 @@ public:
         /** function whenever data.type() == CellType::##CellType_.    */ \
         /** Reimplement it in subclasses. The default implementation   */ \
         /** does nothing.                                              */ \
-        virtual void visit(const CellType_##Data<T> & data) {}
+        virtual void visit(const CellType_##Data<T> & /*data*/) {}
 
     OPENVAC_FOREACH_FINAL_CELL_TYPE(OPENVAC_CELLDATA_DECLARE_CONST_VISIT_)
 };

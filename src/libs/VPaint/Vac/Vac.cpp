@@ -7,3 +7,7 @@
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
 #include "Vac.h"
+
+Vac::Vac()
+{
+}

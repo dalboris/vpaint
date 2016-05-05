@@ -9,8 +9,13 @@
 TEMPLATE = lib
 CONFIG -= qt
 
-SOURCES +=
+THIRD_DEPENDS = \
+    glm
 
-HEADERS +=
+HEADERS += \
+    EdgeGeometry.h
+
+SOURCES += \
+    EdgeGeometry.cpp
 
 include($$OUT_PWD/.config.pri)
