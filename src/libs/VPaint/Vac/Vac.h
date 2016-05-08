@@ -34,6 +34,32 @@ public:
     /// Returns the underlying Vac. This is a convenient synonym of data().
     ///
     inline const VacData & vac() const { return data(); }
+
+signals:
+    /// Signal emitted whenever the topology has changed.
+    ///
+    void topologyChanged(
+            const std::vector<OpenVac::CellId> & created,
+            const std::vector<OpenVac::CellId> & destroyed,
+            const std::vector<OpenVac::CellId> & affected);
+
+    /// Signal emitted whenever the geometry has changed. Note that changing
+    /// the geometry of a cell often affects the geometry of incident cells as
+    /// well. For instance, sculpting a key edge affects the geometry of all
+    /// inbetween edges that interpolate it, and of all key faces that it
+    /// supports.
+    ///
+    /// The signal topologyChanged() is always followed by the signal
+    /// geometryChanged(), but geometryChanged() may be sent individually.
+    ///
+    void geometryChanged(
+            const std::vector<CellHandle> & affected);
+
+private:
+
+    // Instances of std::vector<CellHandle> to keep alive when
+    // the signal topologyChanged() is emitted.
+    std::vector<CellHandle>
 };
 
 #endif // VAC_H

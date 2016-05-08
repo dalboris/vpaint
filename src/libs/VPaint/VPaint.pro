@@ -156,7 +156,8 @@ HEADERS += MainWindow.h \
     Cameras/Camera2DData.h \
     Tools/View2D/PanView2DAction.h \
     Tools/View2D/ZoomView2DAction.h \
-    Tools/View2D/RotateView2DAction.h
+    Tools/View2D/RotateView2DAction.h \
+    Vac/VacObserver.h
 
 SOURCES += \
     SaveAndLoad.cpp \
@@ -270,7 +271,8 @@ SOURCES += \
     Cameras/Camera2DData.cpp \
     Tools/View2D/PanView2DAction.cpp \
     Tools/View2D/ZoomView2DAction.cpp \
-    Tools/View2D/RotateView2DAction.cpp
+    Tools/View2D/RotateView2DAction.cpp \
+    Vac/VacObserver.cpp
 
 DISTFILES += \
     OpenGL/Shaders/Helloworld.v.glsl \

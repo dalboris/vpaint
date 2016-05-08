@@ -21,28 +21,35 @@ namespace Op = OpenVac::Operators;
 struct SketchActionBegin: public DataObjectMutator<VacData>
 {
     OpenVac::KeyEdgeHandle edge;
-    glm::vec2 centerline;
+    EdgeGeometryInputSample inputSample;
 
     void exec(VacData & vac)
     {
         OpenVac::Geometry::Frame frame = 0;
 
-        auto startKeyVertex = Op::makeKeyVertex(vac, frame);
-        auto endKeyVertex   = Op::makeKeyVertex(vac, frame);
+        vac.beginTopologyEdit();
+        auto startVertex = Op::makeKeyVertex(vac, frame);
+        auto endVertex   = Op::makeKeyVertex(vac, frame);
+        edge             = Op::makeKeyOpenEdge(startVertex, endVertex);
+        vac.endTopologyEdit();
 
-        edge = Op::makeKeyOpenEdge(startKeyVertex, endKeyVertex);
-        edge->geometry().beginStroke(centerline);
+        vac.beginGeometryEdit(edge);
+        edge->geometry().beginFit();
+        edge->geometry().addFitInputSample(inputSample);
+        vac.endGeometryEdit();
     }
 };
 
 struct SketchActionContinue: public DataObjectMutator<VacData>
 {
     OpenVac::KeyEdgeHandle edge;
-    glm::vec2 centerline;
+    EdgeGeometryInputSample inputSample;
 
     void exec(VacData & /*vac*/)
     {
-        edge->geometry().continueStroke(centerline);
+        vac.beginGeometryEdit(edge);
+        edge->geometry().addFitInputSample(inputSample);
+        vac.endGeometryEdit();
     }
 };
 
@@ -52,7 +59,9 @@ struct SketchActionEnd: public DataObjectMutator<VacData>
 
     void exec(VacData & /*vac*/)
     {
-        edge->geometry().endStroke();
+        vac.beginGeometryEdit(edge);
+        edge->geometry().endFit();
+        vac.endGeometryEdit();
     }
 };
 
@@ -67,25 +76,33 @@ bool SketchAction::acceptPMREvent(const View2DMouseEvent * event)
            (event->button() == Qt::LeftButton);
 }
 
+namespace
+{
+EdgeGeometryInputSample getInputSample_(const View2DMouseEvent * event)
+{
+    const glm::vec2 position((float) event->scenePos().x(),
+                            (float) event->scenePos().y());
+
+    const double width = 10.0; // XXX TODO
+    const double time = 0.0;   // XXX TODO
+
+    return EdgeGeometryInputSample(position, width, time);
+}
+}
+
 void SketchAction::pressEvent(const View2DMouseEvent * event)
 {
-    glm::vec2 centerline((float) event->scenePos().x(),
-                         (float) event->scenePos().y());
-
     SketchActionBegin m;
-    m.centerline = centerline;
+    m.inputSample = getInputSample_(event);
     scene_->activeVac()->accept(m);
     edge = m.edge;
 }
 
 void SketchAction::moveEvent(const View2DMouseEvent * event)
 {
-    glm::vec2 centerline((float) event->scenePos().x(),
-                         (float) event->scenePos().y());
-
     SketchActionContinue m;
     m.edge = edge;
-    m.centerline = centerline;
+    m.inputSample = getInputSample_(event);
     scene_->activeVac()->accept(m);
 }
 

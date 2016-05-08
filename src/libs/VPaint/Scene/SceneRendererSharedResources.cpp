@@ -75,7 +75,7 @@ void SceneRendererSharedResources::update(OpenGLFunctions * /*f*/)
 
         // Allocate VBO (i.e., allocate memory in GPU)
         vbo_.bind();
-        vbo_.allocate(numSamples * sizeof(EdgeGeometrySample));
+        vbo_.allocate(numSamples * sizeof(EdgeGeometryGpuSample));
         vbo_.release();
 
         // Write VBO (i.e., copy data from CPU to GPU)
@@ -84,7 +84,7 @@ void SceneRendererSharedResources::update(OpenGLFunctions * /*f*/)
         for (const OpenVac::KeyEdgeHandle & edge: edges)
         {
             const auto & samples = edge->geometry().samples();
-            int count = samples.size() * sizeof(EdgeGeometrySample);
+            int count = samples.size() * sizeof(EdgeGeometryGpuSample);
 
             vbo_.write(offset, samples.data(), count);
 

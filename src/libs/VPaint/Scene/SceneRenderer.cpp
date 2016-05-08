@@ -38,8 +38,8 @@ void SceneRenderer::initialize(OpenGLFunctions * f)
     // Store attribute bindings in VAO
     auto & vbo = sharedResources_->vbo_;
     auto & vertexLoc = sharedResources_->vertexLoc_;
-    GLsizei  stride  = sizeof(EdgeGeometrySample) / 2;
-    GLvoid * pointer = reinterpret_cast<void*>(offsetof(EdgeGeometrySample, leftBoundary));
+    GLsizei  stride  = sizeof(EdgeGeometryGpuVertex);
+    GLvoid * pointer = reinterpret_cast<void*>(offsetof(EdgeGeometryGpuVertex, position));
     vao_.bind();
     vbo.bind();
     f->glEnableVertexAttribArray(vertexLoc);

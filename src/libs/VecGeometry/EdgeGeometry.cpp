@@ -15,7 +15,7 @@ EdgeGeometry::EdgeGeometry()
 
 }
 
-const std::vector<EdgeGeometrySample> & EdgeGeometry::samples()
+const std::vector<EdgeGeometryGpuSample> & EdgeGeometry::samples()
 {
     return samples_;
 }
@@ -25,18 +25,17 @@ size_t EdgeGeometry::size() const
     return samples_.size();
 }
 
-void EdgeGeometry::beginStroke(const glm::vec2 & centerline)
+void EdgeGeometry::beginFit()
 {
     clear();
-    addSample(centerline);
 }
 
-void EdgeGeometry::continueStroke(const glm::vec2 & centerline)
+void EdgeGeometry::addFitInputSample(const EdgeGeometryInputSample & inputSample)
 {
-    addSample(centerline);
+    addSample(inputSample);
 }
 
-void EdgeGeometry::endStroke()
+void EdgeGeometry::endFit()
 {
 }
 
@@ -47,24 +46,26 @@ void EdgeGeometry::clear()
     tangents_.clear();
 }
 
-void EdgeGeometry::addSample(const glm::vec2 & centerline)
+void EdgeGeometry::addSample(const EdgeGeometryInputSample & inputSample)
 {
     const glm::vec2 zero(0.0f, 0.0f);
     const int n = size();
     const float eps = 1e-6f;
-    const float width = 10.0f;
+
+    const glm::vec2 & centerline = inputSample.position;
+    const float    & width       = inputSample.width;
 
     if (n == 0)
     {
-        EdgeGeometrySample sample;
+        EdgeGeometryGpuSample sample;
 
-        sample.centerline1   = centerline;
-        sample.normal1       = zero;
-        sample.leftBoundary  = centerline;
+        sample.left.centerline = centerline;
+        sample.left.normal     = zero;
+        sample.left.position   = centerline;
 
-        sample.centerline2   = centerline;
-        sample.normal2       = zero;
-        sample.rightBoundary = centerline;
+        sample.right.centerline = centerline;
+        sample.right.normal     = zero;
+        sample.right.position   = centerline;
 
         samples_    .push_back(sample);
         arclengths_ .push_back(0.0f);
@@ -73,7 +74,7 @@ void EdgeGeometry::addSample(const glm::vec2 & centerline)
     else
     {
         // Compute last tangent and arclength
-        glm::vec2 tangent = centerline - samples_[n-1].centerline1;
+        glm::vec2 tangent = centerline - samples_[n-1].left.centerline;
         const float length  = glm::length(tangent);
 
         if (length > eps)
@@ -85,15 +86,15 @@ void EdgeGeometry::addSample(const glm::vec2 & centerline)
             const glm::vec2 normal(-tangent.y, tangent.x);
 
             // Compute sample
-            EdgeGeometrySample sample;
+            EdgeGeometryGpuSample sample;
 
-            sample.centerline1   = centerline;
-            sample.normal1       = normal;
-            sample.leftBoundary  = centerline + width * normal;
+            sample.left.centerline = centerline;
+            sample.left.normal     = normal;
+            sample.left.position   = centerline + width * normal;
 
-            sample.centerline2   = centerline;
-            sample.normal2       = -normal;
-            sample.rightBoundary = centerline - width * normal;
+            sample.right.centerline = centerline;
+            sample.right.normal     = -normal;
+            sample.right.position   = centerline - width * normal;
 
             // Add sample
             samples_    .push_back(sample);
@@ -113,7 +114,7 @@ void EdgeGeometry::addSample(const glm::vec2 & centerline)
             else
             {
                 // Size is now 3 or more. We use P[n] - P[n-2] as tangent for P[n-1]
-                previousTangent = centerline - samples_[n-2].centerline1;
+                previousTangent = centerline - samples_[n-2].left.centerline;
                 float previousLength  = glm::length(previousTangent);
                 if (previousLength > eps)
                 {
@@ -132,14 +133,14 @@ void EdgeGeometry::addSample(const glm::vec2 & centerline)
             const glm::vec2 previousNormal(-previousTangent.y, previousTangent.x);
 
             // Update previous sample
-            EdgeGeometrySample & previousSample = samples_[n-1];
-            const glm::vec2 & previousCenterline = previousSample.centerline1;
+            EdgeGeometryGpuSample & previousSample = samples_[n-1];
+            const glm::vec2 & previousCenterline = previousSample.left.normal;
 
-            previousSample.normal1       = previousNormal;
-            previousSample.leftBoundary  = previousCenterline + width * previousNormal;
+            previousSample.left.normal   = previousNormal;
+            previousSample.left.position = previousCenterline + width * previousNormal;
 
-            previousSample.normal2       = -previousNormal;
-            previousSample.rightBoundary = previousCenterline - width * previousNormal;
+            previousSample.right.normal   = -previousNormal;
+            previousSample.right.position = previousCenterline - width * previousNormal;
 
             tangents_[n-1] = previousTangent;
         }

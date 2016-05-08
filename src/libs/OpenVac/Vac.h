@@ -11,7 +11,10 @@
 
 #include <OpenVac/Core/IdManager.h>
 #include <OpenVac/Topology/Cell.h>
+#include <OpenVac/Util/VacObserver.h>
 #include <OpenVac/Geometry.h>
+
+#include <unordered_set>
 
 /// \namespace OpenVac
 /// \brief The OpenVAC library
@@ -31,13 +34,16 @@ class Vac
 {
 public:
     /// Constructs a Vac.
+    ///
     Vac() : cellManager_(), geometryManager_() {}
 
     /// Returns the number of cells in the Vac.
+    ///
     size_t numCells() const { return cellManager_.size(); }
 
     /// Returns a handle to the cell with the given \p id. Returns an empty
     /// handle if no cell has the given \p id.
+    ///
     CellHandle cell(CellId id) const
     {
         if (cellManager_.contains(id))
@@ -58,6 +64,93 @@ public:
         return res;
     }
 
+    /// Registers an observer.
+    ///
+    void registerObserver(VacObserver * observer)
+    {
+        observers_.insert(observer);
+    }
+
+    /// Un-registers an observer.
+    ///
+    void unregisterObserver(VacObserver * observer)
+    {
+        observers_.erase(observer);
+    }
+
+    /// Clients may call beginTopologyEdit() whenever they are about to edit the
+    /// topology of cells (i.e., using an Operator), but it is not required
+    /// to do so.
+    ///
+    /// Calling this method will merge all topologyChanged() notifications that
+    /// should have been called between beginTopologyEdit() and
+    /// endTopologyEdit(), into a single notification called in
+    /// endTopologyEdit(). Use this whenever you are planning to use two or
+    /// more topological operators in a row, but would like only one
+    /// topologyChanged() notification to be sent.
+    ///
+    void beginTopologyEdit()
+    {
+        geometryEditAffected_ = affected;
+    }
+
+    /// When clients choose to call beginTopologyEdit(), then they must call
+    /// endGeometryEdit() when they are done editing the topology.
+    ///
+    void endTopologyEdit()
+    {
+        // XXX TODO
+    }
+
+    /// Clients must call this method whenever they are about to edit the
+    /// geometry of cells. It must not be called if beginGeometryEdit() was
+    /// previously called without having yet called its corresponding
+    /// endGeometryEdit().
+    ///
+    /// One may ask: why this design choice? Indeed, another option would have
+    /// been to make Cell::geometry() return a const reference (instead of a
+    /// mutable reference), and have a function Cell::setGeometry() that
+    /// ensures the notification gets sent. The rationale against is option is
+    /// that users of OpenVac may define arbitrarily complex geometry, and
+    /// therefore, e.g., InbetweenFaceGeometry might be extremely expensive to
+    /// copy. Allowing clients of OpenVac to have direct access to the stored
+    /// geometry and perform a small local modification in-place might be
+    /// critical for performance. Also, this allows to send a unique
+    /// notification for a batch geometry edit of thousands of cells, which may
+    /// also be critical for performance.
+    ///
+    /// Note how beginTopologyEdit() does not take any parameter, while
+    /// beginGeometryEdit() does. The reason is that OpenVac knows which cells
+    /// are affected by topological operators, but cannot know which cells are
+    /// affected by a geometry edit, since geometry is user-defined.
+    ///
+    void beginGeometryEdit(const std::vector<CellHandle> & affected)
+    {
+        geometryEditAffected_ = affected;
+    }
+
+    /// Convenient overload of
+    /// beginGeometryEdit(const std::vector<CellHandle> &),
+    /// for when there is only one affected cell.
+    ///
+    void beginGeometryEdit(const CellHandle & affected)
+    {
+        geometryEditAffected_.clear();
+        geometryEditAffected_.push_back(affected);
+    }
+
+    /// Clients must call this method when they are done editing the geometry.
+    /// This will notify all observers that the geometry changed.
+    ///
+    void endGeometryEdit()
+    {
+        for (VacObserver * observer: observers_)
+        {
+            observer->geometryChanged(geometryEditAffected_);
+        }
+        geometryEditAffected_.clear();
+    }
+
 private:
     // Cell manager
     IdManager<SharedPtr<Cell>> cellManager_;
@@ -67,6 +160,12 @@ private:
 
     // Befriend Operator
     friend class Operator;
+
+    // Observers
+    std::unordered_set<VacObserver*> observers_;
+
+    // Cells whose geometry is being edited
+    std::vector<CellHandle> geometryEditAffected_;
 };
 
 } // end namespace OpenVac

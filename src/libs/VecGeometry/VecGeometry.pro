@@ -13,9 +13,13 @@ THIRD_DEPENDS = \
     glm
 
 HEADERS += \
-    EdgeGeometry.h
+    EdgeGeometry.h \
+    CurveSample.h \
+    Curve.h
 
 SOURCES += \
-    EdgeGeometry.cpp
+    EdgeGeometry.cpp \
+    CurveSample.cpp \
+    Curve.cpp
 
 include($$OUT_PWD/.config.pri)
