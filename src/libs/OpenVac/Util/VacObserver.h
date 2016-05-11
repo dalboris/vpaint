@@ -11,6 +11,8 @@
 
 #include <OpenVac/Core/CellId.h>
 
+#include <unordered_set>
+
 namespace OpenVac
 {
 
@@ -24,10 +26,19 @@ class VacObserver
 public:
     /// Notifies whenever the topology has changed.
     ///
+    /// You must not attempt to modify the topology in this callback method.
+    ///
+    /// Note that this topologyChanged returns IDs, while geometryChanged
+    /// returns handles. Ideally, returning handles is better, but it cannot
+    /// be done for topologyChanged since the handles of destroyed cells
+    /// wouldn't be valid. It would be possible to return handles for
+    /// created and affected cells, but for consistency we return IDs
+    /// for all.
+    ///
     virtual void topologyChanged(
-            const std::vector<OpenVac::CellId> & /*created*/,
-            const std::vector<OpenVac::CellId> & /*destroyed*/,
-            const std::vector<OpenVac::CellId> & /*affected*/)
+            const std::unordered_set<OpenVac::CellId> & /*created*/,
+            const std::unordered_set<OpenVac::CellId> & /*destroyed*/,
+            const std::unordered_set<OpenVac::CellId> & /*affected*/)
     {
         // Empty implementation
     }
@@ -42,8 +53,10 @@ public:
     /// geometryChanged() notification, but geometryChanged() may be sent
     /// individually.
     ///
+    /// You must not attempt to modify the geometry in this callback method.
+    ///
     virtual void geometryChanged(
-            const std::vector<CellHandle> & /*affected*/)
+            const std::unordered_set<CellHandle> & /*affected*/)
     {
         // Empty implementation
     }

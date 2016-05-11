@@ -30,12 +30,13 @@ namespace OpenVac
 /// \class Vac OpenVac/Vac.h
 /// \brief A class to represent a Vector Animation Complex
 ///
+///
 class Vac
 {
 public:
     /// Constructs a Vac.
     ///
-    Vac() : cellManager_(), geometryManager_() {}
+    Vac() : cellManager_(), geometryManager_(), areTopologyEditsConcatenated_(false) {}
 
     /// Returns the number of cells in the Vac.
     ///
@@ -71,7 +72,7 @@ public:
         observers_.insert(observer);
     }
 
-    /// Un-registers an observer.
+    /// Unregisters an observer.
     ///
     void unregisterObserver(VacObserver * observer)
     {
@@ -91,15 +92,18 @@ public:
     ///
     void beginTopologyEdit()
     {
-        geometryEditAffected_ = affected;
+        areTopologyEditsConcatenated_ = true;
+        topologyEditCreated_.clear();
+        topologyEditDestroyed_.clear();
+        topologyEditAffected_.clear();
     }
 
     /// When clients choose to call beginTopologyEdit(), then they must call
-    /// endGeometryEdit() when they are done editing the topology.
+    /// endTopologyEdit() when they are done editing the topology.
     ///
     void endTopologyEdit()
     {
-        // XXX TODO
+        emitTopologyChanged_();
     }
 
     /// Clients must call this method whenever they are about to edit the
@@ -124,7 +128,7 @@ public:
     /// are affected by topological operators, but cannot know which cells are
     /// affected by a geometry edit, since geometry is user-defined.
     ///
-    void beginGeometryEdit(const std::vector<CellHandle> & affected)
+    void beginGeometryEdit(const std::unordered_set<CellHandle> & affected)
     {
         geometryEditAffected_ = affected;
     }
@@ -152,6 +156,27 @@ public:
     }
 
 private:
+    // Emits the topologyChanged() notification. This is called either by
+    // Operator::apply() (when topology edits are not concatenated), or by
+    // endTopologyEdit() (when topology edits are concatenated)
+    //
+    void emitTopologyChanged_()
+    {
+        for (VacObserver * observer: observers_)
+        {
+            observer->topologyChanged(
+                        topologyEditCreated_,
+                        topologyEditDestroyed_,
+                        topologyEditAffected_);
+        }
+
+        areTopologyEditsConcatenated_ = false;
+        topologyEditCreated_.clear();
+        topologyEditDestroyed_.clear();
+        topologyEditAffected_.clear();
+    }
+
+private:
     // Cell manager
     IdManager<SharedPtr<Cell>> cellManager_;
 
@@ -164,8 +189,20 @@ private:
     // Observers
     std::unordered_set<VacObserver*> observers_;
 
+    // Are topology edits concatenated or not? This variable is true if and
+    // only if beginTopologyEdit() has been call by clients.
+    //
+    bool areTopologyEditsConcatenated_;
+
+    // Cells whose topology is being edited. The value of these variables is
+    // defined by the Operator class.
+    //
+    std::unordered_set<OpenVac::CellId> & topologyEditCreated_;
+    std::unordered_set<OpenVac::CellId> & topologyEditDestroyed_;
+    std::unordered_set<OpenVac::CellId> & topologyEditAffected_;
+
     // Cells whose geometry is being edited
-    std::vector<CellHandle> geometryEditAffected_;
+    std::unordered_set<CellHandle> geometryEditAffected_;
 };
 
 } // end namespace OpenVac

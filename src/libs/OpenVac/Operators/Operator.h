@@ -110,14 +110,14 @@ public:
         assert(canBeApplied_);
 
         // Deallocate deleted cells
-        for (CellId id: deletedCells_)
+        for (CellId id: destroyedCells_)
         {
             // Remove cell from ID Manager
             vac.cellManager_.remove(id);
         }
 
         // Allocate new cells
-        for (CellId id: newCells_)
+        for (CellId id: createdCells_)
         {
             // Allocate cell
             UniquePtr<CellData<Ids>> & data = cellsAfter_.at(id);
@@ -143,20 +143,73 @@ public:
             copier.copy(opCellData, vacCellData);
         }
 
+        // Concatenate info about created/destroyed/affected cells.
+        // Note: order of these loops matter. Destroyed cells must be first.
+        for (CellId destroyedId: destroyedCells_)
+        {
+            vac.topologyEditCreated_.erase(destroyedId);
+            vac.topologyEditAffected_.erase(destroyedId);
+            vac.topologyEditDestroyed_.insert(destroyedId);
+        }
+        for (CellId createdId: createdCells_)
+        {
+            vac.topologyEditCreated_.insert(createdId);
+        }
+        for (CellId affectedId: affectedCells_)
+        {
+            vac.topologyEditAffected_.insert(affectedId);
+        }
+
+        // Emit topologyChanged notification if they are not concatenated
+        if (vac.areTopologyEditsConcatenated_)
+        {
+            vac.emitTopologyChanged_();
+        }
+
         return *this;
     }
 
     /// Returns the IDs of the cells that are created by this operator. This
-    /// must be called after compute(), but may be called before apply().
+    /// must not be called before compute(), but may be called before apply().
     /// Returns an empty vector if not yet computed or cannot be applied.
     ///
-    const std::vector<CellId> & newCells() { return newCells_; }
+    /// How can the Operator base class know which cells are created by derived
+    /// classes? Because derived classes must call protected base functions
+    /// (e.g., Operator::newKeyVertex()) to create new cells.
+    ///
+    const std::vector<CellId> & createdCells() { return createdCells_; }
 
-    /// Returns the IDs of the cells that are destructed by this operator. This
-    /// must be called after compute(), but may be called before apply().
+    /// Returns the IDs of the cells that are destroyed by this operator. This
+    /// must be not be called before compute(), but may be called before apply().
     /// Returns an empty vector if not yet computed or cannot be applied.
     ///
-    const std::vector<CellId> & deletedCells() { return deletedCells_; }
+    /// How can the Operator base class know which cells are destroyed by derived
+    /// classes? Because derived classes must call a protected base function,
+    /// Operator::deleteCell()) to destroy a cell.
+    ///
+    const std::vector<CellId> & destroyedCells() { return destroyedCells_; }
+
+    /// Returns the IDs of the cells that are affected by this operator. Affected
+    /// cells are the cells which are neither created nor destroyed by this operator,
+    /// but which are nevertheless affected, for instance, their boundary changed.\
+    ///
+    /// Example: when two key vertices are glued, then the two key vertices are
+    /// destroyed, a new key vertex is created, and all incident edges of the
+    /// glued vertices are affected (they now point to the created key vertex,
+    /// instead of the destructed key vertex).
+    ///
+    /// How can the Operator base class know which cells are affected by
+    /// derived classes? Because derived classes must call protected base
+    /// functions, e.g., Operator::getKeyVertex()) to get a reference to a
+    /// cell, before it can be affected.
+    ///
+    /// Note that it is conservative: derived classes might want to get the
+    /// cell just for inspection, not to modify it. There is currently no ways
+    /// for derived classes to "get" a cell without this cell being marked as
+    /// affected. In the future, we may want to implement a function
+    /// "getConstKeyVertex" for this, but it is not a priority for now.
+    ///
+    const std::vector<CellId> & affectedCells() { return affectedCells_; }
 
 protected:
 
@@ -206,8 +259,9 @@ private:
     bool canBeApplied_;
     std::map<CellId, UniquePtr<CellData<Ids>>> cellsBefore_;
     std::map<CellId, UniquePtr<CellData<Ids>>> cellsAfter_;
-    std::vector<CellId> newCells_;
-    std::vector<CellId> deletedCells_;
+    std::vector<CellId> createdCells_;
+    std::vector<CellId> destroyedCells_;
+    std::vector<CellId> affectedCells_;
 
     // VAC to Operator cell copier
     HandlesToIdsCopier handlesToIdsCopier_;
@@ -239,7 +293,7 @@ private:
         assert(inserted.second);
 
         // Tag this ID as a cell created by the operator
-        newCells_.push_back(id);
+        createdCells_.push_back(id);
 
         // Return the allocated OpCellData
         return cellData;
@@ -328,6 +382,9 @@ private:
         handlesToIdsCopier_.copy(vacCellData, *opCellDataBefore);
         handlesToIdsCopier_.copy(vacCellData, *opCellDataAfter);
 
+        // Tag this ID as a cell affected by the operator
+        affectedCells_.push_back(id);
+
         // Returns the relevant op cell data
         return opCellDataAfter;
     }
@@ -374,7 +431,7 @@ private:
 namespace Operators
 {
     // Nothing  here, that's intended. This namespace is only
-    // open as a placeholder to write some Doxygen documentation.
+    // here as a placeholder to write some Doxygen documentation.
 }
 }
 
