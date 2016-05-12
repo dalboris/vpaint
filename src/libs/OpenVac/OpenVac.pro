@@ -47,6 +47,9 @@ HEADERS += \
     Operators/Util/Ids.h \
     Topology/Util/Handles.h \
     Topology/Util/CellCast.h \
-    Util/VacObserver.h
+    Util/VacObserver.h \
+    Topology/Util/CellHandleSet.h \
+    Topology/Util/CellHandle.h \
+    Core/CellIdSet.h
 
 include($$OUT_PWD/.config.pri)

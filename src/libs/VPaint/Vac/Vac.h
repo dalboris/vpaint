@@ -11,6 +11,9 @@
 
 #include "Core/DataObject.h"
 #include "Vac/VacData.h"
+#include "Vac/VacSignalEmitter.h"
+
+class VacSignalEmitter;
 
 /// \class Vac
 /// \brief A DataObject subclass that represents a vector animation complex.
@@ -31,17 +34,17 @@ public:
     ///
     Vac();
 
-    /// Returns the underlying Vac. This is a convenient synonym of data().
+    /// Destructs this Vac.
     ///
-    inline const VacData & vac() const { return data(); }
+    ~Vac();
 
 signals:
     /// Signal emitted whenever the topology has changed.
     ///
     void topologyChanged(
-            const std::vector<OpenVac::CellId> & created,
-            const std::vector<OpenVac::CellId> & destroyed,
-            const std::vector<OpenVac::CellId> & affected);
+            const OpenVac::CellIdSet & created,
+            const OpenVac::CellIdSet & destroyed,
+            const OpenVac::CellIdSet & affected);
 
     /// Signal emitted whenever the geometry has changed. Note that changing
     /// the geometry of a cell often affects the geometry of incident cells as
@@ -53,13 +56,10 @@ signals:
     /// geometryChanged(), but geometryChanged() may be sent individually.
     ///
     void geometryChanged(
-            const std::vector<CellHandle> & affected);
+            const OpenVac::CellHandleSet & affected);
 
 private:
-
-    // Instances of std::vector<CellHandle> to keep alive when
-    // the signal topologyChanged() is emitted.
-    std::vector<CellHandle>
+    VacSignalEmitter vacSignalEmitter_;
 };
 
 #endif // VAC_H

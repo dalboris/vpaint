@@ -6,17 +6,14 @@
 // license terms and conditions in the LICENSE.MIT file found in the top-level
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
-#ifndef VACOBSERVER_H
-#define VACOBSERVER_H
+#ifndef OPENVAC_VACOBSERVER_H
+#define OPENVAC_VACOBSERVER_H
 
-#include <OpenVac/Core/CellId.h>
-
-#include <unordered_set>
+#include <OpenVac/Core/CellIdSet.h>
+#include <OpenVac/Topology/Util/CellHandleSet.h>
 
 namespace OpenVac
 {
-
-class Vac;
 
 /// \class VacObserver
 /// \brief Implementation of the observer pattern for the Vac class.
@@ -35,10 +32,9 @@ public:
     /// created and affected cells, but for consistency we return IDs
     /// for all.
     ///
-    virtual void topologyChanged(
-            const std::unordered_set<OpenVac::CellId> & /*created*/,
-            const std::unordered_set<OpenVac::CellId> & /*destroyed*/,
-            const std::unordered_set<OpenVac::CellId> & /*affected*/)
+    virtual void topologyChanged(const CellIdSet & /*created*/,
+                                 const CellIdSet & /*destroyed*/,
+                                 const CellIdSet & /*affected*/)
     {
         // Empty implementation
     }
@@ -55,8 +51,7 @@ public:
     ///
     /// You must not attempt to modify the geometry in this callback method.
     ///
-    virtual void geometryChanged(
-            const std::unordered_set<CellHandle> & /*affected*/)
+    virtual void geometryChanged(const CellHandleSet & /*affected*/)
     {
         // Empty implementation
     }
@@ -64,4 +59,4 @@ public:
 
 }
 
-#endif // VACOBSERVER_H
+#endif // OPENVAC_VACOBSERVER_H

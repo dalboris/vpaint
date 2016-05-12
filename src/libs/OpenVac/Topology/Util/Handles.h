@@ -10,22 +10,10 @@
 #define OPENVAC_HANDLES
 
 #include <OpenVac/Core/ForeachCellType.h>
-#include <OpenVac/Core/Memory.h>
+#include <OpenVac/Topology/Util/CellHandle.h>
 
 namespace OpenVac
 {
-
-/************* Define and CellHandle classes *******************/
-
-#define OPENVAC_HANDLES_FORWARD_DECLARE_CELL_(CellType) \
-    class CellType; \
-    /** Type alias for Handle<CellType> */ \
-    using CellType##Handle = Handle<CellType>;
-
-OPENVAC_FOREACH_CELL_TYPE(OPENVAC_HANDLES_FORWARD_DECLARE_CELL_)
-
-
-/********************************* Handles ***********************************/
 
 /// \class Handles OpenVac/Topology/Util/Handles.h
 /// \brief Class that declares CellTypeRef as an alias for

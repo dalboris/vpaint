@@ -10,4 +10,10 @@
 
 Vac::Vac()
 {
+    data_.registerObserver(&vacSignalEmitter_);
+}
+
+Vac::~Vac()
+{
+    data_.unregisterObserver(&vacSignalEmitter_);
 }

@@ -6,9 +6,22 @@
 // license terms and conditions in the LICENSE.MIT file found in the top-level
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
-#include "VacObserver.h"
+#ifndef OPENVAC_CELLHANDLE_H
+#define OPENVAC_CELLHANDLE_H
 
-VacObserver::VacObserver()
+#include <OpenVac/Core/ForeachCellType.h>
+#include <OpenVac/Core/Memory.h>
+
+namespace OpenVac
 {
 
+#define OPENVAC_HANDLES_FORWARD_DECLARE_CELL_(CellType) \
+    class CellType; \
+    /** Type alias for Handle<CellType> */ \
+    using CellType##Handle = Handle<CellType>;
+
+OPENVAC_FOREACH_CELL_TYPE(OPENVAC_HANDLES_FORWARD_DECLARE_CELL_)
+
 }
+
+#endif // OPENVAC_CELLHANDLE_H

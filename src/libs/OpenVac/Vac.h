@@ -11,6 +11,7 @@
 
 #include <OpenVac/Core/IdManager.h>
 #include <OpenVac/Topology/Cell.h>
+#include <OpenVac/Topology/Util/CellHandleSet.h>
 #include <OpenVac/Util/VacObserver.h>
 #include <OpenVac/Geometry.h>
 
@@ -128,7 +129,7 @@ public:
     /// are affected by topological operators, but cannot know which cells are
     /// affected by a geometry edit, since geometry is user-defined.
     ///
-    void beginGeometryEdit(const std::unordered_set<CellHandle> & affected)
+    void beginGeometryEdit(const CellHandleSet & affected)
     {
         geometryEditAffected_ = affected;
     }
@@ -197,12 +198,12 @@ private:
     // Cells whose topology is being edited. The value of these variables is
     // defined by the Operator class.
     //
-    std::unordered_set<OpenVac::CellId> & topologyEditCreated_;
-    std::unordered_set<OpenVac::CellId> & topologyEditDestroyed_;
-    std::unordered_set<OpenVac::CellId> & topologyEditAffected_;
+    CellIdSet topologyEditCreated_;
+    CellIdSet topologyEditDestroyed_;
+    CellIdSet topologyEditAffected_;
 
     // Cells whose geometry is being edited
-    std::unordered_set<CellHandle> geometryEditAffected_;
+    CellHandleSet geometryEditAffected_;
 };
 
 } // end namespace OpenVac

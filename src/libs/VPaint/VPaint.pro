@@ -157,7 +157,7 @@ HEADERS += MainWindow.h \
     Tools/View2D/PanView2DAction.h \
     Tools/View2D/ZoomView2DAction.h \
     Tools/View2D/RotateView2DAction.h \
-    Vac/VacObserver.h
+    Vac/VacSignalEmitter.h
 
 SOURCES += \
     SaveAndLoad.cpp \
@@ -272,7 +272,7 @@ SOURCES += \
     Tools/View2D/PanView2DAction.cpp \
     Tools/View2D/ZoomView2DAction.cpp \
     Tools/View2D/RotateView2DAction.cpp \
-    Vac/VacObserver.cpp
+    Vac/VacSignalEmitter.cpp
 
 DISTFILES += \
     OpenGL/Shaders/Helloworld.v.glsl \
