@@ -85,7 +85,7 @@ void SceneRenderer::render2D(OpenGLFunctions * f, const QMatrix4x4 & projMatrix,
 
     // Get all edges
     std::vector<OpenVac::KeyEdgeHandle> edges;
-    std::vector<OpenVac::CellHandle> cells =  scene()->activeVac()->vac().cells();
+    std::vector<OpenVac::CellHandle> cells =  scene()->activeVac()->data().cells();
     for (const OpenVac::CellHandle & cell: cells)
     {
         OpenVac::KeyEdgeHandle edge = cell;

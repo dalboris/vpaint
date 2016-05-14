@@ -141,7 +141,7 @@ public:
     void beginGeometryEdit(const CellHandle & affected)
     {
         geometryEditAffected_.clear();
-        geometryEditAffected_.push_back(affected);
+        geometryEditAffected_.insert(affected);
     }
 
     /// Clients must call this method when they are done editing the geometry.

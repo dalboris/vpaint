@@ -9,6 +9,7 @@
 #include "SketchAction.h"
 
 #include "Scene/Scene.h"
+#include "Views/View2D.h"
 
 #include "OpenVac/Topology/KeyEdge.h"
 #include "OpenVac/Operators/MakeKeyVertex.h"
@@ -22,6 +23,12 @@ struct SketchActionBegin: public DataObjectMutator<VacData>
 {
     OpenVac::KeyEdgeHandle edge;
     EdgeGeometryInputSample inputSample;
+
+    SketchActionBegin(
+            const EdgeGeometryInputSample & inputSample) :
+        inputSample(inputSample)
+    {
+    }
 
     void exec(VacData & vac)
     {
@@ -45,8 +52,22 @@ struct SketchActionContinue: public DataObjectMutator<VacData>
     OpenVac::KeyEdgeHandle edge;
     EdgeGeometryInputSample inputSample;
 
-    void exec(VacData & /*vac*/)
+    SketchActionContinue(
+            const OpenVac::KeyEdgeHandle & edge,
+            const EdgeGeometryInputSample & inputSample) :
+        edge(edge),
+        inputSample(inputSample)
     {
+    }
+
+    void exec(VacData & vac)
+    {
+        static int i = 0;
+        if (++i > 50)
+        {
+            --i;
+        }
+
         vac.beginGeometryEdit(edge);
         edge->geometry().addFitInputSample(inputSample);
         vac.endGeometryEdit();
@@ -57,7 +78,13 @@ struct SketchActionEnd: public DataObjectMutator<VacData>
 {
     OpenVac::KeyEdgeHandle edge;
 
-    void exec(VacData & /*vac*/)
+    SketchActionEnd(
+             const OpenVac::KeyEdgeHandle & edge) :
+        edge(edge)
+    {
+    }
+
+    void exec(VacData & vac)
     {
         vac.beginGeometryEdit(edge);
         edge->geometry().endFit();
@@ -85,30 +112,27 @@ EdgeGeometryInputSample getInputSample_(const View2DMouseEvent * event)
 
     const double width = 10.0; // XXX TODO
     const double time = 0.0;   // XXX TODO
+    const double resolution = 1.0 / event->view()->camera()->scale();
 
-    return EdgeGeometryInputSample(position, width, time);
+    return EdgeGeometryInputSample(position, width, time, resolution);
 }
 }
 
 void SketchAction::pressEvent(const View2DMouseEvent * event)
 {
-    SketchActionBegin m;
-    m.inputSample = getInputSample_(event);
+    SketchActionBegin m(getInputSample_(event));
     scene_->activeVac()->accept(m);
     edge = m.edge;
 }
 
 void SketchAction::moveEvent(const View2DMouseEvent * event)
 {
-    SketchActionContinue m;
-    m.edge = edge;
-    m.inputSample = getInputSample_(event);
+    SketchActionContinue m(edge, getInputSample_(event));
     scene_->activeVac()->accept(m);
 }
 
 void SketchAction::releaseEvent(const View2DMouseEvent * /*event*/)
 {
-    SketchActionEnd m;
-    m.edge = edge;
+    SketchActionEnd m(edge);
     scene_->activeVac()->accept(m);
 }

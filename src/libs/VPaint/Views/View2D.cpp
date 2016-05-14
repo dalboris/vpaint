@@ -34,6 +34,11 @@ QPointF View2D::mapToScene(const QPointF & viewPos)
     return camera2D_->toMatrix().inverted() * viewPos;
 }
 
+Camera2D * View2D::camera() const
+{
+    return camera2D_.get();
+}
+
 View2DMouseEvent * View2D::makeMouseEvent()
 {
     return new View2DMouseEvent(this);

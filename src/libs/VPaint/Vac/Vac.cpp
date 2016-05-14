@@ -8,7 +8,8 @@
 
 #include "Vac.h"
 
-Vac::Vac()
+Vac::Vac() :
+    vacSignalEmitter_(this)
 {
     data_.registerObserver(&vacSignalEmitter_);
 }

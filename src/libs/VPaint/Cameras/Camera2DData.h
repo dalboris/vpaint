@@ -27,8 +27,8 @@ struct Camera2DData
     ///
     double rotation = 0.0;
 
-    /// Scale attribute of the camera. If scale == 2, then unit in scene
-    /// coordiates appears as 2 pixels on screen.
+    /// Scale attribute of the camera. If scale == 2, then one unit in scene
+    /// coordinates appears as 2 pixels on screen.
     ///
     double scale = 1.0;
 

@@ -43,6 +43,10 @@ public:
     ///
     QPointF mapToScene(const QPointF & viewPos);
 
+    /// Returns the camera associated with this View2D.
+    ///
+    Camera2D * camera() const;
+
 protected:
     /// Implements the pure virtual function View::makeMouseEvent().
     ///

@@ -31,6 +31,11 @@ void View2DMouseEvent::computeSceneAttributes()
     scenePos_ = view2D_->mapToScene(viewPos());
 }
 
+View2D * View2DMouseEvent::view() const
+{
+    return view2D_;
+}
+
 void View2DMouseEvent::computeSceneAttributesAtPress()
 {
     scenePosAtPress_ = view2D_->mapToScene(viewPosAtPress());

@@ -191,7 +191,7 @@ public:
 
     /// Returns the IDs of the cells that are affected by this operator. Affected
     /// cells are the cells which are neither created nor destroyed by this operator,
-    /// but which are nevertheless affected, for instance, their boundary changed.\
+    /// but which are nevertheless affected, for instance, their boundary changed.
     ///
     /// Example: when two key vertices are glued, then the two key vertices are
     /// destroyed, a new key vertex is created, and all incident edges of the

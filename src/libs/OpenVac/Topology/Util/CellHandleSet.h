@@ -30,7 +30,7 @@ struct HandleHash
     ///
     size_t operator() (const Handle<T> & handle) const
     {
-        return std::hash<T*>(handle.get());
+        return std::hash<T*>()(handle.get());
     }
 };
 

@@ -27,6 +27,10 @@ public:
     QPointF scenePos() const;        ///< Returns the current mouse position, in scene coordinates.
     QPointF scenePosAtPress() const; ///< Returns the mouse position at mouse press, in scene coordinates.
 
+    /// Returns the View2D associated with this mouse event.
+    ///
+    View2D * view() const;
+
 private:
     View2D * view2D_;
 

@@ -33,5 +33,5 @@ void VacSignalEmitter::topologyChanged(const OpenVac::CellIdSet & created,
 
 void VacSignalEmitter::geometryChanged(const OpenVac::CellHandleSet & affected)
 {
-    emit geometryChanged(affected);
+    emit vac()->geometryChanged(affected);
 }

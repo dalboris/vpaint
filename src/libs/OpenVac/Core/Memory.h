@@ -391,7 +391,7 @@ public:
 
     // Comparison with other smart pointer types
     template <class YPtr>
-    bool operator==(const YPtr & other)
+    bool operator==(const YPtr & other) const
     {
         return get() == other.get();
     }
