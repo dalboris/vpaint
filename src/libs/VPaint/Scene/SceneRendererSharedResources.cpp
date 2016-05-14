@@ -52,7 +52,6 @@ void SceneRendererSharedResources::initialize(OpenGLFunctions * /*f*/)
 
 void SceneRendererSharedResources::update(OpenGLFunctions * /*f*/)
 {
-
     if (isDirty_)
     {
         // Get all edges

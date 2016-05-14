@@ -62,12 +62,6 @@ struct SketchActionContinue: public DataObjectMutator<VacData>
 
     void exec(VacData & vac)
     {
-        static int i = 0;
-        if (++i > 50)
-        {
-            --i;
-        }
-
         vac.beginGeometryEdit(edge);
         edge->geometry().addFitInputSample(inputSample);
         vac.endGeometryEdit();

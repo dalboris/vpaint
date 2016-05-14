@@ -134,7 +134,7 @@ void EdgeGeometry::addSample(const EdgeGeometryInputSample & inputSample)
 
             // Update previous sample
             EdgeGeometryGpuSample & previousSample = samples_[n-1];
-            const glm::vec2 & previousCenterline = previousSample.left.normal;
+            const glm::vec2 & previousCenterline = previousSample.left.centerline;
 
             previousSample.left.normal   = previousNormal;
             previousSample.left.position = previousCenterline + width * previousNormal;
