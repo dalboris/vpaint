@@ -7,8 +7,3 @@
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
 #include "OpenGL/OpenGLRenderer.h"
-
-OpenGLRenderer::OpenGLRenderer(QObject * parent) :
-    QObject(parent)
-{
-}

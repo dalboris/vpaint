@@ -9,98 +9,53 @@
 #include "Scene/SceneRendererSharedResources.h"
 
 #include "Scene/Scene.h"
-#include "Scene/SceneData.h"
+#include "Layer/LayerRendererSharedResources.h"
 
-#include "OpenVac/Topology/KeyEdge.h"
-
-SceneRendererSharedResources::SceneRendererSharedResources(
-        Scene * scene,
-        QObject * parent) :
-    QObject(parent),
-    scene_(scene)
+SceneRendererSharedResources::SceneRendererSharedResources(Scene * scene) :
+    scene_(scene),
+    layerRendererSharedResources_()
 {
-    connect(scene_, &Scene::changed, this, &SceneRendererSharedResources::setDirty);
-}
-
-void SceneRendererSharedResources::setDirty()
-{
-    isDirty_ = true;
-}
-
-void SceneRendererSharedResources::initialize(OpenGLFunctions * /*f*/)
-{
-    if (refCount_ == 0)
+    for (int i=0; i<scene->numLayers(); ++i)
     {
-        // Initialize shader program
-        shaderProgram_.addShaderFromSourceFile(QOpenGLShader::Vertex, ":/OpenGL/Shaders/Helloworld.v.glsl");
-        shaderProgram_.addShaderFromSourceFile(QOpenGLShader::Fragment, ":/OpenGL/Shaders/Helloworld.f.glsl");
-        shaderProgram_.link();
-
-        // Get shader locations
-        shaderProgram_.bind();
-        vertexLoc_     = shaderProgram_.attributeLocation("vertex");
-        projMatrixLoc_ = shaderProgram_.uniformLocation("projMatrix");
-        viewMatrixLoc_ = shaderProgram_.uniformLocation("viewMatrix");
-        shaderProgram_.release();
-
-        // Create VBO
-        vbo_.create();
+        layerRendererSharedResources_.emplace_back(
+                    new LayerRendererSharedResources(scene->layer(i)));
     }
-
-    ++refCount_;
 }
 
-void SceneRendererSharedResources::update(OpenGLFunctions * /*f*/)
+SceneRendererSharedResources::~SceneRendererSharedResources()
 {
-    if (isDirty_)
+}
+
+Scene * SceneRendererSharedResources::scene() const
+{
+    return scene_;
+}
+
+LayerRendererSharedResources * SceneRendererSharedResources::layerRendererSharedResources(int i) const
+{
+    return layerRendererSharedResources_[i].get();
+}
+
+void SceneRendererSharedResources::initialize(OpenGLFunctions * f)
+{
+    for (int i=0; i<scene()->numLayers(); ++i)
     {
-        // Get all edges
-        std::vector<OpenVac::KeyEdgeHandle> edges;
-        std::vector<OpenVac::CellHandle> cells =  scene()->activeVac()->data().cells();
-        for (const OpenVac::CellHandle & cell: cells)
-        {
-            OpenVac::KeyEdgeHandle edge = cell;
-            if (edge)
-                edges.push_back(edge);
-        }
-
-        // Get total num samples
-        int numSamples = 0;
-        for (const OpenVac::KeyEdgeHandle & edge: edges)
-        {
-            const auto & samples = edge->geometry().samples();
-            numSamples += samples.size();
-        }
-
-        // Allocate VBO (i.e., allocate memory in GPU)
-        vbo_.bind();
-        vbo_.allocate(numSamples * sizeof(EdgeGeometryGpuSample));
-        vbo_.release();
-
-        // Write VBO (i.e., copy data from CPU to GPU)
-        int offset = 0;
-        vbo_.bind();
-        for (const OpenVac::KeyEdgeHandle & edge: edges)
-        {
-            const auto & samples = edge->geometry().samples();
-            int count = samples.size() * sizeof(EdgeGeometryGpuSample);
-
-            vbo_.write(offset, samples.data(), count);
-
-            offset += count;
-        }
-        vbo_.release();
+        layerRendererSharedResources(i)->initialize(f);
     }
-
-    isDirty_ = false;
 }
 
-void SceneRendererSharedResources::cleanup(OpenGLFunctions * /*f*/)
+void SceneRendererSharedResources::update(OpenGLFunctions * f)
 {
-    --refCount_;
-
-    if (refCount_ == 0)
+    for (int i=0; i<scene()->numLayers(); ++i)
     {
-        vbo_.destroy();
+        layerRendererSharedResources(i)->update(f);
+    }
+}
+
+void SceneRendererSharedResources::cleanup(OpenGLFunctions * f)
+{
+    for (int i=0; i<scene()->numLayers(); ++i)
+    {
+        layerRendererSharedResources(i)->cleanup(f);
     }
 }

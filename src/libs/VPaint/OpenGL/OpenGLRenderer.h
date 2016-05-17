@@ -29,11 +29,9 @@ private:
 public:
     /********************** Constructor / Destructor *************************/
 
-    /// Constructs an OpenGLRenderer. The argument \p sharedResources must a
-    /// valid non-null pointer that outlive this OpenGLRenderer. This
-    /// OpenGLRenderer does not take ownership of sharedResources.
+    /// Constructs an OpenGLRenderer.
     ///
-    OpenGLRenderer(QObject * parent);
+    OpenGLRenderer() {}
 
     /// Destructs this OpenGLRenderer. Note it this does *not* call cleanup().
     /// Indeed, cleanup() cannot be called in the destructor because:

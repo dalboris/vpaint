@@ -15,8 +15,8 @@
 
 struct SceneData
 {
-    // Canvas
-    //Canvas * canvas = nullptr;
+    // Canvas XXX TODO
+    //DataObjectPtr<Canvas> canvas;
 
     // Layers
     std::vector<DataObjectPtr<Layer>> layers;

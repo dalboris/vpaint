@@ -157,7 +157,11 @@ HEADERS += MainWindow.h \
     Tools/View2D/PanView2DAction.h \
     Tools/View2D/ZoomView2DAction.h \
     Tools/View2D/RotateView2DAction.h \
-    Vac/VacSignalEmitter.h
+    Vac/VacSignalEmitter.h \
+    Layer/LayerRenderer.h \
+    Layer/LayerRendererSharedResources.h \
+    Vac/VacRenderer.h \
+    Vac/VacRendererSharedResources.h
 
 SOURCES += \
     SaveAndLoad.cpp \
@@ -272,7 +276,11 @@ SOURCES += \
     Tools/View2D/PanView2DAction.cpp \
     Tools/View2D/ZoomView2DAction.cpp \
     Tools/View2D/RotateView2DAction.cpp \
-    Vac/VacSignalEmitter.cpp
+    Vac/VacSignalEmitter.cpp \
+    Layer/LayerRenderer.cpp \
+    Layer/LayerRendererSharedResources.cpp \
+    Vac/VacRenderer.cpp \
+    Vac/VacRendererSharedResources.cpp
 
 DISTFILES += \
     OpenGL/Shaders/Helloworld.v.glsl \

@@ -6,35 +6,34 @@
 // license terms and conditions in the LICENSE.MIT file found in the top-level
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
-#ifndef SCENERENDERER_H
-#define SCENERENDERER_H
+#ifndef LAYERRENDERER_H
+#define LAYERRENDERER_H
 
 #include "OpenGL/OpenGLFunctions.h"
 
 #include <QObject>
 #include <QMatrix4x4>
 
-#include <vector>
 #include <memory>
 
-class Scene;
-class SceneRendererSharedResources;
-class LayerRenderer;
+class Layer;
+class LayerRendererSharedResources;
+class VacRenderer;
 
-class SceneRenderer: public QObject
+class LayerRenderer: public QObject
 {
 private:
     Q_OBJECT
-    Q_DISABLE_COPY(SceneRenderer)
+    Q_DISABLE_COPY(LayerRenderer)
 
 public:
-    SceneRenderer(SceneRendererSharedResources * sharedResources);
-    ~SceneRenderer();
+    LayerRenderer(LayerRendererSharedResources * sharedResources);
+    ~LayerRenderer();
 
-    SceneRendererSharedResources * sharedResources() const;
-    LayerRenderer * layerRenderer(int i) const;
+    LayerRendererSharedResources * sharedResources() const;
+    VacRenderer * vacRenderer() const;
 
-    Scene * scene() const;
+    Layer * layer() const;
 
     void initialize(OpenGLFunctions * f);
     void render2D(OpenGLFunctions * f, const QMatrix4x4 & projMatrix, const QMatrix4x4 & viewMatrix);
@@ -43,10 +42,10 @@ public:
 
 private:
     // Shared resources
-    SceneRendererSharedResources * sharedResources_;
+    LayerRendererSharedResources * sharedResources_;
 
-    // Layer renderers (one renderer per layer)
-    std::vector<std::unique_ptr<LayerRenderer>> layerRenderers_;
+    // Vac renderer
+    std::unique_ptr<VacRenderer> vacRenderer_;
 };
 
-#endif // SCENERENDERER_H
+#endif // LAYERRENDERER_H

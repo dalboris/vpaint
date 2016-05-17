@@ -26,6 +26,14 @@ public:
     ///
     Scene();
 
+    /// Returns the number of layers in this Scene.
+    ///
+    int numLayers() const;
+
+    /// Returns the i-th Layer of this Scene.
+    ///
+    Layer * layer(int i) const;
+
     /// Returns the active layer of this Scene. There is always a
     /// non-null active layer, so this never returns nullptr.
     ///

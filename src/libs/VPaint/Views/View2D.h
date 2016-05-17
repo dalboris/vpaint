@@ -15,6 +15,8 @@
 
 #include <QPointF>
 
+#include <memory>
+
 class View2DRenderer;
 class SceneRendererSharedResources;
 class SceneRenderer;
@@ -30,24 +32,34 @@ private:
     Q_DISABLE_COPY(View2D)
 
 public:
-    /// Constructs a View2D displaying the given \p scene. For performance
-    /// purposes, the caller must also pass a pointer to a
-    /// SceneRendererSharedResources. The View2D does not take ownership of the
-    /// SceneRendererSharedResources.
+    /// Constructs a View2D displaying the given \p scene, using the
+    /// given \p sceneRendererSharedResources.
     ///
     View2D(Scene * scene,
            SceneRendererSharedResources * sceneRendererSharedResources,
            QWidget * parent);
 
-    /// Returns the view coordinate \p viewPos mapped to scene coordinates.
+    /// Destructs this View2D.
     ///
-    QPointF mapToScene(const QPointF & viewPos);
+    ~View2D();
+
+    /// Returns the SceneRendererSharedResources associated with this View2D.
+    ///
+    SceneRendererSharedResources * sceneRendererSharedResources() const;
 
     /// Returns the camera associated with this View2D.
     ///
     Camera2D * camera() const;
 
+    /// Returns the view coordinate \p viewPos mapped to scene coordinates.
+    ///
+    QPointF mapToScene(const QPointF & viewPos) const;
+
 protected:
+    /// Implements the pure virtual function OpenGLWidget::makeRenderer().
+    ///
+    OpenGLRenderer * makeRenderer() const;
+
     /// Implements the pure virtual function View::makeMouseEvent().
     ///
     View2DMouseEvent * makeMouseEvent();
@@ -56,11 +68,11 @@ private:
     void addActions_();
 
 private:
+    // Observed QObjects
+    SceneRendererSharedResources * sceneRendererSharedResources_;
+
     // Owned DataObjects
     DataObjectPtr<Camera2D> camera2D_;
-
-    // Owned QObjects
-    View2DRenderer * view2DRenderer_;
 };
 
 #endif // VIEW2D_H

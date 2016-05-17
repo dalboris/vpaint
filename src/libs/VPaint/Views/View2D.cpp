@@ -19,24 +19,34 @@
 View2D::View2D(Scene * scene,
                SceneRendererSharedResources * sceneRendererSharedResources,
                QWidget * parent):
-    View(scene, parent)
+
+    View(scene, parent),
+
+    sceneRendererSharedResources_(sceneRendererSharedResources),
+    camera2D_()
 {
-    view2DRenderer_ = new View2DRenderer(sceneRendererSharedResources, camera2D_.get(), this);
-    setRenderer(view2DRenderer_);
-
+    setRenderer(new View2DRenderer(sceneRendererSharedResources, camera()));
     addActions_();
-
     connect(camera2D_.get(), &Camera2D::changed, this, &View2D::update);
 }
 
-QPointF View2D::mapToScene(const QPointF & viewPos)
+View2D::~View2D()
 {
-    return camera2D_->toMatrix().inverted() * viewPos;
+}
+
+SceneRendererSharedResources * View2D::sceneRendererSharedResources() const
+{
+    return sceneRendererSharedResources_;
 }
 
 Camera2D * View2D::camera() const
 {
     return camera2D_.get();
+}
+
+QPointF View2D::mapToScene(const QPointF & viewPos) const
+{
+    return camera2D_->toMatrix().inverted() * viewPos;
 }
 
 View2DMouseEvent * View2D::makeMouseEvent()
@@ -47,7 +57,7 @@ View2DMouseEvent * View2D::makeMouseEvent()
 void View2D::addActions_()
 {
     addMouseAction(new SketchAction(scene()));
-    addMouseAction(new PanView2DAction(camera2D_.get()));
-    addMouseAction(new RotateView2DAction(camera2D_.get()));
-    addMouseAction(new ZoomView2DAction(camera2D_.get()));
+    addMouseAction(new PanView2DAction(camera()));
+    addMouseAction(new RotateView2DAction(camera()));
+    addMouseAction(new ZoomView2DAction(camera()));
 }

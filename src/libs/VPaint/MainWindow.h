@@ -16,6 +16,8 @@
 #include <QTimer>
 #include <QDir>
 
+#include <memory>
+
 class QScrollArea;
 class SceneOld;
 class GLWidget;
@@ -157,8 +159,8 @@ private:
 
     // --------- Other properties and widgets --------
     // Scene and View
-    Scene * scene_;
-    SceneRendererSharedResources * sceneRendererSharedResources_;
+    std::unique_ptr<Scene> scene_;
+    std::unique_ptr<SceneRendererSharedResources> sceneRendererSharedResources_;
     View2D * view2D_;
     View2D * view2D2_;
 

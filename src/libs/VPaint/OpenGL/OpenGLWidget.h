@@ -9,28 +9,11 @@
 #ifndef OPENGLWIDGET_H
 #define OPENGLWIDGET_H
 
-/*
-#include "Core/Cache.h"
-#include "Core/Memory.h"
-
-#include <QOpenGLFunctions>
-*/
-
-/*
-#include <QOpenGLShaderProgram>
-#include <QOpenGLVertexArrayObject>
-#include <QOpenGLBuffer>
-#include <QMatrix4x4>
-
-#include <vector>
-#include <glm/vec2.hpp>
-*/
+#include "OpenGL/OpenGLFunctions.h"
 
 #include <QOpenGLWidget>
 
-#include "OpenGL/OpenGLFunctions.h"
-
-#include <QElapsedTimer>
+#include <memory>
 
 class OpenGLRenderer;
 
@@ -48,17 +31,9 @@ private:
     Q_DISABLE_COPY(OpenGLWidget)
 
 public:
-    /// Constructs an OpenGLWidget. The given \p renderer must be non-null
-    /// and must outlive this OpenGLWidget.
+    /// Constructs an OpenGLWidget.
     ///
     OpenGLWidget(QWidget * parent);
-
-    /// Sets renderer to use. The given \p renderer must be non-null and must
-    /// outlive this OpenGLWidget. This setter must be call before the first
-    /// initializeGL() is issued. This OpenGLWidget does not take ownership of
-    /// the renderer.
-    ///
-    void setRenderer(OpenGLRenderer * renderer);
 
     /// Destructs this OpenGLWidget, ensuring proper cleanup. You should make
     /// sure that the OpenGLRenderer is still alive at this point, since its
@@ -77,8 +52,14 @@ protected:
     void resizeGL(int w, int h);
     void paintGL();
 
+    /// Sets the OpenGLRenderer of this OpenGLWidget. Ownership is
+    /// passed to the OpenGLWidget. This function must be called
+    /// in the constructor of derived classes.
+    ///
+    void setRenderer(OpenGLRenderer * renderer);
+
 private:
-    OpenGLRenderer * renderer_;
+    std::unique_ptr<OpenGLRenderer> renderer_;
 };
 
 #endif // OPENGLWIDGET_H

@@ -96,14 +96,19 @@ MainWindow::MainWindow(QWidget * parent) :
     exportingPng_(false)
 {
     // Allocate scene
-    scene_         = new Scene();
+    scene_.reset(new Scene());
 
     // Allocate resources shared between all SceneRenderers
-    sceneRendererSharedResources_ = new SceneRendererSharedResources(scene_, this);
+    sceneRendererSharedResources_.reset(new SceneRendererSharedResources(scene_.get()));
 
     // Allocate Views
-    view2D_  = new View2D(scene_, sceneRendererSharedResources_, this);
-    view2D2_ = new View2D(scene_, sceneRendererSharedResources_, this);
+    view2D_  = new View2D(scene_.get(),
+                          sceneRendererSharedResources_.get(),
+                          this);
+
+    view2D2_  = new View2D(scene_.get(),
+                           sceneRendererSharedResources_.get(),
+                           this);
 
     // Create splitter with side-by-side views
     QSplitter * splitter = new QSplitter();
@@ -237,8 +242,11 @@ MainWindow::~MainWindow()
 
     delete view2D_;
     delete view2D2_;
-    delete sceneRendererSharedResources_;
-    delete scene_;
+
+    // Those two are now useless since they are unique_ptr.
+    //
+    //delete sceneRendererSharedResources_;
+    //delete scene_;
 
     clearUndoStack_();
     autosaveEnd();
@@ -380,7 +388,7 @@ void MainWindow::autosaveEnd()
 
 Scene * MainWindow::scene() const
 {
-    return scene_;
+    return scene_.get();
 }
 
 SceneOld * MainWindow::sceneOld() const

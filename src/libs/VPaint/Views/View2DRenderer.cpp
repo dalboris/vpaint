@@ -13,19 +13,22 @@
 
 View2DRenderer::View2DRenderer(
         SceneRendererSharedResources * sceneRendererSharedResources,
-        Camera2D * camera2D,
-        QObject * parent) :
+        Camera2D * camera2D) :
 
-    OpenGLRenderer(parent),
+    OpenGLRenderer(),
 
+    sceneRenderer_(new SceneRenderer(sceneRendererSharedResources)),
     camera2D_(camera2D)
 {
-    sceneRenderer_ = new SceneRenderer(sceneRendererSharedResources, this);
+}
+
+View2DRenderer::~View2DRenderer()
+{
 }
 
 SceneRenderer * View2DRenderer::sceneRenderer()
 {
-    return sceneRenderer_;
+    return sceneRenderer_.get();
 }
 
 void View2DRenderer::initialize(OpenGLFunctions * f)

@@ -13,6 +13,8 @@
 
 #include <QMatrix4x4>
 
+#include <memory>
+
 class SceneRenderer;
 class SceneRendererSharedResources;
 class Camera2D;
@@ -32,13 +34,12 @@ public:
     /// Constructs a View2DRenderer.
     ///
     View2DRenderer(SceneRendererSharedResources * sceneRendererSharedResources,
-                   Camera2D * camera2D,
-                   QObject * parent);
+                   Camera2D * camera2D);
 
     /// Destructs this View2DRenderer. It is important that the SceneRenderer
     /// is still alive
     ///
-    virtual ~View2DRenderer() {}
+    virtual ~View2DRenderer();
 
 
     /***************************** Accessors *********************************/
@@ -79,7 +80,7 @@ public:
 
 private:
     // Owned QObjects
-    SceneRenderer * sceneRenderer_;
+    std::unique_ptr<SceneRenderer> sceneRenderer_;
 
     // Observed DataObjects
     Camera2D * camera2D_;

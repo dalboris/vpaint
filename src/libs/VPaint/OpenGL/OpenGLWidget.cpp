@@ -14,7 +14,7 @@
 
 OpenGLWidget::OpenGLWidget(QWidget * parent) :
     QOpenGLWidget(parent),
-    renderer_(nullptr)
+    renderer_()
 {
 }
 
@@ -23,16 +23,9 @@ OpenGLWidget::~OpenGLWidget()
     cleanup();
 }
 
-void OpenGLWidget::setRenderer(OpenGLRenderer * renderer)
-{
-    assert(renderer);
-    renderer_ = renderer;
-}
-
 OpenGLRenderer * OpenGLWidget::renderer() const
 {
-    assert(renderer_);
-    return renderer_;
+    return renderer_.get();
 }
 
 OpenGLFunctions * OpenGLWidget::functions() const
@@ -71,4 +64,9 @@ void OpenGLWidget::paintGL()
 {
     OpenGLFunctions * f = functions();
     renderer()->render(f);
+}
+
+void OpenGLWidget::setRenderer(OpenGLRenderer * renderer)
+{
+    renderer_.reset(renderer);
 }

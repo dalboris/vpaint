@@ -8,17 +8,32 @@
 
 #include "Scene.h"
 
-#include <glm/geometric.hpp>
-
 Scene::Scene()
 {
+    // Create the layer.
+    // Note: for now, there is only one layer.
     data_.layers.push_back(DataObjectPtr<Layer>());
-    connect(data().layers[0].get(), &Layer::changed, this, &Scene::changed);
+
+    // Emit Scene::changed() whenever a layer changes.
+    for (int i=0; i<numLayers(); ++i)
+    {
+        connect(layer(i), &Layer::changed, this, &Scene::changed);
+    }
+}
+
+int Scene::numLayers() const
+{
+    return data_.layers.size();
+}
+
+Layer * Scene::layer(int i) const
+{
+    return data().layers[i].get();
 }
 
 Layer * Scene::activeLayer() const
 {
-    return data().layers[0].get();
+    return layer(0);
 }
 
 Vac * Scene::activeVac() const
