@@ -19,6 +19,13 @@ struct CellIdType
 {
     CellId id;
     CellType type;
+
+    CellIdType(CellId id, CellType type) : id(id), type(type) {}
+
+    bool operator==(const CellIdType & other) const
+    {
+        return (id == other.id) && (type == other.type);
+    }
 };
 
 } // end namespace OpenVac

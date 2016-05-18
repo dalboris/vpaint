@@ -39,9 +39,7 @@ public:
     /// Overrides OpenVac::VacObserver::topologyChanged().
     /// Emits the Qt signals Vac::topologyChanged().
     ///
-    virtual void topologyChanged(const OpenVac::CellIdSet & created,
-                                 const OpenVac::CellIdSet & destroyed,
-                                 const OpenVac::CellIdSet & affected);
+    virtual void topologyChanged(const OpenVac::TopologyEditInfo & info);
 
     /// Overrides OpenVac::VacObserver::topologyChanged().
     /// Emits the Qt signals Vac::geometryChanged().

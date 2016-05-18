@@ -35,10 +35,7 @@ public:
 public slots:
     void setDirty();
 
-    void onTopologyChanged(
-            const OpenVac::CellIdSet & created,
-            const OpenVac::CellIdSet & destroyed,
-            const OpenVac::CellIdSet & affected);
+    void onTopologyChanged(const OpenVac::TopologyEditInfo & info);
 
 private:
     friend class VacRenderer;

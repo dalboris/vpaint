@@ -14,6 +14,7 @@
 #include <OpenVac/Topology/Util/CellHandleSet.h>
 #include <OpenVac/Util/VacObserver.h>
 #include <OpenVac/Geometry.h>
+#include "OpenVac/Operators/Util/TopologyChangeInfo.h"
 
 #include <unordered_set>
 
@@ -94,9 +95,7 @@ public:
     void beginTopologyEdit()
     {
         areTopologyEditsConcatenated_ = true;
-        topologyEditCreated_.clear();
-        topologyEditDestroyed_.clear();
-        topologyEditAffected_.clear();
+        topologyEditInfo_.clear();
     }
 
     /// When clients choose to call beginTopologyEdit(), then they must call
@@ -129,19 +128,19 @@ public:
     /// are affected by topological operators, but cannot know which cells are
     /// affected by a geometry edit, since geometry is user-defined.
     ///
-    void beginGeometryEdit(const CellHandleSet & affected)
+    void beginGeometryEdit(const CellHandleSet & affectedCells)
     {
-        geometryEditAffected_ = affected;
+        geometryEditAffectedCells_ = affectedCells;
     }
 
     /// Convenient overload of
     /// beginGeometryEdit(const std::vector<CellHandle> &),
     /// for when there is only one affected cell.
     ///
-    void beginGeometryEdit(const CellHandle & affected)
+    void beginGeometryEdit(const CellHandle & affectedCells)
     {
-        geometryEditAffected_.clear();
-        geometryEditAffected_.insert(affected);
+        geometryEditAffectedCells_.clear();
+        geometryEditAffectedCells_.insert(affectedCells);
     }
 
     /// Clients must call this method when they are done editing the geometry.
@@ -151,9 +150,9 @@ public:
     {
         for (VacObserver * observer: observers_)
         {
-            observer->geometryChanged(geometryEditAffected_);
+            observer->geometryChanged(geometryEditAffectedCells_);
         }
-        geometryEditAffected_.clear();
+        geometryEditAffectedCells_.clear();
     }
 
 private:
@@ -165,16 +164,11 @@ private:
     {
         for (VacObserver * observer: observers_)
         {
-            observer->topologyChanged(
-                        topologyEditCreated_,
-                        topologyEditDestroyed_,
-                        topologyEditAffected_);
+            observer->topologyChanged(topologyEditInfo_);
         }
 
         areTopologyEditsConcatenated_ = false;
-        topologyEditCreated_.clear();
-        topologyEditDestroyed_.clear();
-        topologyEditAffected_.clear();
+        topologyEditInfo_.clear();
     }
 
 private:
@@ -195,15 +189,13 @@ private:
     //
     bool areTopologyEditsConcatenated_;
 
-    // Cells whose topology is being edited. The value of these variables is
-    // defined by the Operator class.
+    // Cells whose topology is being edited. The value of this variable is
+    // set by Operator::apply().
     //
-    CellIdSet topologyEditCreated_;
-    CellIdSet topologyEditDestroyed_;
-    CellIdSet topologyEditAffected_;
+    TopologyEditInfo topologyEditInfo_;
 
     // Cells whose geometry is being edited
-    CellHandleSet geometryEditAffected_;
+    CellHandleSet geometryEditAffectedCells_;
 };
 
 } // end namespace OpenVac

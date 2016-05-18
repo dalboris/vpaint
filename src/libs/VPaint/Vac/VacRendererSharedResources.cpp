@@ -23,14 +23,11 @@ VacRendererSharedResources::VacRendererSharedResources(Vac * vac) :
     connect(vac_, &Vac::topologyChanged, this, &VacRendererSharedResources::onTopologyChanged);
 }
 
-void VacRendererSharedResources::onTopologyChanged(
-        const OpenVac::CellIdSet & created,
-        const OpenVac::CellIdSet & destroyed,
-        const OpenVac::CellIdSet & affected)
+void VacRendererSharedResources::onTopologyChanged(const OpenVac::TopologyEditInfo & info)
 {
-    for (OpenVac::CellId id: created)
+    for (OpenVac::CellIdType idtype: info.created())
     {
-        qDebug() << "created: " << id;
+        qDebug() << "created: " << idtype.id << static_cast<int>(idtype.type);
     }
 }
 

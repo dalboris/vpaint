@@ -41,10 +41,7 @@ public:
 signals:
     /// Signal emitted whenever the topology has changed.
     ///
-    void topologyChanged(
-            const OpenVac::CellIdSet & created,
-            const OpenVac::CellIdSet & destroyed,
-            const OpenVac::CellIdSet & affected);
+    void topologyChanged(const OpenVac::TopologyEditInfo & info);
 
     /// Signal emitted whenever the geometry has changed. Note that changing
     /// the geometry of a cell often affects the geometry of incident cells as
@@ -55,8 +52,7 @@ signals:
     /// The signal topologyChanged() is always followed by the signal
     /// geometryChanged(), but geometryChanged() may be sent individually.
     ///
-    void geometryChanged(
-            const OpenVac::CellHandleSet & affected);
+    void geometryChanged(const OpenVac::CellHandleSet & affected);
 
 private:
     VacSignalEmitter vacSignalEmitter_;

@@ -24,11 +24,9 @@ Vac * VacSignalEmitter::vac() const
     return vac_;
 }
 
-void VacSignalEmitter::topologyChanged(const OpenVac::CellIdSet & created,
-                                       const OpenVac::CellIdSet & destroyed,
-                                       const OpenVac::CellIdSet & affected)
+void VacSignalEmitter::topologyChanged(const OpenVac::TopologyEditInfo & info)
 {
-    emit vac()->topologyChanged(created, destroyed, affected);
+    emit vac()->topologyChanged(info);
 }
 
 void VacSignalEmitter::geometryChanged(const OpenVac::CellHandleSet & affected)

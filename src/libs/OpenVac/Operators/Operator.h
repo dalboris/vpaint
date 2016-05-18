@@ -110,15 +110,17 @@ public:
         assert(canBeApplied_);
 
         // Deallocate deleted cells
-        for (CellId id: destroyedCells_)
+        for (CellIdType idtype: destroyedCells_)
         {
             // Remove cell from ID Manager
-            vac.cellManager_.remove(id);
+            vac.cellManager_.remove(idtype.id);
         }
 
         // Allocate new cells
-        for (CellId id: createdCells_)
+        for (CellIdType idtype: createdCells_)
         {
+            CellId id = idtype.id;
+
             // Allocate cell
             UniquePtr<CellData<Ids>> & data = cellsAfter_.at(id);
             SharedPtr<Cell> cell = makeCell_(&vac, data->type(), id);
@@ -144,21 +146,8 @@ public:
         }
 
         // Concatenate info about created/destroyed/affected cells.
-        // Note: order of these loops matter. Destroyed cells must be first.
-        for (CellId destroyedId: destroyedCells_)
-        {
-            vac.topologyEditCreated_.erase(destroyedId);
-            vac.topologyEditAffected_.erase(destroyedId);
-            vac.topologyEditDestroyed_.insert(destroyedId);
-        }
-        for (CellId createdId: createdCells_)
-        {
-            vac.topologyEditCreated_.insert(createdId);
-        }
-        for (CellId affectedId: affectedCells_)
-        {
-            vac.topologyEditAffected_.insert(affectedId);
-        }
+        vac.topologyEditInfo_.compose(TopologyEditInfo(
+                createdCells_, destroyedCells_, affectedCells_));
 
         // Emit topologyChanged notification if they are not concatenated
         if (vac.areTopologyEditsConcatenated_)
@@ -177,7 +166,7 @@ public:
     /// classes? Because derived classes must call protected base functions
     /// (e.g., Operator::newKeyVertex()) to create new cells.
     ///
-    const std::vector<CellId> & createdCells() { return createdCells_; }
+    const CellIdTypeSet & createdCells() { return createdCells_; }
 
     /// Returns the IDs of the cells that are destroyed by this operator. This
     /// must be not be called before compute(), but may be called before apply().
@@ -187,7 +176,7 @@ public:
     /// classes? Because derived classes must call a protected base function,
     /// Operator::deleteCell()) to destroy a cell.
     ///
-    const std::vector<CellId> & destroyedCells() { return destroyedCells_; }
+    const CellIdTypeSet & destroyedCells() { return destroyedCells_; }
 
     /// Returns the IDs of the cells that are affected by this operator. Affected
     /// cells are the cells which are neither created nor destroyed by this operator,
@@ -209,7 +198,7 @@ public:
     /// affected. In the future, we may want to implement a function
     /// "getConstKeyVertex" for this, but it is not a priority for now.
     ///
-    const std::vector<CellId> & affectedCells() { return affectedCells_; }
+    const CellIdTypeSet & affectedCells() { return affectedCells_; }
 
 protected:
 
@@ -259,9 +248,9 @@ private:
     bool canBeApplied_;
     std::map<CellId, UniquePtr<CellData<Ids>>> cellsBefore_;
     std::map<CellId, UniquePtr<CellData<Ids>>> cellsAfter_;
-    std::vector<CellId> createdCells_;
-    std::vector<CellId> destroyedCells_;
-    std::vector<CellId> affectedCells_;
+    CellIdTypeSet createdCells_;
+    CellIdTypeSet destroyedCells_;
+    CellIdTypeSet affectedCells_;
 
     // VAC to Operator cell copier
     HandlesToIdsCopier handlesToIdsCopier_;
@@ -293,7 +282,7 @@ private:
         assert(inserted.second);
 
         // Tag this ID as a cell created by the operator
-        createdCells_.push_back(id);
+        createdCells_.insert(CellIdType(id, CellDataType::static_type()));
 
         // Return the allocated OpCellData
         return cellData;
@@ -383,7 +372,7 @@ private:
         handlesToIdsCopier_.copy(vacCellData, *opCellDataAfter);
 
         // Tag this ID as a cell affected by the operator
-        affectedCells_.push_back(id);
+        affectedCells_.insert(CellIdType(id, CellDataType::static_type()));
 
         // Returns the relevant op cell data
         return opCellDataAfter;
@@ -430,8 +419,7 @@ private:
 ///
 namespace Operators
 {
-    // Nothing  here, that's intended. This namespace is only
-    // here as a placeholder to write some Doxygen documentation.
+    // Nothing here: this namespace is opened here for Doxygen only.
 }
 }
 

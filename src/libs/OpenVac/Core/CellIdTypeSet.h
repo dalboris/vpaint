@@ -23,7 +23,7 @@ struct CellIdTypeHash
     std::size_t operator() (const CellIdType & idtype) const
     {
         std::size_t h1 = std::hash<CellId>()(idtype.id);
-        std::size_t h2 = std::hash<CellType>()(idtype.type);
+        std::size_t h2 = std::hash<char>()(static_cast<char>(idtype.type));
         return h1 ^ (h2 << 1); // or use boost::hash_combine
     }
 };
