@@ -14,7 +14,8 @@
 #include <OpenVac/Topology/Util/CellHandleSet.h>
 #include <OpenVac/Util/VacObserver.h>
 #include <OpenVac/Geometry.h>
-#include "OpenVac/Operators/Util/TopologyChangeInfo.h"
+#include "OpenVac/Util/TopologyEditInfo.h"
+#include "OpenVac/Util/GeometryEditInfo.h"
 
 #include <unordered_set>
 
@@ -128,19 +129,33 @@ public:
     /// are affected by topological operators, but cannot know which cells are
     /// affected by a geometry edit, since geometry is user-defined.
     ///
-    void beginGeometryEdit(const CellHandleSet & affectedCells)
+    void beginGeometryEdit(const GeometryEditInfo & info)
     {
-        geometryEditAffectedCells_ = affectedCells;
+        geometryEditInfo_ = info;
     }
 
-    /// Convenient overload of
-    /// beginGeometryEdit(const std::vector<CellHandle> &),
-    /// for when there is only one affected cell.
+    /// Convenient overload of beginGeometryEdit().
     ///
-    void beginGeometryEdit(const CellHandle & affectedCells)
+    void beginGeometryEdit(const CellHandleSet & affected)
     {
-        geometryEditAffectedCells_.clear();
-        geometryEditAffectedCells_.insert(affectedCells);
+        CellIdTypeSet affectedIdTypes;
+        for (const CellHandle & h : affected)
+        {
+            affectedIdTypes.insert(h->idType());
+        }
+
+        beginGeometryEdit(GeometryEditInfo(affectedIdTypes));
+    }
+
+    /// Convenient overload of beginGeometryEdit(), for when there is only one
+    /// affected cell.
+    ///
+    void beginGeometryEdit(const CellHandle & affected)
+    {
+        CellHandleSet set;
+        set.insert(affected);
+
+        beginGeometryEdit(set);
     }
 
     /// Clients must call this method when they are done editing the geometry.
@@ -150,9 +165,9 @@ public:
     {
         for (VacObserver * observer: observers_)
         {
-            observer->geometryChanged(geometryEditAffectedCells_);
+            observer->geometryChanged(geometryEditInfo_);
         }
-        geometryEditAffectedCells_.clear();
+        geometryEditInfo_.clear();
     }
 
 private:
@@ -195,7 +210,7 @@ private:
     TopologyEditInfo topologyEditInfo_;
 
     // Cells whose geometry is being edited
-    CellHandleSet geometryEditAffectedCells_;
+    GeometryEditInfo geometryEditInfo_;
 };
 
 } // end namespace OpenVac

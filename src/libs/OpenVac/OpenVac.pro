@@ -51,8 +51,9 @@ HEADERS += \
     Topology/Util/CellHandleSet.h \
     Topology/Util/CellHandle.h \
     Core/CellIdSet.h \
-    Operators/Util/TopologyChangeInfo.h \
     Core/CellIdType.h \
-    Core/CellIdTypeSet.h
+    Core/CellIdTypeSet.h \
+    Util/TopologyEditInfo.h \
+    Util/GeometryEditInfo.h
 
 include($$OUT_PWD/.config.pri)

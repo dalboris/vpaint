@@ -44,7 +44,7 @@ public:
     /// Overrides OpenVac::VacObserver::topologyChanged().
     /// Emits the Qt signals Vac::geometryChanged().
     ///
-    virtual void geometryChanged(const OpenVac::CellHandleSet & affected);
+    virtual void geometryChanged(const OpenVac::GeometryEditInfo & info);
 
     /// Returns the Vac this VacSignalEmitter is associated with.
     ///

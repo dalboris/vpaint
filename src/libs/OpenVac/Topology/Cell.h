@@ -11,6 +11,7 @@
 
 #include <OpenVac/Core/CellId.h>
 #include <OpenVac/Core/CellType.h>
+#include <OpenVac/Core/CellIdType.h>
 #include <OpenVac/Data/CellData.h>
 #include <OpenVac/Topology/Util/Handles.h>
 #include <OpenVac/Topology/Util/CellCast.h>
@@ -39,8 +40,11 @@ public:
     /// Returns the Vac that this cell belongs to.
     Vac * vac() const { return vac_; }
 
-    /// Returns the ID of this Cell. Cannott be 0, reserved for "no cell".
+    /// Returns the ID of this Cell. Cannot be 0, reserved for "no cell".
     CellId id() const { return id_; }
+
+    /// Returns the ID and type of this Cell.
+    CellIdType idType() const { return CellIdType(id(), type()); }
 
     /// Access the data of this Cell.
     virtual const CellData<Handles> & data() const=0;

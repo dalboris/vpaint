@@ -10,12 +10,14 @@
 #define VACRENDERER_H
 
 #include "OpenGL/OpenGLFunctions.h"
+#include "Vac/Vac.h"
 
 #include <QObject>
 #include <QMatrix4x4>
 #include <QOpenGLVertexArrayObject>
 
-class Vac;
+#include <unordered_map>
+
 class VacRendererSharedResources;
 
 class VacRenderer: public QObject
@@ -32,16 +34,43 @@ public:
     Vac * vac() const;
 
     void initialize(OpenGLFunctions * f);
+    void update(OpenGLFunctions * f);
     void render2D(OpenGLFunctions * f, const QMatrix4x4 & projMatrix, const QMatrix4x4 & viewMatrix);
     void render3D(OpenGLFunctions * f);
     void cleanup(OpenGLFunctions * f);
 
+public slots:
+    void onTopologyChanged(const OpenVac::TopologyEditInfo & info);
+    void onGeometryChanged(const OpenVac::GeometryEditInfo & info);
+
 private:
-    // Shared resources
+    void createVAO_(OpenGLFunctions * f, OpenVac::CellId id);
+    void updateVAO_(OpenGLFunctions * f, OpenVac::CellId id);
+    void destroyVAO_(OpenGLFunctions * f, OpenVac::CellId id);
+
+private:
+    // Shared GPU resources across views
     VacRendererSharedResources * sharedResources_;
 
-    // Context-specific resources
-    QOpenGLVertexArrayObject vao_;
+    // View-specific GPU resources
+    struct DrawKeyCellInfo
+    {
+        QOpenGLVertexArrayObject * vao; // Pointer because copy of QOpenGLVertexArrayObject is disabled
+        size_t numIndices;
+
+        DrawKeyCellInfo() : vao(nullptr), numIndices(0) {}
+    };
+
+    std::unordered_map<OpenVac::CellId, DrawKeyCellInfo> vaos_;
+
+    // Information about what has changed in the Vac and therefore must be
+    // (re-)sent to the GPU.
+    //
+    // This info is written in onTopologyChanged() and onGeometryChanged(),
+    // and is read then cleared in update().
+    //
+    OpenVac::TopologyEditInfo topologyEditInfo_;
+    OpenVac::GeometryEditInfo geometryEditInfo_;
 };
 
 #endif // VACRENDERER_H

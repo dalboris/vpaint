@@ -16,6 +16,8 @@
 #include <QOpenGLBuffer>
 #include <QOpenGLShaderProgram>
 
+#include <unordered_map>
+
 class VacRendererSharedResources: public QObject
 {
 private:
@@ -33,9 +35,13 @@ public:
     void cleanup(OpenGLFunctions * f);
 
 public slots:
-    void setDirty();
-
     void onTopologyChanged(const OpenVac::TopologyEditInfo & info);
+    void onGeometryChanged(const OpenVac::GeometryEditInfo & info);
+
+private:
+    void createVBO_(OpenVac::CellId id);
+    void updateVBO_(OpenVac::CellId id);
+    void destroyVBO_(OpenVac::CellId id);
 
 private:
     friend class VacRenderer;
@@ -45,7 +51,7 @@ private:
 
     // GPU resources
     QOpenGLShaderProgram shaderProgram_;
-    QOpenGLBuffer vbo_;
+    std::unordered_map<OpenVac::CellId, QOpenGLBuffer> vbos_;
 
     // Shader locations
     int vertexLoc_;
@@ -55,8 +61,14 @@ private:
     // Reference counting to initialize and cleanup only once
     int refCount_ = 0;
 
-    // Dirty bit
-    bool isDirty_ = true;
+    // Information about what has changed in the Vac and therefore must be
+    // (re-)sent to the GPU.
+    //
+    // This info is written in onTopologyChanged() and onGeometryChanged(),
+    // and is read then cleared in update().
+    //
+    OpenVac::TopologyEditInfo topologyEditInfo_;
+    OpenVac::GeometryEditInfo geometryEditInfo_;
 };
 
 #endif // VACRENDERERSHAREDRESOURCES_H

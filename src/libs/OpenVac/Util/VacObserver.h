@@ -11,7 +11,8 @@
 
 #include <OpenVac/Core/CellIdSet.h>
 #include <OpenVac/Topology/Util/CellHandleSet.h>
-#include "OpenVac/Operators/Util/TopologyChangeInfo.h"
+#include "OpenVac/Util/TopologyEditInfo.h"
+#include "OpenVac/Util/GeometryEditInfo.h"
 
 namespace OpenVac
 {
@@ -50,7 +51,7 @@ public:
     ///
     /// You must not attempt to modify the geometry in this callback method.
     ///
-    virtual void geometryChanged(const CellHandleSet & /*affectedCells*/)
+    virtual void geometryChanged(const GeometryEditInfo & /*info*/)
     {
         // Empty implementation
     }

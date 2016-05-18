@@ -52,7 +52,7 @@ void LayerRenderer::render2D(OpenGLFunctions * f, const QMatrix4x4 & projMatrix,
     vacRenderer()->render2D(f, projMatrix, viewMatrix);
 }
 
-void LayerRenderer::render3D(OpenGLFunctions * f)
+void LayerRenderer::render3D(OpenGLFunctions * /*f*/)
 {
     // XXX TODO
 }

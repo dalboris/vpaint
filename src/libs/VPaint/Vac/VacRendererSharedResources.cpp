@@ -12,37 +12,21 @@
 
 #include "OpenVac/Topology/KeyEdge.h"
 
-#include <QtDebug>
-
 VacRendererSharedResources::VacRendererSharedResources(Vac * vac) :
     vac_(vac)
 {
-    // XXX TODO: listen to notifications more specific than "changed".
-    connect(vac_, &Vac::changed, this, &VacRendererSharedResources::setDirty);
-
-    connect(vac_, &Vac::topologyChanged, this, &VacRendererSharedResources::onTopologyChanged);
-}
-
-void VacRendererSharedResources::onTopologyChanged(const OpenVac::TopologyEditInfo & info)
-{
-    for (OpenVac::CellIdType idtype: info.created())
-    {
-        qDebug() << "created: " << idtype.id << static_cast<int>(idtype.type);
-    }
+    connect(vac, &Vac::topologyChanged, this, &VacRendererSharedResources::onTopologyChanged);
+    connect(vac, &Vac::geometryChanged, this, &VacRendererSharedResources::onGeometryChanged);
 }
 
 VacRendererSharedResources::~VacRendererSharedResources()
 {
 }
 
+
 Vac * VacRendererSharedResources::vac() const
 {
     return vac_;
-}
-
-void VacRendererSharedResources::setDirty()
-{
-    isDirty_ = true;
 }
 
 void VacRendererSharedResources::initialize(OpenGLFunctions * /*f*/)
@@ -60,57 +44,59 @@ void VacRendererSharedResources::initialize(OpenGLFunctions * /*f*/)
         projMatrixLoc_ = shaderProgram_.uniformLocation("projMatrix");
         viewMatrixLoc_ = shaderProgram_.uniformLocation("viewMatrix");
         shaderProgram_.release();
-
-        // Create VBO
-        vbo_.create();
     }
 
     ++refCount_;
 }
 
+
 void VacRendererSharedResources::update(OpenGLFunctions * /*f*/)
 {
-    if (isDirty_)
+    // Loop over all destroyed key edges, and destroy corresponding VBO
+    //
+    for (OpenVac::CellIdType idtype: topologyEditInfo_.destroyed())
     {
-        // Get all edges
-        std::vector<OpenVac::KeyEdgeHandle> edges;
-        std::vector<OpenVac::CellHandle> cells =  vac()->data().cells();
-        for (const OpenVac::CellHandle & cell: cells)
+        if (idtype.type == OpenVac::CellType::KeyEdge)
         {
-            OpenVac::KeyEdgeHandle edge = cell;
-            if (edge)
-                edges.push_back(edge);
+            destroyVBO_(idtype.id);
         }
-
-        // Get total num samples
-        int numSamples = 0;
-        for (const OpenVac::KeyEdgeHandle & edge: edges)
-        {
-            const auto & samples = edge->geometry().samples();
-            numSamples += samples.size();
-        }
-
-        // Allocate VBO (i.e., allocate memory in GPU)
-        vbo_.bind();
-        vbo_.allocate(numSamples * sizeof(EdgeGeometryGpuSample));
-        vbo_.release();
-
-        // Write VBO (i.e., copy data from CPU to GPU)
-        int offset = 0;
-        vbo_.bind();
-        for (const OpenVac::KeyEdgeHandle & edge: edges)
-        {
-            const auto & samples = edge->geometry().samples();
-            int count = samples.size() * sizeof(EdgeGeometryGpuSample);
-
-            vbo_.write(offset, samples.data(), count);
-
-            offset += count;
-        }
-        vbo_.release();
     }
 
-    isDirty_ = false;
+    // Loop over all created key edges, and create one VBO for each
+    //
+    for (OpenVac::CellIdType idtype: topologyEditInfo_.created())
+    {
+        if (idtype.type == OpenVac::CellType::KeyEdge)
+        {
+            createVBO_(idtype.id);
+            updateVBO_(idtype.id);
+        }
+    }
+
+    // Loop over all key edges affected by topology edits, and update corresponding VBO
+    //
+    for (OpenVac::CellIdType idtype: topologyEditInfo_.affected())
+    {
+        if (idtype.type == OpenVac::CellType::KeyEdge)
+        {
+            updateVBO_(idtype.id);
+        }
+    }
+
+    // Loop over all key edges affected by geometry edits, and update corresponding VBO
+    //
+    for (OpenVac::CellIdType idtype: geometryEditInfo_.affected())
+    {
+        if (idtype.type == OpenVac::CellType::KeyEdge)
+        {
+            updateVBO_(idtype.id);
+        }
+    }
+
+    // Clear info about topology and geometry edits
+    //
+    topologyEditInfo_.clear();
+    geometryEditInfo_.clear();
 }
 
 void VacRendererSharedResources::cleanup(OpenGLFunctions * /*f*/)
@@ -119,6 +105,71 @@ void VacRendererSharedResources::cleanup(OpenGLFunctions * /*f*/)
 
     if (refCount_ == 0)
     {
-        vbo_.destroy();
+        // Get all IDs of VBOs currently in use
+        std::vector<OpenVac::CellId> ids;
+        for(auto pair : vbos_)
+        {
+            OpenVac::CellId id = pair.first;
+            ids.push_back(id);
+        }
+
+        // Destroy all VBOs
+        for(OpenVac::CellId id : ids)
+        {
+            destroyVBO_(id);
+        }
     }
+}
+
+void VacRendererSharedResources::onTopologyChanged(const OpenVac::TopologyEditInfo & info)
+{
+    // Store edit info, composing with pre-existing edits, if any
+    topologyEditInfo_.compose(info);
+}
+
+void VacRendererSharedResources::onGeometryChanged(const OpenVac::GeometryEditInfo & info)
+{
+    // Store edit info, composing with pre-existing edits, if any
+    geometryEditInfo_.compose(info);
+}
+
+void VacRendererSharedResources::createVBO_(OpenVac::CellId id)
+{
+    // Create VBO
+    QOpenGLBuffer vbo;
+    vbo.create();
+
+    // Insert in map
+    vbos_[id] = vbo;
+}
+
+void VacRendererSharedResources::updateVBO_(OpenVac::CellId id)
+{
+    // Get VBO
+    QOpenGLBuffer & vbo = vbos_[id];
+
+    // Get key edge handle
+    OpenVac::KeyEdgeHandle edge = vac()->data().cell(id);
+    assert((bool) edge);
+
+    // Get edge geometry samples
+    const auto & samples = edge->geometry().samples();
+    int count = samples.size() * sizeof(EdgeGeometryGpuSample);
+
+    // Update VBO (i.e., send data from RAM to GPU)
+    vbo.bind();
+    vbo.allocate(samples.data(), count);
+    vbo.release();
+}
+
+void VacRendererSharedResources::destroyVBO_(OpenVac::CellId id)
+{
+    // Get VBO
+    QOpenGLBuffer & vbo = vbos_[id];
+
+    // Destroy VBO
+    vbo.destroy();
+
+    // Erase from map
+    vbos_.erase(id);
 }

@@ -52,7 +52,7 @@ signals:
     /// The signal topologyChanged() is always followed by the signal
     /// geometryChanged(), but geometryChanged() may be sent individually.
     ///
-    void geometryChanged(const OpenVac::CellHandleSet & affected);
+    void geometryChanged(const OpenVac::GeometryEditInfo & info);
 
 private:
     VacSignalEmitter vacSignalEmitter_;

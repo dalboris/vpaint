@@ -6,21 +6,21 @@
 // license terms and conditions in the LICENSE.MIT file found in the top-level
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
-#ifndef OPENVAC_TOPOLOGYCHANGEINFO_H
-#define OPENVAC_TOPOLOGYCHANGEINFO_H
+#ifndef OPENVAC_TOPOLOGYEDITINFO_H
+#define OPENVAC_TOPOLOGYEDITINFO_H
 
 #include "OpenVac/Core/CellIdTypeSet.h"
 
 namespace OpenVac
 {
 
-/// \class TopologyChangeInfo
-/// \brief A class that stores info about topology changes.
+/// \class TopologyEditInfo
+/// \brief A class that stores info about topology edits.
 ///
 class TopologyEditInfo
 {
 public:
-    /// Constructs an empty TopologyChangeInfo.
+    /// Constructs an empty TopologyEditInfo.
     ///
     TopologyEditInfo() :
         created_(),
@@ -29,7 +29,7 @@ public:
     {
     }
 
-    /// Constructs a TopologyChangeInfo with the given changes.
+    /// Constructs a TopologyEditInfo with the given changes.
     ///
     TopologyEditInfo(
             const CellIdTypeSet & created,
@@ -41,7 +41,7 @@ public:
     {
     }
 
-    /// Clears the TopologyChangeInfo.
+    /// Clears the TopologyEditInfo.
     ///
     void clear()
     {
@@ -76,7 +76,7 @@ public:
         return affected_;
     }
 
-    /// Compose this topology changes with the given changes.
+    /// Compose this topology edits with the given edits.
     ///
     void compose(const TopologyEditInfo & other)
     {
@@ -104,4 +104,4 @@ private:
 
 } // end namespace OpenVac
 
-#endif // OPENVAC_TOPOLOGYCHANGEINFO_H
+#endif // OPENVAC_TOPOLOGYEDITINFO_H
