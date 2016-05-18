@@ -12,11 +12,26 @@
 
 #include "OpenVac/Topology/KeyEdge.h"
 
+#include <QtDebug>
+
 VacRendererSharedResources::VacRendererSharedResources(Vac * vac) :
     vac_(vac)
 {
     // XXX TODO: listen to notifications more specific than "changed".
     connect(vac_, &Vac::changed, this, &VacRendererSharedResources::setDirty);
+
+    connect(vac_, &Vac::topologyChanged, this, &VacRendererSharedResources::onTopologyChanged);
+}
+
+void VacRendererSharedResources::onTopologyChanged(
+        const OpenVac::CellIdSet & created,
+        const OpenVac::CellIdSet & destroyed,
+        const OpenVac::CellIdSet & affected)
+{
+    for (OpenVac::CellId id: created)
+    {
+        qDebug() << "created: " << id;
+    }
 }
 
 VacRendererSharedResources::~VacRendererSharedResources()

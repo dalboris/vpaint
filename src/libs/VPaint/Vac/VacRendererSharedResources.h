@@ -10,12 +10,11 @@
 #define VACRENDERERSHAREDRESOURCES_H
 
 #include "OpenGL/OpenGLFunctions.h"
+#include "Vac/Vac.h"
 
 #include <QObject>
 #include <QOpenGLBuffer>
 #include <QOpenGLShaderProgram>
-
-class Vac;
 
 class VacRendererSharedResources: public QObject
 {
@@ -35,6 +34,11 @@ public:
 
 public slots:
     void setDirty();
+
+    void onTopologyChanged(
+            const OpenVac::CellIdSet & created,
+            const OpenVac::CellIdSet & destroyed,
+            const OpenVac::CellIdSet & affected);
 
 private:
     friend class VacRenderer;
