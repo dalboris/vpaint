@@ -96,8 +96,13 @@ void View::mousePressEvent(QMouseEvent *event)
     }
 }
 
+#include "Core/Debug.h"
+
 void View::mouseMoveEvent(QMouseEvent *event)
 {
+    //Debug::log() << "mouseMoveEvent()";
+    //return;
+
     if(mouseEvent_)
     {
         // Set current position

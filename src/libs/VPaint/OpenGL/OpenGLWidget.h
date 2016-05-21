@@ -47,6 +47,10 @@ public:
 public slots:
     void cleanup();
 
+private slots:
+    void onAboutToCompose();
+    void onFrameSwapped();
+
 protected:
     void initializeGL();
     void resizeGL(int w, int h);

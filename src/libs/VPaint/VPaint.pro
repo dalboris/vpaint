@@ -161,7 +161,8 @@ HEADERS += MainWindow.h \
     Layer/LayerRenderer.h \
     Layer/LayerRendererSharedResources.h \
     Vac/VacRenderer.h \
-    Vac/VacRendererSharedResources.h
+    Vac/VacRendererSharedResources.h \
+    Core/Debug.h
 
 SOURCES += \
     SaveAndLoad.cpp \
@@ -280,7 +281,8 @@ SOURCES += \
     Layer/LayerRenderer.cpp \
     Layer/LayerRendererSharedResources.cpp \
     Vac/VacRenderer.cpp \
-    Vac/VacRendererSharedResources.cpp
+    Vac/VacRendererSharedResources.cpp \
+    Core/Debug.cpp
 
 DISTFILES += \
     OpenGL/Shaders/Helloworld.v.glsl \

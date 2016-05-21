@@ -16,6 +16,8 @@ OpenGLWidget::OpenGLWidget(QWidget * parent) :
     QOpenGLWidget(parent),
     renderer_()
 {
+    connect(this, &OpenGLWidget::aboutToCompose, this, &OpenGLWidget::onAboutToCompose);
+    connect(this, &OpenGLWidget::frameSwapped, this, &OpenGLWidget::onFrameSwapped);
 }
 
 OpenGLWidget::~OpenGLWidget()
@@ -60,10 +62,23 @@ void OpenGLWidget::resizeGL(int w, int h)
     renderer()->resize(f, w, h);
 }
 
+//#include "Core/Debug.h"
+
 void OpenGLWidget::paintGL()
 {
+    //Debug::log() << "paintGL()";
     OpenGLFunctions * f = functions();
     renderer()->render(f);
+}
+
+void OpenGLWidget::onAboutToCompose()
+{
+    //Debug::log() << "aboutToCompose()";
+}
+
+void OpenGLWidget::onFrameSwapped()
+{
+    //Debug::log() << "frameSwapped()";
 }
 
 void OpenGLWidget::setRenderer(OpenGLRenderer * renderer)

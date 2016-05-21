@@ -105,7 +105,7 @@ MainWindow::MainWindow(QWidget * parent) :
     view2D_  = new View2D(scene_.get(),
                           sceneRendererSharedResources_.get(),
                           this);
-
+/*
     view2D2_  = new View2D(scene_.get(),
                            sceneRendererSharedResources_.get(),
                            this);
@@ -117,6 +117,8 @@ MainWindow::MainWindow(QWidget * parent) :
 
     // Set splitter as central widget
     setCentralWidget(splitter);
+*/
+    setCentralWidget(view2D_);
 
     // Make window a reasonable size
     resize(1000, 600);
