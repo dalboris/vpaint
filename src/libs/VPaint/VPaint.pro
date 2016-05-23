@@ -162,7 +162,8 @@ HEADERS += MainWindow.h \
     Layer/LayerRendererSharedResources.h \
     Vac/VacRenderer.h \
     Vac/VacRendererSharedResources.h \
-    Core/Debug.h
+    Core/Debug.h \
+    Vac/KeyEdgeGLResources.h
 
 SOURCES += \
     SaveAndLoad.cpp \

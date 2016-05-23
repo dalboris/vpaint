@@ -115,15 +115,15 @@ void VacRenderer::render2D(OpenGLFunctions * f, const QMatrix4x4 & projMatrix, c
     shaderProgram.setUniformValue(viewMatrixLoc, viewMatrix);
 
     // Draw all key edges
-    for (auto & pair : vaos_)
+    for (auto & pair : keyEdgeGLResources_)
     {
         QOpenGLVertexArrayObject & vao = *pair.second.vao;
-        size_t & numIndices = pair.second.numIndices;
+        size_t & numVertices = pair.second.numVertices;
 
         vao.bind();
         f->glDrawArrays(GL_TRIANGLE_STRIP, // mode
                         0,                 // first index
-                        numIndices);       // number of indices
+                        numVertices);      // number of vertices
         vao.release();
     }
 
@@ -143,7 +143,7 @@ void VacRenderer::cleanup(OpenGLFunctions * f)
 
     // Get all IDs of VAOs currently in use
     std::vector<OpenVac::CellId> ids;
-    for(auto & pair : vaos_)
+    for(auto & pair : keyEdgeGLResources_)
     {
         OpenVac::CellId id = pair.first;
         ids.push_back(id);
@@ -171,13 +171,13 @@ void VacRenderer::onGeometryChanged(const OpenVac::GeometryEditInfo & info)
 void VacRenderer::createVAO_(OpenGLFunctions * f, OpenVac::CellId id)
 {
     // Create VAO
-    DrawKeyCellInfo info;
-    info.vao = new QOpenGLVertexArrayObject();
-    QOpenGLVertexArrayObject & vao = *info.vao;
+    KeyEdgeGLResources resources;
+    resources.vao = new QOpenGLVertexArrayObject();
+    QOpenGLVertexArrayObject & vao = *resources.vao;
     vao.create();
 
     // Store attribute bindings in VAO
-    auto & vbo = sharedResources_->vbos_.at(id);
+    auto & vbo = sharedResources_->keyEdgeGLSharedResources_.at(id).vbo;
     auto & vertexLoc = sharedResources_->vertexLoc_;
     GLsizei  stride  = sizeof(EdgeGeometryGLVertex);
     GLvoid * pointer = reinterpret_cast<void*>(offsetof(EdgeGeometryGLVertex, position));
@@ -195,30 +195,26 @@ void VacRenderer::createVAO_(OpenGLFunctions * f, OpenVac::CellId id)
     vao.release();
 
     // Insert in map
-    vaos_[id] = info;
+    keyEdgeGLResources_[id] = resources;
 }
 
 void VacRenderer::updateVAO_(OpenGLFunctions * /*f*/, OpenVac::CellId id)
 {
-    // Get VAO info
-    DrawKeyCellInfo & info = vaos_[id];
+    // Get shared resources
+    KeyEdgeGLSharedResources & sharedResources =
+            sharedResources_->keyEdgeGLSharedResources_[id];
 
-    // Get key edge handle
-    OpenVac::KeyEdgeHandle edge = vac()->data().cell(id);
-    assert((bool) edge);
+    // Get resources
+    KeyEdgeGLResources & resources = keyEdgeGLResources_[id];
 
-    // Get edge geometry samples
-    const auto & samples = edge->geometry().samples();
-    int numIndices = samples.size() * 2;
-
-    // Update VAO info
-    info.numIndices = numIndices;
+    // Update num of indices
+    resources.numVertices = sharedResources.numVertices;
 }
 
 void VacRenderer::destroyVAO_(OpenGLFunctions * /*f*/, OpenVac::CellId id)
 {
     // Get VAO
-    QOpenGLVertexArrayObject * vaoPtr = vaos_[id].vao;
+    QOpenGLVertexArrayObject * vaoPtr = keyEdgeGLResources_[id].vao;
     QOpenGLVertexArrayObject & vao = *vaoPtr;
 
     // Destroy VAO
@@ -226,5 +222,5 @@ void VacRenderer::destroyVAO_(OpenGLFunctions * /*f*/, OpenVac::CellId id)
     delete vaoPtr;
 
     // Erase from map
-    vaos_.erase(id);
+    keyEdgeGLResources_.erase(id);
 }

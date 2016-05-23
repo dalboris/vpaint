@@ -107,7 +107,7 @@ void VacRendererSharedResources::cleanup(OpenGLFunctions * /*f*/)
     {
         // Get all IDs of VBOs currently in use
         std::vector<OpenVac::CellId> ids;
-        for(auto pair : vbos_)
+        for(auto pair : keyEdgeGLSharedResources_)
         {
             OpenVac::CellId id = pair.first;
             ids.push_back(id);
@@ -140,36 +140,68 @@ void VacRendererSharedResources::createVBO_(OpenVac::CellId id)
     vbo.create();
 
     // Insert in map
-    vbos_[id] = vbo;
+    KeyEdgeGLSharedResources resources;
+    resources.vbo = vbo;
+    resources.numVertices = 0;
+    keyEdgeGLSharedResources_[id] = resources;
 }
 
 void VacRendererSharedResources::updateVBO_(OpenVac::CellId id)
 {
+    // Get resources
+    KeyEdgeGLSharedResources & resources = keyEdgeGLSharedResources_[id];
+
     // Get VBO
-    QOpenGLBuffer & vbo = vbos_[id];
+    QOpenGLBuffer & vbo = resources.vbo;
 
     // Get key edge handle
     OpenVac::KeyEdgeHandle edge = vac()->data().cell(id);
     assert((bool) edge);
 
-    // Get edge geometry samples
-    const auto & samples = edge->geometry().samples();
-    int count = samples.size() * sizeof(EdgeGeometryGLSample);
+    // Get curve
+    const VecCurve & curve = edge->geometry().curve();
+    const size_t nSamples = curve.numSamples();
+
+    // Convert curve samples to GL samples
+    std::vector<EdgeGeometryGLSample> glSamples;
+    glSamples.reserve(nSamples);
+    for (unsigned int i=0; i<nSamples; ++i)
+    {
+        const VecCurveSample & sample = curve.sample(i);
+
+        EdgeGeometryGLSample glSample;
+
+        glSample.left.centerline = sample.position;
+        glSample.left.normal     = sample.normal;
+        glSample.left.position   = sample.position + sample.width * sample.normal;
+
+        glSample.right.centerline = sample.position;
+        glSample.right.normal     = - sample.normal;
+        glSample.right.position   = sample.position - sample.width * sample.normal;
+
+        glSamples.push_back(glSample);
+    }
 
     // Update VBO (i.e., send data from RAM to GPU)
     vbo.bind();
-    vbo.allocate(samples.data(), count);
+    vbo.allocate(glSamples.data(), nSamples * sizeof(EdgeGeometryGLSample));
     vbo.release();
+
+    // Remember number of GLVertices in VBO
+    resources.numVertices = 2 * nSamples;
 }
 
 void VacRendererSharedResources::destroyVBO_(OpenVac::CellId id)
 {
+    // Get resources
+    KeyEdgeGLSharedResources & resources = keyEdgeGLSharedResources_[id];
+
     // Get VBO
-    QOpenGLBuffer & vbo = vbos_[id];
+    QOpenGLBuffer & vbo = resources.vbo;
 
     // Destroy VBO
     vbo.destroy();
 
     // Erase from map
-    vbos_.erase(id);
+    keyEdgeGLSharedResources_.erase(id);
 }

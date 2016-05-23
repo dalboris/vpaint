@@ -62,11 +62,11 @@ public:
 
     /// Returns the number of samples in this curve.
     ///
-    int numSamples() const;
+    size_t numSamples() const;
 
     /// Returns the i-th sample.
     ///
-    const VecCurveSample & sample(int i) const;
+    const VecCurveSample & sample(unsigned int i) const;
 
     /// Returns the sample at the given arclength \p s, interpolating
     /// neighbouring samples.

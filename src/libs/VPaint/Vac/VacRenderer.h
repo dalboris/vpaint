@@ -11,10 +11,10 @@
 
 #include "OpenGL/OpenGLFunctions.h"
 #include "Vac/Vac.h"
+#include "Vac/KeyEdgeGLResources.h"
 
 #include <QObject>
 #include <QMatrix4x4>
-#include <QOpenGLVertexArrayObject>
 
 #include <unordered_map>
 
@@ -53,15 +53,7 @@ private:
     VacRendererSharedResources * sharedResources_;
 
     // View-specific GPU resources
-    struct DrawKeyCellInfo
-    {
-        QOpenGLVertexArrayObject * vao; // Pointer because copy of QOpenGLVertexArrayObject is disabled
-        size_t numIndices;
-
-        DrawKeyCellInfo() : vao(nullptr), numIndices(0) {}
-    };
-
-    std::unordered_map<OpenVac::CellId, DrawKeyCellInfo> vaos_;
+    std::unordered_map<OpenVac::CellId, KeyEdgeGLResources> keyEdgeGLResources_;
 
     // Information about what has changed in the Vac and therefore must be
     // (re-)sent to the GPU.

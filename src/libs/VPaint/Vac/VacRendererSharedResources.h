@@ -11,9 +11,9 @@
 
 #include "OpenGL/OpenGLFunctions.h"
 #include "Vac/Vac.h"
+#include "Vac/KeyEdgeGLResources.h"
 
 #include <QObject>
-#include <QOpenGLBuffer>
 #include <QOpenGLShaderProgram>
 
 #include <unordered_map>
@@ -49,9 +49,9 @@ private:
     // Vac to render
     Vac * vac_;
 
-    // GPU resources
+    // GL resources
     QOpenGLShaderProgram shaderProgram_;
-    std::unordered_map<OpenVac::CellId, QOpenGLBuffer> vbos_;
+    std::unordered_map<OpenVac::CellId, KeyEdgeGLSharedResources> keyEdgeGLSharedResources_;
 
     // Shader locations
     int vertexLoc_;

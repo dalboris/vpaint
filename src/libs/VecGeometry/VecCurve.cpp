@@ -111,12 +111,12 @@ void VecCurve::addSample(const VecCurveInputSample & inputSample)
     }
 }
 
-int VecCurve::numSamples() const
+size_t VecCurve::numSamples() const
 {
     return samples_.size();
 }
 
-const VecCurveSample & VecCurve::sample(int i) const
+const VecCurveSample & VecCurve::sample(unsigned int i) const
 {
     return samples_.at(i);
 }
