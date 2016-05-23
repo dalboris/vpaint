@@ -9,9 +9,7 @@
 #ifndef VECGEOMETRY_EDGEGEOMETRY_H
 #define VECGEOMETRY_EDGEGEOMETRY_H
 
-#include "VecCurveInputSample.h"
-
-#include "VecCurveSample.h"
+#include "VecCurve.h"
 
 /// \class EdgeGeometryGpuVertex
 /// \brief A struct that stores the per-vertex data to be consumed by the
@@ -98,18 +96,30 @@ public:
 
     const std::vector<EdgeGeometryGLSample> & samples();
 
+
 private:
+    // Old code
+    /*
     size_t size() const;
     void clear();
     void addSample(const VecCurveInputSample & inputSample);
+    */
+
+private:
+    void clear();
+    void computeGLSamples_();
 
 private:
     // Data
+    /*
     std::vector<EdgeGeometryGLSample> samples_;
     std::vector<float> arclengths_;
     std::vector<glm::vec2> tangents_;
+    */
 
     // New code
+    VecCurve curve_;
+    std::vector<EdgeGeometryGLSample> glSamples_;
 
 };
 

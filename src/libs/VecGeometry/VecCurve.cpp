@@ -8,6 +8,8 @@
 
 #include "VecCurve.h"
 
+#include <glm/geometric.hpp>
+
 VecCurve::VecCurve()
 {
 
@@ -18,9 +20,95 @@ void VecCurve::clear()
     samples_.clear();
 }
 
-void VecCurve::addSample(const glm::vec2 & position, float width)
+void VecCurve::addSample(const VecCurveInputSample & inputSample)
 {
-    // XXX TODO
+    // Useful constants
+    const glm::vec2 zero(0.0f, 0.0f);
+    const glm::vec2 ux(1.0f, 0.0f);
+    const glm::vec2 uy(0.0f, 1.0f);
+    const int n = size();
+    const float eps = 0.1f * inputSample.resolution;
+
+    // Switch depending on current number of samples
+    if (n == 0)
+    {
+        VecCurveSample sample;
+        sample.position = inputSample.position;
+        sample.width = inputSample.width;
+        sample.tangent = ux;
+        sample.normal = uy;
+        sample.arclength = 0.0f;
+        sample.angle = 0.0f;
+        push_back(sample);
+    }
+    else
+    {
+        // Get previous sample
+        VecCurveSample & prevSample = samples_[n-1];
+
+        // Compute difference with previous sample
+        const glm::vec2 dp = inputSample.position - prevSample.position;
+        const float ds = glm::length(dp);
+
+        // Discard sample if too close
+        if (ds > eps)
+        {
+            // Sample to compute
+            VecCurveSample sample;
+
+            // Set position
+            sample.position = inputSample.position;
+
+            // Set width
+            sample.width = inputSample.width;
+
+            // Compute tangent
+            sample.tangent = dp / ds;
+
+            // Compute normal
+            sample.normal.x = - sample.tangent.y;
+            sample.normal.y = + sample.tangent.x;
+
+            // Compute arclength
+            sample.arclength = prevSample.arclength + ds;
+
+            // Compute angle XXX TODO
+            sample.angle = 0.0f;
+
+            // Update tangent and normal of previous sample
+            if (n == 1)
+            {
+                prevSample.tangent = sample.tangent;
+                prevSample.normal  = sample.normal;
+            }
+            else // size >= 2
+            {
+                // Get sample before previous sample
+                VecCurveSample & prevSample2 = samples_[n-2];
+
+                // Compute difference between this sample and prevSample2
+                const glm::vec2 dp2 = inputSample.position - prevSample2.position;
+                const float ds2 = glm::length(dp2);
+
+                // Update tangent of previous sample
+                if (ds2 > eps)
+                {
+                    prevSample.tangent = dp2 / ds2;
+                }
+                else
+                {
+                    prevSample.tangent = ux;
+                }
+
+                // Update normal of previous sample
+                prevSample.normal.x = - prevSample.tangent.y;
+                prevSample.normal.y = + prevSample.tangent.x;
+            }
+
+            // Insert sample
+            push_back(sample);
+        }
+    }
 }
 
 int VecCurve::numSamples() const
@@ -33,10 +121,12 @@ const VecCurveSample & VecCurve::sample(int i) const
     return samples_.at(i);
 }
 
+
 VecCurveSample VecCurve::sample(double s) const
 {
-    // XXX TODO
+    return VecCurveSample();
 }
+
 
 double VecCurve::length() const
 {

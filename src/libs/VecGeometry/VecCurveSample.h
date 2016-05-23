@@ -11,7 +11,7 @@
 
 #include <glm/vec2.hpp>
 
-/// \class CurveSample
+/// \class VecCurveSample
 /// \brief A struct that stores the data of one curve sample.
 ///
 struct VecCurveSample
@@ -22,7 +22,7 @@ struct VecCurveSample
 
     /// Width (or thickness) of the curve of at this sample.
     ///
-    glm::vec2 width;
+    float width;
 
     /// Tangent of the curve at this sample.
     ///

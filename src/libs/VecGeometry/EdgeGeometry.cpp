@@ -8,7 +8,6 @@
 
 #include "EdgeGeometry.h"
 
-#include <glm/geometric.hpp>
 
 EdgeGeometry::EdgeGeometry()
 {
@@ -17,13 +16,16 @@ EdgeGeometry::EdgeGeometry()
 
 const std::vector<EdgeGeometryGLSample> & EdgeGeometry::samples()
 {
-    return samples_;
+    //return samples_;
+    return glSamples_;
 }
 
+/*
 size_t EdgeGeometry::size() const
 {
     return samples_.size();
 }
+*/
 
 void EdgeGeometry::beginFit()
 {
@@ -32,7 +34,10 @@ void EdgeGeometry::beginFit()
 
 void EdgeGeometry::addFitInputSample(const VecCurveInputSample & inputSample)
 {
-    addSample(inputSample);
+    //addSample(inputSample);
+
+    curve_.addSample(inputSample);
+    computeGLSamples_();
 }
 
 void EdgeGeometry::endFit()
@@ -41,11 +46,37 @@ void EdgeGeometry::endFit()
 
 void EdgeGeometry::clear()
 {
-    samples_.clear();
-    arclengths_.clear();
-    tangents_.clear();
+    //samples_.clear();
+    //arclengths_.clear();
+    //tangents_.clear();
+
+    curve_.clear();
+    glSamples_.clear();
+
 }
 
+void EdgeGeometry::computeGLSamples_()
+{
+    glSamples_.clear();
+    glSamples_.reserve(curve_.numSamples());
+
+    for (VecCurveSample & sample: curve_.samples())
+    {
+        EdgeGeometryGLSample glSample;
+
+        glSample.left.centerline = sample.position;
+        glSample.left.normal     = sample.normal;
+        glSample.left.position   = sample.position + sample.width * sample.normal;
+
+        glSample.right.centerline = sample.position;
+        glSample.right.normal     = - sample.normal;
+        glSample.right.position   = sample.position - sample.width * sample.normal;
+
+        glSamples_.push_back(glSample);
+    }
+}
+
+/*
 void EdgeGeometry::addSample(const VecCurveInputSample & inputSample)
 {
     const glm::vec2 zero(0.0f, 0.0f);
@@ -146,3 +177,4 @@ void EdgeGeometry::addSample(const VecCurveInputSample & inputSample)
         }
     }
 }
+*/

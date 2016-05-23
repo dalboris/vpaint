@@ -10,10 +10,11 @@
 #define CURVE_H
 
 #include "VecCurveSample.h"
+#include "VecCurveInputSample.h"
 
 #include <vector>
 
-/// \class Curve
+/// \class VecCurve
 /// \brief A class to represent a piecewise linear curve.
 ///
 /// There are two ways to use this class:
@@ -33,7 +34,8 @@
 ///         - double length() const
 ///
 ///    2. You know what you are doing and want to modify the data directly,
-///       in which case you can also use:
+///       in which case you can also use (i.e., you use this class merely
+///       as a std::vector<VecCurveSample>):
 ///
 ///         - size_t size() const
 ///         - void push_back(const CurveSample & sample)
@@ -56,7 +58,7 @@ public:
     /// arclengths, and angles. This typically also modifies the previous
     /// sample, since its tangent is affected by the new sample.
     ///
-    void addSample(const glm::vec2 & position, float width);
+    void addSample(const VecCurveInputSample & inputSample);
 
     /// Returns the number of samples in this curve.
     ///
@@ -68,6 +70,8 @@ public:
 
     /// Returns the sample at the given arclength \p s, interpolating
     /// neighbouring samples.
+    ///
+    /// XXX Not implememted yet: returns an uninitialized sample.
     ///
     VecCurveSample sample(double s) const;
 
