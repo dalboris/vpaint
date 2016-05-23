@@ -18,7 +18,7 @@ View::View(Scene *scene, QWidget * parent) :
     //using update_t = void (QWidget::*) ();
     //update_t update = static_cast<update_t>(&QWidget::update);
 
-    connect(scene_, &Scene::changed, this, &View::update);
+    connect(scene_, &Scene::changed, this, &View::repaint);
 }
 
 Scene * View::scene() const

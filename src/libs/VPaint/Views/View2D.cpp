@@ -27,7 +27,7 @@ View2D::View2D(Scene * scene,
 {
     setRenderer(new View2DRenderer(sceneRendererSharedResources, camera()));
     addActions_();
-    connect(camera2D_.get(), &Camera2D::changed, this, &View2D::update);
+    connect(camera2D_.get(), &Camera2D::changed, this, &View2D::repaint);
 }
 
 View2D::~View2D()

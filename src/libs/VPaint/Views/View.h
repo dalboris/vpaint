@@ -76,6 +76,7 @@ protected slots:
 
     // Hides update(const QRect &) to resolve ambiguity
     void update() { OpenGLWidget::update(); }
+    void repaint() { OpenGLWidget::repaint(); }
 
 private:
     // Child QObjects
