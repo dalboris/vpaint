@@ -154,7 +154,7 @@ void VacRendererSharedResources::updateVBO_(OpenVac::CellId id)
 
     // Get edge geometry samples
     const auto & samples = edge->geometry().samples();
-    int count = samples.size() * sizeof(EdgeGeometryGpuSample);
+    int count = samples.size() * sizeof(EdgeGeometryGLSample);
 
     // Update VBO (i.e., send data from RAM to GPU)
     vbo.bind();

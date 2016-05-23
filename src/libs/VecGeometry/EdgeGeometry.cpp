@@ -15,7 +15,7 @@ EdgeGeometry::EdgeGeometry()
 
 }
 
-const std::vector<EdgeGeometryGpuSample> & EdgeGeometry::samples()
+const std::vector<EdgeGeometryGLSample> & EdgeGeometry::samples()
 {
     return samples_;
 }
@@ -30,7 +30,7 @@ void EdgeGeometry::beginFit()
     clear();
 }
 
-void EdgeGeometry::addFitInputSample(const EdgeGeometryInputSample & inputSample)
+void EdgeGeometry::addFitInputSample(const VecCurveInputSample & inputSample)
 {
     addSample(inputSample);
 }
@@ -46,7 +46,7 @@ void EdgeGeometry::clear()
     tangents_.clear();
 }
 
-void EdgeGeometry::addSample(const EdgeGeometryInputSample & inputSample)
+void EdgeGeometry::addSample(const VecCurveInputSample & inputSample)
 {
     const glm::vec2 zero(0.0f, 0.0f);
     const int n = size();
@@ -57,7 +57,7 @@ void EdgeGeometry::addSample(const EdgeGeometryInputSample & inputSample)
 
     if (n == 0)
     {
-        EdgeGeometryGpuSample sample;
+        EdgeGeometryGLSample sample;
 
         sample.left.centerline = centerline;
         sample.left.normal     = zero;
@@ -86,7 +86,7 @@ void EdgeGeometry::addSample(const EdgeGeometryInputSample & inputSample)
             const glm::vec2 normal(-tangent.y, tangent.x);
 
             // Compute sample
-            EdgeGeometryGpuSample sample;
+            EdgeGeometryGLSample sample;
 
             sample.left.centerline = centerline;
             sample.left.normal     = normal;
@@ -133,7 +133,7 @@ void EdgeGeometry::addSample(const EdgeGeometryInputSample & inputSample)
             const glm::vec2 previousNormal(-previousTangent.y, previousTangent.x);
 
             // Update previous sample
-            EdgeGeometryGpuSample & previousSample = samples_[n-1];
+            EdgeGeometryGLSample & previousSample = samples_[n-1];
             const glm::vec2 & previousCenterline = previousSample.left.centerline;
 
             previousSample.left.normal   = previousNormal;

@@ -15,11 +15,13 @@ THIRD_DEPENDS = \
 HEADERS += \
     EdgeGeometry.h \
     CurveSample.h \
-    Curve.h
+    Curve.h \
+    VecCurveInputSample.h
 
 SOURCES += \
     EdgeGeometry.cpp \
     CurveSample.cpp \
-    Curve.cpp
+    Curve.cpp \
+    VecCurveInputSample.cpp
 
 include($$OUT_PWD/.config.pri)

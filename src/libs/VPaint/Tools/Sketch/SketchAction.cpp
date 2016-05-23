@@ -22,10 +22,10 @@ namespace Op = OpenVac::Operators;
 struct SketchActionBegin: public DataObjectMutator<VacData>
 {
     OpenVac::KeyEdgeHandle edge;
-    EdgeGeometryInputSample inputSample;
+    VecCurveInputSample inputSample;
 
     SketchActionBegin(
-            const EdgeGeometryInputSample & inputSample) :
+            const VecCurveInputSample & inputSample) :
         inputSample(inputSample)
     {
     }
@@ -50,11 +50,11 @@ struct SketchActionBegin: public DataObjectMutator<VacData>
 struct SketchActionContinue: public DataObjectMutator<VacData>
 {
     OpenVac::KeyEdgeHandle edge;
-    EdgeGeometryInputSample inputSample;
+    VecCurveInputSample inputSample;
 
     SketchActionContinue(
             const OpenVac::KeyEdgeHandle & edge,
-            const EdgeGeometryInputSample & inputSample) :
+            const VecCurveInputSample & inputSample) :
         edge(edge),
         inputSample(inputSample)
     {
@@ -99,7 +99,7 @@ bool SketchAction::acceptPMREvent(const View2DMouseEvent * event)
 
 namespace
 {
-EdgeGeometryInputSample getInputSample_(const View2DMouseEvent * event)
+VecCurveInputSample getInputSample_(const View2DMouseEvent * event)
 {
     const glm::vec2 position((float) event->scenePos().x(),
                             (float) event->scenePos().y());
@@ -108,7 +108,7 @@ EdgeGeometryInputSample getInputSample_(const View2DMouseEvent * event)
     const double time = 0.0;   // XXX TODO
     const double resolution = 1.0 / event->view()->camera()->scale();
 
-    return EdgeGeometryInputSample(position, width, time, resolution);
+    return VecCurveInputSample(position, width, time, resolution);
 }
 }
 

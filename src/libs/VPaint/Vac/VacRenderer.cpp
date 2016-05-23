@@ -179,8 +179,8 @@ void VacRenderer::createVAO_(OpenGLFunctions * f, OpenVac::CellId id)
     // Store attribute bindings in VAO
     auto & vbo = sharedResources_->vbos_.at(id);
     auto & vertexLoc = sharedResources_->vertexLoc_;
-    GLsizei  stride  = sizeof(EdgeGeometryGpuVertex);
-    GLvoid * pointer = reinterpret_cast<void*>(offsetof(EdgeGeometryGpuVertex, position));
+    GLsizei  stride  = sizeof(EdgeGeometryGLVertex);
+    GLvoid * pointer = reinterpret_cast<void*>(offsetof(EdgeGeometryGLVertex, position));
     vao.bind();
     vbo.bind();
     f->glEnableVertexAttribArray(vertexLoc);
