@@ -6,39 +6,39 @@
 // license terms and conditions in the LICENSE.MIT file found in the top-level
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
-#include "Curve.h"
+#include "VecCurve.h"
 
-Curve::Curve()
+VecCurve::VecCurve()
 {
 
 }
 
-void Curve::clear()
+void VecCurve::clear()
 {
     samples_.clear();
 }
 
-void Curve::addSample(const glm::vec2 & position, float width)
+void VecCurve::addSample(const glm::vec2 & position, float width)
 {
     // XXX TODO
 }
 
-int Curve::numSamples() const
+int VecCurve::numSamples() const
 {
     return samples_.size();
 }
 
-const CurveSample & Curve::sample(int i) const
+const VecCurveSample & VecCurve::sample(int i) const
 {
     return samples_.at(i);
 }
 
-CurveSample Curve::sample(double s) const
+VecCurveSample VecCurve::sample(double s) const
 {
     // XXX TODO
 }
 
-double Curve::length() const
+double VecCurve::length() const
 {
     if (size() == 0)
     {
@@ -50,27 +50,27 @@ double Curve::length() const
     }
 }
 
-size_t Curve::size() const
+size_t VecCurve::size() const
 {
     return samples_.size();
 }
 
-void Curve::push_back(const CurveSample & sample)
+void VecCurve::push_back(const VecCurveSample & sample)
 {
     samples_.push_back(sample);
 }
 
-void Curve::push_back(CurveSample && sample)
+void VecCurve::push_back(VecCurveSample && sample)
 {
     samples_.push_back(std::move(sample));
 }
 
-CurveSample & Curve::operator[](int i)
+VecCurveSample & VecCurve::operator[](int i)
 {
     return samples_[i];
 }
 
-std::vector<CurveSample> & Curve::samples()
+std::vector<VecCurveSample> & VecCurve::samples()
 {
     return samples_;
 }

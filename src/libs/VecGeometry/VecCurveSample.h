@@ -14,7 +14,7 @@
 /// \class CurveSample
 /// \brief A struct that stores the data of one curve sample.
 ///
-struct CurveSample
+struct VecCurveSample
 {
     /// Position of the centerline of the curve at this sample.
     ///

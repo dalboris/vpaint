@@ -9,7 +9,7 @@
 #ifndef CURVE_H
 #define CURVE_H
 
-#include "CurveSample.h"
+#include "VecCurveSample.h"
 
 #include <vector>
 
@@ -41,12 +41,12 @@
 ///         - CurveSample & operator[](int i)
 ///         - std::vector<CurveSample> & samples()
 ///
-class Curve
+class VecCurve
 {
 public:
     /// Constructs an empty curve.
     ///
-    Curve();
+    VecCurve();
 
     /// Clears the curve.
     ///
@@ -64,12 +64,12 @@ public:
 
     /// Returns the i-th sample.
     ///
-    const CurveSample & sample(int i) const;
+    const VecCurveSample & sample(int i) const;
 
     /// Returns the sample at the given arclength \p s, interpolating
     /// neighbouring samples.
     ///
-    CurveSample sample(double s) const;
+    VecCurveSample sample(double s) const;
 
     /// Returns the length of the curve.
     ///
@@ -82,22 +82,22 @@ public:
 
     /// Appends a sample to the vector of samples. Passed by const reference.
     ///
-    void push_back(const CurveSample & sample);
+    void push_back(const VecCurveSample & sample);
 
     /// Appends a sample to the vector of samples. Passed by rvalue.
     ///
-    void push_back(CurveSample && sample);
+    void push_back(VecCurveSample && sample);
 
     /// Returns the i-th sample as a modifiable reference.
     ///
-    CurveSample & operator[](int i);
+    VecCurveSample & operator[](int i);
 
     /// Returns the vector of samples as a modifiable reference.
     ///
-    std::vector<CurveSample> & samples();
+    std::vector<VecCurveSample> & samples();
 
 private:
-    std::vector<CurveSample> samples_;
+    std::vector<VecCurveSample> samples_;
 };
 
 #endif // CURVE_H

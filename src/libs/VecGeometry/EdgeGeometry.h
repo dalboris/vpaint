@@ -11,7 +11,7 @@
 
 #include "VecCurveInputSample.h"
 
-#include "CurveSample.h"
+#include "VecCurveSample.h"
 
 /// \class EdgeGeometryGpuVertex
 /// \brief A struct that stores the per-vertex data to be consumed by the
