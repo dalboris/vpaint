@@ -12,6 +12,8 @@
 #include "Views/View2DMouseAction.h"
 #include "OpenVac/Topology/KeyEdge.h"
 
+#include <QElapsedTimer>
+
 class Scene;
 
 class SketchAction: public View2DMouseAction
@@ -26,8 +28,12 @@ protected:
     void releaseEvent(const View2DMouseEvent * event);
 
 private:
+    VecCurveInputSample getInputSample_(const View2DMouseEvent * event);
+
+private:
     Scene * scene_;
     OpenVac::KeyEdgeHandle edge;
+    QElapsedTimer timer; // timer to measure elapsed time while sketching
 };
 
 #endif // SKETCHACTION_H

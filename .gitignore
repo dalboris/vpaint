@@ -7,3 +7,4 @@ build-*
 src/*.o
 src/moc_*
 src/VPaint
+configure/*.pyc

@@ -108,7 +108,7 @@ private:
     VecCurveSample toCurveSample_(const VecCurveInputSample & inputSample);
 
     // constants
-    int numFitSamples_ = 10;
+    int numFitSamples_;
 
     // Raw input with samples within resoltion removed
     bool addSampleIfNotTooCloseFromPrevious_(const VecCurveInputSample & inputSample);
@@ -117,7 +117,7 @@ private:
 
     // Uniform sampling of input
     void computeInputUniformSampling_();
-    float samplingRate_ = 0.001f; // 1ms for testing. Later, 100ms is better
+    float samplingRate_;
     std::vector<VecCurveSample> inputUniformSampling_;
 
 };

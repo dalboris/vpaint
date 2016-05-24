@@ -97,23 +97,21 @@ bool SketchAction::acceptPMREvent(const View2DMouseEvent * event)
            (event->button() == Qt::LeftButton);
 }
 
-namespace
-{
-VecCurveInputSample getInputSample_(const View2DMouseEvent * event)
+VecCurveInputSample SketchAction::getInputSample_(const View2DMouseEvent * event)
 {
     const glm::vec2 position((float) event->scenePos().x(),
                             (float) event->scenePos().y());
 
     const double width = 10.0; // XXX TODO
-    const double time = 0.0;   // XXX TODO
+    const double time = 0.001 * timer.elapsed();
     const double resolution = 1.0 / event->view()->camera()->scale();
 
     return VecCurveInputSample(position, width, time, resolution);
 }
-}
 
 void SketchAction::pressEvent(const View2DMouseEvent * event)
 {
+    timer.start();
     SketchActionBegin m(getInputSample_(event));
     scene_->activeVac()->accept(m);
     edge = m.edge;

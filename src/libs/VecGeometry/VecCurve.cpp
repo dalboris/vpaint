@@ -10,7 +10,9 @@
 
 #include <glm/geometric.hpp>
 
-VecCurve::VecCurve()
+VecCurve::VecCurve() :
+    numFitSamples_(10),
+    samplingRate_(0.01f) // 10ms
 {
 
 }
@@ -20,7 +22,7 @@ void VecCurve::clear()
     samples_.clear();
 
     inputSamples_.clear();
-
+    inputUniformSampling_.clear();
 
 }
 
@@ -29,7 +31,6 @@ bool VecCurve::addSampleIfNotTooCloseFromPrevious_(const VecCurveInputSample & i
     const int n = inputSamples_.size();
     lastSample_ = inputSample; // we keep it for endFit(): a previously discarded sample
                                // can be added at the very end. XXX TODO.
-
     if (n == 0)
     {
         inputSamples_.push_back(inputSample);
@@ -61,7 +62,7 @@ bool VecCurve::addSampleIfNotTooCloseFromPrevious_(const VecCurveInputSample & i
 
 void VecCurve::computeInputUniformSampling_()
 {
-    const int n = inputSamples_.size();
+    const unsigned int n = inputSamples_.size();
     inputUniformSampling_.clear();
 
     // Note: at this stage, attributes other than position and width are ignored
@@ -77,62 +78,169 @@ void VecCurve::computeInputUniformSampling_()
         sample.width = inputSamples_[0].width;
         inputUniformSampling_.push_back(sample);
     }
-    else // n > 2
+    else // n >= 2
     {
-        // index in inputSamples_ s.t.:
-        // inputSamples_[i].time <= t < inputSamples_[i+1].time
-        // 0 <= i <= n-2 (since both i and i+1 should be valid indexes)
+        // Add first sample. We do not include this is the
+        // loop below to guarantee this is added even when tMax <=0
+        //
+        VecCurveSample firstSample;
+        firstSample.position = inputSamples_[0].position;
+        firstSample.width = inputSamples_[0].width;
+        inputUniformSampling_.push_back(firstSample);
+
+        // Find time when to quit the loop.
+        //
+        // Why this isn't simply inputSamples_[n-1].time ?
+        //
+        // Remember: Consecutives samples are exactly separated by
+        // 'samplingRate_', but with one exeption: the last two samples.
+        // Indeed, we always add the last sample regardless of its
+        // 'time' attrubute. In order to prevent that the last two
+        // samples are too close in time, we stop the loop before,
+        // to ensure that the last two samples are always separated
+        // by at least 0.5*samplingRate_.
+        //
+        // Note:
+        // If:   inputSamples_[n-1].time <= 1.5 * samplingRate_
+        // Then:           samplingRate_ >= inputSamples_[n-1].time - 0.5 * samplingRate_
+        // Then:           samplingRate_ >= tMax
+        // Then: the loop is never executed.
+        //
+        // In this case, inputUniformSampling_ will be made of two samples only,
+        // and they may be closer than 0.5*samplingRate_.
+        //
+        float tMax = inputSamples_[n-1].time - 0.5*samplingRate_;
+
+        // Index of inputSamples_ such that:
+        //     inputSamples_[i].time <= t < inputSamples_[i+1].time
+        //
+        // This value is updated inside the loop. It is guaranteed that
+        // i <= 0 <= n-2 (i.e., both i and i+1 are always valid indexes).
+        //
         unsigned int i = 0;
 
-        // Loop over all time samples to compute
-        for (float t = 0.0f; t < inputSamples_[n-1].time; t += samplingRate_)
+        // Loop over all samples to compute (not including the first and last)
+        //
+        for (float t = samplingRate_; t < tMax; t += samplingRate_)
         {
-            // Compute i
+            // Update i
             while (i+2 < n && t >= inputSamples_[i+1].time)
             {
                 ++i;
             }
 
-            // Compute sample from catmull rom interpolation
-            VecCurveInputSample & p1 = inputSamples_[i];
-            VecCurveInputSample & p2 = inputSamples_[i+1];
-            VecCurveInputSample & p0 = inputSamples_[ i>0   ? i-1 : 0   ];
-            VecCurveInputSample & p3 = inputSamples_[ i<n-1 ? i+1 : n-1 ];
+            // Get samples from which to compute Cubic Hermite
+            VecCurveInputSample & s0 = inputSamples_[i>0 ? i-1 : 0];
+            VecCurveInputSample & s1 = inputSamples_[i];
+            VecCurveInputSample & s2 = inputSamples_[i+1];
+            VecCurveInputSample & s3 = inputSamples_[i<n-1 ? i+1 : n-1];
 
-            // Delta of times. Note: we know they are > 0
-            const float dt1 = p2.time - p0.time;
-            const float dt2 = p3.time - p1.time;
+            // Get times
+            const float & t0 = s0.time;
+            const float & t1 = s1.time;
+            const float & t2 = s2.time;
+            const float & t3 = s3.time;
 
-            // Desired derivatives of position
-            const glm::vec2 dp1 = (p2.position - p0.position) / dt1;
-            const glm::vec2 dp2 = (p3.position - p1.position) / dt2;
+            // Get positions
+            const glm::vec2 & p0 = s0.position;
+            const glm::vec2 & p1 = s1.position;
+            const glm::vec2 & p2 = s2.position;
+            const glm::vec2 & p3 = s3.position;
 
-            // Desired derivatives of width
-            const float dw1 = (p2.width - p0.width) / dt1;
-            const float dw2 = (p3.width - p1.width) / dt2;
+            // Get widths
+            const float & w0 = s0.width;
+            const float & w1 = s1.width;
+            const float & w2 = s2.width;
+            const float & w3 = s3.width;
 
+            // Compute delta of times. Note: we know they are > 0 because
+            // dt > samplingRate_ for each consecutive samples
+            const float dt  = t2 - t1;
+            const float dt1 = t2 - t0;
+            const float dt2 = t3 - t1;
 
-            // Compute sample using cubic interpolation
-            // XXX TODO
+            // Catmull-Rom Heuristic for desired derivatives of position
+            const glm::vec2 dp1 = (p2 - p0) / dt1;
+            const glm::vec2 dp2 = (p3 - p1) / dt2;
+
+            // Catmull-Rom Heuristic for desired derivatives of widths
+            const float dw1 = (w2 - w0) / dt1;
+            const float dw2 = (w3 - w1) / dt2;
+
+            // Cubic Hermite coefficients, to interpolate the desired
+            // data points with the desired derivatives at t.
+            //
+            // Note that the coefficients dc1 and dc2 are pre-multiplied
+            // by dt to scale the derivatives. This accounts for
+            // the fact that t is in [t1, t2], while u is in [0, 1]
+            const float u = (t - t1) / dt;
+            const float u2 = u*u;
+            const float u3 = u2*u;
+            const float c1 = 2*u3 - 3*u2 + 1;
+            const float c2 = - 2*u3 + 3*u2;
+            const float dc1 = dt * (u3 - 2*u2 + u);
+            const float dc2 = dt * (u3 - u2);
+
+            // Compute interpolated sample
+            VecCurveSample sample;
+            sample.position = c1*p1 + c2*p2 + dc1*dp1 + dc2*dp2;
+            sample.width    = c1*w1 + c2*w2 + dc1*dw1 + dc2*dw2;
+            inputUniformSampling_.push_back(sample);
         }
+
+        // Add last sample
+        VecCurveSample lastSample;
+        lastSample.position = inputSamples_[n-1].position;
+        lastSample.width = inputSamples_[n-1].width;
+        inputUniformSampling_.push_back(lastSample);
     }
 }
 
 void VecCurve::addSample(const VecCurveInputSample & inputSample)
 {
-    /*
-    // Useful constants
-
+    // Insert sample
     bool inserted = addSampleIfNotTooCloseFromPrevious_(inputSample);
-    if (inserted)
+
+    // Compute uniform sampling
+    if (!inserted)
+        inputSamples_.push_back(lastSample_);
+
+    computeInputUniformSampling_();
+
+    if (!inserted)
+        inputSamples_.pop_back();
+
+    // XXX TEMP
+    samples_ = inputUniformSampling_;
+    const int n = samples_.size();
+    // compute tangents and normals
+    for (int i=0; i<n; ++i)
     {
-        computeInputUniformSampling_();
+        // Get samples before, at, and after i
+        VecCurveSample & s0 = samples_[i>0 ? i-1 : 0];
+        VecCurveSample & s1 = samples_[i];
+        VecCurveSample & s2 = samples_[i<n-1 ? i+1 : n-1];
+
+        // Compute difference between the sample before and the sample after
+        const glm::vec2 dp = s2.position - s0.position;
+        const float ds = glm::length(dp);
+
+        // Compute tangent
+        if (ds > 1e-6)
+            s1.tangent = dp / ds;
+        else
+            s1.tangent = glm::vec2(1.0f, 0.0f);
+
+        // Compute normal
+        s1.normal.x = - s1.tangent.y;
+        s1.normal.y = + s1.tangent.x;
     }
 
     // End function here (not to execute previous code)
     // XXX this is temporary
     return;
-    */
+
+
 
     // ----------- old code below --------------
 
@@ -140,7 +248,7 @@ void VecCurve::addSample(const VecCurveInputSample & inputSample)
     const glm::vec2 zero(0.0f, 0.0f);
     const glm::vec2 ux(1.0f, 0.0f);
     const glm::vec2 uy(0.0f, 1.0f);
-    const int n = samples_.size();
+    //const int n = samples_.size();
     const float eps = 0.1f * inputSample.resolution;
 
     // Switch depending on current number of samples
