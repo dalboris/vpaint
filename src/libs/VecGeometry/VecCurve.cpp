@@ -18,15 +18,129 @@ VecCurve::VecCurve()
 void VecCurve::clear()
 {
     samples_.clear();
+
+    inputSamples_.clear();
+
+
+}
+
+bool VecCurve::addSampleIfNotTooCloseFromPrevious_(const VecCurveInputSample & inputSample)
+{
+    const int n = inputSamples_.size();
+    lastSample_ = inputSample; // we keep it for endFit(): a previously discarded sample
+                               // can be added at the very end. XXX TODO.
+
+    if (n == 0)
+    {
+        inputSamples_.push_back(inputSample);
+        return true;
+    }
+    else
+    {
+        // Get previous sample
+        const VecCurveInputSample & prevInputSample = inputSamples_[n-1];
+
+        // Get distance between samples
+        const float distance =  glm::length(inputSample.position - prevInputSample.position);
+
+        // Get distance in time between samples
+        const float dt =  inputSample.time - prevInputSample.time;
+
+        // append if not too close
+        if (distance > 3*inputSample.resolution && dt > samplingRate_)
+        {
+            inputSamples_.push_back(inputSample);
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+}
+
+void VecCurve::computeInputUniformSampling_()
+{
+    const int n = inputSamples_.size();
+    inputUniformSampling_.clear();
+
+    // Note: at this stage, attributes other than position and width are ignored
+
+    if (n == 0)
+    {
+        // Nothing to do
+    }
+    else if (n == 1)
+    {
+        VecCurveSample sample;
+        sample.position = inputSamples_[0].position;
+        sample.width = inputSamples_[0].width;
+        inputUniformSampling_.push_back(sample);
+    }
+    else // n > 2
+    {
+        // index in inputSamples_ s.t.:
+        // inputSamples_[i].time <= t < inputSamples_[i+1].time
+        // 0 <= i <= n-2 (since both i and i+1 should be valid indexes)
+        unsigned int i = 0;
+
+        // Loop over all time samples to compute
+        for (float t = 0.0f; t < inputSamples_[n-1].time; t += samplingRate_)
+        {
+            // Compute i
+            while (i+2 < n && t >= inputSamples_[i+1].time)
+            {
+                ++i;
+            }
+
+            // Compute sample from catmull rom interpolation
+            VecCurveInputSample & p1 = inputSamples_[i];
+            VecCurveInputSample & p2 = inputSamples_[i+1];
+            VecCurveInputSample & p0 = inputSamples_[ i>0   ? i-1 : 0   ];
+            VecCurveInputSample & p3 = inputSamples_[ i<n-1 ? i+1 : n-1 ];
+
+            // Delta of times. Note: we know they are > 0
+            const float dt1 = p2.time - p0.time;
+            const float dt2 = p3.time - p1.time;
+
+            // Desired derivatives of position
+            const glm::vec2 dp1 = (p2.position - p0.position) / dt1;
+            const glm::vec2 dp2 = (p3.position - p1.position) / dt2;
+
+            // Desired derivatives of width
+            const float dw1 = (p2.width - p0.width) / dt1;
+            const float dw2 = (p3.width - p1.width) / dt2;
+
+
+            // Compute sample using cubic interpolation
+            // XXX TODO
+        }
+    }
 }
 
 void VecCurve::addSample(const VecCurveInputSample & inputSample)
 {
+    /*
+    // Useful constants
+
+    bool inserted = addSampleIfNotTooCloseFromPrevious_(inputSample);
+    if (inserted)
+    {
+        computeInputUniformSampling_();
+    }
+
+    // End function here (not to execute previous code)
+    // XXX this is temporary
+    return;
+    */
+
+    // ----------- old code below --------------
+
     // Useful constants
     const glm::vec2 zero(0.0f, 0.0f);
     const glm::vec2 ux(1.0f, 0.0f);
     const glm::vec2 uy(0.0f, 1.0f);
-    const int n = size();
+    const int n = samples_.size();
     const float eps = 0.1f * inputSample.resolution;
 
     // Switch depending on current number of samples

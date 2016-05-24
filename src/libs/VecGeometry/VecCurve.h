@@ -102,6 +102,24 @@ public:
 
 private:
     std::vector<VecCurveSample> samples_;
+
+    // ---- Smoothing algorithm data ----
+
+    VecCurveSample toCurveSample_(const VecCurveInputSample & inputSample);
+
+    // constants
+    int numFitSamples_ = 10;
+
+    // Raw input with samples within resoltion removed
+    bool addSampleIfNotTooCloseFromPrevious_(const VecCurveInputSample & inputSample);
+    std::vector<VecCurveInputSample> inputSamples_;
+    VecCurveInputSample lastSample_;
+
+    // Uniform sampling of input
+    void computeInputUniformSampling_();
+    float samplingRate_ = 0.001f; // 1ms for testing. Later, 100ms is better
+    std::vector<VecCurveSample> inputUniformSampling_;
+
 };
 
 #endif // CURVE_H

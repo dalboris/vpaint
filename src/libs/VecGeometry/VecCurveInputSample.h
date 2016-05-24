@@ -54,11 +54,22 @@ struct VecCurveInputSample
 
     /// Constructs a mouse sample.
     ///
+    VecCurveInputSample() :
+
+        position(glm::vec2(0.0f, 0.0f)),
+        width(0.0f),
+        time(0.0f),
+        resolution(0.0f)
+
+    {}
+
+    /// Constructs a mouse sample.
+    ///
     VecCurveInputSample(
             const glm::vec2 & position,
-            double width,
-            double time,
-            double resolution) :
+            float width,
+            float time,
+            float resolution) :
 
         position(position),
         width(width),
