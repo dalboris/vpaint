@@ -37,6 +37,8 @@ public:
     QPointF viewPos() const;        ///< Returns the current mouse position, in view coordinates.
     QPointF viewPosAtPress() const; ///< Returns the mouse position at mouse press, in view coordinates.
 
+    double timeSincePress() const; ///< Returns the time, in seconds, that has passed since the mouse press.
+
     bool isTablet() const;                ///< Returns whether this event was generated from a tablet event.
     double tabletPressure() const;        ///< If tablet event, returns the current tablet pressure.
     double tabletPressureAtPress() const; ///< If tablet event, returns the tablet pressure at press.
@@ -50,9 +52,11 @@ public:
     void setViewPos(const QPointF & viewPos);        ///< Sets current mouse position, in view coordinates.
     void setViewPosAtPress(const QPointF & viewPos); ///< Sets mouse position at mouse press, in view coordinates.
 
-    void setTablet(bool isTablet);                      ///< Set whether this event was generated from a tablet event.
-    void setTabletPressure(bool tabletPressure);        ///< If tablet event, sets the current tablet pressure.
-    void setTabletPressureAtPress(bool tabletPressure); ///< If tablet event, sets the tablet pressure at press.
+    void setTimeSincePress(double time); ///< Sets the time, in seconds, that has passed since the mouse press.
+
+    void setTablet(bool isTablet);                      ///< Sets whether this event was generated from a tablet event.
+    void setTabletPressure(double tabletPressure);        ///< If tablet event, sets the current tablet pressure.
+    void setTabletPressureAtPress(double tabletPressure); ///< If tablet event, sets the tablet pressure at press.
 
 protected:
     virtual void computeSceneAttributes() {}        ///< To be implemented in subclasses, invoked by setViewPos().
@@ -66,6 +70,8 @@ private:
 
     QPointF viewPos_ = QPointF(0.0, 0.0);
     QPointF viewPosAtPress_ = QPointF(0.0, 0.0);
+
+    double timeSincePress_ = 0.0;
 
     bool isTablet_ = false;
     double tabletPressure_ = 0.0;

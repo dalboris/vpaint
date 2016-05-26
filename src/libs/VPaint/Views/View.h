@@ -14,6 +14,8 @@
 #include "Views/ViewMouseEvent.h"
 #include "Views/ViewMouseAction.h"
 
+#include <QElapsedTimer>
+
 #include <vector>
 
 class Scene;
@@ -93,6 +95,7 @@ private:
     ViewMouseAction * mousePMRAction_ = nullptr;
 
     // Generated mouse event
+    QElapsedTimer mouseEventTimer_;
     UniquePtr<ViewMouseEvent> mouseEvent_;
 };
 

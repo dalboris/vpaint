@@ -40,6 +40,9 @@ void View::mousePressEvent(QMouseEvent *event)
     if(mouseEvent_)
         return;
 
+    // Start timer to compute timeSincePress
+    mouseEventTimer_.start();
+
     // Generate mouse event
     mouseEvent_ = UniquePtr<ViewMouseEvent>(makeMouseEvent());
     mouseEvent_->setView(this);
@@ -47,6 +50,7 @@ void View::mousePressEvent(QMouseEvent *event)
     mouseEvent_->setModifiers(event->modifiers());
     mouseEvent_->setViewPosAtPress(event->pos());
     mouseEvent_->setViewPos(event->pos());
+    mouseEvent_->setTimeSincePress(0.0);
 
     // Select Click action, if any
     mouseClickAction_ = nullptr;
@@ -105,6 +109,9 @@ void View::mouseMoveEvent(QMouseEvent *event)
 
     if(mouseEvent_)
     {
+        // Set time since press
+        mouseEvent_->setTimeSincePress(0.001 * (double) mouseEventTimer_.elapsed());
+
         // Set current position
         mouseEvent_->setViewPos(event->pos());
 
@@ -156,6 +163,9 @@ void View::mouseReleaseEvent(QMouseEvent *event)
 {
     if(mouseEvent_ && mouseEvent_->button() == event->button())
     {
+        // Set time since press
+        mouseEvent_->setTimeSincePress(0.001 * (double) mouseEventTimer_.elapsed());
+
         // Set current position
         mouseEvent_->setViewPos(event->pos());
 

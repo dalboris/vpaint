@@ -33,6 +33,11 @@ QPointF ViewMouseEvent::viewPosAtPress() const
     return viewPosAtPress_;
 }
 
+double ViewMouseEvent::timeSincePress() const
+{
+    return timeSincePress_;
+}
+
 bool ViewMouseEvent::isTablet() const
 {
     return isTablet_;
@@ -75,17 +80,22 @@ void ViewMouseEvent::setViewPosAtPress(const QPointF & viewPos)
     computeSceneAttributesAtPress();
 }
 
+void ViewMouseEvent::setTimeSincePress(double time)
+{
+    timeSincePress_ = time;
+}
+
 void ViewMouseEvent::setTablet(bool isTablet)
 {
     isTablet_ = isTablet;
 }
 
-void ViewMouseEvent::setTabletPressure(bool tabletPressure)
+void ViewMouseEvent::setTabletPressure(double tabletPressure)
 {
     tabletPressure_ = tabletPressure;
 }
 
-void ViewMouseEvent::setTabletPressureAtPress(bool tabletPressure)
+void ViewMouseEvent::setTabletPressureAtPress(double tabletPressure)
 {
     tabletPressureAtPress_ = tabletPressure;
 }

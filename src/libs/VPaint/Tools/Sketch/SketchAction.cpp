@@ -103,7 +103,7 @@ VecCurveInputSample SketchAction::getInputSample_(const View2DMouseEvent * event
                             (float) event->scenePos().y());
 
     const double width = 10.0; // XXX TODO
-    const double time = 0.001 * timer.elapsed();
+    const double time = event->timeSincePress();
     const double resolution = 1.0 / event->view()->camera()->scale();
 
     return VecCurveInputSample(position, width, time, resolution);
@@ -111,7 +111,6 @@ VecCurveInputSample SketchAction::getInputSample_(const View2DMouseEvent * event
 
 void SketchAction::pressEvent(const View2DMouseEvent * event)
 {
-    timer.start();
     SketchActionBegin m(getInputSample_(event));
     scene_->activeVac()->accept(m);
     edge = m.edge;
