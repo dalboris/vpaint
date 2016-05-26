@@ -102,7 +102,7 @@ VecCurveInputSample SketchAction::getInputSample_(const View2DMouseEvent * event
     const glm::vec2 position((float) event->scenePos().x(),
                             (float) event->scenePos().y());
 
-    const double width = 10.0; // XXX TODO
+    const double width = 10.0 * (event->isTablet() ? event->tabletPressure() : 1.0);
     const double time = event->timeSincePress();
     const double resolution = 1.0 / event->view()->camera()->scale();
 

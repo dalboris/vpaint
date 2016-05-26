@@ -72,6 +72,7 @@ protected:
     virtual ViewMouseEvent * makeMouseEvent() = 0;
 
 protected slots:
+    void tabletEvent(QTabletEvent * event);
     void mousePressEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);
@@ -95,6 +96,8 @@ private:
     ViewMouseAction * mousePMRAction_ = nullptr;
 
     // Generated mouse event
+    bool isTablet_ = false;
+    double tabletPressure_ = 0.0;
     QElapsedTimer mouseEventTimer_;
     UniquePtr<ViewMouseEvent> mouseEvent_;
 };

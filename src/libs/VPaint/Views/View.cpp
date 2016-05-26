@@ -32,6 +32,31 @@ void View::addMouseAction(ViewMouseAction * action)
     mouseActions_.push_back(std::move(ptr));
 }
 
+void View::tabletEvent(QTabletEvent * event)
+{
+    // Set pressure
+    tabletPressure_ = event->pressure();
+
+    // Delegate
+    if(event->type() == QEvent::TabletPress)
+    {
+        isTablet_ = true;
+    }
+    else if(event->type() == QEvent::TabletMove)
+    {
+    }
+    else if(event->type() == QEvent::TabletRelease)
+    {
+        isTablet_ = false;
+    }
+    else
+    {
+    }
+
+    // Ignore event, so Qt generates a mouse event.
+    event->ignore();
+}
+
 void View::mousePressEvent(QMouseEvent *event)
 {
     // emit mousePressed(this); XXX (to connect to "MultiView::setActive")
@@ -51,6 +76,9 @@ void View::mousePressEvent(QMouseEvent *event)
     mouseEvent_->setViewPosAtPress(event->pos());
     mouseEvent_->setViewPos(event->pos());
     mouseEvent_->setTimeSincePress(0.0);
+    mouseEvent_->setTablet(isTablet_);
+    mouseEvent_->setTabletPressure(tabletPressure_);
+    mouseEvent_->setTabletPressureAtPress(tabletPressure_);
 
     // Select Click action, if any
     mouseClickAction_ = nullptr;
@@ -115,6 +143,9 @@ void View::mouseMoveEvent(QMouseEvent *event)
         // Set current position
         mouseEvent_->setViewPos(event->pos());
 
+        // Set tablet pressure
+        mouseEvent_->setTabletPressure(tabletPressure_);
+
         // Do nothing if Click only
         if (mouseClickAction_ && !mousePMRAction_)
             return;
@@ -168,6 +199,9 @@ void View::mouseReleaseEvent(QMouseEvent *event)
 
         // Set current position
         mouseEvent_->setViewPos(event->pos());
+
+        // Set tablet pressure
+        mouseEvent_->setTabletPressure(tabletPressure_);
 
         // Perform the corresponding actions
         if(mouseClickAction_)
