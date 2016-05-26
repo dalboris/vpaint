@@ -16,12 +16,14 @@ HEADERS += \
     EdgeGeometry.h \
     VecCurveInputSample.h \
     VecCurve.h \
-    VecCurveSample.h
+    VecCurveSample.h \
+    VecFitter.h
 
 SOURCES += \
     EdgeGeometry.cpp \
     VecCurveInputSample.cpp \
     VecCurve.cpp \
-    VecCurveSample.cpp
+    VecCurveSample.cpp \
+    VecFitter.cpp
 
 include($$OUT_PWD/.config.pri)

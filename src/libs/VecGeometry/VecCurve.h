@@ -11,6 +11,7 @@
 
 #include "VecCurveSample.h"
 #include "VecCurveInputSample.h"
+#include "VecFitter.h"
 
 #include <vector>
 
@@ -101,14 +102,9 @@ public:
     std::vector<VecCurveSample> & samples();
 
 private:
-    std::vector<VecCurveSample> samples_;
-
     // ---- Smoothing algorithm data ----
 
     VecCurveSample toCurveSample_(const VecCurveInputSample & inputSample);
-
-    // constants
-    int numFitSamples_;
 
     // Raw input with samples within resoltion removed
     bool addSampleIfNotTooCloseFromPrevious_(const VecCurveInputSample & inputSample);
@@ -118,7 +114,26 @@ private:
     // Uniform sampling of input
     void computeInputUniformSampling_();
     float samplingRate_;
-    std::vector<VecCurveSample> inputUniformSampling_;
+    std::vector<glm::vec2> inputUniformSamplingPosition_;
+    std::vector<float> inputUniformSamplingWidth_;
+
+    // non-normalized bell-shaped function, centered at 0.5:
+    //   at u=0   : w=0 and w'=0
+    //   at u=0.5 : w>0 and w'=0
+    //   at u=1   : w=0 and w'=0
+    template <typename T>
+    inline T w_(T u) { return u*u*(1-u)*(1-u); }
+
+    // Smoothed uniform sampling
+    void smoothUniformSampling_();
+    size_t numFitSamples_;
+    std::vector<VecFitter> fitters_;
+    std::vector<glm::vec2> smoothedUniformSamplingPosition_;
+    std::vector<float> smoothedUniformSamplingWidth_;
+
+    // Final samples to render
+    void computeFinalSamples_();
+    std::vector<VecCurveSample> samples_;
 
 };
 

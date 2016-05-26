@@ -7,12 +7,13 @@
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
 #include "VecCurve.h"
+#include "VecFitter.h"
 
 #include <glm/geometric.hpp>
 
 VecCurve::VecCurve() :
-    numFitSamples_(10),
-    samplingRate_(0.01f) // 10ms
+    samplingRate_(0.005f), // 5ms
+    numFitSamples_(20)
 {
 
 }
@@ -22,8 +23,13 @@ void VecCurve::clear()
     samples_.clear();
 
     inputSamples_.clear();
-    inputUniformSampling_.clear();
 
+    inputUniformSamplingPosition_.clear();
+    inputUniformSamplingWidth_.clear();
+
+    fitters_.clear();
+    smoothedUniformSamplingPosition_.clear();
+    smoothedUniformSamplingWidth_.clear();
 }
 
 bool VecCurve::addSampleIfNotTooCloseFromPrevious_(const VecCurveInputSample & inputSample)
@@ -48,7 +54,7 @@ bool VecCurve::addSampleIfNotTooCloseFromPrevious_(const VecCurveInputSample & i
         const float dt =  inputSample.time - prevInputSample.time;
 
         // append if not too close
-        if (distance > 3*inputSample.resolution && dt > samplingRate_)
+        if (distance > 5*inputSample.resolution && dt > samplingRate_)
         {
             inputSamples_.push_back(inputSample);
             return true;
@@ -63,7 +69,8 @@ bool VecCurve::addSampleIfNotTooCloseFromPrevious_(const VecCurveInputSample & i
 void VecCurve::computeInputUniformSampling_()
 {
     const unsigned int n = inputSamples_.size();
-    inputUniformSampling_.clear();
+    inputUniformSamplingPosition_.clear();
+    inputUniformSamplingWidth_.clear();
 
     // Note: at this stage, attributes other than position and width are ignored
 
@@ -73,20 +80,16 @@ void VecCurve::computeInputUniformSampling_()
     }
     else if (n == 1)
     {
-        VecCurveSample sample;
-        sample.position = inputSamples_[0].position;
-        sample.width = inputSamples_[0].width;
-        inputUniformSampling_.push_back(sample);
+        inputUniformSamplingPosition_.push_back(inputSamples_[0].position);
+        inputUniformSamplingWidth_.push_back(inputSamples_[0].width);
     }
     else // n >= 2
     {
         // Add first sample. We do not include this is the
         // loop below to guarantee this is added even when tMax <=0
         //
-        VecCurveSample firstSample;
-        firstSample.position = inputSamples_[0].position;
-        firstSample.width = inputSamples_[0].width;
-        inputUniformSampling_.push_back(firstSample);
+        inputUniformSamplingPosition_.push_back(inputSamples_[0].position);
+        inputUniformSamplingWidth_.push_back(inputSamples_[0].width);
 
         // Find time when to quit the loop.
         //
@@ -182,39 +185,119 @@ void VecCurve::computeInputUniformSampling_()
             const float dc2 = dt * (u3 - u2);
 
             // Compute interpolated sample
-            VecCurveSample sample;
-            sample.position = c1*p1 + c2*p2 + dc1*dp1 + dc2*dp2;
-            sample.width    = c1*w1 + c2*w2 + dc1*dw1 + dc2*dw2;
-            inputUniformSampling_.push_back(sample);
+            const glm::vec2 position = c1*p1 + c2*p2 + dc1*dp1 + dc2*dp2;
+            const float     width    = c1*w1 + c2*w2 + dc1*dw1 + dc2*dw2;
+
+            // Insert sample
+            inputUniformSamplingPosition_.push_back(position);
+            inputUniformSamplingWidth_.push_back(width);
         }
 
         // Add last sample
-        VecCurveSample lastSample;
-        lastSample.position = inputSamples_[n-1].position;
-        lastSample.width = inputSamples_[n-1].width;
-        inputUniformSampling_.push_back(lastSample);
+        inputUniformSamplingPosition_.push_back(inputSamples_[n-1].position);
+        inputUniformSamplingWidth_.push_back(inputSamples_[n-1].width);
     }
 }
 
-void VecCurve::addSample(const VecCurveInputSample & inputSample)
+void VecCurve::smoothUniformSampling_()
 {
-    // Insert sample
-    bool inserted = addSampleIfNotTooCloseFromPrevious_(inputSample);
+    const size_t n = inputUniformSamplingPosition_.size();
+    const glm::vec2 zero(0.0f, 0.0f);
 
-    // Compute uniform sampling
-    if (!inserted)
-        inputSamples_.push_back(lastSample_);
+    // Smooth positions via fitting
+    smoothedUniformSamplingPosition_.resize(n);
 
-    computeInputUniformSampling_();
+    if (n <= numFitSamples_)
+    {
+        // Only use one fitter
+        VecFitter fitter(inputUniformSamplingPosition_);
 
-    if (!inserted)
-        inputSamples_.pop_back();
+        // Sample along the fitter
+        for (unsigned int i=0; i<n; ++i)
+        {
+            float u = (float) i / (float) (n-1);
+            smoothedUniformSamplingPosition_[i] = fitter(u);
+        }
+    }
+    else // n >= numFitSamples_ + 1
+    {
+        // Only two ot more fitters
+        const size_t numFittersBefore = fitters_.size();
+        const size_t numFitters = n - numFitSamples_ + 1;
+        fitters_.resize(numFitters);
 
-    // XXX TEMP
-    samples_ = inputUniformSampling_;
-    const int n = samples_.size();
-    // compute tangents and normals
-    for (int i=0; i<n; ++i)
+        // Index of the last existing fitter (or zero if no fitter yet)
+        const unsigned int iLastFitter = numFittersBefore > 0 ? numFittersBefore-1 : 0;
+
+        // Re-compute last existing fitter, and compute all new fitters
+        for (unsigned int i=iLastFitter; i<numFitters; ++i)
+        {
+            std::vector<glm::vec2> samples(numFitSamples_);
+            for (unsigned int j=0; j<numFitSamples_; ++j)
+            {
+                samples[j] = inputUniformSamplingPosition_[i+j];
+            }
+            fitters_[i] = VecFitter(samples);
+        }
+
+        // Precompute u. Note: we could precompute u2 and u3 too, but
+        // this only save one multiplication. Two memory accesses are
+        // likely slower than one multiplication
+        std::vector<float> u(numFitSamples_);
+        for (unsigned int j=0; j<numFitSamples_; ++j)
+        {
+            u[j] = (float) j / (float) (numFitSamples_-1);
+        }
+
+        // First sample
+        smoothedUniformSamplingPosition_[0] = inputUniformSamplingPosition_[0];
+
+        // Re-compute existing but affected samples, and compute all new samples
+        for (unsigned int i=iLastFitter+1; i<n-1; ++i)
+        {
+            glm::vec2 pos = zero;
+            float sumW = 0.0f;
+            for (unsigned int j=0; j<numFitSamples_; ++j)
+            {
+                const int k = (int)i - (int)j;
+                if (0 <= k && k < (int)numFitters)
+                {
+                    const VecFitter & fitter = fitters_[k];
+
+                    const glm::vec2 posj = fitter(u[j]);
+                    const float     wj   = w_(u[j]);
+
+                    pos  += wj * posj;
+                    sumW += wj;
+                }
+            }
+            smoothedUniformSamplingPosition_[i] = (1.0f / sumW) * pos;
+        }
+
+        // Last sample
+        smoothedUniformSamplingPosition_[n-1] = inputUniformSamplingPosition_[n-1];
+    }
+
+    // Do not smooth width for now
+    smoothedUniformSamplingWidth_ = inputUniformSamplingWidth_;
+}
+
+void VecCurve::computeFinalSamples_()
+{
+    const size_t n = smoothedUniformSamplingPosition_.size();
+    samples_.resize(n);
+
+    // Set position and width
+    for (unsigned int i=0; i<n; ++i)
+    {
+        VecCurveSample & sample = samples_[i];
+
+        sample.position = smoothedUniformSamplingPosition_[i];
+        sample.width    = smoothedUniformSamplingWidth_[i];
+    }
+
+    // Compute tangents and normals
+    for (unsigned int i=0; i<n; ++i)
     {
         // Get samples before, at, and after i
         VecCurveSample & s0 = samples_[i>0 ? i-1 : 0];
@@ -235,102 +318,26 @@ void VecCurve::addSample(const VecCurveInputSample & inputSample)
         s1.normal.x = - s1.tangent.y;
         s1.normal.y = + s1.tangent.x;
     }
+}
 
-    // End function here (not to execute previous code)
-    // XXX this is temporary
-    return;
+void VecCurve::addSample(const VecCurveInputSample & inputSample)
+{
+    // Insert sample (or not) in inputSamples_
+    bool inserted = addSampleIfNotTooCloseFromPrevious_(inputSample);
 
+    // Add last sample anyway for now, even though it may be eventually
+    // discarded if the user keeps drawing
+    if (!inserted)
+        inputSamples_.push_back(inputSample);
 
+    // Process the curve
+    computeInputUniformSampling_();
+    smoothUniformSampling_();
+    computeFinalSamples_();
 
-    // ----------- old code below --------------
-
-    // Useful constants
-    const glm::vec2 zero(0.0f, 0.0f);
-    const glm::vec2 ux(1.0f, 0.0f);
-    const glm::vec2 uy(0.0f, 1.0f);
-    //const int n = samples_.size();
-    const float eps = 0.1f * inputSample.resolution;
-
-    // Switch depending on current number of samples
-    if (n == 0)
-    {
-        VecCurveSample sample;
-        sample.position = inputSample.position;
-        sample.width = inputSample.width;
-        sample.tangent = ux;
-        sample.normal = uy;
-        sample.arclength = 0.0f;
-        sample.angle = 0.0f;
-        push_back(sample);
-    }
-    else
-    {
-        // Get previous sample
-        VecCurveSample & prevSample = samples_[n-1];
-
-        // Compute difference with previous sample
-        const glm::vec2 dp = inputSample.position - prevSample.position;
-        const float ds = glm::length(dp);
-
-        // Discard sample if too close
-        if (ds > eps)
-        {
-            // Sample to compute
-            VecCurveSample sample;
-
-            // Set position
-            sample.position = inputSample.position;
-
-            // Set width
-            sample.width = inputSample.width;
-
-            // Compute tangent
-            sample.tangent = dp / ds;
-
-            // Compute normal
-            sample.normal.x = - sample.tangent.y;
-            sample.normal.y = + sample.tangent.x;
-
-            // Compute arclength
-            sample.arclength = prevSample.arclength + ds;
-
-            // Compute angle XXX TODO
-            sample.angle = 0.0f;
-
-            // Update tangent and normal of previous sample
-            if (n == 1)
-            {
-                prevSample.tangent = sample.tangent;
-                prevSample.normal  = sample.normal;
-            }
-            else // size >= 2
-            {
-                // Get sample before previous sample
-                VecCurveSample & prevSample2 = samples_[n-2];
-
-                // Compute difference between this sample and prevSample2
-                const glm::vec2 dp2 = inputSample.position - prevSample2.position;
-                const float ds2 = glm::length(dp2);
-
-                // Update tangent of previous sample
-                if (ds2 > eps)
-                {
-                    prevSample.tangent = dp2 / ds2;
-                }
-                else
-                {
-                    prevSample.tangent = ux;
-                }
-
-                // Update normal of previous sample
-                prevSample.normal.x = - prevSample.tangent.y;
-                prevSample.normal.y = + prevSample.tangent.x;
-            }
-
-            // Insert sample
-            push_back(sample);
-        }
-    }
+    // Remove last sample if eventually discarded
+    if (!inserted)
+        inputSamples_.pop_back();
 }
 
 size_t VecCurve::numSamples() const
