@@ -135,7 +135,8 @@ public:
     void computeNoiseFitters_();
     void averageNoiseFitters_();
     std::vector<VecFitter> noiseFitters_;
-    std::vector<glm::vec2> averagedNoiseFitters_;
+    std::vector<glm::vec2> regularizedPositions_;
+    std::vector<double> regularizedWidth_;
     // For comparison
     void computeConvolution_();
     std::vector<glm::vec2> convolutedSamples_;

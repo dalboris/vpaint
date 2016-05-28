@@ -99,123 +99,6 @@ void VacRenderer::update(OpenGLFunctions * f)
 
 void VacRenderer::render2D(OpenGLFunctions * f, const QMatrix4x4 & projMatrix, const QMatrix4x4 & viewMatrix)
 {
-    OpenGLDebug glDebug(f, projMatrix, viewMatrix);
-
-    for (OpenVac::CellHandle & h: vac()->data().cells())
-    {
-        OpenVac::KeyEdgeHandle keyEdge = h;
-        if (keyEdge)
-        {
-            const VecCurve & curve = keyEdge->geometry().curve();
-
-            std::vector<glm::vec2> inputSamples;
-            for (const VecCurveInputSample & s: curve.inputSamples_)
-            {
-                inputSamples.push_back(s.position);
-            }
-
-
-            glDebug.setColor(QColor(Qt::red));
-            f->glLineWidth(5.0f);
-            for (const VecFitter & fitter : curve.noiseFitters_)
-            {
-                const size_t numDrawSamples = 30;
-                std::vector<glm::vec2> noiseFit(numDrawSamples);
-                for (unsigned int k = 0; k<numDrawSamples; ++k)
-                {
-                    const double u = (double) k / (double) (numDrawSamples-1);
-                    noiseFit[k] = fitter(u);
-                }
-                //glDebug.draw(noiseFit, GL_LINE_STRIP);
-
-                /*
-                const size_t numSamplesToFit = curve.inputSamples_.size() - curve.noiseFitters_.size() + 1;
-                std::vector<glm::vec2> noiseFitSamples(numSamplesToFit);
-                for (unsigned int k = 0; k<numSamplesToFit; ++k)
-                {
-                    const double u = (double) k / (double) (numSamplesToFit-1);
-                    noiseFitSamples[k] = fitter(u);
-                }
-                glDebug.draw(noiseFitSamples, GL_POINTS);
-                */
-            }
-
-
-
-
-
-/*
-            glDebug.setColor(QColor(Qt::black));
-            f->glPointSize(6.0f);
-            f->glLineWidth(3.0f);
-            glDebug.draw(inputSamples, GL_LINE_STRIP);
-            glDebug.draw(inputSamples, GL_POINTS);
-*/
-
-/*
-            glDebug.setColor(QColor(Qt::black));
-            f->glPointSize(6.0f);
-            f->glLineWidth(3.0f);
-            glDebug.draw(curve.convolutedSamples_, GL_LINE_STRIP);
-            glDebug.draw(curve.convolutedSamples_, GL_POINTS);
-*/
-
-            glDebug.setColor(QColor(Qt::black));
-            f->glPointSize(6.0f);
-            f->glLineWidth(3.0f);
-            glDebug.draw(curve.averagedNoiseFitters_, GL_LINE_STRIP);
-            glDebug.draw(curve.averagedNoiseFitters_, GL_POINTS);
-
-
-            /*
-            f->glPointSize(7.0f);
-            glDebug.setColor(QColor(Qt::red));
-            glDebug.draw(curve.inputUniformSamplingPosition_, GL_POINTS);
-
-            f->glPointSize(3.0f);
-            glDebug.setColor(QColor(Qt::black));
-            glDebug.draw(curve.smoothedUniformSamplingPosition_, GL_POINTS);
-            */
-
-            /*
-            int i = 41;
-            if (i<curve.averagedNoiseFitters_.size())
-            {
-                std::vector<glm::vec2> sample;
-                sample.push_back(curve.averagedNoiseFitters_[i]);
-
-                glDebug.setColor(QColor(Qt::blue));
-                glDebug.draw(sample, GL_POINTS);
-
-                const size_t numNoiseFitters = curve.noiseFitters_.size();
-                const size_t numSamplesToFit = curve.inputSamples_.size() - numNoiseFitters + 1;
-
-                std::vector<glm::vec2> samples;
-                for (int j=1; j<numSamplesToFit-1; ++j)
-                {
-                    int k = i-j;
-                    if (0 <= k && k < (int)numNoiseFitters)
-                    {
-                        const VecFitter & fitter = curve.noiseFitters_[k];
-                        const double uj1 = (double) j / (double) (numSamplesToFit-1);
-                        const double uj2 = fitter.uis()[j];
-
-                        const glm::dvec2 posj = fitter(uj1);
-                        samples.push_back(posj);
-                    }
-                }
-
-                glDebug.setColor(QColor(Qt::blue));
-                glDebug.draw(samples, GL_POINTS);
-            }
-            */
-        }
-    }
-
-
-    /*
-
-
     update(f);
 
     // Get shared resources
@@ -242,7 +125,7 @@ void VacRenderer::render2D(OpenGLFunctions * f, const QMatrix4x4 & projMatrix, c
         size_t & numVertices = pair.second.numVertices;
 
         vao.bind();
-        f->glDrawArrays(GL_POINTS,// GL_TRIANGLE_STRIP, // mode
+        f->glDrawArrays(GL_TRIANGLE_STRIP, // mode
                         0,                 // first index
                         numVertices);      // number of vertices
         vao.release();
@@ -250,7 +133,6 @@ void VacRenderer::render2D(OpenGLFunctions * f, const QMatrix4x4 & projMatrix, c
 
     // Release shader program
     shaderProgram.release();
-    */
 }
 
 void VacRenderer::render3D(OpenGLFunctions * /*f*/)
@@ -302,7 +184,7 @@ void VacRenderer::createVAO_(OpenGLFunctions * f, OpenVac::CellId id)
     auto & vbo = sharedResources_->keyEdgeGLSharedResources_.at(id).vbo;
     auto & vertexLoc = sharedResources_->vertexLoc_;
     GLsizei  stride  = sizeof(EdgeGeometryGLVertex);
-    GLvoid * pointer = reinterpret_cast<void*>(offsetof(EdgeGeometryGLVertex, centerline)); // position
+    GLvoid * pointer = reinterpret_cast<void*>(offsetof(EdgeGeometryGLVertex, position));
     vao.bind();
     vbo.bind();
     f->glEnableVertexAttribArray(vertexLoc);

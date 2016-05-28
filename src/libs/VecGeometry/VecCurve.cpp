@@ -323,7 +323,7 @@ void VecCurve::smoothUniformSampling_()
 
 void VecCurve::computeFinalSamples_()
 {
-    const size_t n = smoothedUniformSamplingPosition_.size();
+    const size_t n = regularizedPositions_.size();
     samples_.resize(n);
 
     // Set position and width
@@ -331,8 +331,8 @@ void VecCurve::computeFinalSamples_()
     {
         VecCurveSample & sample = samples_[i];
 
-        sample.position = smoothedUniformSamplingPosition_[i];
-        sample.width    = smoothedUniformSamplingWidth_[i];
+        sample.position = regularizedPositions_[i];
+        sample.width    = regularizedWidth_[i];
     }
 
     // Compute tangents and normals
@@ -414,8 +414,9 @@ void VecCurve::averageNoiseFitters_()
     const size_t numNoiseFitters = noiseFitters_.size();
     const size_t numSamplesToFit = n - numNoiseFitters + 1;
 
-    averagedNoiseFitters_.resize(n);
-    averagedNoiseFitters_[0] = inputSamples_[0].position;
+    // Positions
+    regularizedPositions_.resize(n);
+    regularizedPositions_[0] = inputSamples_[0].position;
     for (unsigned int i=1; i<n-1; ++i)          // i = global index of sample
     {
         glm::dvec2 pos(0.0, 0.0);
@@ -439,9 +440,16 @@ void VecCurve::averageNoiseFitters_()
                 sumW += wj;
             }
         }
-        averagedNoiseFitters_[i] = (1/sumW) * pos;
+        regularizedPositions_[i] = (1/sumW) * pos;
     }
-    averagedNoiseFitters_[n-1] = inputSamples_[n-1].position;
+    regularizedPositions_[n-1] = inputSamples_[n-1].position;
+
+    // Widths
+    regularizedWidth_.resize(n);
+    for (unsigned int i=0; i<n; ++i)
+    {
+        regularizedWidth_[i] = inputSamples_[i].width;
+    }
 }
 
 void VecCurve::computeConvolution_()
@@ -481,6 +489,7 @@ void VecCurve::addSample(const VecCurveInputSample & inputSample)
     computeNoiseFitters_();
     averageNoiseFitters_();
     computeConvolution_();
+    computeFinalSamples_();
 
     // Remove last sample if eventually discarded
     if (!inserted)
