@@ -13,7 +13,7 @@
 
 VecCurve::VecCurve() :
     samplingRate_(0.005f), // 5ms
-    numFitSamples_(20)
+    numFitSamples_(40)
 {
 
 }
@@ -35,8 +35,16 @@ void VecCurve::clear()
 bool VecCurve::addSampleIfNotTooCloseFromPrevious_(const VecCurveInputSample & inputSample)
 {
     const int n = inputSamples_.size();
-    lastSample_ = inputSample; // we keep it for endFit(): a previously discarded sample
-                               // can be added at the very end. XXX TODO.
+
+    // Remeber last sample
+    lastSample_ = inputSample;
+
+    // Set time based on index, i.e.: constant time between two samples.
+    // Indeed, it turns out that this works better. Using actual time causes
+    // issues when the user stop drawing. How to know whether it's a lag, or an
+    // intentional slow down?
+    lastSample_.time = 4*samplingRate_*n;
+
     if (n == 0)
     {
         inputSamples_.push_back(inputSample);
@@ -51,12 +59,13 @@ bool VecCurve::addSampleIfNotTooCloseFromPrevious_(const VecCurveInputSample & i
         const float distance =  glm::length(inputSample.position - prevInputSample.position);
 
         // Get distance in time between samples
+        // Not that here we still use inputSample.time and not lastSample_.time.
         const float dt =  inputSample.time - prevInputSample.time;
 
         // append if not too close
-        if (distance > 5*inputSample.resolution && dt > samplingRate_)
+        if (distance > 0.1*inputSample.resolution) // && dt > 0.5*samplingRate_)
         {
-            inputSamples_.push_back(inputSample);
+            inputSamples_.push_back(lastSample_);
             return true;
         }
         else
@@ -64,6 +73,11 @@ bool VecCurve::addSampleIfNotTooCloseFromPrevious_(const VecCurveInputSample & i
             return false;
         }
     }
+}
+
+void computeNoiseFitters_()
+{
+
 }
 
 void VecCurve::computeInputUniformSampling_()
@@ -199,6 +213,8 @@ void VecCurve::computeInputUniformSampling_()
     }
 }
 
+#include <iostream>
+
 void VecCurve::smoothUniformSampling_()
 {
     const size_t n = inputUniformSamplingPosition_.size();
@@ -240,6 +256,9 @@ void VecCurve::smoothUniformSampling_()
             fitters_[i] = VecFitter(samples);
         }
 
+        //std::cout << "n=" << n << " numFitSamples_=" << numFitSamples_ << " numFitters=" << numFitters << std::endl;
+
+
         // Precompute u. Note: we could precompute u2 and u3 too, but
         // this only save one multiplication. Two memory accesses are
         // likely slower than one multiplication
@@ -249,28 +268,48 @@ void VecCurve::smoothUniformSampling_()
             u[j] = (float) j / (float) (numFitSamples_-1);
         }
 
+
         // First sample
         smoothedUniformSamplingPosition_[0] = inputUniformSamplingPosition_[0];
 
         // Re-compute existing but affected samples, and compute all new samples
-        for (unsigned int i=iLastFitter+1; i<n-1; ++i)
+        for (unsigned int i=0 /*iLastFitter*/; i<n-1; ++i)
         {
             glm::vec2 pos = zero;
             float sumW = 0.0f;
+            /*
             for (unsigned int j=0; j<numFitSamples_; ++j)
             {
-                const int k = (int)i - (int)j;
+            */
+            unsigned int j = i % numFitSamples_;
+
+                //const int k = (int)i - (int)j;
+                 int k = (int)i - (int)j;
+                // XXX TEMP
+                if (k >= (int)numFitters)
+                {
+                    k = (int)numFitters -1;
+                    j = i - k;
+                }
+
+                //std::cout << "i=" << i << " j=" << j << " k=" << k << std::endl;
                 if (0 <= k && k < (int)numFitters)
                 {
                     const VecFitter & fitter = fitters_[k];
+                    const float uj = fitter.uis()[j];
 
-                    const glm::vec2 posj = fitter(u[j]);
-                    const float     wj   = w_(u[j]);
+                    const glm::vec2 posj = fitter(uj);
+                    //const float     wj   = w_(u[j]);
+                    const float     wj   = 1.0;
 
                     pos  += wj * posj;
                     sumW += wj;
                 }
-            }
+                else
+                {
+                    std::cout << "weird" << std::endl;
+                }
+            //}
             smoothedUniformSamplingPosition_[i] = (1.0f / sumW) * pos;
         }
 
@@ -320,6 +359,108 @@ void VecCurve::computeFinalSamples_()
     }
 }
 
+void VecCurve::computeNoiseFitters_()
+{
+    const size_t n = inputSamples_.size();
+    assert(n > 0);
+
+    const size_t numSamplesToFit = std::min((size_t) 6, n);
+    const size_t numSubSamples = 1;
+    const size_t numSubSamplesToFit = numSubSamples * (numSamplesToFit-1) + 1;
+
+    const size_t numNoiseFitters = n - numSamplesToFit + 1;
+    noiseFitters_.resize(numNoiseFitters);
+
+    for (unsigned int i=0; i<numNoiseFitters; ++i)
+    {
+        std::vector<glm::vec2> subSamplesToFit(numSubSamplesToFit);
+
+        // Full-samples
+        const bool applyConvolution = false;
+        for (unsigned int j=0; j<numSamplesToFit; ++j)
+        {
+            const unsigned int k = i+j;
+            if (applyConvolution && k > 0 && k < n-1)
+            {
+                subSamplesToFit[j*numSubSamples] =
+                        0.25f * inputSamples_[k-1].position +
+                        0.50f * inputSamples_[k].position +
+                        0.25f * inputSamples_[k+1].position;
+            }
+            else
+            {
+                subSamplesToFit[j*numSubSamples] = inputSamples_[k].position;
+            }
+        }
+
+        // Sub-samples
+        for (unsigned int j=0; j<numSamplesToFit-1; ++j)
+        {
+            for (unsigned int k=1; k<numSubSamples; ++k)
+            {
+                const float u = (float) k / (float) (numSubSamples - 1);
+                subSamplesToFit[j*numSubSamples+k] = (1-u) * subSamplesToFit[j*numSubSamples] + u * subSamplesToFit[(j+1)*numSubSamples];
+            }
+        }
+
+        // Compute fit
+        noiseFitters_[i] = VecFitter(subSamplesToFit);
+    }
+}
+
+void VecCurve::averageNoiseFitters_()
+{
+    const size_t n = inputSamples_.size();
+    const size_t numNoiseFitters = noiseFitters_.size();
+    const size_t numSamplesToFit = n - numNoiseFitters + 1;
+
+    averagedNoiseFitters_.resize(n);
+    averagedNoiseFitters_[0] = inputSamples_[0].position;
+    for (unsigned int i=1; i<n-1; ++i)          // i = global index of sample
+    {
+        glm::dvec2 pos(0.0, 0.0);
+        double sumW = 0.0;
+
+        for (unsigned int j=1; j<numSamplesToFit-1; ++j) // j = index of sample w.r.t fitter
+            // loop range equivalent to do j in [0, numSamplesToFit)
+            // since w_(uj) = 0.0 for j = 0 and j = numSamplesToFit-1
+        {
+            const int k = (int)i - (int)j; // k = index of fitter whose j-th sample is samples[i]
+            if (0 <= k && k < (int)numNoiseFitters)
+            {
+                const VecFitter & fitter = noiseFitters_[k];
+                const double uj1 = (double) j / (double) (numSamplesToFit-1);
+                const double uj2 = fitter.uis()[j];
+
+                const glm::dvec2 posj = fitter(uj1);
+                const double     wj   = w_(uj1);
+
+                pos  += wj * posj;
+                sumW += wj;
+            }
+        }
+        averagedNoiseFitters_[i] = (1/sumW) * pos;
+    }
+    averagedNoiseFitters_[n-1] = inputSamples_[n-1].position;
+}
+
+void VecCurve::computeConvolution_()
+{
+    const size_t n = inputSamples_.size();
+    assert(n > 0);
+
+    convolutedSamples_.resize(n);
+    convolutedSamples_[0] = inputSamples_[0].position;
+    for (unsigned int i=1; i<n-1; ++i)
+    {
+        convolutedSamples_[i] =
+                0.25f * inputSamples_[i-1].position +
+                0.50f * inputSamples_[i].position +
+                0.25f * inputSamples_[i+1].position;
+    }
+    convolutedSamples_[n-1] = inputSamples_[n-1].position;
+}
+
 void VecCurve::addSample(const VecCurveInputSample & inputSample)
 {
     // Insert sample (or not) in inputSamples_
@@ -328,12 +469,18 @@ void VecCurve::addSample(const VecCurveInputSample & inputSample)
     // Add last sample anyway for now, even though it may be eventually
     // discarded if the user keeps drawing
     if (!inserted)
-        inputSamples_.push_back(inputSample);
+        inputSamples_.push_back(lastSample_);
 
     // Process the curve
+    /*
     computeInputUniformSampling_();
     smoothUniformSampling_();
     computeFinalSamples_();
+    */
+
+    computeNoiseFitters_();
+    averageNoiseFitters_();
+    computeConvolution_();
 
     // Remove last sample if eventually discarded
     if (!inserted)

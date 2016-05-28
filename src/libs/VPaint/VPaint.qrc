@@ -37,7 +37,7 @@
         <file>images/view-settings-active.png</file>
         <file>images/logo_currentversion.png</file>
         <file>images/icon-256.png</file>
-        <file>OpenGL/Shaders/Helloworld.f.glsl</file>
-        <file>OpenGL/Shaders/Helloworld.v.glsl</file>
+        <file>OpenGL/Shaders/shadeless-unicolor.f.glsl</file>
+        <file>OpenGL/Shaders/shadeless-unicolor.v.glsl</file>
     </qresource>
 </RCC>

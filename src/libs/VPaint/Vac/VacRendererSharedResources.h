@@ -57,6 +57,7 @@ private:
     int vertexLoc_;
     int projMatrixLoc_;
     int viewMatrixLoc_;
+    int colorLoc_;
 
     // Reference counting to initialize and cleanup only once
     int refCount_ = 0;

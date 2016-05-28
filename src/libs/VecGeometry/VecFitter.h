@@ -25,16 +25,41 @@ public:
 
     /// Returns the sample after fitting, given \p u in [0,1].
     ///
-    inline glm::vec2 operator()(float u) const
+    inline glm::dvec2 operator()(double u) const
     {
-        const float u2 = u*u;
-        const float u3 = u2*u;
+        const double u2 = u*u;
+        const double u3 = u2*u;
         return a_ + u*b_ + u2*c_ + u3*d_;
     }
 
+    /// Returns the derivative after fitting, given \p u in [0,1].
+    ///
+    inline glm::dvec2 der(double u) const
+    {
+        return b_ + 2*u*c_ + 3*u*u*d_;
+    }
+
+    /// Returns the second derivative after fitting, given \p u in [0,1].
+    ///
+    inline glm::dvec2 der2(double u) const
+    {
+        return 2.0*c_ + 6*u*d_;
+    }
+
+    /// Returns the parameter corresponding to the fitted samples
+    ///
+    inline const std::vector<double> & uis() const { return uis_; }
+
 private:
     // Cubic parameters
-    glm::vec2 a_, b_, c_, d_;
+    glm::dvec2 a_, b_, c_, d_;
+
+    // sample parameters
+    std::vector<double> uis_;
+
+    // Set canonical parameter from bezier parameters
+    void setFromQuadraticBezier_(const glm::dvec2 & p0, const glm::dvec2 & p1, const glm::dvec2 & p2);
+    void setFromCubicBezier_(const glm::dvec2 & p0, const glm::dvec2 & p1, const glm::dvec2 & p2, const glm::dvec2 & p3);
 };
 
 #endif // VECFITTER_H

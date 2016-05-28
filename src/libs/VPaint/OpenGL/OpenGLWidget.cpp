@@ -12,12 +12,15 @@
 
 #include <cassert>
 
+#include <QtDebug>
+
 OpenGLWidget::OpenGLWidget(QWidget * parent) :
     QOpenGLWidget(parent),
     renderer_()
 {
     connect(this, &OpenGLWidget::aboutToCompose, this, &OpenGLWidget::onAboutToCompose);
     connect(this, &OpenGLWidget::frameSwapped, this, &OpenGLWidget::onFrameSwapped);
+
 }
 
 OpenGLWidget::~OpenGLWidget()

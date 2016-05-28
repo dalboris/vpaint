@@ -34,8 +34,8 @@ void VacRendererSharedResources::initialize(OpenGLFunctions * /*f*/)
     if (refCount_ == 0)
     {
         // Initialize shader program
-        shaderProgram_.addShaderFromSourceFile(QOpenGLShader::Vertex, ":/OpenGL/Shaders/Helloworld.v.glsl");
-        shaderProgram_.addShaderFromSourceFile(QOpenGLShader::Fragment, ":/OpenGL/Shaders/Helloworld.f.glsl");
+        shaderProgram_.addShaderFromSourceFile(QOpenGLShader::Vertex, ":/OpenGL/Shaders/shadeless-unicolor.v.glsl");
+        shaderProgram_.addShaderFromSourceFile(QOpenGLShader::Fragment, ":/OpenGL/Shaders/shadeless-unicolor.f.glsl");
         shaderProgram_.link();
 
         // Get shader locations
@@ -43,6 +43,7 @@ void VacRendererSharedResources::initialize(OpenGLFunctions * /*f*/)
         vertexLoc_     = shaderProgram_.attributeLocation("vertex");
         projMatrixLoc_ = shaderProgram_.uniformLocation("projMatrix");
         viewMatrixLoc_ = shaderProgram_.uniformLocation("viewMatrix");
+        colorLoc_      = shaderProgram_.uniformLocation("color");
         shaderProgram_.release();
     }
 

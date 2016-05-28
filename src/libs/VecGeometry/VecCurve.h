@@ -101,7 +101,7 @@ public:
     ///
     std::vector<VecCurveSample> & samples();
 
-private:
+//private:
     // ---- Smoothing algorithm data ----
 
     VecCurveSample toCurveSample_(const VecCurveInputSample & inputSample);
@@ -125,11 +125,20 @@ private:
     inline T w_(T u) { return u*u*(1-u)*(1-u); }
 
     // Smoothed uniform sampling
+    // Old
     void smoothUniformSampling_();
     size_t numFitSamples_;
     std::vector<VecFitter> fitters_;
     std::vector<glm::vec2> smoothedUniformSamplingPosition_;
     std::vector<float> smoothedUniformSamplingWidth_;
+    // New
+    void computeNoiseFitters_();
+    void averageNoiseFitters_();
+    std::vector<VecFitter> noiseFitters_;
+    std::vector<glm::vec2> averagedNoiseFitters_;
+    // For comparison
+    void computeConvolution_();
+    std::vector<glm::vec2> convolutedSamples_;
 
     // Final samples to render
     void computeFinalSamples_();

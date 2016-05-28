@@ -105,7 +105,7 @@ MainWindow::MainWindow(QWidget * parent) :
     view2D_  = new View2D(scene_.get(),
                           sceneRendererSharedResources_.get(),
                           this);
-
+/*
     view2D2_  = new View2D(scene_.get(),
                            sceneRendererSharedResources_.get(),
                            this);
@@ -117,8 +117,8 @@ MainWindow::MainWindow(QWidget * parent) :
 
     // Set splitter as central widget
     setCentralWidget(splitter);
-
-    //setCentralWidget(view2D_);
+*/
+    setCentralWidget(view2D_);
 
     // Make window a reasonable size
     resize(1000, 600);
@@ -243,7 +243,7 @@ MainWindow::~MainWindow()
     // as an argument to the constructor of MainWindow.
 
     delete view2D_;
-    delete view2D2_;
+    //delete view2D2_;
 
     // Those two are now useless since they are unique_ptr.
     //

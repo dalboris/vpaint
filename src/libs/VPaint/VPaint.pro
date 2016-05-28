@@ -163,7 +163,8 @@ HEADERS += MainWindow.h \
     Vac/VacRenderer.h \
     Vac/VacRendererSharedResources.h \
     Core/Debug.h \
-    Vac/KeyEdgeGLResources.h
+    Vac/KeyEdgeGLResources.h \
+    OpenGL/OpenGLDebug.h
 
 SOURCES += \
     SaveAndLoad.cpp \
@@ -283,10 +284,11 @@ SOURCES += \
     Layer/LayerRendererSharedResources.cpp \
     Vac/VacRenderer.cpp \
     Vac/VacRendererSharedResources.cpp \
-    Core/Debug.cpp
+    Core/Debug.cpp \
+    OpenGL/OpenGLDebug.cpp
 
 DISTFILES += \
-    OpenGL/Shaders/Helloworld.v.glsl \
-    OpenGL/Shaders/Helloworld.f.glsl
+    OpenGL/Shaders/shadeless-unicolor.v.glsl \
+    OpenGL/Shaders/shadeless-unicolor.f.glsl
 
 include($$OUT_PWD/.config.pri)
