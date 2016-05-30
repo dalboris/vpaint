@@ -6,30 +6,19 @@
 // license terms and conditions in the LICENSE.MIT file found in the top-level
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
-#include "EdgeGeometry.h"
+#ifndef OPENVAC_POINT_H
+#define OPENVAC_POINT_H
 
-
-EdgeGeometry::EdgeGeometry()
+namespace OpenVac
 {
 
-}
-
-void EdgeGeometry::beginFit()
+namespace DGeometry
 {
-    curve_.clear();
-}
 
-void EdgeGeometry::addFitInputSample(const VecCurveInputSample & inputSample)
-{
-    curve_.addSample(inputSample);
-}
+using Point = double[2];
 
-void EdgeGeometry::endFit()
-{
-}
+} // end namespace DGeometry
 
-const VecCurve & EdgeGeometry::curve() const
-{
-    return curve_;
+} // end namespace OpenVac
 
-}
+#endif // OPENVAC_POINT_H

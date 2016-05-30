@@ -91,3 +91,12 @@ void OpenGLDebug::draw(const std::vector<glm::vec2> & vertices, GLenum mode)
     // Destroy VBO
     vbo.destroy();
 }
+
+void OpenGLDebug::draw(const std::vector<glm::dvec2> & vertices, GLenum mode)
+{
+    std::vector<glm::vec2> fvertices;
+    fvertices.reserve(vertices.size());
+    for (const glm::dvec2 & vertex: vertices)
+        fvertices.push_back(glm::vec2(vertex)); // dvec2 -> vec2 conversion
+    draw(fvertices, mode);
+}

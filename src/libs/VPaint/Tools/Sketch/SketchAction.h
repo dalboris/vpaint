@@ -26,7 +26,10 @@ protected:
     void releaseEvent(const View2DMouseEvent * event);
 
 private:
-    VecCurveInputSample getInputSample_(const View2DMouseEvent * event);
+    VGeometry::VCurveInputSample getInputSample_(
+            const View2DMouseEvent * event);
+
+    void execTest_();
 
 private:
     Scene * scene_;

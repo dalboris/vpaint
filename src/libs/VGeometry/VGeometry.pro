@@ -13,17 +13,21 @@ THIRD_DEPENDS = \
     glm
 
 HEADERS += \
-    EdgeGeometry.h \
-    VecCurveInputSample.h \
-    VecCurve.h \
-    VecCurveSample.h \
-    VecFitter.h
+    VCurve.h \
+    KeyEdgeGeometry.h \
+    CubicCurve.h \
+    VCurveSample.h \
+    VCurveInputSample.h \
+    Algorithms.h \
+    QuadraticCurve.h
 
 SOURCES += \
-    EdgeGeometry.cpp \
-    VecCurveInputSample.cpp \
-    VecCurve.cpp \
-    VecCurveSample.cpp \
-    VecFitter.cpp
+    VCurve.cpp \
+    KeyEdgeGeometry.cpp \
+    CubicCurve.cpp \
+    VCurveSample.cpp \
+    VCurveInputSample.cpp \
+    Algorithms.cpp \
+    QuadraticCurve.cpp
 
 include($$OUT_PWD/.config.pri)

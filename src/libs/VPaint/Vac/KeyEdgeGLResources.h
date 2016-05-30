@@ -14,14 +14,14 @@
 #include <QOpenGLBuffer>
 #include <QOpenGLVertexArrayObject>
 
-/// \class EdgeGeometryGpuVertex
+/// \class EdgeGeometryGLVertex
 /// \brief A struct that stores the per-vertex data to be consumed by the
 /// vertex shader.
 ///
 /// Here, the word "vertex" is used in the OpenGL sense, not in the VAC sense
 /// (i.e., a "vertex" is the atomic element processed by the vertex shader).
 ///
-/// Read documentation of EdgeGeometryGpuSample before this documentation.
+/// Read documentation of EdgeGeometryGLSample before this documentation.
 ///
 /// Each EdgeGeometryGpuVertex stores three vec2 member variables:
 ///   - centerline
@@ -58,7 +58,7 @@ struct EdgeGeometryGLVertex
     glm::vec2 position;
 };
 
-/// \class EdgeGeometryGpuSample
+/// \class EdgeGeometryGLSample
 /// \brief A struct that stores a GPU-friendly representation of a curve sample
 /// for rendering purposes.
 ///

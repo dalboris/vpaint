@@ -6,4 +6,21 @@
 // license terms and conditions in the LICENSE.MIT file found in the top-level
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
-#include "VecCurveInputSample.h"
+#ifndef OPENVAC_KEYEDGEGEOMETRY_H
+#define OPENVAC_KEYEDGEGEOMETRY_H
+
+#include "Curve.h"
+
+namespace OpenVac
+{
+
+namespace DGeometry
+{
+
+class KeyEdgeGeometry { Curve curve; };
+
+} // end namespace DGeometry
+
+} // end namespace OpenVac
+
+#endif // OPENVAC_KEYEDGEGEOMETRY_H

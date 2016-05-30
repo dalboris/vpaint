@@ -160,7 +160,7 @@ void VacRendererSharedResources::updateVBO_(OpenVac::CellId id)
     assert((bool) edge);
 
     // Get curve
-    const VecCurve & curve = edge->geometry().curve();
+    const VGeometry::VCurve & curve = edge->geometry().curve();
     const size_t nSamples = curve.numSamples();
 
     // Convert curve samples to GL samples
@@ -168,7 +168,7 @@ void VacRendererSharedResources::updateVBO_(OpenVac::CellId id)
     glSamples.reserve(nSamples);
     for (unsigned int i=0; i<nSamples; ++i)
     {
-        const VecCurveSample & sample = curve.sample(i);
+        const VGeometry::VCurveSample & sample = curve.sample(i);
 
         EdgeGeometryGLSample glSample;
 
@@ -181,6 +181,8 @@ void VacRendererSharedResources::updateVBO_(OpenVac::CellId id)
         glSample.right.position   = sample.position - sample.width * sample.normal;
 
         glSamples.push_back(glSample);
+
+        // Note: a double->float conversion occurs in each assignment above.
     }
 
     // Update VBO (i.e., send data from RAM to GPU)

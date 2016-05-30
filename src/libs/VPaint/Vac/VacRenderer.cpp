@@ -9,7 +9,6 @@
 #include "Vac/Vac.h"
 #include "Vac/VacRenderer.h"
 #include "Vac/VacRendererSharedResources.h"
-#include "OpenGL/OpenGLDebug.h"
 #include "OpenVac/Topology/KeyEdge.h"
 
 #include <QColor>
@@ -97,6 +96,8 @@ void VacRenderer::update(OpenGLFunctions * f)
     geometryEditInfo_.clear();
 }
 
+#include "OpenGL/OpenGLDebug.h"
+
 void VacRenderer::render2D(OpenGLFunctions * f, const QMatrix4x4 & projMatrix, const QMatrix4x4 & viewMatrix)
 {
     update(f);
@@ -133,6 +134,24 @@ void VacRenderer::render2D(OpenGLFunctions * f, const QMatrix4x4 & projMatrix, c
 
     // Release shader program
     shaderProgram.release();
+
+    // XXX Print debug stuff
+    /*
+    OpenGLDebug glDebug(f, projMatrix, viewMatrix);
+    glDebug.setColor(QColor(Qt::red));
+    f->glPointSize(6.0f);
+    f->glLineWidth(3.0f);
+    for (OpenVac::CellHandle & h: vac()->data().cells())
+    {
+        OpenVac::KeyEdgeHandle keyEdge = h;
+        if (keyEdge)
+        {
+            const VGeometry::VCurve & curve = keyEdge->geometry().curve();
+            glDebug.draw(curve.regPositions_, GL_LINE_STRIP);
+            glDebug.draw(curve.regPositions_, GL_POINTS);
+        }
+    }
+    */
 }
 
 void VacRenderer::render3D(OpenGLFunctions * /*f*/)

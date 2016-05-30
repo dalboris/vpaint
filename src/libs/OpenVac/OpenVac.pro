@@ -10,7 +10,7 @@ TEMPLATE = lib
 CONFIG -= qt
 
 LIB_DEPENDS = \
-    VecGeometry
+    VGeometry
 
 SOURCES +=
 
@@ -34,7 +34,7 @@ HEADERS += \
     Operators/MakeKeyVertex.h \
     Operators/MakeKeyOpenEdge.h \
     Geometry.h \
-    Geometry/Frame.h \
+    DGeometry/Frame.h \
     Data/Util/CellDataCopier.h \
     Data/Util/CellDataCopierVisitor.h \
     Data/Util/CellRefTranslator.h \
@@ -54,6 +54,13 @@ HEADERS += \
     Core/CellIdType.h \
     Core/CellIdTypeSet.h \
     Util/TopologyEditInfo.h \
-    Util/GeometryEditInfo.h
+    Util/GeometryEditInfo.h \
+    VGeometry.h \
+    DGeometry/KeyEdgeGeometry.h \
+    DGeometry/KeyVertexGeometry.h \
+    DGeometry/GeometryManager.h \
+    DGeometry/Point.h \
+    DGeometry/Curve.h \
+    DGeometry.h
 
 include($$OUT_PWD/.config.pri)

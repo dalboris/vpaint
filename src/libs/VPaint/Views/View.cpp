@@ -14,10 +14,6 @@ View::View(Scene *scene, QWidget * parent) :
     OpenGLWidget(parent),
     scene_(scene)
 {
-    // Resolve ambiguity: use 'update()' and not 'update(const QRect &)'
-    //using update_t = void (QWidget::*) ();
-    //update_t update = static_cast<update_t>(&QWidget::update);
-
     connect(scene_, &Scene::changed, this, &View::repaint);
 }
 
@@ -44,6 +40,22 @@ void View::tabletEvent(QTabletEvent * event)
     }
     else if(event->type() == QEvent::TabletMove)
     {
+        // Nothing to do
+
+        // Note: Qt will not propagate tablet move event into a mouse move event
+        // when the move is less than a pixel. This behaviour ensures that mouse
+        // samples are always different, which is okay in our case (we don't need
+        // sub-pixels accuracy, since curves are smoothed anyway). Also
+        // note that tablet move events can occur without any pencil position
+        // change, i.e., just changing pressure without moving the pencil generates
+        // a tablet move event. We ignore those in our application.
+
+        // Note 2: Somehow, the last move event seem to always have a pressure
+        // of exactly 0 (even though the position may have changed since last
+        // move event.). Maybe I should not let Qt do the tablet->mouse event
+        // conversion, and do it myself, in which case I could generate a
+        // release event when pressure = 0, even when it is categorized by Qt
+        // as "TabletMove".
     }
     else if(event->type() == QEvent::TabletRelease)
     {
@@ -53,7 +65,7 @@ void View::tabletEvent(QTabletEvent * event)
     {
     }
 
-    // Ignore event, so Qt generates a mouse event.
+    // Ignore event, so Qt generates a mouse event from the tablet event.
     event->ignore();
 }
 
@@ -128,13 +140,8 @@ void View::mousePressEvent(QMouseEvent *event)
     }
 }
 
-#include "Core/Debug.h"
-
 void View::mouseMoveEvent(QMouseEvent *event)
 {
-    //Debug::log() << "mouseMoveEvent()";
-    //return;
-
     if(mouseEvent_)
     {
         // Set time since press

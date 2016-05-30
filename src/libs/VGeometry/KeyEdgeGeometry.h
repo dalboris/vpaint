@@ -6,27 +6,32 @@
 // license terms and conditions in the LICENSE.MIT file found in the top-level
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
-#ifndef VECGEOMETRY_EDGEGEOMETRY_H
-#define VECGEOMETRY_EDGEGEOMETRY_H
+#ifndef VGEOMETRY_KEYEDGEGEOMETRY_H
+#define VGEOMETRY_KEYEDGEGEOMETRY_H
 
-#include "VecCurve.h"
+#include "VCurve.h"
 
-/// \class EdgeGeometry
+namespace VGeometry
+{
+
+/// \class KeyEdgeGeometry
 /// \brief A class that builds and stores the geometry of a key edge.
 ///
-class EdgeGeometry
+class KeyEdgeGeometry
 {
 public:
-    EdgeGeometry();
+    KeyEdgeGeometry();
 
     void beginFit();
-    void addFitInputSample(const VecCurveInputSample & inputSample);
+    void continueFit(const VCurveInputSample & inputSample);
     void endFit();
 
-    const VecCurve & curve() const;
+    const VCurve & curve() const;
 
 private:
-    VecCurve curve_;
+    VCurve curve_;
 };
 
-#endif // VECGEOMETRY_EDGEGEOMETRY_H
+} // end namespace VGeometry
+
+#endif // VGEOMETRY_KEYEDGEGEOMETRY_H

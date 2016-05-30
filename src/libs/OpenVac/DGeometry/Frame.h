@@ -14,7 +14,10 @@
 namespace OpenVac
 {
 
-/// \class Frame OpenVac/Geometry/Frame.h
+namespace DGeometry
+{
+
+/// \class Frame OpenVac/DGeometry/Frame.h
 /// \brief A class representing a frame of an animation as a double.
 ///
 /// Even though represented as a double, a Frame will typically be an "integer"
@@ -382,6 +385,8 @@ inline Frame & operator++(Frame & f) { f.value_ += 1.0; return f; }
 inline Frame & operator--(Frame & f) { f.value_ -= 1.0; return f; }
 inline Frame   operator++(Frame & f, int) { Frame res = f; f.value_ += 1.0; return res; }
 inline Frame   operator--(Frame & f, int) { Frame res = f; f.value_ -= 1.0; return res; }
+
+} // end namespace DGeometry
 
 } // end namespace OpenVac
 

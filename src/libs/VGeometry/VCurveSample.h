@@ -6,27 +6,30 @@
 // license terms and conditions in the LICENSE.MIT file found in the top-level
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
-#ifndef CURVESAMPLE_H
-#define CURVESAMPLE_H
+#ifndef VCURVESAMPLE_H
+#define VCURVESAMPLE_H
 
 #include <glm/vec2.hpp>
 
-/// \class VecCurveSample
+namespace VGeometry
+{
+
+/// \class VCurveSample
 /// \brief A struct that stores the data of one curve sample.
 ///
-struct VecCurveSample
+struct VCurveSample
 {
     /// Position of the centerline of the curve at this sample.
     ///
-    glm::vec2 position;
+    glm::dvec2 position;
 
     /// Width (or thickness) of the curve of at this sample.
     ///
-    float width;
+    double width;
 
     /// Tangent of the curve at this sample.
     ///
-    glm::vec2 tangent;
+    glm::dvec2 tangent;
 
     /// Normal of the curve at this sample. The normal is pointing towards the
     /// "right side", when walking along the curve (i.e., increasing
@@ -39,13 +42,13 @@ struct VecCurveSample
     ///     normal.x = - tangent.y
     ///     normal.y = + tangent.x
     ///
-    glm::vec2 normal;
+    glm::dvec2 normal;
 
     /// Length between the start of the curve and this sample. More
     /// specifically, this is the sum of the length of the linear segments up
     /// to this sample.
     ///
-    float arclength;
+    double arclength;
 
     /// Angle formed by the two segments of the curve incident to this sample.
     /// While not linearly related to curvature, this provides info which can
@@ -53,7 +56,9 @@ struct VecCurveSample
     /// If angle == 0, then curvature us null at this sample (the three
     /// consecutive samples around this sample are aligned).
     ///
-    float angle;
+    double angle;
 };
 
-#endif // CURVESAMPLE_H
+} // end namespace VGeometry
+
+#endif // VCURVESAMPLE_H
