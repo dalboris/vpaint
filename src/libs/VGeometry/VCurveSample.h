@@ -15,7 +15,7 @@ namespace VGeometry
 {
 
 /// \class VCurveSample
-/// \brief A struct that stores the data of one curve sample.
+/// \brief A struct that stores the data of one VCurve sample.
 ///
 struct VCurveSample
 {

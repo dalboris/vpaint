@@ -9,6 +9,8 @@
 #ifndef VGEOMETRY_VCURVE_H
 #define VGEOMETRY_VCURVE_H
 
+#include "VCurveParams.h"
+#include "VCurveKnot.h"
 #include "VCurveSample.h"
 #include "VCurveInputSample.h"
 #include "QuadraticCurve.h"
@@ -21,12 +23,29 @@ namespace VGeometry
 /// \class VCurve
 /// \brief A class to represent a smooth curve with variable thickness.
 ///
+/// A VCurve is defined by knots (type: VCurveKnot). Each knot has a position
+/// and a width, and is either a corner knot or a smooth knot.
+///
+/// Between corner knots, the curve is defined by a 4-point subdivision scheme
+/// with a tension parameter w = 1/16, as defined in:
+///
+///     [Dyn, Levin, Gregory 1987] A 4-point interpolatory subdivision scheme
+///                                for curve design
+///
+/// At corner knots, the curve looks like the SVG "round" join style.
+///
+/// From the knots, 'samples' are computed (type: VCurveSample), by subdividing
+/// the curve as many time as necessary to ensure that the angle between two samples
+/// is always less than maxSampleAngle_. From corner knots, many samples are
+/// created with the same position and width but different tangents/normals, to
+/// be able to render them conveniently as round.
+///
 class VCurve
 {
 public:
-    /// Constructs an empty curve.
+    /// Constructs an empty curve with the given parameters.
     ///
-    VCurve();
+    VCurve(const VCurveParams & params = VCurveParams());
 
     /// Clears the curve.
     ///
@@ -52,6 +71,14 @@ public:
     ///
     void endFit();
 
+    /// Returns the number of knots in this curve.
+    ///
+    size_t numKnots() const;
+
+    /// Returns the i-th knot.
+    ///
+    const VCurveKnot & knot(unsigned int i) const;
+
     /// Returns the number of samples in this curve.
     ///
     size_t numSamples() const;
@@ -60,16 +87,14 @@ public:
     ///
     const VCurveSample & sample(unsigned int i) const;
 
-    /// Returns the vector of samples as a modifiable reference.
-    /// Only use this if you know what you are doing.
-    ///
-    std::vector<VCurveSample> & samples();
-
     /// Returns the length of the curve.
     ///
     double length() const;
 
 private:
+    // Parameters of the curve
+    VCurveParams params_;
+
     // Append input samples, possibly discarding samples if too close from
     // one another.
     //
@@ -78,12 +103,12 @@ private:
 
     // Regularized positions and widths.
     //
-    // regCubicFits_ and regWidths_ have the same size as inputSamples_, but
+    // regPositions_ and regWidths_ have the same size as inputSamples_, but
     // with better spacing and minimal smoothing to fix artefacts caused by
     // sampling errors (e.g., samples perfectly aligned on a grid due to pixel
     // precision).
     //
-    // regCubicFits_ are local cubic fits used to compute regPositions_.
+    // regFits_ are local polynomial fits used to compute regPositions_.
     //
     void computeRegPositions_();
     void computeRegWidths_();
@@ -93,9 +118,14 @@ private:
     std::vector<glm::dvec2> regPositions_;
     std::vector<double> regWidths_;
 
-    // Final curve samples
+    // Knots
     //
-    void computeFinalSamples_();
+    void computeKnots_();
+    std::vector<VCurveKnot> knots_;
+
+    // Samples
+    //
+    void computeSamples_();
     std::vector<VCurveSample> samples_;
 };
 

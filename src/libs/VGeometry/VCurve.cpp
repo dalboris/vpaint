@@ -15,7 +15,8 @@
 namespace VGeometry
 {
 
-VCurve::VCurve()
+VCurve::VCurve(const VCurveParams & params) :
+    params_(params)
 {
 }
 
@@ -38,12 +39,22 @@ void VCurve::continueFit(const VCurveInputSample & inputSample)
     appendInputSample_(inputSample);
     computeRegPositions_();
     computeRegWidths_();
-    computeFinalSamples_();
+    computeSamples_();
 }
 
 void VCurve::endFit()
 {
     // Nothing to do
+}
+
+size_t VCurve::numKnots() const
+{
+    return knots_.size();
+}
+
+const VCurveKnot & VCurve::knot(unsigned int i) const
+{
+    return knots_.at(i);
 }
 
 size_t VCurve::numSamples() const
@@ -54,11 +65,6 @@ size_t VCurve::numSamples() const
 const VCurveSample & VCurve::sample(unsigned int i) const
 {
     return samples_.at(i);
-}
-
-std::vector<VCurveSample> & VCurve::samples()
-{
-    return samples_;
 }
 
 double VCurve::length() const
@@ -193,7 +199,7 @@ void VCurve::averageRegFits_()
     regPositions_[n-1] = inputSamples_[n-1].position;
 }
 
-void VCurve::computeFinalSamples_()
+void VCurve::computeSamples_()
 {
     const size_t n = regPositions_.size();
     samples_.resize(n);

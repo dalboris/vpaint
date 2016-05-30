@@ -19,7 +19,9 @@ HEADERS += \
     VCurveSample.h \
     VCurveInputSample.h \
     Algorithms.h \
-    QuadraticCurve.h
+    QuadraticCurve.h \
+    VCurveKnot.h \
+    VCurveParams.h
 
 SOURCES += \
     VCurve.cpp \
@@ -28,6 +30,8 @@ SOURCES += \
     VCurveSample.cpp \
     VCurveInputSample.cpp \
     Algorithms.cpp \
-    QuadraticCurve.cpp
+    QuadraticCurve.cpp \
+    VCurveKnot.cpp \
+    VCurveParams.cpp
 
 include($$OUT_PWD/.config.pri)
