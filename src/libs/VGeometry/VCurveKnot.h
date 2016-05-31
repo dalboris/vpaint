@@ -31,8 +31,9 @@ struct VCurveKnot
     ///
     bool isCorner;
 
-    /// Angle between this knot and neighboring knots.
-    /// Zero if it is an end knot.
+    /// Supplementary angle between this knot and neighboring knots. Value is
+    /// in [0,pi]. It is equal to zero if it is an end knot, or if three
+    /// consecutive knots are aligned.
     ///
     double angle;
 };

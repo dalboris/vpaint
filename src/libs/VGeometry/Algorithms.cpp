@@ -397,4 +397,32 @@ CubicCurve fitCubic(const std::vector<glm::dvec2> & points)
     }
 }
 
+double computeOrientedAngle(const glm::dvec2 & p0,
+                            const glm::dvec2 & p1,
+                            const glm::dvec2 & p2)
+{
+    const double alpha = std::atan2(p0.y - p1.y, p0.x - p1.x);
+    const double beta  = std::atan2(p2.y - p1.y, p2.x - p1.x);
+    double res = alpha - beta;
+    if (res > M_PI)
+        res -= 2 * M_PI;
+    else if (res < - M_PI)
+        res += 2 * M_PI;
+    return res;
+}
+
+double computeAngle(const glm::dvec2 & p0,
+                    const glm::dvec2 & p1,
+                    const glm::dvec2 & p2)
+{
+    return std::abs(computeOrientedAngle(p0, p1, p2));
+}
+
+double computeSupplementaryAngle(const glm::dvec2 & p0,
+                                 const glm::dvec2 & p1,
+                                 const glm::dvec2 & p2)
+{
+    return M_PI - computeAngle(p0, p1, p2);
+}
+
 } // end namespace VGeometry
