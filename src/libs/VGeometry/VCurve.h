@@ -79,6 +79,10 @@ public:
     ///
     const VCurveKnot & knot(unsigned int i) const;
 
+    /// Returns the vector of knot as a const reference.
+    ///
+    const std::vector<VCurveKnot> & knots() const;
+
     /// Returns the number of samples in this curve.
     ///
     size_t numSamples() const;
@@ -86,6 +90,10 @@ public:
     /// Returns the i-th sample.
     ///
     const VCurveSample & sample(unsigned int i) const;
+
+    /// Returns the vector of samples as a const reference.
+    ///
+    const std::vector<VCurveSample> & samples() const;
 
     /// Returns the length of the curve.
     ///

@@ -136,6 +136,8 @@ QuadraticCurve solveQuadratic(
 /// for small number of points, and minimizing the least square distance for
 /// big enough number of points.
 ///
+/// This method never fails.
+///
 QuadraticCurve fitQuadratic(
         const std::vector<glm::dvec2> & points);
 

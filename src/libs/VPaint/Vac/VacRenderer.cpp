@@ -136,22 +136,36 @@ void VacRenderer::render2D(OpenGLFunctions * f, const QMatrix4x4 & projMatrix, c
     shaderProgram.release();
 
     // XXX Print debug stuff
-    /*
+
     OpenGLDebug glDebug(f, projMatrix, viewMatrix);
     glDebug.setColor(QColor(Qt::red));
     f->glPointSize(6.0f);
-    f->glLineWidth(3.0f);
+    f->glLineWidth(1.0f);
+
+
     for (OpenVac::CellHandle & h: vac()->data().cells())
     {
         OpenVac::KeyEdgeHandle keyEdge = h;
         if (keyEdge)
         {
             const VGeometry::VCurve & curve = keyEdge->geometry().curve();
-            glDebug.draw(curve.regPositions_, GL_LINE_STRIP);
-            glDebug.draw(curve.regPositions_, GL_POINTS);
+
+            std::vector<glm::vec2> knots;
+            for (const VGeometry::VCurveKnot & knot: curve.knots())
+            {
+                knots.push_back(knot.position);
+            }
+
+            std::vector<glm::vec2> samples;
+            for (const VGeometry::VCurveSample & sample: curve.samples())
+            {
+                samples.push_back(sample.position);
+            }
+
+            glDebug.draw(samples, GL_LINE_STRIP);
+            glDebug.draw(knots, GL_POINTS);
         }
     }
-    */
 }
 
 void VacRenderer::render3D(OpenGLFunctions * /*f*/)

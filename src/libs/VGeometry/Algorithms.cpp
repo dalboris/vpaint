@@ -214,23 +214,68 @@ void initializeParameterization_(
         std::vector<double> & uTemp,
         unsigned int numNewtonIterations)
 {
-    const size_t n = points.size();
+    // Preconditions:
+    //     points.size() > 1
+    //     points.size() < 1/eps ( = 10,000,000,000)
+    //
+    // Note: distance between consecutive samples > 0
+    //       is NOT a preconditions (i.e., this method
+    //       is robust, including if all points are equals)
 
-    // Initialize u, using arclength of points (considered linear by parts) as a
-    // heuristic.
+    const size_t n = points.size();
+    assert(n > 1);
+
+    // Compute arclength[i], store it in u[i]
     //
     u.resize(n);
     u[0] = 0.0;
-    for (unsigned int i=1; i<n; i++)
+    for (unsigned int i=1; i<n; ++i)
     {
-        u[i] += u[i-1] + glm::length(points[i] - points[i-1]);
+        const double ds = glm::length(points[i] - points[i-1]);
+        u[i] = u[i-1] + ds;
     }
+
+    // Should we use
+    //     u[i] = arclength[i] / length,
+    //
+    // or should we use
+    //     u[i] = i / (n-1) ?
+    //
+    bool useArclength = true;
+    const double eps = 1e-10; // Important: eps < 2.3283064e-10 = 1 / max_unsigned_int
     const double length = u[n-1];
-    if (length > 1e-10)
+    if (length < eps)
     {
-        for (unsigned int i=1; i<n; i++)
+        useArclength = false;
+    }
+    else
+    {
+        for (unsigned int i=1; i<n; ++i)
+        {
+            const double ds = u[i] - u[i-1];
+            if (ds < eps * length) // i.e., if (du < eps)
+            {
+                useArclength = false;
+                break;
+            }
+        }
+    }
+
+    // Compute u[i]
+    //
+    if (useArclength)
+    {
+        for (unsigned int i=1; i<n; ++i)
         {
             u[i] /= length;
+        }
+    }
+    else
+    {
+        const double du = 1.0 / (double) (n-1); // du > 1 / max_unsigned_int > eps
+        for (unsigned int i=1; i<n; ++i)
+        {
+            u[i] = i * du;
         }
     }
 
@@ -245,6 +290,9 @@ void initializeParameterization_(
         uTemp[0] = 0.0;
         uTemp[n-1] = 1.0;
     }
+
+    // Postconditions:
+    //     distance between consecutive u[i] is > eps = 1e-10
 }
 
 template <class PolynomialCurve>
@@ -256,9 +304,11 @@ void reparameterizeUsingNewtonRhapson_(
 {
     const size_t n = points.size();
 
+    const double eps = 1e-10;
     const double inv2ClampValue = 0.5 * n;
     const double clampValue = 0.5 / inv2ClampValue;
 
+    // Compute new u
     for(unsigned int i=1; i<n-1; i++)
     {
         const double ui = u[i];
@@ -270,7 +320,6 @@ void reparameterizeUsingNewtonRhapson_(
         const double numerator   = glm::dot(deltai, deri);
         const double denominator = glm::dot(deri, deri) + glm::dot(deltai, der2i);
 
-        const double eps = 1e-10;
         if (std::abs(denominator) > eps)
         {
             double correction = numerator / denominator;
@@ -291,7 +340,22 @@ void reparameterizeUsingNewtonRhapson_(
             uTemp[i] = ui;
         }
     }
-    swap(u, uTemp);
+
+    // Only use new u if it still satisfies du > eps for each consecutive samples
+    bool ok = true;
+    for(unsigned int i=1; i<n; i++)
+    {
+        const double du = uTemp[i+1] - uTemp[i];
+        if (du < eps)
+        {
+            ok = false;
+            break;
+        }
+    }
+    if (ok)
+    {
+        swap(u, uTemp);
+    }
 }
 
 }
