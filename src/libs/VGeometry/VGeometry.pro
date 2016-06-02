@@ -21,7 +21,8 @@ HEADERS += \
     Algorithms.h \
     QuadraticCurve.h \
     VCurveKnot.h \
-    VCurveParams.h
+    VCurveParams.h \
+    KeyVertexStyle.h
 
 SOURCES += \
     VCurve.cpp \
@@ -32,6 +33,7 @@ SOURCES += \
     Algorithms.cpp \
     QuadraticCurve.cpp \
     VCurveKnot.cpp \
-    VCurveParams.cpp
+    VCurveParams.cpp \
+    KeyVertexStyle.cpp
 
 include($$OUT_PWD/.config.pri)
