@@ -136,6 +136,7 @@ void VacRenderer::render2D(OpenGLFunctions * f, const QMatrix4x4 & projMatrix, c
     shaderProgram.release();
 
     // XXX Print debug stuff
+/*
 
     OpenGLDebug glDebug(f, projMatrix, viewMatrix);
     glDebug.setColor(QColor(Qt::red));
@@ -166,6 +167,7 @@ void VacRenderer::render2D(OpenGLFunctions * f, const QMatrix4x4 & projMatrix, c
             glDebug.draw(knots, GL_POINTS);
         }
     }
+*/
 }
 
 void VacRenderer::render3D(OpenGLFunctions * /*f*/)

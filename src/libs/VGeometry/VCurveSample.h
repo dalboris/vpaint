@@ -56,7 +56,7 @@ struct VCurveSample
     /// If angle == 0, then curvature us null at this sample (the three
     /// consecutive samples around this sample are aligned).
     ///
-    double angle;
+    //double angle;
 };
 
 } // end namespace VGeometry

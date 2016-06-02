@@ -114,6 +114,8 @@ void VCurve::appendInputSample_(const VCurveInputSample & inputSample)
     // Postconditions:
     //     inputSamples_.size() > 0
     //     distance between consecutive samples > 0.1*inputSample.resolution
+
+    assert(inputSamples_.size() > 0);
 }
 
 void VCurve::computeRegPositions_()
@@ -121,6 +123,83 @@ void VCurve::computeRegPositions_()
     computeRegFits_();
     averageRegFits_();
 }
+
+// Note on preconditions and postconditions:
+//
+// There are two types of guarantees:
+//
+//    - Integer Guarantees (I): in general, those are vector sizes.
+//      those are hard-checked with assert() since we want to
+//      be really sure that we are not accessing memory that we
+//      shouldn't
+//
+//   - Floating Point guarantees (FP): in general, those are distances
+//     between consecutive values in vector, guaranteed (or not)
+//     to be greater than some eps. Those are not checked by
+//     assert() because it would make the code less readable,
+//     (and execution slower: assert may not be removed even in
+//      release builds).
+//
+// If a floating point guarantee should infer an integer guarantee,
+// then we call this a "Loose Integer guarantee".
+//
+// Example:
+//
+// \code
+// Preconditions:
+//    (I)  v1.size() >= 2
+//    (FP) distance(v1[i], v1[i+1]) > eps, for all i
+//
+// const size_t n = v1.size();
+// assert(n >= 2);
+//
+// v2.clear();
+// v2.push_back(v1[0]);
+// for (unsigned int i=1; i<n; ++i)
+// {
+//     if (distance(v2.back(), v1[i]) > eps)
+//     {
+//         v2.push_back(v1[i]);
+//     }
+// }
+//
+// Midconditions:
+//    (I)  v1.size() >= 2
+//    (I)  v2.size() >= 1
+//    (LI) v2.size() >= 2
+//    (FP) distance(v1[i], v1[i+1]) > eps, for all i
+//    (FP) distance(v2[i], v2[i+1]) > eps, for all i
+//
+// if (v2.size() == 1)
+// {
+//     v2.push_back(v1.back());
+// }
+//
+// Postconditions:
+//    (I)  v1.size() >= 2
+//    (I)  v2.size() >= 2
+//    (FP) distance(v1[i], v1[i+1]) > eps, for all i
+//    (FP) distance(v2[i], v2[i+1]) > eps, for all i
+//
+// assert(v1.size() >= 2);
+// assert(v2.size() >= 2);
+// \endcode
+//
+// Integer pre-conditions and post-conditions must be checked via asserts.
+//
+// Floating Point conditions don't have to be checked.
+//
+// Loose Integer conditions must be checked via "if" (not assert), and
+// corrected into a (strong) Integer condition (i.e., not relying on any
+// floating point computation). When doing so, you don't *have to* enforce FP
+// conditions. For instance, in the example above, when correcting the LI, we
+// don't check whether adding v1.back() breaks the FP, and we just assume it
+// does not. It is meaningless to enforce a FP during a LI->I correction, since
+// anyway there's already something wrong with the FP, otherwise we wouldn't do
+// the LI->I correction in the first place. Just try to make make something
+// *sensible*, the most important being that the I conditions don't rely
+// on floating point computations.
+//
 
 void VCurve::computeRegWidths_()
 {
@@ -157,6 +236,9 @@ void VCurve::computeRegWidths_()
     // Postconditions:
     //     inputSamples_.size() > 0
     //     regWidths_.size() == inputSamples_.size()
+
+    assert(inputSamples_.size() > 0);
+    assert(regWidths_.size() == inputSamples_.size());
 }
 
 void VCurve::computeRegFits_()
@@ -206,7 +288,12 @@ void VCurve::computeRegFits_()
     //     regFits_.size() > 0
     //     regFits_.size() <= inputSamples_.size()
     //     With numSamplesPerFit = n - numFits + 1:
-    //            if n>=3 then numSamplesPerCubicFit >= 3
+    //            if n>=3 then numSamplesPerFit >= 3
+
+    assert(inputSamples_.size() > 0);
+    assert(regFits_.size() > 0);
+    assert(regFits_.size() <= inputSamples_.size());
+    assert(inputSamples_.size() - regFits_.size() + 1 >= 3 || inputSamples_.size() <= 2);
 }
 
 namespace
@@ -266,10 +353,13 @@ void VCurve::averageRegFits_()
 
     // Postconditions:
     //     inputSamples_.size() > 0
-    //     regWidths_.size() == inputSamples_.size()
+    //     regPositions_.size() == inputSamples_.size()
     //
     // Note: after this averaging, we may have duplicated positions,
     // we don't remove them here to ensure reg.size() == input.size()
+
+    assert(inputSamples_.size() > 0);
+    assert(regPositions_.size() == inputSamples_.size());
 }
 
 
@@ -291,7 +381,10 @@ void VCurve::computeKnots_()
 
     // ---- Set knot positions and widths (removing duplicates) ----
 
-    const double resolution = inputSamples_[0].resolution;
+    const double eps  = 1e-10; // numerical precision
+    const double resolution =  // resolution precision
+            std::max(10 * eps,
+                     inputSamples_[0].resolution);
 
     // Reserve memory for knots
     knots_.clear();
@@ -316,7 +409,7 @@ void VCurve::computeKnots_()
 
         const double ds = glm::length(p1 - p0);
 
-        if (ds > 0.1*resolution)
+        if (ds > resolution)
         {
             knot.position = p1;
             knot.width    = regWidths_[i];
@@ -325,7 +418,11 @@ void VCurve::computeKnots_()
         }
     }
 
-    // Get number of knots after removing duplicates
+    // Midconditions:
+    //     knots_.size() > 0
+    //     distance between consecutive knots > resolution
+    //     distance between consecutive knots > 10 * eps
+
     const size_t m  = knots_.size();
     assert(m > 0);
 
@@ -333,9 +430,9 @@ void VCurve::computeKnots_()
 
     // Note: this is different from removing duplicates, and can't be done in
     // the same step. Removing duplicates removes knots which are *exact
-    // duplicates* (up to numerical precisions).
+    // duplicates* (up to resolution).
     //
-    // Here, we know that those exact duplicates (up to numerical precision)
+    // Here, we know that those exact duplicates (up to resolution)
     // are removed, and therefore that angles can be reliably computed.
     //
     // This step does the following:
@@ -381,7 +478,7 @@ void VCurve::computeKnots_()
     //                C
     //                o
     //               /|
-    //            B o |           => We delete C
+    //            B o |           => We delete B
     //             /  |
     //            /   |
     //           /    |
@@ -399,6 +496,14 @@ void VCurve::computeKnots_()
     // The reason we use r=2.1 is that it has to be > 2 to guarantee that the
     // algorithm doesn't create duplicate consecutives knots. And the smaller
     // r, the better (more corners detected), so r = 2.1 is a good compromise.
+    //
+    // In the worst case, the distance between consecutive knots becomes:
+    //
+    //     d_min <- max( (r - 2) * d_min, d_min )
+    //
+    // So in our case, with r=2.1:
+    //
+    //     d_min <- 0.1 * d_min = 0.1 * (10 * eps) = eps
     //
 
     // Compute knot angles. By 'angle', we mean 'supplementary angle', i.e.
@@ -422,8 +527,8 @@ void VCurve::computeKnots_()
     const double r = 2.1;
     unsigned int i1 = 0; // i1: index of knot in old list
     unsigned int i2 = 0; // i2: index of knot in new list
-    while (i1+3 < m) // i1 < m-3, but we avoiding the difference because m-3
-                     // could wraps around to a very large unsigned int.
+    while (i1+3 < m) // same as while(i1 < m-3) but the latter causes the
+                     // unsigned int to wrap to MAX_UINT for small m.
     {
         // Increment indices.
         // First loop iteration has i1 = i2 = 1
@@ -489,18 +594,23 @@ void VCurve::computeKnots_()
     }
     // copy the last knot, or the last two knots (depending
     // whether the last loop iteration was a merge or not)
-    while (i1 < m-1)
+    while (i1+1 < m)
     {
         ++i1;
         ++i2;
         knots_[i2] = knots_[i1];
     }
+    // Discards remnant knots from old list
+    knots_.resize(i2 + 1);
+
+    // Midconditions:
+    //     knots_.size() > 0
+    //     distance between consecutive knots > eps
 
     // Get number of knots after merging nearby knots
-    const size_t p = i2 + 1;
+    const size_t p = knots_.size();
     assert(p > 0);
     assert(p <= m);
-    knots_.resize(p);
 
     // Recompute angles
     knots_[0].angle = 0.0;
@@ -528,17 +638,23 @@ void VCurve::computeKnots_()
 
     // Postconditions:
     //     knots_.size() > 0
-    //     consecutive knots have a distance > 0.1*eps (very unlikely worst case)
-    //
+    //     consecutive knots have a distance > eps
+    //                              distance > 0.1*resolution
 }
 
 void VCurve::computeSamples_()
 {
+    // Preconditions:
+    //     knots_.size() > 0
+    //     end knots are corner knots
+    //     consecutive knots have a distance > eps
+
     const size_t n = knots_.size();
     assert(n>0);
     assert(knots_[0].isCorner);
     assert(knots_[n-1].isCorner);
 
+    const double eps = 1e-10;
     const unsigned int numSubdivisionSteps = 3;
     const double w = 1.0 / 16.0; // tension parameter for 4-point scheme
 
@@ -548,62 +664,68 @@ void VCurve::computeSamples_()
     for(unsigned int i=0; i<n-1; ++i)
     {
         // In this loop, we create the samples between knots_[i] and
-        // knots_[i+1]. For this, we also need to use the two previous knots
-        // and the two following knots, unless there are corner knots.
+        // knots_[i+1].
         //
-        // More precisely, to compute the samples between knots_[i] and
-        // knots_[i+1] we need the knots at i-2, i-1, i, i+1, i+2, and i+3, but
-        // saturating the indices at corner knots. We call these indices i0,
-        // i1, i2, i3, i4, and i5. We call the corresponding knots k0, k1, k2,
-        // k3, k4, and k5. (with possibly, k0 = k2, k1 = k2, k4 = k3, and/or k5
-        // = k3).
+        // For this, we also need to access the two previous knots, and the two
+        // following knots (saturating at corner knots). So in total, we need 6
+        // knots A, B, C, D, E, F, to compute the samples between C = knots_[i]
+        // and D = knots_[i+1].
+        //
 
         // Get knots at i and i+1
-        const unsigned int i2 = i;
-        const unsigned int i3 = i+1;
-        const VCurveKnot & k2 = knots_[i2];
-        const VCurveKnot & k3 = knots_[i3];
+        const unsigned int iC = i;
+        const unsigned int iD = i+1;
+        const VCurveKnot & C = knots_[iC];
+        const VCurveKnot & D = knots_[iD];
 
         // Get knot at "i-1"
-        const unsigned int i1 = k2.isCorner ? i2 : i2 - 1;
-        const VCurveKnot & k1 = knots_[i1];
+        const unsigned int iB = C.isCorner ? iC : iC - 1;
+        const VCurveKnot & B = knots_[iB];
 
         // Get knot at "i-2"
-        const unsigned int i0 = k1.isCorner ? i1 : i1 - 1;
-        const VCurveKnot & k0 = knots_[i0];
+        const unsigned int iA = B.isCorner ? iB : iB - 1;
+        const VCurveKnot & A = knots_[iA];
 
         // Get knot at "i+2"
-        const unsigned int i4 = k3.isCorner ? i3 : i3 + 1;
-        const VCurveKnot & k4 = knots_[i4];
+        const unsigned int iE = D.isCorner ? iD : iD + 1;
+        const VCurveKnot & E = knots_[iE];
 
         // Get knot at "i+3"
-        const unsigned int i5 = k4.isCorner ? i4 : i4 + 1;
-        const VCurveKnot & k5 = knots_[i5];
+        const unsigned int iF = E.isCorner ? iE : iE + 1;
+        const VCurveKnot & F = knots_[iF];
 
-        // Subdivide recursively the curve between k2 and k3. The ASCII art
-        // represents what's in the vectors. The empty values in the vectors
-        // are to avoid special treatment for the first iteration, or when
-        // there's no iteration.
+        // Subdivide recursively the curve between C and D. The ASCII art
+        // represents what knot/sample each index in the vectors corresponds
+        // to.
+        //
+        // #A# : sample at knots
+        // :a: : samples at first iteration  (half-way between knots)
+        // .d. : samples at second iteration (half-way between samples of first iteration)
+        //  h  : samples at third iteration  (half-way between samples of second iteration)
+        //
+        // The reason there are unused values in the vectors is that it makes
+        // index arithmetic simpler, and it avoids having to write a special
+        // case for the first iteration.
 
         // Initialize vectors:
         //
-        //     |   |   | 0 | 1 | 2 | 3 | 4 | 5 |   |   |
+        //     |   |   |#A#|#B#|#C#|#D#|#E#|#F#|   |   |
         //
         std::vector<glm::dvec2> positions(10);
-        positions[2] = k0.position;
-        positions[3] = k1.position;
-        positions[4] = k2.position;
-        positions[5] = k3.position;
-        positions[6] = k4.position;
-        positions[7] = k5.position;
+        positions[2] = A.position;
+        positions[3] = B.position;
+        positions[4] = C.position;
+        positions[5] = D.position;
+        positions[6] = E.position;
+        positions[7] = F.position;
         //
         std::vector<double> widths(10);
-        widths[2] = k0.width;
-        widths[3] = k1.width;
-        widths[4] = k2.width;
-        widths[5] = k3.width;
-        widths[6] = k4.width;
-        widths[7] = k5.width;
+        widths[2] = A.width;
+        widths[3] = B.width;
+        widths[4] = C.width;
+        widths[5] = D.width;
+        widths[6] = E.width;
+        widths[7] = F.width;
 
         for (unsigned int j=0; j<numSubdivisionSteps; ++j)
         {
@@ -617,9 +739,9 @@ void VCurve::computeSamples_()
 
             // Spread out values
             //
-            //   old:       |   |   | 0 | 1 | 2 | 3 | 4 | 5 |   |   |
+            //   old:       |   |   |#A#|#B#|#C#|#D#|#E#|#F#|   |   |
             //
-            //   new:       | 0 |   | 1 |   | 2 |   | 3 |   | 4 |   | 5 |
+            //   new:       |#A#|   |#B#|   |#C#|   |#D#|   |#E#|   |#F#|
             //
             for (unsigned int k=0; k<p; ++k) // k in [0..5]
             {
@@ -629,11 +751,11 @@ void VCurve::computeSamples_()
 
             // Compute useful interpolated values based on 4 values around.
             //
-            //   after i=0:  | 0 |   | 1 | 6 | 2 |   | 3 |   | 4 |   | 5 |
+            //   after i=0:  |#A#|   |#B#|:a:|#C#|   |#D#|   |#E#|   |#F#|
             //
-            //   after i=1:  | 0 |   | 1 | 6 | 2 | 7 | 3 |   | 4 |   | 5 |
+            //   after i=1:  |#A#|   |#B#|:a:|#C#|:b:|#D#|   |#E#|   |#F#|
             //
-            //   after i=2:  | 0 |   | 1 | 6 | 2 | 7 | 3 | 8 | 4 |   | 5 |
+            //   after i=2:  |#A#|   |#B#|:a:|#C#|:b:|#D#|:c:|#E#|   |#F#|
             //
             for (unsigned int k=0; k<p-3; ++k) // i in [0..2]
             {
@@ -665,76 +787,269 @@ void VCurve::computeSamples_()
 
         // Here is how it looks after three iterations:
         //
-        //     |    |    | 0  | 1  | 2  | 3  | 4  | 5  |    |    |
+        // init:            |   |   |#A#|#B#|#C#|#D#|#E#|#F#|   |   |
         //
-        //     | 0  |    | 1  | 6  | 2  | 7  | 3  | 8  | 4  |    | 5  |
+        // 1st spread out:  |#A#|   |#B#|   |#C#|   |#D#|   |#E#|   |#F#|
         //
-        //     | 1  |    | 6  | 9  | 2  | 10 | 7  | 11 | 3  | 12 | 8  |    | 4  |
+        // 1st compute:     |#A#|   |#B#|:a:|#C#|:b:|#D#|:c:|#E#|   |#F#|
         //
-        //     | 6  |    | 9  | 13 | 2  | 14 | 10 | 15 | 7  | 16 | 11 | 17 | 3  | 18 | 12 |    | 8  |
-        //                         \____________________________________________/
-        //                        here are our samples between the knots k2 and k3 (both included)
+        // 2nd spread out:  |#B#|   |:a:|   |#C#|   |:b:|   |#D#|   |:c:|   |#E#|
+        //
+        // 2nd compute:     |#B#|   |:a:|.d.|#C#|.e.|:b:|.f.|#D#|.g.|:c:|   |#E#|
+        //
+        // 3rd spread out:  |:a:|   |.d.|   |#C#|   |.e.|   |:b:|   |.f.|   |#D#|   |.g.|   |:c:|
+        //
+        // 3rd compute:     |:a:|   |.d.| h |#C#| i |.e.| j |:b:| k |.f.| l |#D#| m |.g.|   |:c:|
+        //                                  \___________________________________/
+        //                                   samples = between the knots C and D
 
-        // Make samples from k2 (included) to k3 (not included)
-        for (unsigned int k=4; k<positions.size()-5; ++k)
+        // Note: final size = 9 + 2^numSubdivisionSteps
+        // Examples:
+        //     n0 = 10 = 9 + 2^0
+        //     n1 = 11 = 9 + 2^1
+        //     n2 = 13 = 9 + 2^2
+        //     n3 = 17 = 9 + 2^3
+
+        // Note: since the distance between consecutive is non-zero, and
+        // the tension parameter w < 1/8, then the limit curve is guaranteed to
+        // be continuous and have continuous tangent. Therefore, given enough
+        // iterations, then the distance between consecutive samples is guaranteed to be non-zero.
+        //
+        // However, since the number of iteration is capped, we cannot guarantee
+        // it (even though it is very, very unlikely). So for the following,
+        // let's not assume that samples have no duplicates.
+
+        // Remove duplicates and compute samples' arclength
+        std::vector<VCurveSample> samples;
+
+        // First sample
+        VCurveSample sC; // sample at C
+        sC.position = positions[4];
+        sC.width    = widths[4];
+        if (i == 0)
         {
-            // Sample to add to samples_
+            sC.arclength = 0.0;
+        }
+        else
+        {
+            VCurveSample & s0 = samples_.back();
+
+            const glm::dvec2 dp = sC.position - s0.position;
+            const double ds     = glm::length(dp);
+
+            sC.arclength = s0.arclength + ds;
+        }
+        samples.push_back(sC);
+
+        // Other samples
+        for (unsigned int k=5; k<positions.size()-4; ++k)
+        {
+            VCurveSample & s0 = samples.back(); // NOT samples_
+
+            const glm::dvec2 & p1 = positions[k];
+            const double       w1 = widths[k];
+
+            const glm::dvec2 dp = p1 - s0.position;
+            const double ds     = glm::length(dp);
+
+            if (ds > eps) // should be true at least once, since distance(B,C) > eps
+            {
+                VCurveSample sample;
+                sample.position  = p1;
+                sample.width     = w1;
+                sample.arclength = s0.arclength + ds;
+                samples.push_back(sample);
+            }
+        }
+
+        // Midcondition:
+        //   (I)  samples.size() >= 1
+        //   (LI) samples.size() >= 2
+
+        if (samples.size() == 1)
+        {
+            unsigned int k = positions.size()-5;
+
             VCurveSample sample;
+            sample.position  = positions[k];
+            sample.width     = widths[k];
+            sample.arclength = glm::length(sample.position - samples[0].position);
+            samples.push_back(sample);
+        }
 
-            // Set position and width
-            sample.position = positions[k];
-            sample.width = widths[k];
+        // Midcondition:
+        //   (I) samples.size() >= 2
 
-            // Append sample
-            samples_.push_back(sample);
+        assert(samples.size() >= 2);
+
+        // Compute tangents and normals
+
+        // First sample
+        if (C.isCorner)
+        {
+            VCurveSample & s0 = samples[0];
+            VCurveSample & s1 = samples[1];
+
+            const glm::dvec2 dp = s1.position  - s0.position;
+            const double ds     = s1.arclength - s0.arclength;
+
+            // Compute tangent
+            if (ds > eps)
+                s0.tangent = dp / ds;
+            else
+                s0.tangent = glm::dvec2(1.0, 0.0); // should not happen
+
+            // Compute normal
+            s0.normal.x = - s0.tangent.y;
+            s0.normal.y = + s0.tangent.x;
+        }
+        else
+        {
+            VCurveSample & s0 = samples_.back();
+            VCurveSample & s1 = samples[0];
+            VCurveSample & s2 = samples[1];
+
+            // Compute difference between the sample before and the sample after
+            const glm::dvec2 dp = s2.position - s0.position;
+            const double ds = glm::length(dp);
+
+            // Compute tangent
+            if (ds > eps)
+                s1.tangent = dp / ds;
+            else
+                s1.tangent = glm::dvec2(1.0, 0.0); // very unlikely to happen
+
+            // Compute normal
+            s1.normal.x = - s1.tangent.y;
+            s1.normal.y = + s1.tangent.x;
+        }
+
+        // Other samples except last
+        for (unsigned int k=1; k<samples.size()-1; ++k)
+        {
+            // Get samples before, at, and after i
+            VCurveSample & s0 = samples[k-1];
+            VCurveSample & s1 = samples[k];
+            VCurveSample & s2 = samples[k+1];
+
+            // Compute difference between the sample before and the sample after
+            const glm::dvec2 dp = s2.position - s0.position;
+            const double ds = glm::length(dp);
+
+            // Compute tangent
+            if (ds > eps)
+                s1.tangent = dp / ds;
+            else
+                s1.tangent = glm::dvec2(1.0, 0.0); // very unlikely to happen
+
+            // Compute normal
+            s1.normal.x = - s1.tangent.y;
+            s1.normal.y = + s1.tangent.x;
+        }
+
+        // In case C is a true corner knot (not an end knot), now is the time
+        // to add its in-place samples in order to have a nice round join.
+        //
+        if (C.isCorner && i>0)
+        {
+            // Midcondition:
+            //   samples.size() >= 2
+            //   samples_.size() >=1
+            //   distance(samples_.back(), samples[0] ) > eps
+            //   distance(samples[0],      samples[1] ) > eps
+
+            assert(samples_.size() >= 1);
+
+            const VCurveSample & s0 = samples_.back();
+            const VCurveSample & s1 = samples[0];
+            const VCurveSample & s2 = samples[1];
+
+            const glm::dvec2 & p0 = s0.position;
+            const glm::dvec2 & p1 = s1.position;
+            const glm::dvec2 & p2 = s2.position;
+
+            double a1 = std::atan2(p1.y-p0.y, p1.x-p0.x);
+            double a2 = std::atan2(p2.y-p1.y, p2.x-p1.x);
+
+            // Compute angle equivalent to a2, closest to a1
+            if (a2 > a1 + M_PI)
+                a2 -= 2 * M_PI;
+            else if (a2 < a1 - M_PI)
+                a2 += 2 * M_PI;
+
+            // Compute number of additional samples to create at C.
+            // Note: it's ok to have na = 0. That means the "corner" is
+            // actually not so much of a corner, and therefore there is no need
+            // to add duplicated samples at the corner. samples[0] will still
+            // be added no matter what.
+            const unsigned int na = std::floor(std::abs(a2-a1) / params_.maxSampleAngle);
+
+            // Create samples
+            for (unsigned int k=0; k<na; ++k)
+            {
+                const double u = (double) k / (double) na;
+                const double a = a1 + u*(a2-a1);
+
+                const double cos_a = std::cos(a);
+                const double sin_a = std::sin(a);
+
+                VCurveSample sample;
+                sample.position  = s1.position;
+                sample.width     = s1.width;
+                sample.arclength = s1.arclength;
+                sample.tangent   = glm::dvec2(cos_a,  sin_a);
+                sample.normal    = glm::dvec2(-sin_a, cos_a);
+                samples_.push_back(sample);
+            }
+        }
+
+        // Add samples from B (included) to C (not included)
+        // Since samples.size() >= 2, this adds at least
+        // one
+        for (unsigned int k=0; k<samples.size()-1; ++k)
+        {
+            samples_.push_back(samples[k]);
         }
     }
 
     // Create last sample
     VCurveSample lastSample;
+    // Position
     lastSample.position = knots_[n-1].position;
+    // Width
     lastSample.width = knots_[n-1].width;
+    // Arclength + tangent
+    if (samples_.size() > 0)
+    {
+        VCurveSample & s0 = samples_.back();
+
+        const glm::dvec2 dp = lastSample.position  - s0.position;
+        const double ds     = glm::length(dp);
+
+        // Arclength
+        lastSample.arclength = s0.arclength + ds;
+
+        // Tangent
+        if (ds > eps)
+            lastSample.tangent = dp / ds;
+        else
+            lastSample.tangent = glm::dvec2(1.0, 0.0); // should not happen
+    }
+    else
+    {
+        lastSample.arclength = 0.0;
+        lastSample.tangent = glm::dvec2(1.0, 0.0);
+    }
+    // Normal
+    lastSample.normal.x = - lastSample.tangent.y;
+    lastSample.normal.y = + lastSample.tangent.x;
+    // Add to samples_
     samples_.push_back(lastSample);
 
-    // Now, we should have at least one sample
-    const size_t m = samples_.size();
-    assert(m > 0);
+    // Postconditions:
+    //     samples_.size() > 0
 
-    // Compute arclengths
-    samples_[0].arclength = 0.0;
-    for (unsigned int i=1; i<m; ++i)
-    {
-        VCurveSample & s0 = samples_[i-1];
-        VCurveSample & s1 = samples_[i];
-
-        const glm::dvec2 dp = s1.position - s0.position;
-        const double ds = glm::length(dp);
-
-        s1.arclength = s0.arclength + ds;
-    }
-
-    // Compute tangents and normals
-    for (unsigned int i=0; i<m; ++i)
-    {
-        // Get samples before, at, and after i
-        VCurveSample & s0 = samples_[i>0 ? i-1 : 0];
-        VCurveSample & s1 = samples_[i];
-        VCurveSample & s2 = samples_[i<m-1 ? i+1 : m-1];
-
-        // Compute difference between the sample before and the sample after
-        const glm::dvec2 dp = s2.position - s0.position;
-        const double ds = glm::length(dp);
-
-        // Compute tangent
-        if (ds > 1e-6)
-            s1.tangent = dp / ds;
-        else
-            s1.tangent = glm::dvec2(1.0, 0.0);
-
-        // Compute normal
-        s1.normal.x = - s1.tangent.y;
-        s1.normal.y = + s1.tangent.x;
-    }
+    assert(samples_.size() > 0);
 }
 
 } // end namespace VGeometry
