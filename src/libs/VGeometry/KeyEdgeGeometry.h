@@ -10,6 +10,9 @@
 #define VGEOMETRY_KEYEDGEGEOMETRY_H
 
 #include "VCurve.h"
+#include "KeyEdgeGeometrySample.h"
+
+#include <vector>
 
 namespace VGeometry
 {
@@ -27,9 +30,14 @@ public:
     void endFit();
 
     const VCurve & curve() const;
+    const std::vector<KeyEdgeGeometrySample> & samples() const;
+
+private:
+    void computeSamples_();
 
 private:
     VCurve curve_;
+    std::vector<KeyEdgeGeometrySample> samples_;
 };
 
 } // end namespace VGeometry

@@ -451,7 +451,7 @@ void VCurve::computeKnots_()
     //
     // The criteria we use to detect those (B,C) knots to merge is:
     //
-    //      (r*BC < AB) and (r*BC < CD)   with r = 2.1 (IMPORTANT: r > 2)
+    //      (r*BC < AB) and (r*BC < CD)   with r > 2
     //
     // In which case we delete the one with the smallest supplementary angle.
     //
@@ -493,15 +493,14 @@ void VCurve::computeKnots_()
     //           /    |
     //        A o     o E
     //
-    // The reason we use r=2.1 is that it has to be > 2 to guarantee that the
-    // algorithm doesn't create duplicate consecutives knots. And the smaller
-    // r, the better (more corners detected), so r = 2.1 is a good compromise.
+    // IMPORTANT: we need r > 2 to guarantee that the
+    // algorithm doesn't create duplicate consecutives knots.
     //
     // In the worst case, the distance between consecutive knots becomes:
     //
-    //     d_min <- max( (r - 2) * d_min, d_min )
+    //     d_min <- min( (r - 2) * d_min, d_min )
     //
-    // So in our case, with r=2.1:
+    // Example, with r=2.1:
     //
     //     d_min <- 0.1 * d_min = 0.1 * (10 * eps) = eps
     //
@@ -524,7 +523,7 @@ void VCurve::computeKnots_()
 
     // Merge knots in-place. Don't touch first knot
     //
-    const double r = 2.1;
+    const double r = 4;
     unsigned int i1 = 0; // i1: index of knot in old list
     unsigned int i2 = 0; // i2: index of knot in new list
     while (i1+3 < m) // same as while(i1 < m-3) but the latter causes the

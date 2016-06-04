@@ -37,4 +37,14 @@ const VCurve & KeyEdgeGeometry::curve() const
 
 }
 
+const std::vector<KeyEdgeGeometrySample> & KeyEdgeGeometry::samples() const
+{
+    return samples_;
+}
+
+void KeyEdgeGeometry::computeSamples_()
+{
+
+}
+
 } // end namespace VGeometry

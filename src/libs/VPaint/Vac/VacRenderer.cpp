@@ -136,8 +136,8 @@ void VacRenderer::render2D(OpenGLFunctions * f, const QMatrix4x4 & projMatrix, c
     shaderProgram.release();
 
     // XXX Print debug stuff
-/*
 
+/*
     OpenGLDebug glDebug(f, projMatrix, viewMatrix);
     glDebug.setColor(QColor(Qt::red));
     f->glPointSize(6.0f);

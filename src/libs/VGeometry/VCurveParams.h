@@ -41,7 +41,7 @@ struct VCurveParams
     /// the more smooth knots are added, or the knot is converted
     /// into a corner knot, depending on the situation at hand.
     ///
-    double maxSmoothKnotAngle = 1.57; // approx. PI / 2
+    double maxSmoothKnotAngle = 2.75; // approx. 7 * PI / 8
 };
 
 } // end namespace VGeometry

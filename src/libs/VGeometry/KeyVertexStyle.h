@@ -15,7 +15,7 @@ namespace VGeometry
 /// \class KeyVertexStyle
 /// \brief A struct that stores the style of a given KeyVertex
 ///
-/// Note: for now, only CapStyle::Round and JoinStyle::Round are supported.
+/// Note: for now, only CapStyle::Round and JoinStyle::None are supported.
 ///
 struct KeyVertexStyle
 {
@@ -28,9 +28,10 @@ struct KeyVertexStyle
 
     enum class JoinStyle
     {
+        None, // Just apply cap style to each, then overlap
         Round,
         Bevel,
-        Miter, // Same as SVG miter-clip
+        Miter,
         Arcs
     };
 
@@ -46,7 +47,7 @@ struct KeyVertexStyle
 
     /// Style to apply when there are two or more incident edges
     ///
-    JoinStyle joinStyle = JoinStyle::Round;
+    JoinStyle joinStyle = JoinStyle::None;
 
     /// When joinStyle is Miter or Arcs, this value is used
     /// to know when to clip it
