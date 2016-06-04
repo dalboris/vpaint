@@ -641,6 +641,186 @@ void VCurve::computeKnots_()
     //                              distance > 0.1*resolution
 }
 
+namespace
+{
+
+class AdaptiveSampler
+{
+private:
+    // Parameters
+    unsigned int maxNumSubdivision;
+    double maxAngle;
+    double w;
+
+    // Pre-allocated buffers where to store computed samples
+    //
+    // Note:
+    //   With maxNumSubdivision = 6, then:
+    //     maxNumSamplesPerKnot = 64
+    //     sampleBufferSize = 321
+    //     sizeof(vp+vw) = 321 * 3 * sizeof(double) = 7704B  => fits in L1 cache.
+    //
+    glm::dvec2 * vp; // buffer of sample positions
+    double * vw;     // buffer of sample widths
+
+    // Init indices
+    unsigned int iA;
+    unsigned int iB;
+    unsigned int iC;
+    unsigned int iD;
+    unsigned int iE;
+    unsigned int iF;
+    unsigned int iFirst;
+    unsigned int dFirst;
+
+    // Indices of computed samples
+    std::vector<unsigned int> sampleIndices;
+
+public:
+    AdaptiveSampler(
+            unsigned int maxNumSubdivision,
+            double maxAngle,
+            double w) :
+        maxNumSubdivision(maxNumSubdivision),
+        maxAngle(maxAngle),
+        w(w)
+    {
+        // Get buffers' size
+        const unsigned int maxNumSamplesPerKnot = 1 << maxNumSubdivision;
+        const size_t       sampleBufferSize     = 5*maxNumSamplesPerKnot + 1;
+
+        // Allocate buffers
+        vp = new glm::dvec2[sampleBufferSize];
+        vw = new double[sampleBufferSize];
+
+        // Compute init indices
+        iA = 0;
+        iB = iA + maxNumSamplesPerKnot;
+        iC = iB + maxNumSamplesPerKnot;
+        iD = iC + maxNumSamplesPerKnot;
+        iE = iD + maxNumSamplesPerKnot;
+        iF = iE + maxNumSamplesPerKnot;
+        dFirst = maxNumSamplesPerKnot / 2;
+        iFirst = iC + dFirst;
+    }
+
+    ~AdaptiveSampler()
+    {
+        // Deallocate buffers
+        delete[] vp;
+        delete[] vw;
+    }
+
+    size_t numSamples() const
+    {
+        return sampleIndices.size();
+    }
+
+    glm::dvec2 position(unsigned int j) const
+    {
+        return vp[sampleIndices[j]];
+    }
+
+    double width(unsigned int j) const
+    {
+        return vw[sampleIndices[j]];
+    }
+
+    void computeSampling(
+            const VCurveKnot & A,
+            const VCurveKnot & B,
+            const VCurveKnot & C,
+            const VCurveKnot & D,
+            const VCurveKnot & E,
+            const VCurveKnot & F)
+    {
+        // Initialize buffer positions
+        vp[iA] = A.position;
+        vp[iB] = B.position;
+        vp[iC] = C.position;
+        vp[iD] = D.position;
+        vp[iE] = E.position;
+        vp[iF] = F.position;
+
+        // Initialize buffer widths
+        vw[iA] = A.width;
+        vw[iB] = B.width;
+        vw[iC] = C.width;
+        vw[iD] = D.width;
+        vw[iE] = E.width;
+        vw[iF] = F.width;
+
+        // Clear indices of samples
+        sampleIndices.clear();
+
+        // Add first sample
+        sampleIndices.push_back(iC);
+
+        // Sample recursively
+        recurse_(iFirst, dFirst);
+
+        // Add last sample
+        sampleIndices.push_back(iD);
+    }
+
+private:
+    // Adaptive sampling recursive method.
+    //
+    // XXX May be worth de-recursify this.
+    //
+    // Note: this function sometimes re-compute already computed samples. However:
+    //     - In the worth case, no more than 2*numSamples() samples are computed.
+    //     - Computing a sample is super fast (everything fits in L1 cache, and
+    //       interpolateUsingDynLevin() is only four additions and two multiplications)
+    //     - What is expensive is computeSupplementaryAngle() which cannot be
+    //       called less than it already is.
+    //
+    void recurse_(
+            unsigned int i, // index of sample to compute
+            unsigned int d) // delta index between samples at this recursion level (power of two)
+    {
+        // Precondition: the 6 samples around i are already computed. Example for d=2:
+        //
+        //  v = ... |   |i-5d|   |   |   |i-3d|   |   |   |i-d|   |   |   |i+d|   |   |   |i+3d|   |   |   |i+5d|   | ...
+
+        // Compute sample position and width
+        vp[i] = interpolateUsingDynLevin(vp[i-3*d], vp[i-d], vp[i+d], vp[i+3*d], w);
+        vw[i] = interpolateUsingDynLevin(vw[i-3*d], vw[i-d], vw[i+d], vw[i+3*d], w);
+
+        //  v = ... |   |i-5d|   |   |   |i-3d|   |   |   |i-d|   | i |   |i+d|   |   |   |i+3d|   |   |   |i+5d|   | ...
+
+        if (d>1 && computeSupplementaryAngle(vp[i-d], vp[i], vp[i+d]) > maxAngle)
+        {
+            // Compute i-2d and i+2d to satisfy precondition when recursing. These
+            // are temporary values required to compute i-d/2 and i+d/2, but
+            // shouldn't be added as sample (i.e., not added to vi)
+
+            vp[i-2*d] = interpolateUsingDynLevin(vp[i-5*d], vp[i-3*d], vp[i-d], vp[i+d], w);
+            vw[i-2*d] = interpolateUsingDynLevin(vw[i-5*d], vw[i-3*d], vw[i-d], vw[i+d], w);
+
+            vp[i+2*d] = interpolateUsingDynLevin(vp[i-d], vp[i+d], vp[i+3*d], vp[i+5*d], w);
+            vw[i+2*d] = interpolateUsingDynLevin(vw[i-d], vw[i+d], vw[i+3*d], vw[i+5*d], w);
+
+            //  v = ... |   |i-5d|   |   |   |i-3d|   |i-2d|   |i-d|   | i |   |i+d|   |i+2d|   |i+3d|   |   |   |i+5d|   | ...
+
+            // Recurse depth-first, adding samples in arclength order
+
+            const unsigned int d2 = d / 2;
+            recurse_(i-d2, d2);
+            sampleIndices.push_back(i);
+            recurse_(i+d2, d2);
+
+            //  v = ... |   |i-5d|   |   |   |i-3d|   |i-2d|   |i-d|i-d2| i |i+d2|i+d|   |i+2d|   |i+3d|   |   |   |i+5d|   | ...
+        }
+        else
+        {
+            sampleIndices.push_back(i);
+        }
+    }
+};
+
+}
+
 void VCurve::computeSamples_()
 {
     // Preconditions:
@@ -653,11 +833,14 @@ void VCurve::computeSamples_()
     assert(knots_[0].isCorner);
     assert(knots_[n-1].isCorner);
 
+    // Parameters
     const double eps = 1e-10;
-    const unsigned int numSubdivisionSteps = 3;
-    const double w = 1.0 / 16.0; // tension parameter for 4-point scheme
 
+    // Clear samples
     samples_.clear();
+
+    // Allocate the AdaptiveSampler. This shares data and memory accross knots
+    AdaptiveSampler sampler(params_.maxNumSubdivision, params_.maxSampleAngle, params_.w);
 
     // Create all but last sample
     for(unsigned int i=0; i<n-1; ++i)
@@ -669,7 +852,6 @@ void VCurve::computeSamples_()
         // following knots (saturating at corner knots). So in total, we need 6
         // knots A, B, C, D, E, F, to compute the samples between C = knots_[i]
         // and D = knots_[i+1].
-        //
 
         // Get knots at i and i+1
         const unsigned int iC = i;
@@ -693,138 +875,17 @@ void VCurve::computeSamples_()
         const unsigned int iF = E.isCorner ? iE : iE + 1;
         const VCurveKnot & F = knots_[iF];
 
-        // Subdivide recursively the curve between C and D. The ASCII art
-        // represents what knot/sample each index in the vectors corresponds
-        // to.
-        //
-        // #A# : sample at knots
-        // :a: : samples at first iteration  (half-way between knots)
-        // .d. : samples at second iteration (half-way between samples of first iteration)
-        //  h  : samples at third iteration  (half-way between samples of second iteration)
-        //
-        // The reason there are unused values in the vectors is that it makes
-        // index arithmetic simpler, and it avoids having to write a special
-        // case for the first iteration.
-
-        // Initialize vectors:
-        //
-        //     |   |   |#A#|#B#|#C#|#D#|#E#|#F#|   |   |
-        //
-        std::vector<glm::dvec2> positions(10);
-        positions[2] = A.position;
-        positions[3] = B.position;
-        positions[4] = C.position;
-        positions[5] = D.position;
-        positions[6] = E.position;
-        positions[7] = F.position;
-        //
-        std::vector<double> widths(10);
-        widths[2] = A.width;
-        widths[3] = B.width;
-        widths[4] = C.width;
-        widths[5] = D.width;
-        widths[6] = E.width;
-        widths[7] = F.width;
-
-        for (unsigned int j=0; j<numSubdivisionSteps; ++j)
-        {
-            // Meta-comment: ASCII art and values are for first iteration
-
-            const size_t p    = positions.size() - 4; // == 6
-
-            // Allocate memory for storing result of iteration
-            std::vector<glm::dvec2> newPositions(2*p-1); // == 11
-            std::vector<double> newWidths(2*p-1);
-
-            // Spread out values
-            //
-            //   old:       |   |   |#A#|#B#|#C#|#D#|#E#|#F#|   |   |
-            //
-            //   new:       |#A#|   |#B#|   |#C#|   |#D#|   |#E#|   |#F#|
-            //
-            for (unsigned int k=0; k<p; ++k) // k in [0..5]
-            {
-                newPositions[2*k] = positions[k+2];
-                newWidths[2*k] = widths[k+2];
-            }
-
-            // Compute useful interpolated values based on 4 values around.
-            //
-            //   after i=0:  |#A#|   |#B#|:a:|#C#|   |#D#|   |#E#|   |#F#|
-            //
-            //   after i=1:  |#A#|   |#B#|:a:|#C#|:b:|#D#|   |#E#|   |#F#|
-            //
-            //   after i=2:  |#A#|   |#B#|:a:|#C#|:b:|#D#|:c:|#E#|   |#F#|
-            //
-            for (unsigned int k=0; k<p-3; ++k) // i in [0..2]
-            {
-                const unsigned int k1  = 2*k;    // in
-                const unsigned int k2  = k1 + 2; // in
-                const unsigned int k25 = k1 + 3; // out
-                const unsigned int k3  = k1 + 4; // in
-                const unsigned int k4  = k1 + 6; // in
-
-                newPositions[k25] = interpolateUsingDynLevin(
-                            newPositions[k1],
-                            newPositions[k2],
-                            newPositions[k3],
-                            newPositions[k4],
-                            w);
-
-                newWidths[k25] = interpolateUsingDynLevin(
-                            newWidths[k1],
-                            newWidths[k2],
-                            newWidths[k3],
-                            newWidths[k4],
-                            w);
-            }
-
-            // Swap old and new
-            swap(positions, newPositions);
-            swap(widths, newWidths);
-        }
-
-        // Here is how it looks after three iterations:
-        //
-        // init:            |   |   |#A#|#B#|#C#|#D#|#E#|#F#|   |   |
-        //
-        // 1st spread out:  |#A#|   |#B#|   |#C#|   |#D#|   |#E#|   |#F#|
-        //
-        // 1st compute:     |#A#|   |#B#|:a:|#C#|:b:|#D#|:c:|#E#|   |#F#|
-        //
-        // 2nd spread out:  |#B#|   |:a:|   |#C#|   |:b:|   |#D#|   |:c:|   |#E#|
-        //
-        // 2nd compute:     |#B#|   |:a:|.d.|#C#|.e.|:b:|.f.|#D#|.g.|:c:|   |#E#|
-        //
-        // 3rd spread out:  |:a:|   |.d.|   |#C#|   |.e.|   |:b:|   |.f.|   |#D#|   |.g.|   |:c:|
-        //
-        // 3rd compute:     |:a:|   |.d.| h |#C#| i |.e.| j |:b:| k |.f.| l |#D#| m |.g.|   |:c:|
-        //                                  \___________________________________/
-        //                                   samples = between the knots C and D
-
-        // Note: final size = 9 + 2^numSubdivisionSteps
-        // Examples:
-        //     n0 = 10 = 9 + 2^0
-        //     n1 = 11 = 9 + 2^1
-        //     n2 = 13 = 9 + 2^2
-        //     n3 = 17 = 9 + 2^3
-
-        // Note: since the distance between consecutive is non-zero, and
-        // the tension parameter w < 1/8, then the limit curve is guaranteed to
-        // be continuous and have continuous tangent. Therefore, given enough
-        // iterations, then the distance between consecutive samples is guaranteed to be non-zero.
-        //
-        // However, since the number of iteration is capped, we cannot guarantee
-        // it (even though it is very, very unlikely). So for the following,
-        // let's not assume that samples have no duplicates.
+        // Adaptive sampling
+        // This is where the actual computation happens
+        sampler.computeSampling(A, B, C, D, E, F);
 
         // Remove duplicates and compute samples' arclength
         std::vector<VCurveSample> samples;
 
         // First sample
         VCurveSample sC; // sample at C
-        sC.position = positions[4];
-        sC.width    = widths[4];
+        sC.position = sampler.position(0);
+        sC.width    = sampler.width(0);
         if (i == 0)
         {
             sC.arclength = 0.0;
@@ -841,12 +902,12 @@ void VCurve::computeSamples_()
         samples.push_back(sC);
 
         // Other samples
-        for (unsigned int k=5; k<positions.size()-4; ++k)
+        for (unsigned int j=0; j<sampler.numSamples(); ++j)
         {
-            VCurveSample & s0 = samples.back(); // NOT samples_
+            VCurveSample & s0 = samples.back(); // Note: samples, not samples_.
 
-            const glm::dvec2 & p1 = positions[k];
-            const double       w1 = widths[k];
+            const glm::dvec2 & p1 = sampler.position(j);
+            const double       w1 = sampler.width(j);
 
             const glm::dvec2 dp = p1 - s0.position;
             const double ds     = glm::length(dp);
@@ -867,11 +928,11 @@ void VCurve::computeSamples_()
 
         if (samples.size() == 1)
         {
-            unsigned int k = positions.size()-5;
+            unsigned int j = sampler.numSamples() - 1;
 
             VCurveSample sample;
-            sample.position  = positions[k];
-            sample.width     = widths[k];
+            sample.position  = sampler.position(j);
+            sample.width     = sampler.width(j);
             sample.arclength = glm::length(sample.position - samples[0].position);
             samples.push_back(sample);
         }

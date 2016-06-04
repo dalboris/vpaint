@@ -23,7 +23,10 @@ struct VCurveParams
     /// will never do more subdivisions than this number, even if there are
     /// still samples whose angle is > maxSampleAngle.
     ///
-    double maxNumSubdivision = 6; // i.e., max 2^6 = 64 samples between two knots
+    int maxNumSubdivision = 6; // i.e., max 2^6 = 64 samples between two knots
+                                  // and at each subdivision, the angle is more or
+                                  // less divided by two. So even if start angle = PI,
+                                  // then that should be enough iterations until maxSampleAngle
 
     /// Variable to specify whether or not knots should be automatically
     /// added or removed.
@@ -42,6 +45,10 @@ struct VCurveParams
     /// into a corner knot, depending on the situation at hand.
     ///
     double maxSmoothKnotAngle = 2.75; // approx. 7 * PI / 8
+
+    /// Tension parameter of 4-point subdivision scheme
+    ///
+    double w = 1.0 / 16.0;
 };
 
 } // end namespace VGeometry
