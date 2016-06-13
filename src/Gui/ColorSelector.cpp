@@ -58,14 +58,16 @@ void ColorSelector::updateIcon()
     int h = pixSize.height();
 
     // Create icon
-    QPixmap pix(pixSize);
-    pix.fill(color_);
-
+    QPixmap checkerboard(":/images/checkerboard.png"), pix(pixSize);
+    //checkerboard.brush(color_);
     QPainter painter(&pix);
+    QRect r(0,0,w-1,h-1);
+    painter.fillRect(r, QBrush(checkerboard));
+    painter.fillRect(r, QBrush(color_));
 
     // Border
     painter.setPen(QPen(Qt::black));
-    painter.drawRect(0,0,w-1,h-1);
+    painter.drawRect(r);
 
     // Text
     painter.setPen(QPen(textColor));

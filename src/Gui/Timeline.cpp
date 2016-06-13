@@ -221,6 +221,7 @@ void Timeline_HBar::mousePressEvent (QMouseEvent * event)
         scrollingInitialX_ = event->x();
         scrollingInitialOffset_ = w_->totalPixelOffset_;
         isScrolling_ = true;
+        setCursor(QCursor(Qt::ClosedHandCursor));
     }
 
     // Select time
@@ -237,6 +238,7 @@ void Timeline_HBar::mousePressEvent (QMouseEvent * event)
           event->button() == Qt::RightButton &&
           hasHighlightedFrame_)
     {
+        setCursor(QCursor(Qt::ClosedHandCursor));
         w_->scene_->getVAC_()->prepareTemporalDragAndDrop(Time(highlightedFrame_));
     }
 
@@ -267,10 +269,13 @@ void Timeline_HBar::mouseReleaseEvent (QMouseEvent * event)
         }
         else
             hasHighlightedFrame_ = false;
+
+        setCursor(QCursor(Qt::ArrowCursor));
     }
     else if(event->button() == Qt::RightButton)
     {
         w_->scene_->getVAC_()->completeTemporalDragAndDrop();
+        setCursor(QCursor(Qt::ArrowCursor));
     }
     repaint();
 }
