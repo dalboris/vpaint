@@ -1008,8 +1008,14 @@ void View::drawScene()
     // XXX Should be replaced by drawCanvas_(scene_->canvas());
     scene_->drawCanvas(viewSettings_);
 
+    // Draw scene
+    drawSceneDelegate_(activeTime());
+}
+
+void View::drawSceneDelegate_(Time t)
+{
     // Draw background
-    drawBackground_(scene_->background(), activeFrame()); // later: drawBackground_(layer_->background())
+    drawBackground_(scene_->background(), t.frame()); // later: drawBackground_(layer_->background())
 
     // Loop over all onion skins. Draw in this order:
     //   1. onion skins before
@@ -1019,43 +1025,41 @@ void View::drawScene()
     // Note 1: When layers will be implemented, then only the active layer has onion skins
     // Note 2: Backgrounds are always ignored for onion skinning
 
+    // Draw onion skins
     viewSettings_.setMainDrawing(false);
-    Time t = activeTime();
+    if(viewSettings_.onionSkinningIsEnabled())
     {
-        if(viewSettings_.onionSkinningIsEnabled())
+        // Draw onion skins before
+        Time tOnion = t;
+        for(int i=0; i<viewSettings_.numOnionSkinsBefore(); ++i)
         {
-            // Draw onion skins before
-            Time tOnion = t;
-            for(int i=0; i<viewSettings_.numOnionSkinsBefore(); ++i)
-            {
-                tOnion = tOnion - viewSettings_.onionSkinsTimeOffset();
-                glTranslated(-viewSettings_.onionSkinsXOffset(),-viewSettings_.onionSkinsYOffset(),0);
-            }
-            for(int i=0; i<viewSettings_.numOnionSkinsBefore(); ++i)
-            {
-                scene_->draw(tOnion, viewSettings_); // XXX should be replaced by scene_->vectorAnimationComplex()->draw()
-                tOnion = tOnion + viewSettings_.onionSkinsTimeOffset();
-                glTranslated(viewSettings_.onionSkinsXOffset(),viewSettings_.onionSkinsYOffset(),0);
-            }
-
-            // Draw onion skins after
-            tOnion = t;
-            for(int i=0; i<viewSettings_.numOnionSkinsAfter(); ++i)
-            {
-                glTranslated(viewSettings_.onionSkinsXOffset(),viewSettings_.onionSkinsYOffset(),0);
-                tOnion = tOnion + viewSettings_.onionSkinsTimeOffset();
-                scene_->draw(tOnion, viewSettings_);
-            }
-            for(int i=0; i<viewSettings_.numOnionSkinsAfter(); ++i)
-            {
-                glTranslated(-viewSettings_.onionSkinsXOffset(),-viewSettings_.onionSkinsYOffset(),0);
-            }
+            tOnion = tOnion - viewSettings_.onionSkinsTimeOffset();
+            glTranslated(-viewSettings_.onionSkinsXOffset(),-viewSettings_.onionSkinsYOffset(),0);
+        }
+        for(int i=0; i<viewSettings_.numOnionSkinsBefore(); ++i)
+        {
+            scene_->draw(tOnion, viewSettings_); // XXX should be replaced by scene_->vectorAnimationComplex()->draw()
+            tOnion = tOnion + viewSettings_.onionSkinsTimeOffset();
+            glTranslated(viewSettings_.onionSkinsXOffset(),viewSettings_.onionSkinsYOffset(),0);
         }
 
-        // Draw current frame
-        viewSettings_.setMainDrawing(true);
-        scene_->draw(t, viewSettings_);
+        // Draw onion skins after
+        tOnion = t;
+        for(int i=0; i<viewSettings_.numOnionSkinsAfter(); ++i)
+        {
+            glTranslated(viewSettings_.onionSkinsXOffset(),viewSettings_.onionSkinsYOffset(),0);
+            tOnion = tOnion + viewSettings_.onionSkinsTimeOffset();
+            scene_->draw(tOnion, viewSettings_);
+        }
+        for(int i=0; i<viewSettings_.numOnionSkinsAfter(); ++i)
+        {
+            glTranslated(-viewSettings_.onionSkinsXOffset(),-viewSettings_.onionSkinsYOffset(),0);
+        }
     }
+
+    // Draw current frame
+    viewSettings_.setMainDrawing(true);
+    scene_->draw(t, viewSettings_);
 }
 
 void View::toggleOutline()
@@ -1420,12 +1424,12 @@ void imageCleanupHandler(void * info)
 
 }
 
-QImage View::drawToImage(double x, double y, double w, double h, int imgW, int imgH)
+QImage View::drawToImage(double x, double y, double w, double h, int imgW, int imgH, bool useViewSettings)
 {
-    return drawToImage(activeTime(), x, y, w, h, imgW, imgH);
+    return drawToImage(activeTime(), x, y, w, h, imgW, imgH, useViewSettings);
 }
 
-QImage View::drawToImage(Time t, double x, double y, double w, double h, int imgW, int imgH)
+QImage View::drawToImage(Time t, double x, double y, double w, double h, int imgW, int imgH, bool useViewSettings)
 {
     // Test availability of OpenGL functionality
     if(!GLEW_VERSION_2_0) {
@@ -1543,14 +1547,21 @@ QImage View::drawToImage(Time t, double x, double y, double w, double h, int img
     glLoadMatrixd(camera2d.viewMatrixData());
 
     // Draw scene
-    ViewSettings::DisplayMode oldDM = viewSettings_.displayMode();
-    viewSettings_.setDisplayMode(ViewSettings::ILLUSTRATION);
-    drawBackground_(scene_->background(), t.frame());
-    viewSettings_.setMainDrawing(false);
-    viewSettings_.setDrawCursor(false);
-    scene_->draw(t, viewSettings_);
-    viewSettings_.setDrawCursor(true);
-    viewSettings_.setDisplayMode(oldDM);
+    if (useViewSettings)
+    {
+        drawSceneDelegate_(t);
+    }
+    else
+    {
+        ViewSettings::DisplayMode oldDM = viewSettings_.displayMode();
+        viewSettings_.setDisplayMode(ViewSettings::ILLUSTRATION);
+        drawBackground_(scene_->background(), t.frame());
+        viewSettings_.setMainDrawing(false);
+        viewSettings_.setDrawCursor(false);
+        scene_->draw(t, viewSettings_);
+        viewSettings_.setDrawCursor(true);
+        viewSettings_.setDisplayMode(oldDM);
+    }
 
     // Restore viewport size
     viewportWidth_ = oldViewportWidth;

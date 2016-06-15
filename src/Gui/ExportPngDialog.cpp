@@ -67,6 +67,10 @@ ExportPngDialog::ExportPngDialog(Scene * scene) :
     exportSequenceCheckBox_->setChecked(false);
     formLayoutPng->addRow(tr("Export Sequence"), exportSequenceCheckBox_);
 
+    useViewSettings_ = new QCheckBox();
+    useViewSettings_->setChecked(false);
+    formLayoutPng->addRow(tr("Use View Settings"), useViewSettings_);
+
     // Export/Cancel dialog buttons
     QDialogButtonBox * buttonBox = new QDialogButtonBox(QDialogButtonBox::Cancel);
     buttonBox->addButton(tr("Export"), QDialogButtonBox::AcceptRole);
@@ -141,6 +145,11 @@ bool ExportPngDialog::preserveAspectRatio() const
 bool ExportPngDialog::exportSequence() const
 {
     return exportSequenceCheckBox_->isChecked();
+}
+
+bool ExportPngDialog::useViewSettings() const
+{
+    return useViewSettings_->isChecked();
 }
 
 void ExportPngDialog::setPngWidthForHeight_()

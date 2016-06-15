@@ -40,6 +40,7 @@ public:
     int pngHeight() const;
     bool preserveAspectRatio() const;
     bool exportSequence() const;
+    bool useViewSettings() const;
 
 public slots:
     // Reimplements from QDialog
@@ -68,6 +69,7 @@ private:
     QSpinBox * pngHeightSpinBox_;
     QCheckBox * preserveAspectRatioCheckBox_;
     QCheckBox * exportSequenceCheckBox_;
+    QCheckBox * useViewSettings_;
 
     double oldTop_;
     double oldLeft_;
