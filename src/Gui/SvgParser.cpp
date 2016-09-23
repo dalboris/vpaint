@@ -1032,51 +1032,64 @@ Eigen::Vector2d SvgParser::finishPath(QList<PotentialPoint> & samplingPoints, co
     return Eigen::Vector2d(samplingPoints.last().getX(), samplingPoints.last().getY());
 }
 
-void SvgParser::readSvg_(XmlStreamReader & xml)
+void SvgParser::readElement_(XmlStreamReader & xml)
 {
-    while (xml.readNextStartElement())
+    if(xml.isStartElement() || xml.isEndElement())
     {
-        if(xml.name() == "svg") {
-            while(xml.readNextStartElement())
-            {
-                if(xml.name() == "rect")
-                {
-                    if(!readRect_(xml)) return;
-                }
-                else if(xml.name() == "line")
-                {
-                    if(!readLine_(xml)) return;
-                }
-                else if(xml.name() == "polyline")
-                {
-                    if(!readPolyline_(xml)) return;
-                }
-                else if(xml.name() == "polygon")
-                {
-                    if(!readPolygon_(xml)) return;
-                }
-                else if(xml.name() == "circle")
-                {
-                    if(!readCircle_(xml)) return;
-                }
-                else if(xml.name() == "ellipse")
-                {
-                    if(!readEllipse_(xml)) return;
-                }
-                else if(xml.name() == "path")
-                {
-                    if(!readPath_(xml)) return;
-                }
+        qDebug() << xml.name();
 
-                xml.skipCurrentElement();
-            }
+        if(xml.name() == "rect")
+        {
+            if(!readRect_(xml)) return;
+        }
+        else if(xml.name() == "line")
+        {
+            if(!readLine_(xml)) return;
+        }
+        else if(xml.name() == "polyline")
+        {
+            if(!readPolyline_(xml)) return;
+        }
+        else if(xml.name() == "polygon")
+        {
+            if(!readPolygon_(xml)) return;
+        }
+        else if(xml.name() == "circle")
+        {
+            if(!readCircle_(xml)) return;
+        }
+        else if(xml.name() == "ellipse")
+        {
+            if(!readEllipse_(xml)) return;
+        }
+        else if(xml.name() == "path")
+        {
+            if(!readPath_(xml)) return;
         }
         else {
-            qDebug() << xml.name();
+            // Warning
         }
 
-        xml.skipCurrentElement();
+        if(xml.name() != "g")
+        {
+            xml.skipCurrentElement();
+        }
     }
+
+    if(!xml.atEnd()) {
+        xml.readNext();
+        readElement_(xml);
+    }
+}
+
+void SvgParser::readSvg_(XmlStreamReader & xml)
+{
+    xml.readNextStartElement();
+    if(xml.name() != "svg") {
+        // Error
+    }
+    xml.readNextStartElement();
+    readElement_(xml);
 }
 
 SvgPresentationAttributes::SvgPresentationAttributes(XmlStreamReader &xml, SvgParser & parser) {

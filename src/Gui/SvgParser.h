@@ -69,6 +69,7 @@ public:
     bool readCircle_(XmlStreamReader & xml);
     bool readEllipse_(XmlStreamReader & xml);
     bool readPath_(XmlStreamReader & xml);
+    void readElement_(XmlStreamReader & xml);
     void readSvg_(XmlStreamReader & xml);
 
     // Utilities
