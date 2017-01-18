@@ -279,3 +279,5 @@ SOURCES += main.cpp \
     UpdateCheck.cpp \
     VectorAnimationComplex/BoundingBox.cpp \
     VectorAnimationComplex/TransformTool.cpp
+    
+    win32: LIBS += -lopengl32 -lglu32
