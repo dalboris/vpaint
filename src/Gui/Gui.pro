@@ -61,7 +61,7 @@ win32: CONFIG += embed_manifest_exe
 
 # GLU
 unix:!macx: LIBS += -lGLU
-
+win32: LIBS += -lopengl32 -lglu32
 
 ###############################################################################
 #                      SHIPPED EXTERNAL LIBRARIES
@@ -279,5 +279,3 @@ SOURCES += main.cpp \
     UpdateCheck.cpp \
     VectorAnimationComplex/BoundingBox.cpp \
     VectorAnimationComplex/TransformTool.cpp
-    
-    win32: LIBS += -lopengl32 -lglu32
