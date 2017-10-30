@@ -2,14 +2,21 @@
 
 [![Join the chat at https://gitter.im/dalboris/vpaint](https://badges.gitter.im/dalboris/vpaint.svg)](https://gitter.im/dalboris/vpaint?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-VPaint is a vector graphics and 2D animation app based on the
-[Vector Animation Complex](http://www.dalboris.com/research/vac/) 
+# VPAINT IS NOW DISCONTINUED
+
+This repository is obsolete and kept for archival purposes only.
+
+VPaint is now discontinued in favor of its successors VGC Illustration and VGC Animation. See [www.vgc.io](https://www.vgc.io/) for more info.
+
+
+# ABOUT
+
+VPaint was a vector graphics and 2D animation app based on the
+[Vector Animation Complex](http://www.borisdalstein.com/research/vac/) 
 technology. Visit [vpaint.org](http://vpaint.org) to learn more,
-or visit the [VPaint forum](http://www.vpaint.org/forum/). VPaint is proud to 
+or visit the [VGC forums](http://forums.vgc.io/). VPaint is proud to 
 be open source software licensed under 
 [the MIT license](https://github.com/dalboris/vpaint/blob/master/LICENSE.MIT).
-
-Though, beware that VPaint is still in early development, and all VPaint 1.x versions are and will be labeled "BETA". The most unstable/incomplete features are marked with the text [Beta]. Please subscribe to the [mailing list](http://www.vpaint.org/#about) to be informed when VPaint 2.0 is released.
 
 
 # KNOWN ISSUES
