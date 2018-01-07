@@ -2,11 +2,11 @@
 
 [![Join the chat at https://gitter.im/dalboris/vpaint](https://badges.gitter.im/dalboris/vpaint.svg)](https://gitter.im/dalboris/vpaint?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-# VPAINT IS NOW DISCONTINUED
+# VPAINT BECOMES VGC ANIMATION
 
-This repository is obsolete and kept for archival purposes only.
+The future of VPaint is VGC Illustration and VGC Animation. See [www.vgc.io](https://www.vgc.io/) for more info. Github:  [https://github.com/vgc-io/vgc](https://github.com/vgc-io/vgc).
 
-VPaint is now discontinued in favor of its successors VGC Illustration and VGC Animation. See [www.vgc.io](https://www.vgc.io/) for more info.
+This repository is obsolete and kept for archival purposes only. 
 
 
 # ABOUT
