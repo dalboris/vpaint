@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2016 The VPaint Developers.
+// Copyright (C) 2012-2018 The VPaint Developers.
 // See the COPYRIGHT file at the top-level directory of this distribution
 // and at https://github.com/dalboris/vpaint/blob/master/COPYRIGHT
 //
@@ -25,6 +25,7 @@
 #include "Background/BackgroundWidget.h"
 #include "VectorAnimationComplex/VAC.h"
 #include "VectorAnimationComplex/InbetweenFace.h"
+#include "LayersWidget.h"
 
 #include "IO/FileVersionConverter.h"
 #include "XmlStreamWriter.h"
@@ -1783,6 +1784,7 @@ void MainWindow::createMenus()
     menuView->addAction(global()->toolModeToolBar()->toggleViewAction());
     menuView->addAction(dockTimeLine->toggleViewAction());
     menuView->addAction(dockBackgroundWidget->toggleViewAction());
+    menuView->addAction(dockLayersWidget->toggleViewAction());
     advancedViewMenu = menuView->addMenu(tr("Advanced [Beta]")); {
         advancedViewMenu->addAction(dockInspector->toggleViewAction());
         advancedViewMenu->addAction(dockAdvancedSettings->toggleViewAction());
@@ -1925,6 +1927,16 @@ void MainWindow::createDocks()
     addDockWidget(Qt::RightDockWidgetArea, dockBackgroundWidget);
     //dockBackgroundWidget->hide(); todo: uncomment (commented for convenience while developing)
 
+    // ----- Layers ---------
+
+    // Widget
+    layersWidget = new LayersWidget();
+
+    // Dock
+    dockLayersWidget = new QDockWidget(tr("Layers"));
+    dockLayersWidget->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+    dockLayersWidget->setWidget(layersWidget);
+    addDockWidget(Qt::RightDockWidgetArea, dockLayersWidget);
 
     // ----- TimeLine -------------
 

@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2016 The VPaint Developers.
+// Copyright (C) 2012-2018 The VPaint Developers.
 // See the COPYRIGHT file at the top-level directory of this distribution
 // and at https://github.com/dalboris/vpaint/blob/master/COPYRIGHT
 //
@@ -32,6 +32,7 @@ class EditCanvasSizeDialog;
 class ExportPngDialog;
 class AboutDialog;
 class BackgroundWidget;
+class LayersWidget;
 
 namespace VectorAnimationComplex
 {
@@ -284,6 +285,8 @@ private:
     AnimatedCycleWidget * animatedCycleEditor;
     BackgroundWidget * backgroundWidget;
     QDockWidget * dockBackgroundWidget;
+    LayersWidget * layersWidget;
+    QDockWidget * dockLayersWidget;
 };
 
 #endif

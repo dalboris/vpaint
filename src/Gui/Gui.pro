@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2016 The VPaint Developers.
+# Copyright (C) 2012-2018 The VPaint Developers.
 # See the COPYRIGHT file at the top-level directory of this distribution
 # and at https://github.com/dalboris/vpaint/blob/master/COPYRIGHT
 #
@@ -188,7 +188,8 @@ HEADERS += MainWindow.h \
     Version.h \
     UpdateCheck.h \
     VectorAnimationComplex/BoundingBox.h \
-    VectorAnimationComplex/TransformTool.h
+    VectorAnimationComplex/TransformTool.h \
+    LayersWidget.h
 
 SOURCES += main.cpp \
     SaveAndLoad.cpp \
@@ -278,4 +279,5 @@ SOURCES += main.cpp \
     Version.cpp \
     UpdateCheck.cpp \
     VectorAnimationComplex/BoundingBox.cpp \
-    VectorAnimationComplex/TransformTool.cpp
+    VectorAnimationComplex/TransformTool.cpp \
+    LayersWidget.cpp
