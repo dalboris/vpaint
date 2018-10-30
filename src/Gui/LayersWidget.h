@@ -9,8 +9,50 @@
 #ifndef LAYERSWIDGET_H
 #define LAYERSWIDGET_H
 
+#include <vector>
+
 #include <QWidget>
 
+class QCheckBox;
+class QLabel;
+class QVBoxLayout;
+
+/// One individual layer row in the Layers panel.
+///
+class LayerWidget: public QWidget
+{
+    Q_OBJECT
+
+public:
+    LayerWidget(int index, bool isCurrent = false);
+    ~LayerWidget();
+
+    int index() const;
+    void setIndex(int index);
+
+    bool isCurrent() const;
+    void setCurrent(bool b);
+
+protected:
+    void mousePressEvent(QMouseEvent* event) override;
+
+signals:
+    // This signal is emitted when the user
+    // requested to make this layer current.
+    void requestCurrent(int layerIndex);
+
+private:
+    int index_;
+    bool isCurrent_;
+    QCheckBox * checkBox_;
+    QLabel * label_;
+    void updateBackground_();
+    void updateCheckBoxState_();
+    void updateLabelText_();
+};
+
+/// The whole Layers panel.
+///
 class LayersWidget: public QWidget
 {
     Q_OBJECT
@@ -18,6 +60,19 @@ class LayersWidget: public QWidget
 public:
     LayersWidget();
     ~LayersWidget();
+
+private slots:
+    void onRequestCurrent_(int index);
+
+private:
+    // Each LayerWidget is responsible for displaying info
+    // about a given layer. When reordering the layers, the
+    // LayerWidget instances are not reordered, but simply
+    // assigned a different layer to display info of.
+    void createNewLayerWidget_();
+    void destroyLastLayerWidget_();
+    std::vector<LayerWidget*> layers_;
+    QVBoxLayout * layerListLayout_;
 };
 
 #endif // LAYERSWIDGET_H
