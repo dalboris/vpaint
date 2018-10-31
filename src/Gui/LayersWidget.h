@@ -15,6 +15,7 @@
 
 class QCheckBox;
 class QLabel;
+class QLineEdit;
 class QVBoxLayout;
 
 /// One individual layer row in the Layers panel.
@@ -36,19 +37,26 @@ public:
     bool isCurrent() const;
     void setCurrent(bool b);
 
+    void enterNameEditingMode();
+
 protected:
     void mousePressEvent(QMouseEvent* event) override;
+    void mouseDoubleClickEvent(QMouseEvent* event) override;
 
 signals:
     // This signal is emitted when the user
     // requested to make this layer current.
     void requestCurrent(int layerIndex);
 
+private slots:
+    void onNameEditingFinished_();
+
 private:
     int index_;
     bool isCurrent_;
     QCheckBox * checkBox_;
     QLabel * nameLabel_;
+    QLineEdit * nameLineEdit_;
     void updateBackground_();
 };
 

@@ -11,6 +11,7 @@
 #include <QCheckBox>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QLineEdit>
 #include <QPushButton>
 #include <QScrollArea>
 #include <QVBoxLayout>
@@ -29,11 +30,20 @@ LayerWidget::LayerWidget(int index, bool isCurrent) :
     checkBox_ = new QCheckBox();
     checkBox_->setCheckState(Qt::Checked);
     checkBox_->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+
     nameLabel_ = new QLabel();
+    nameLabel_->setMinimumHeight(30);
     setName( tr("Layer %1").arg(index));
+
+    nameLineEdit_ = new QLineEdit();
+    nameLineEdit_->setMinimumHeight(30);
+    nameLineEdit_->hide();
+    connect(nameLineEdit_, &QLineEdit::editingFinished, this, &LayerWidget::onNameEditingFinished_);
+
     QHBoxLayout * layout = new QHBoxLayout();
     layout->addWidget(checkBox_);
     layout->addWidget(nameLabel_);
+    layout->addWidget(nameLineEdit_);
     setLayout(layout);
 
     setAutoFillBackground(true);
@@ -76,9 +86,30 @@ void LayerWidget::setCurrent(bool b)
     updateBackground_();
 }
 
+void LayerWidget::enterNameEditingMode()
+{
+    nameLineEdit_->setText(nameLabel_->text());
+    nameLabel_->hide();
+    nameLineEdit_->show();
+    nameLineEdit_->selectAll();
+    nameLineEdit_->setFocus();
+}
+
 void LayerWidget::mousePressEvent(QMouseEvent*)
 {
     emit requestCurrent(index());
+}
+
+void LayerWidget::mouseDoubleClickEvent(QMouseEvent*)
+{
+    enterNameEditingMode();
+}
+
+void LayerWidget::onNameEditingFinished_()
+{
+    nameLabel_->setText(nameLineEdit_->text());
+    nameLineEdit_->hide();
+    nameLabel_->show();
 }
 
 void LayerWidget::updateBackground_()
@@ -202,8 +233,9 @@ void LayersWidget::onNewLayerClicked_()
             layerWidgets_[i]->setName(layerWidgets_[i-1]->name());
         }
     }
-    layerWidgets_[newCurrentIndex]->setName("Layer");
+    layerWidgets_[newCurrentIndex]->setName("New Layer");
     setCurrentLayer_(newCurrentIndex);
+    currentLayer_->enterNameEditingMode();
 }
 
 void LayersWidget::onDeleteLayerClicked_()
