@@ -25,7 +25,10 @@ class LayerWidget: public QWidget
 
 public:
     LayerWidget(int index, bool isCurrent = false);
-    ~LayerWidget();
+    ~LayerWidget() override;
+
+    QString name() const;
+    void setName(const QString& name);
 
     int index() const;
     void setIndex(int index);
@@ -45,10 +48,8 @@ private:
     int index_;
     bool isCurrent_;
     QCheckBox * checkBox_;
-    QLabel * label_;
+    QLabel * nameLabel_;
     void updateBackground_();
-    void updateCheckBoxState_();
-    void updateLabelText_();
 };
 
 /// The whole Layers panel.
@@ -59,10 +60,17 @@ class LayersWidget: public QWidget
 
 public:
     LayersWidget();
-    ~LayersWidget();
+    ~LayersWidget() override;
 
 private slots:
-    void onRequestCurrent_(int index);
+    // Set current layer. Range-checked. Set no current layer
+    // if invalid index (e.g., -1).
+    void setCurrentLayer_(int index);
+
+    void onNewLayerClicked_();
+    void onDeleteLayerClicked_();
+    void onMoveLayerUpClicked_();
+    void onMoveLayerDownClicked_();
 
 private:
     // Each LayerWidget is responsible for displaying info
@@ -71,8 +79,11 @@ private:
     // assigned a different layer to display info of.
     void createNewLayerWidget_();
     void destroyLastLayerWidget_();
-    std::vector<LayerWidget*> layers_;
+    std::vector<LayerWidget*> layerWidgets_;
+    int numVisibleLayerWidgets_;
+
     QVBoxLayout * layerListLayout_;
+    LayerWidget * currentLayer_;
 };
 
 #endif // LAYERSWIDGET_H

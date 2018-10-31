@@ -11,6 +11,7 @@
 #include <QCheckBox>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QPushButton>
 #include <QScrollArea>
 #include <QVBoxLayout>
 
@@ -21,29 +22,37 @@ const QColor layerColorIfNotCurrent = QColor::fromRgb(255, 255, 255);
 const QColor layerListBackgroundColor = QColor::fromRgb(255, 255, 255);
 } // namespace
 
-LayerWidget::LayerWidget(int layerIndex, bool isCurrent) :
-    index_(layerIndex),
+LayerWidget::LayerWidget(int index, bool isCurrent) :
+    index_(index),
     isCurrent_(isCurrent)
 {
     checkBox_ = new QCheckBox();
     checkBox_->setCheckState(Qt::Checked);
     checkBox_->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
-    label_ = new QLabel();
+    nameLabel_ = new QLabel();
+    setName( tr("Layer %1").arg(index));
     QHBoxLayout * layout = new QHBoxLayout();
     layout->addWidget(checkBox_);
-    layout->addWidget(label_);
+    layout->addWidget(nameLabel_);
     setLayout(layout);
 
     setAutoFillBackground(true);
-
     updateBackground_();
-    updateCheckBoxState_();
-    updateLabelText_();
 }
 
 LayerWidget::~LayerWidget()
 {
 
+}
+
+QString LayerWidget::name() const
+{
+    return nameLabel_->text();
+}
+
+void LayerWidget::setName(const QString& name)
+{
+    nameLabel_->setText(name);
 }
 
 int LayerWidget::index() const
@@ -54,7 +63,6 @@ int LayerWidget::index() const
 void LayerWidget::setIndex(int index)
 {
     index_ = index;
-    updateLabelText_();
 }
 
 bool LayerWidget::isCurrent() const
@@ -82,17 +90,9 @@ void LayerWidget::updateBackground_()
     setPalette(p);
 }
 
-void LayerWidget::updateCheckBoxState_()
-{
-    // TODO
-}
-
-void LayerWidget::updateLabelText_()
-{
-    label_->setText(tr("Layer %1").arg(index()));
-}
-
-LayersWidget::LayersWidget()
+LayersWidget::LayersWidget() :
+    numVisibleLayerWidgets_(0),
+    currentLayer_(nullptr)
 {
     // VBoxLayout with all the individual LayerWidget instances
     layerListLayout_ = new QVBoxLayout();
@@ -104,6 +104,7 @@ LayersWidget::LayersWidget()
     createNewLayerWidget_();
     createNewLayerWidget_();
     createNewLayerWidget_();
+    setCurrentLayer_(numVisibleLayerWidgets_ - 1);
 
     // Wrap the layerListLayout_ into yet another VBoxLayout.
     // We need this because:
@@ -132,9 +133,26 @@ LayersWidget::LayersWidget()
     scrollArea->setPalette(p);
     scrollArea->setAutoFillBackground(true);
 
+    // Create buttons
+    QPushButton * newLayerButton = new QPushButton(tr("New"));
+    QPushButton * moveLayerUpButton = new QPushButton(tr("Move Up"));
+    QPushButton * moveLayerDownButton = new QPushButton(tr("Move Down"));
+    QPushButton * deleteLayerButton = new QPushButton(tr("Delete"));
+    connect(newLayerButton, &QPushButton::clicked, this, &LayersWidget::onNewLayerClicked_);
+    connect(moveLayerUpButton, &QPushButton::clicked, this, &LayersWidget::onMoveLayerUpClicked_);
+    connect(moveLayerDownButton, &QPushButton::clicked, this, &LayersWidget::onMoveLayerDownClicked_);
+    connect(deleteLayerButton, &QPushButton::clicked, this, &LayersWidget::onDeleteLayerClicked_);
+    QHBoxLayout * buttonsLayout = new QHBoxLayout();
+    buttonsLayout->addWidget(newLayerButton);
+    buttonsLayout->addWidget(moveLayerUpButton);
+    buttonsLayout->addWidget(moveLayerDownButton);
+    buttonsLayout->addStretch();
+    buttonsLayout->addWidget(deleteLayerButton);
+
     // Add scrollarea to this widget
     QVBoxLayout * layout = new QVBoxLayout();
     layout->addWidget(scrollArea);
+    layout->addLayout(buttonsLayout);
     setLayout(layout);
 }
 
@@ -143,40 +161,128 @@ LayersWidget::~LayersWidget()
 
 }
 
+void LayersWidget::setCurrentLayer_(int index)
+{
+    // Early return if already current
+    if (currentLayer_ && currentLayer_->index() == index) {
+        return;
+    }
+
+    // Set current layer (if any) as not current anymore
+    if (currentLayer_) {
+        currentLayer_->setCurrent(false);
+        currentLayer_ = nullptr;
+    }
+
+    // Set new current layer if provided index is valid
+    size_t index_ = index;
+    if (0 <= index && index < numVisibleLayerWidgets_) {
+        LayerWidget * newCurrentLayer = layerWidgets_[index_];
+        newCurrentLayer->setCurrent(true);
+        currentLayer_ = newCurrentLayer;
+    }
+}
+
+void LayersWidget::onNewLayerClicked_()
+{
+    // Show or create one more LayerWidget
+    if (numVisibleLayerWidgets_ < static_cast<int>(layerWidgets_.size())) {
+        layerWidgets_[numVisibleLayerWidgets_]->show();
+        ++numVisibleLayerWidgets_;
+    }
+    else {
+        createNewLayerWidget_();
+    }
+
+    // Insert above current layer, or keep last if no current layer
+    int newCurrentIndex = numVisibleLayerWidgets_ - 1;
+    if (currentLayer_) {
+        newCurrentIndex = currentLayer_->index();
+        for (int i = numVisibleLayerWidgets_ - 1; i > newCurrentIndex; --i) {
+            layerWidgets_[i]->setName(layerWidgets_[i-1]->name());
+        }
+    }
+    layerWidgets_[newCurrentIndex]->setName("Layer");
+    setCurrentLayer_(newCurrentIndex);
+}
+
+void LayersWidget::onDeleteLayerClicked_()
+{
+    if (currentLayer_) {
+        int currentIndex = currentLayer_->index();
+        for (int i = currentIndex; i < numVisibleLayerWidgets_ - 1; ++i) {
+            layerWidgets_[i]->setName(layerWidgets_[i+1]->name());
+        }
+        layerWidgets_[numVisibleLayerWidgets_ - 1]->hide();
+        --numVisibleLayerWidgets_;
+
+        // Set layer below as current, unless it was the bottom layer,
+        // in which case we set the layer above as current
+        if (currentIndex < numVisibleLayerWidgets_) {
+            setCurrentLayer_(currentIndex);
+        }
+        else {
+            setCurrentLayer_(currentIndex - 1);
+        }
+    }
+}
+
+void LayersWidget::onMoveLayerUpClicked_()
+{
+    if (currentLayer_) {
+        int i = currentLayer_->index();
+        if (i > 0) {
+            int j = i - 1;
+            QString temp = layerWidgets_[j]->name();
+            layerWidgets_[j]->setName(layerWidgets_[i]->name());
+            layerWidgets_[i]->setName(temp);
+            setCurrentLayer_(j);
+        }
+    }
+}
+
+void LayersWidget::onMoveLayerDownClicked_()
+{
+    if (currentLayer_) {
+        int i = currentLayer_->index();
+        if (i < numVisibleLayerWidgets_ - 1) {
+            int j = i + 1;
+            QString temp = layerWidgets_[j]->name();
+            layerWidgets_[j]->setName(layerWidgets_[i]->name());
+            layerWidgets_[i]->setName(temp);
+            setCurrentLayer_(j);
+        }
+    }
+}
+
 void LayersWidget::createNewLayerWidget_()
 {
-    LayerWidget * layer = new LayerWidget(layers_.size());
-    layers_.push_back(layer);
+    // Create layer
+    LayerWidget * layer = new LayerWidget(layerWidgets_.size());
+    ++numVisibleLayerWidgets_;
+    layerWidgets_.push_back(layer);
     layerListLayout_->addWidget(layer);
-    connect(layer, &LayerWidget::requestCurrent, this, &LayersWidget::onRequestCurrent_);
-
-    onRequestCurrent_(layer->index());
+    connect(layer, &LayerWidget::requestCurrent, this, &LayersWidget::setCurrentLayer_);
 }
 
 void LayersWidget::destroyLastLayerWidget_()
 {
     // Get layer to destroy
-    LayerWidget * layer = layers_.back();
+    LayerWidget * layer = layerWidgets_.back();
 
-    // Set new current layer
-    if (layer->isCurrent() && layer->index() > 0) {
-        layers_[0]->setCurrent(true);
+    // If it was the current layer, set the layer above (if any) as current
+    if (layer->isCurrent()) {
+        setCurrentLayer_(layer->index() - 1); // safe even when index == 0
+    }
+
+    // If it was visible, decrease the number of visible LayerWidgets
+    if (layer->isVisible()) {
+        --numVisibleLayerWidgets_;
     }
 
     // Destroy layer
-    disconnect(layer, &LayerWidget::requestCurrent, this, &LayersWidget::onRequestCurrent_);
+    disconnect(layer, &LayerWidget::requestCurrent, this, &LayersWidget::setCurrentLayer_);
     layerListLayout_->takeAt(layer->index());
-    layers_.pop_back();
+    layerWidgets_.pop_back();
     delete layer;
-}
-
-void LayersWidget::onRequestCurrent_(int index)
-{
-    size_t index_ = index;
-    layers_[index_]->setCurrent(true);
-    for (size_t i = 0; i < layers_.size(); ++i) {
-        if (i != index_ && layers_[i]->isCurrent()) {
-            layers_[i]->setCurrent(false);
-        }
-    }
 }
