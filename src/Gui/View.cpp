@@ -129,7 +129,7 @@ void View::keyReleaseEvent(QKeyEvent *event)
 
 void View::handleNewKeyboardModifiers()
 {
-    vac_ = scene_->vectorAnimationComplex();
+    vac_ = scene_->activeLayer();
 
     // Rectangle of selection
     if(vac_ && currentAction_ == RECTANGLE_OF_SELECTION_ACTION)
@@ -175,7 +175,7 @@ void View::updateZoomFromView()
 
 int View::decideClicAction()
 {
-    vac_ = scene_->vectorAnimationComplex();
+    vac_ = scene_->activeLayer();
 
     // Selection
     if( (global()->toolMode() == Global::SELECT && mouse_LeftButton_) //||
@@ -243,7 +243,7 @@ int View::decideClicAction()
 
 int View::decidePMRAction()
 {
-    vac_ = scene_->vectorAnimationComplex();
+    vac_ = scene_->activeLayer();
 
     if(global()->toolMode() == Global::SELECT)
     {
@@ -399,7 +399,7 @@ void View::ClicEvent(int action, double x, double y)
     {
         if(!hoveredObject_.isNull() || global()->toolMode() == Global::SKETCH)
         {
-            vac_ = scene_->vectorAnimationComplex();
+            vac_ = scene_->activeLayer();
             if(vac_)
             {
                 vac_->split(x, y, interactiveTime(), true);
@@ -412,7 +412,7 @@ void View::ClicEvent(int action, double x, double y)
     }
     else if(action==PAINT_ACTION)
     {
-        vac_ = scene_->vectorAnimationComplex();
+        vac_ = scene_->activeLayer();
         if(vac_)
         {
             VectorAnimationComplex::Cell * paintedCell = vac_->paint(x, y, interactiveTime());
@@ -527,7 +527,7 @@ void View::MoveEvent(double x, double y)
     if(global()->toolMode() == Global::SCULPT)
     {
         Time time = interactiveTime();
-        scene_->vectorAnimationComplex()->updateSculpt(x, y, time);
+        scene_->activeLayer()->updateSculpt(x, y, time);
         mustRedraw = true;
     }
 
@@ -535,7 +535,7 @@ void View::MoveEvent(double x, double y)
     if(global()->toolMode() == Global::PAINT)
     {
         Time time = interactiveTime();
-        scene_->vectorAnimationComplex()->updateToBePaintedFace(x, y, time);
+        scene_->activeLayer()->updateToBePaintedFace(x, y, time);
         mustRedraw = true;
     }
 

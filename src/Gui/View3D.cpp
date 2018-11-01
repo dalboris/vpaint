@@ -367,7 +367,7 @@ void View3D::drawScene()
     using namespace VectorAnimationComplex;
 
     // Get VAC
-    VAC * vac = scene_->vectorAnimationComplex();
+    VAC * vac = scene_->activeLayer();
 
     // Get t-position of camera eye to determine back-to front order
     double zEye = camera_.position()[2];
@@ -581,9 +581,9 @@ void View3D::drawPick3D()
     {
     Picking::setTime(i);*/
     //Picking::setTime(0);
-    if(scene_->vectorAnimationComplex())
+    if(scene_->activeLayer())
     {
-        scene_->vectorAnimationComplex()->drawPick3D(viewSettings_);
+        scene_->activeLayer()->drawPick3D(viewSettings_);
     }
 }
 

@@ -33,7 +33,7 @@ void SelectionInfoWidget::updateInfo()
     QString text;
 
     using namespace VectorAnimationComplex;
-    VAC * vac = global()->mainWindow()->scene()->vectorAnimationComplex();
+    VAC * vac = global()->mainWindow()->scene()->activeLayer();
     if(vac)
     {
         foreach(Cell * c, vac->selectedCells())

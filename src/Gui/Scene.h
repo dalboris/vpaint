@@ -76,8 +76,8 @@ public:
     void writeCanvas(XmlStreamWriter & xml);
     void relativeRemap(const QDir & oldDir, const QDir & newDir);
 
-    // Scene Objects getters
-    VectorAnimationComplex::VAC * vectorAnimationComplex();
+    // Get the active layer
+    VectorAnimationComplex::VAC * activeLayer();
     
     // GUI
     void populateToolBar(QToolBar * toolBar);

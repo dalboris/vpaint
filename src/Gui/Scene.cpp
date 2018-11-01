@@ -234,7 +234,7 @@ void Scene::write(XmlStreamWriter & xml)
 
     // Vector animation complex
     xml.writeStartElement("objects");
-    vectorAnimationComplex()->write(xml);
+    activeLayer()->write(xml);
     xml.writeEndElement();
 }
 
@@ -559,7 +559,7 @@ void Scene::keyReleaseEvent(QKeyEvent *event)
     event->ignore();
 }
 
-VectorAnimationComplex::VAC * Scene::vectorAnimationComplex()
+VectorAnimationComplex::VAC * Scene::activeLayer()
 {
     return getVAC_();
 }
