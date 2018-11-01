@@ -162,7 +162,7 @@ signals:
 
     
 private:
-    void addSceneObject(SceneObject * sceneObject, bool silent = false);
+    void addLayer(SceneObject * layer, bool silent = false);
     QList<SceneObject*> layers_;
 
     int indexHovered_;

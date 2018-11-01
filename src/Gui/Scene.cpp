@@ -34,7 +34,7 @@ Scene::Scene() :
     connect(vac,SIGNAL(selectionChanged()),this,SIGNAL(selectionChanged()));
     connect(background_, SIGNAL(changed()), this, SIGNAL(changed()));
     connect(background_, SIGNAL(checkpoint()), this, SIGNAL(checkpoint()));
-    addSceneObject(vac);
+    addLayer(vac);
     indexHovered_ = -1;
 }
 
@@ -112,7 +112,7 @@ void Scene::copyFrom(Scene * other)
 
     // Copy VAC
     foreach(SceneObject *sceneObject, other->layers_)
-        addSceneObject(sceneObject->clone(), true);
+        addLayer(sceneObject->clone(), true);
 
     // Reset hovered
     indexHovered_ = -1;
@@ -208,7 +208,7 @@ void Scene::read(QTextStream & in)
     Read::skipBracket(in); // [
     while(Read::string(in) == "{")
     {
-        addSceneObject(SceneObject::read(in), true);
+        addLayer(SceneObject::read(in), true);
         Read::skipBracket(in); // }
     }
     // if here, last read string == ]
@@ -254,7 +254,7 @@ void Scene::read(XmlStreamReader & xml)
         {
             VectorAnimationComplex::VAC * vac = new VectorAnimationComplex::VAC();
             vac->read(xml);
-            addSceneObject(vac, true);
+            addLayer(vac, true);
             connect(vac,SIGNAL(selectionChanged()),this,SIGNAL(selectionChanged()));
         }
         else
@@ -559,14 +559,14 @@ void Scene::keyReleaseEvent(QKeyEvent *event)
     event->ignore();
 }
 
-void Scene::addSceneObject(SceneObject * sceneObject, bool silent)
+void Scene::addLayer(SceneObject * layer, bool silent)
 {
-    layers_ << sceneObject;
-    connect(sceneObject, SIGNAL(changed()),
+    layers_ << layer;
+    connect(layer, SIGNAL(changed()),
           this, SIGNAL(changed()));
-    connect(sceneObject, SIGNAL(checkpoint()),
+    connect(layer, SIGNAL(checkpoint()),
           this, SIGNAL(checkpoint()));
-    connect(sceneObject, SIGNAL(needUpdatePicking()),
+    connect(layer, SIGNAL(needUpdatePicking()),
           this, SIGNAL(needUpdatePicking()));
     if(!silent)
     {
