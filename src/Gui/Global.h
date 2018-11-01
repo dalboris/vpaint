@@ -126,8 +126,6 @@ public:
     Settings & settings();
     DevSettings * devSettings();
 
-    VectorAnimationComplex::VAC * currentVAC();
-
     // Settings ( = user settings + application state )
     void readSettings();
     void writeSettings();
