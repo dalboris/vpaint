@@ -43,8 +43,8 @@ public:
     ~Scene();
 
     // Keyboard events
-      void keyPressEvent(QKeyEvent *event);
-      void keyReleaseEvent(QKeyEvent *event);
+    void keyPressEvent(QKeyEvent *event);
+    void keyReleaseEvent(QKeyEvent *event);
 
     // Drawing (assumes a 2D OpenGL context is setup)
     void drawCanvas(ViewSettings & viewSettings);
