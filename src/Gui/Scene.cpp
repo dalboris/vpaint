@@ -23,6 +23,10 @@
 #include "OpenGL.h"
 #include "Global.h"
 
+#include "SaveAndLoad.h"
+
+#include <QToolBar>
+
 Scene::Scene() :
     left_(0),
     top_(0),
@@ -166,7 +170,6 @@ Scene::~Scene()
 }
 
 // ----------------------- Save and Load -------------------------
-#include "SaveAndLoad.h"
 
 void Scene::save(QTextStream & out)
 {
@@ -574,8 +577,6 @@ void Scene::addLayer(SceneObject * layer, bool silent)
         emit needUpdatePicking();
     }
 }
-
-#include <QToolBar>
 
 void Scene::populateToolBar(QToolBar * toolBar)
 {
