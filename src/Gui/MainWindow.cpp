@@ -178,7 +178,7 @@ MainWindow::MainWindow() :
 
 void MainWindow::updateObjectProperties()
 {
-    inspector->setObjects(scene()->getVAC_()->selectedCells());
+    inspector->setObjects(scene()->activeLayer()->selectedCells());
 }
 
 View * MainWindow::activeView() const

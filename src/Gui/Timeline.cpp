@@ -135,7 +135,7 @@ void Timeline_HBar::paintEvent (QPaintEvent * /*event*/)
     painter.drawLine(width()-1, 1, width()-1, height()-2);
 
     // Get cells
-    VAC * vac = w_->scene_->getVAC_();
+    VAC * vac = w_->scene_->activeLayer();
     CellSet cells = vac->cells();
     KeyCellSet keyCells = cells;
     InbetweenCellSet inbetweenCells = cells;
@@ -239,7 +239,7 @@ void Timeline_HBar::mousePressEvent (QMouseEvent * event)
           hasHighlightedFrame_)
     {
         setCursor(QCursor(Qt::ClosedHandCursor));
-        w_->scene_->getVAC_()->prepareTemporalDragAndDrop(Time(highlightedFrame_));
+        w_->scene_->activeLayer()->prepareTemporalDragAndDrop(Time(highlightedFrame_));
     }
 
 
@@ -274,7 +274,7 @@ void Timeline_HBar::mouseReleaseEvent (QMouseEvent * event)
     }
     else if(event->button() == Qt::RightButton)
     {
-        w_->scene_->getVAC_()->completeTemporalDragAndDrop();
+        w_->scene_->activeLayer()->completeTemporalDragAndDrop();
         setCursor(QCursor(Qt::ArrowCursor));
     }
     repaint();
@@ -307,7 +307,7 @@ void Timeline_HBar::mouseMoveEvent (QMouseEvent * event)
         else if(event->buttons() & Qt::RightButton &&
                 hasHighlightedFrame_ )
         {
-            w_->scene_->getVAC_()->performTemporalDragAndDrop(Time(highlightedFrame_));
+            w_->scene_->activeLayer()->performTemporalDragAndDrop(Time(highlightedFrame_));
         }
     }
     

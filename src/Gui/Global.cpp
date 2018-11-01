@@ -800,7 +800,7 @@ void Global::updateStatusBarHelp()
 DevSettings * Global::devSettings() { return DevSettings::instance(); }
 MainWindow * Global::mainWindow() const { return mainWindow_; }
 Settings & Global::settings() { return preferences_; }
-VectorAnimationComplex::VAC * Global::currentVAC() { return mainWindow()->scene()->getVAC_(); }
+VectorAnimationComplex::VAC * Global::currentVAC() { return mainWindow()->scene()->activeLayer(); }
 Scene * Global::scene() const {return mainWindow()->scene();}
 
 QColor Global::edgeColor()

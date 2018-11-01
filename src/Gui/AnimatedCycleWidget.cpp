@@ -512,7 +512,7 @@ void AnimatedCycleWidget::createItem(AnimatedCycleNode * node)
 
 void AnimatedCycleWidget::addSelectedCells()
 {
-    CellSet selectedCells = global()->mainWindow()->scene()->getVAC_()->selectedCells();
+    CellSet selectedCells = global()->mainWindow()->scene()->activeLayer()->selectedCells();
 
     foreach(Cell * cell, selectedCells)
         createNodeAndItem(cell);

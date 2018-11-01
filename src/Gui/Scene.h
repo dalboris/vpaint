@@ -82,9 +82,6 @@ public:
     // GUI
     void populateToolBar(QToolBar * toolBar);
 
-    // get relevant VAC to work on
-    VectorAnimationComplex::VAC * getVAC_();
-
     // Other
     VectorAnimationComplex::InbetweenFace * createInbetweenFace();
 

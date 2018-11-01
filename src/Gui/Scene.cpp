@@ -128,7 +128,7 @@ void Scene::copyFrom(Scene * other)
     emitChanged();
 
     // Create new connections
-    VectorAnimationComplex::VAC * vac = getVAC_();
+    VectorAnimationComplex::VAC * vac = activeLayer();
     if(vac)
     {
         connect(vac,SIGNAL(selectionChanged()),this,SIGNAL(selectionChanged()));
@@ -138,7 +138,7 @@ void Scene::copyFrom(Scene * other)
 
 void Scene::clear(bool silent)
 {
-    VectorAnimationComplex::VAC * vac = getVAC_();
+    VectorAnimationComplex::VAC * vac = activeLayer();
     if(vac)
         disconnect(vac,SIGNAL(selectionChanged()),this,SIGNAL(selectionChanged()));
 
@@ -214,7 +214,7 @@ void Scene::read(QTextStream & in)
     // if here, last read string == ]
 
 
-    VectorAnimationComplex::VAC * vac = getVAC_();
+    VectorAnimationComplex::VAC * vac = activeLayer();
     if(vac)
     {
         connect(vac,SIGNAL(selectionChanged()),this,SIGNAL(selectionChanged()));
@@ -559,11 +559,6 @@ void Scene::keyReleaseEvent(QKeyEvent *event)
     event->ignore();
 }
 
-VectorAnimationComplex::VAC * Scene::activeLayer()
-{
-    return getVAC_();
-}
-
 void Scene::addSceneObject(SceneObject * sceneObject, bool silent)
 {
     layers_ << sceneObject;
@@ -642,7 +637,7 @@ void Scene::smartDelete()
 
 }
 
-VectorAnimationComplex::VAC * Scene::getVAC_()
+VectorAnimationComplex::VAC * Scene::activeLayer()
 {
     using VectorAnimationComplex::VAC;
 
@@ -660,7 +655,7 @@ VectorAnimationComplex::VAC * Scene::getVAC_()
 
 VectorAnimationComplex::InbetweenFace * Scene::createInbetweenFace()
 {
-    VectorAnimationComplex::VAC * vac = getVAC_();
+    VectorAnimationComplex::VAC * vac = activeLayer();
 
     if(vac)
     {
@@ -676,7 +671,7 @@ VectorAnimationComplex::InbetweenFace * Scene::createInbetweenFace()
 
 void Scene::cut(VectorAnimationComplex::VAC* & clipboard)
 {
-    VectorAnimationComplex::VAC * vac = getVAC_();
+    VectorAnimationComplex::VAC * vac = activeLayer();
     if(vac)
     {
         vac->cut(clipboard);
@@ -685,7 +680,7 @@ void Scene::cut(VectorAnimationComplex::VAC* & clipboard)
 
 void Scene::copy(VectorAnimationComplex::VAC* & clipboard)
 {
-    VectorAnimationComplex::VAC * vac = getVAC_();
+    VectorAnimationComplex::VAC * vac = activeLayer();
     if(vac)
     {
         vac->copy(clipboard);
@@ -694,7 +689,7 @@ void Scene::copy(VectorAnimationComplex::VAC* & clipboard)
 
 void Scene::paste(VectorAnimationComplex::VAC* & clipboard)
 {
-    VectorAnimationComplex::VAC * vac = getVAC_();
+    VectorAnimationComplex::VAC * vac = activeLayer();
     if(vac)
     {
         vac->paste(clipboard);
@@ -703,7 +698,7 @@ void Scene::paste(VectorAnimationComplex::VAC* & clipboard)
 
 void Scene::motionPaste(VectorAnimationComplex::VAC* & clipboard)
 {
-    VectorAnimationComplex::VAC * vac = getVAC_();
+    VectorAnimationComplex::VAC * vac = activeLayer();
     if(vac)
     {
         vac->motionPaste(clipboard);
