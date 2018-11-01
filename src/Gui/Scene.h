@@ -42,7 +42,7 @@ public:
     void clear(bool silent = false);
     ~Scene();
 
-    QList<SceneObject*> sceneObjects() {return sceneObjects_;}
+    QList<SceneObject*> sceneObjects() {return layers_;}
 
     // Keyboard events
       void keyPressEvent(QKeyEvent *event);
@@ -168,7 +168,7 @@ signals:
     
 private:
     void addSceneObject(SceneObject * sceneObject, bool silent = false);
-    QList<SceneObject*> sceneObjects_;
+    QList<SceneObject*> layers_;
 
     int indexHovered_;
 

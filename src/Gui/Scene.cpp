@@ -111,7 +111,7 @@ void Scene::copyFrom(Scene * other)
     clear(true);
 
     // Copy VAC
-    foreach(SceneObject *sceneObject, other->sceneObjects_)
+    foreach(SceneObject *sceneObject, other->layers_)
         addSceneObject(sceneObject->clone(), true);
 
     // Reset hovered
@@ -142,9 +142,9 @@ void Scene::clear(bool silent)
     if(vac)
         disconnect(vac,SIGNAL(selectionChanged()),this,SIGNAL(selectionChanged()));
 
-    foreach(SceneObject *sceneObject, sceneObjects_)
+    foreach(SceneObject *sceneObject, layers_)
         delete sceneObject;
-    sceneObjects_.clear();
+    layers_.clear();
 
     // XXX Shouldn't this clear left/top/width/height too?
 
@@ -173,7 +173,7 @@ void Scene::save(QTextStream & out)
     out << Save::newField("SceneObjects");
     out << "\n" << Save::indent() << "[";
     Save::incrIndent();
-    foreach(SceneObject *sceneObject, sceneObjects_)
+    foreach(SceneObject *sceneObject, layers_)
     {
         out << Save::openCurlyBrackets();
         sceneObject->save(out);
@@ -191,7 +191,7 @@ void Scene::exportSVG(Time t, QTextStream & out)
                            left(), top(), width(), height());
 
     // Export VAC
-    foreach(SceneObject *sceneObject, sceneObjects_)
+    foreach(SceneObject *sceneObject, layers_)
     {
         sceneObject->exportSVG(t, out);
     }
@@ -360,7 +360,7 @@ void Scene::draw(Time time, ViewSettings & viewSettings)
     // and later:
     //   foreach(Layer * layer, layers_)
     //     layer->draw(time, viewSettings);
-    foreach(SceneObject *sceneObject, sceneObjects_)
+    foreach(SceneObject *sceneObject, layers_)
     {
         sceneObject->draw(time, viewSettings);
     }
@@ -368,10 +368,10 @@ void Scene::draw(Time time, ViewSettings & viewSettings)
 
 void Scene::drawPick(Time time, ViewSettings & viewSettings)
 {
-    for(int i=0; i<sceneObjects_.size(); i++)
+    for(int i=0; i<layers_.size(); i++)
     {
         Picking::setIndex(i);
-          sceneObjects_[i]->drawPick(time, viewSettings);
+          layers_[i]->drawPick(time, viewSettings);
     }
 }
 
@@ -386,42 +386,42 @@ void Scene::setHoveredObject(Time time, int index, int id)
 {
     setNoHoveredObject();
     indexHovered_ = index;
-    sceneObjects_[index]->setHoveredObject(time, id);
+    layers_[index]->setHoveredObject(time, id);
 }
 
 void Scene::setNoHoveredObject()
 {
     if(indexHovered_ != -1)
     {
-        sceneObjects_[indexHovered_]->setNoHoveredObject();
+        layers_[indexHovered_]->setNoHoveredObject();
         indexHovered_ = -1;
     }
 }
 void Scene::select(Time time, int index, int id)
 {
-    sceneObjects_[index]->select(time, id);
+    layers_[index]->select(time, id);
 }
 void Scene::deselect(Time time, int index, int id)
 {
-    sceneObjects_[index]->deselect(time, id);
+    layers_[index]->deselect(time, id);
 }
 void Scene::toggle(Time time, int index, int id)
 {
-    sceneObjects_[index]->toggle(time, id);
+    layers_[index]->toggle(time, id);
 }
 void Scene::deselectAll(Time time)
 {
-    foreach(SceneObject * so, sceneObjects_)
+    foreach(SceneObject * so, layers_)
         so->deselectAll(time);
 }
 void Scene::deselectAll()
 {
-    foreach(SceneObject * so, sceneObjects_)
+    foreach(SceneObject * so, layers_)
         so->deselectAll();
 }
 void Scene::invertSelection()
 {
-    foreach(SceneObject * so, sceneObjects_)
+    foreach(SceneObject * so, layers_)
         so->invertSelection();
 }
 
@@ -431,11 +431,11 @@ void Scene::invertSelection()
 
 void Scene::selectAll()
 {
-    if(!sceneObjects_.isEmpty())
+    if(!layers_.isEmpty())
     {
         VectorAnimationComplex::VAC * vac =
             dynamic_cast<VectorAnimationComplex::VAC *>
-            (sceneObjects_[0]);
+            (layers_[0]);
 
         if(vac)
             vac->selectAll();
@@ -444,11 +444,11 @@ void Scene::selectAll()
 
 void Scene::selectConnected()
 {
-    if(!sceneObjects_.isEmpty())
+    if(!layers_.isEmpty())
     {
         VectorAnimationComplex::VAC * vac =
             dynamic_cast<VectorAnimationComplex::VAC *>
-            (sceneObjects_[0]);
+            (layers_[0]);
 
         if(vac)
             vac->selectConnected();
@@ -457,11 +457,11 @@ void Scene::selectConnected()
 
 void Scene::selectClosure()
 {
-    if(!sceneObjects_.isEmpty())
+    if(!layers_.isEmpty())
     {
         VectorAnimationComplex::VAC * vac =
             dynamic_cast<VectorAnimationComplex::VAC *>
-            (sceneObjects_[0]);
+            (layers_[0]);
 
         if(vac)
             vac->selectClosure();
@@ -470,11 +470,11 @@ void Scene::selectClosure()
 
 void Scene::selectVertices()
 {
-    if(!sceneObjects_.isEmpty())
+    if(!layers_.isEmpty())
     {
         VectorAnimationComplex::VAC * vac =
             dynamic_cast<VectorAnimationComplex::VAC *>
-            (sceneObjects_[0]);
+            (layers_[0]);
 
         if(vac)
             vac->selectVertices();
@@ -483,11 +483,11 @@ void Scene::selectVertices()
 
 void Scene::selectEdges()
 {
-    if(!sceneObjects_.isEmpty())
+    if(!layers_.isEmpty())
     {
         VectorAnimationComplex::VAC * vac =
             dynamic_cast<VectorAnimationComplex::VAC *>
-            (sceneObjects_[0]);
+            (layers_[0]);
 
         if(vac)
             vac->selectEdges();
@@ -496,11 +496,11 @@ void Scene::selectEdges()
 
 void Scene::selectFaces()
 {
-    if(!sceneObjects_.isEmpty())
+    if(!layers_.isEmpty())
     {
         VectorAnimationComplex::VAC * vac =
             dynamic_cast<VectorAnimationComplex::VAC *>
-            (sceneObjects_[0]);
+            (layers_[0]);
 
         if(vac)
             vac->selectFaces();
@@ -509,11 +509,11 @@ void Scene::selectFaces()
 
 void Scene::deselectVertices()
 {
-    if(!sceneObjects_.isEmpty())
+    if(!layers_.isEmpty())
     {
         VectorAnimationComplex::VAC * vac =
             dynamic_cast<VectorAnimationComplex::VAC *>
-            (sceneObjects_[0]);
+            (layers_[0]);
 
         if(vac)
             vac->deselectVertices();
@@ -522,11 +522,11 @@ void Scene::deselectVertices()
 
 void Scene::deselectEdges()
 {
-    if(!sceneObjects_.isEmpty())
+    if(!layers_.isEmpty())
     {
         VectorAnimationComplex::VAC * vac =
             dynamic_cast<VectorAnimationComplex::VAC *>
-            (sceneObjects_[0]);
+            (layers_[0]);
 
         if(vac)
             vac->deselectEdges();
@@ -535,11 +535,11 @@ void Scene::deselectEdges()
 
 void Scene::deselectFaces()
 {
-    if(!sceneObjects_.isEmpty())
+    if(!layers_.isEmpty())
     {
         VectorAnimationComplex::VAC * vac =
             dynamic_cast<VectorAnimationComplex::VAC *>
-            (sceneObjects_[0]);
+            (layers_[0]);
 
         if(vac)
             vac->deselectFaces();
@@ -566,7 +566,7 @@ VectorAnimationComplex::VAC * Scene::vectorAnimationComplex()
 
 void Scene::addSceneObject(SceneObject * sceneObject, bool silent)
 {
-    sceneObjects_ << sceneObject;
+    layers_ << sceneObject;
     connect(sceneObject, SIGNAL(changed()),
           this, SIGNAL(changed()));
     connect(sceneObject, SIGNAL(checkpoint()),
@@ -593,12 +593,12 @@ void Scene::populateToolBar(QToolBar * toolBar)
 
 void Scene::deleteSelectedCells()
 {
-    if(!sceneObjects_.isEmpty())
+    if(!layers_.isEmpty())
     {
         // todo:  get  the  selected  one  instead  of  the  first
         VectorAnimationComplex::VAC * vac =
             dynamic_cast<VectorAnimationComplex::VAC *>
-            (sceneObjects_[0]);
+            (layers_[0]);
         
         if(vac)
         {
@@ -610,12 +610,12 @@ void Scene::deleteSelectedCells()
 
 void Scene::test()
 {
-    if(!sceneObjects_.isEmpty())
+    if(!layers_.isEmpty())
     {
         // todo:  get  the  selected  one  instead  of  the  first
         VectorAnimationComplex::VAC * vac =
             dynamic_cast<VectorAnimationComplex::VAC *>
-            (sceneObjects_[0]);
+            (layers_[0]);
 
         if(vac)
         {
@@ -627,12 +627,12 @@ void Scene::test()
 
 void Scene::smartDelete()
 {
-    if(!sceneObjects_.isEmpty())
+    if(!layers_.isEmpty())
     {
         // todo:  get  the  selected  one  instead  of  the  first
         VectorAnimationComplex::VAC * vac =
             dynamic_cast<VectorAnimationComplex::VAC *>
-            (sceneObjects_[0]);
+            (layers_[0]);
 
         if(vac)
         {
@@ -646,13 +646,13 @@ VectorAnimationComplex::VAC * Scene::getVAC_()
 {
     using VectorAnimationComplex::VAC;
 
-    if(sceneObjects_.isEmpty())
+    if(layers_.isEmpty())
     {
         return 0;
     }
     else
     {
-        SceneObject * sceneObject = sceneObjects_[0];
+        SceneObject * sceneObject = layers_[0];
         VAC * vac = dynamic_cast<VAC *>(sceneObject);
         return vac;
     }
@@ -714,12 +714,12 @@ void Scene::motionPaste(VectorAnimationComplex::VAC* & clipboard)
 void Scene::createFace()
 {
 
-    if(!sceneObjects_.isEmpty())
+    if(!layers_.isEmpty())
     {
         // todo:  get  the  selected  one  instead  of  the  first
         VectorAnimationComplex::VAC * vac =
             dynamic_cast<VectorAnimationComplex::VAC *>
-            (sceneObjects_[0]);
+            (layers_[0]);
 
         if(vac)
         {
@@ -733,12 +733,12 @@ void Scene::createFace()
 
 void Scene::addCyclesToFace()
 {
-    if(!sceneObjects_.isEmpty())
+    if(!layers_.isEmpty())
     {
         // todo:  get  the  selected  one  instead  of  the  first
         VectorAnimationComplex::VAC * vac =
             dynamic_cast<VectorAnimationComplex::VAC *>
-            (sceneObjects_[0]);
+            (layers_[0]);
 
         if(vac)
         {
@@ -752,12 +752,12 @@ void Scene::addCyclesToFace()
 
 void Scene::removeCyclesFromFace()
 {
-    if(!sceneObjects_.isEmpty())
+    if(!layers_.isEmpty())
     {
         // todo:  get  the  selected  one  instead  of  the  first
         VectorAnimationComplex::VAC * vac =
             dynamic_cast<VectorAnimationComplex::VAC *>
-            (sceneObjects_[0]);
+            (layers_[0]);
 
         if(vac)
         {
@@ -771,12 +771,12 @@ void Scene::removeCyclesFromFace()
 
 void Scene::changeColor()
 {
-    if(!sceneObjects_.isEmpty())
+    if(!layers_.isEmpty())
     {
         // todo:  get  the  selected  one  instead  of  the  first
         VectorAnimationComplex::VAC * vac =
             dynamic_cast<VectorAnimationComplex::VAC *>
-            (sceneObjects_[0]);
+            (layers_[0]);
 
         if(vac)
         {
@@ -789,12 +789,12 @@ void Scene::changeColor()
 }
 void Scene::raise()
 {
-    if(!sceneObjects_.isEmpty())
+    if(!layers_.isEmpty())
     {
         // todo:  get  the  selected  one  instead  of  the  first
         VectorAnimationComplex::VAC * vac =
             dynamic_cast<VectorAnimationComplex::VAC *>
-            (sceneObjects_[0]);
+            (layers_[0]);
 
         if(vac)
         {
@@ -807,12 +807,12 @@ void Scene::raise()
 }
 void Scene::lower()
 {
-    if(!sceneObjects_.isEmpty())
+    if(!layers_.isEmpty())
     {
         // todo:  get  the  selected  one  instead  of  the  first
         VectorAnimationComplex::VAC * vac =
             dynamic_cast<VectorAnimationComplex::VAC *>
-            (sceneObjects_[0]);
+            (layers_[0]);
 
         if(vac)
         {
@@ -826,12 +826,12 @@ void Scene::lower()
 
 void Scene::raiseToTop()
 {
-    if(!sceneObjects_.isEmpty())
+    if(!layers_.isEmpty())
     {
         // todo:  get  the  selected  one  instead  of  the  first
         VectorAnimationComplex::VAC * vac =
             dynamic_cast<VectorAnimationComplex::VAC *>
-            (sceneObjects_[0]);
+            (layers_[0]);
 
         if(vac)
         {
@@ -844,12 +844,12 @@ void Scene::raiseToTop()
 }
 void Scene::lowerToBottom()
 {
-    if(!sceneObjects_.isEmpty())
+    if(!layers_.isEmpty())
     {
         // todo:  get  the  selected  one  instead  of  the  first
         VectorAnimationComplex::VAC * vac =
             dynamic_cast<VectorAnimationComplex::VAC *>
-            (sceneObjects_[0]);
+            (layers_[0]);
 
         if(vac)
         {
@@ -862,12 +862,12 @@ void Scene::lowerToBottom()
 }
 void Scene::altRaise()
 {
-    if(!sceneObjects_.isEmpty())
+    if(!layers_.isEmpty())
     {
         // todo:  get  the  selected  one  instead  of  the  first
         VectorAnimationComplex::VAC * vac =
             dynamic_cast<VectorAnimationComplex::VAC *>
-            (sceneObjects_[0]);
+            (layers_[0]);
 
         if(vac)
         {
@@ -880,12 +880,12 @@ void Scene::altRaise()
 }
 void Scene::altLower()
 {
-    if(!sceneObjects_.isEmpty())
+    if(!layers_.isEmpty())
     {
         // todo:  get  the  selected  one  instead  of  the  first
         VectorAnimationComplex::VAC * vac =
             dynamic_cast<VectorAnimationComplex::VAC *>
-            (sceneObjects_[0]);
+            (layers_[0]);
 
         if(vac)
         {
@@ -899,12 +899,12 @@ void Scene::altLower()
 
 void Scene::altRaiseToTop()
 {
-    if(!sceneObjects_.isEmpty())
+    if(!layers_.isEmpty())
     {
         // todo:  get  the  selected  one  instead  of  the  first
         VectorAnimationComplex::VAC * vac =
             dynamic_cast<VectorAnimationComplex::VAC *>
-            (sceneObjects_[0]);
+            (layers_[0]);
 
         if(vac)
         {
@@ -917,12 +917,12 @@ void Scene::altRaiseToTop()
 }
 void Scene::altLowerToBottom()
 {
-    if(!sceneObjects_.isEmpty())
+    if(!layers_.isEmpty())
     {
         // todo:  get  the  selected  one  instead  of  the  first
         VectorAnimationComplex::VAC * vac =
             dynamic_cast<VectorAnimationComplex::VAC *>
-            (sceneObjects_[0]);
+            (layers_[0]);
 
         if(vac)
         {
@@ -936,12 +936,12 @@ void Scene::altLowerToBottom()
 
 void Scene::changeEdgeWidth()
 {
-    if(!sceneObjects_.isEmpty())
+    if(!layers_.isEmpty())
     {
         // todo:  get  the  selected  one  instead  of  the  first
         VectorAnimationComplex::VAC * vac =
             dynamic_cast<VectorAnimationComplex::VAC *>
-            (sceneObjects_[0]);
+            (layers_[0]);
 
         if(vac)
         {
@@ -956,12 +956,12 @@ void Scene::changeEdgeWidth()
 void Scene::glue()
 {
 
-    if(!sceneObjects_.isEmpty())
+    if(!layers_.isEmpty())
     {
         // todo:  get  the  selected  one  instead  of  the  first
         VectorAnimationComplex::VAC * vac =
             dynamic_cast<VectorAnimationComplex::VAC *>
-            (sceneObjects_[0]);
+            (layers_[0]);
 
         if(vac)
         {
@@ -976,12 +976,12 @@ void Scene::glue()
 void Scene::unglue()
 {
 
-    if(!sceneObjects_.isEmpty())
+    if(!layers_.isEmpty())
     {
         // todo:  get  the  selected  one  instead  of  the  first
         VectorAnimationComplex::VAC * vac =
             dynamic_cast<VectorAnimationComplex::VAC *>
-            (sceneObjects_[0]);
+            (layers_[0]);
 
         if(vac)
         {
@@ -996,12 +996,12 @@ void Scene::unglue()
 void Scene::uncut()
 {
 
-    if(!sceneObjects_.isEmpty())
+    if(!layers_.isEmpty())
     {
         // todo:  get  the  selected  one  instead  of  the  first
         VectorAnimationComplex::VAC * vac =
             dynamic_cast<VectorAnimationComplex::VAC *>
-            (sceneObjects_[0]);
+            (layers_[0]);
 
         if(vac)
         {
@@ -1015,12 +1015,12 @@ void Scene::uncut()
 
 void Scene::inbetweenSelection()
 {
-    if(!sceneObjects_.isEmpty())
+    if(!layers_.isEmpty())
     {
         // todo:  get  the  selected  one  instead  of  the  first
         VectorAnimationComplex::VAC * vac =
             dynamic_cast<VectorAnimationComplex::VAC *>
-            (sceneObjects_[0]);
+            (layers_[0]);
 
         if(vac)
         {
@@ -1033,12 +1033,12 @@ void Scene::inbetweenSelection()
 
 void Scene::keyframeSelection()
 {
-    if(!sceneObjects_.isEmpty())
+    if(!layers_.isEmpty())
     {
         // todo:  get  the  selected  one  instead  of  the  first
         VectorAnimationComplex::VAC * vac =
             dynamic_cast<VectorAnimationComplex::VAC *>
-            (sceneObjects_[0]);
+            (layers_[0]);
 
         if(vac)
         {
@@ -1053,12 +1053,12 @@ void Scene::keyframeSelection()
 void Scene::resetCellsToConsiderForCutting()
 {
 
-    if(!sceneObjects_.isEmpty())
+    if(!layers_.isEmpty())
     {
         // todo:  get  the  selected  one  instead  of  the  first
         VectorAnimationComplex::VAC * vac =
             dynamic_cast<VectorAnimationComplex::VAC *>
-            (sceneObjects_[0]);
+            (layers_[0]);
 
         if(vac)
         {
@@ -1073,12 +1073,12 @@ void Scene::resetCellsToConsiderForCutting()
 void Scene::updateCellsToConsiderForCutting()
 {
 
-    if(!sceneObjects_.isEmpty())
+    if(!layers_.isEmpty())
     {
         // todo:  get  the  selected  one  instead  of  the  first
         VectorAnimationComplex::VAC * vac =
             dynamic_cast<VectorAnimationComplex::VAC *>
-            (sceneObjects_[0]);
+            (layers_[0]);
 
         if(vac)
         {
