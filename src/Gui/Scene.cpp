@@ -114,9 +114,9 @@ void Scene::copyFrom(Scene * other)
     // Reset to default
     clear(true);
 
-    // Copy VAC
-    foreach(SceneObject *sceneObject, other->layers_)
-        addLayer(sceneObject->clone(), true);
+    // Copy layers
+    foreach(SceneObject * layer, other->layers_)
+        addLayer(layer->clone(), true);
 
     // Reset hovered
     indexHovered_ = -1;
@@ -146,8 +146,8 @@ void Scene::clear(bool silent)
     if(vac)
         disconnect(vac,SIGNAL(selectionChanged()),this,SIGNAL(selectionChanged()));
 
-    foreach(SceneObject *sceneObject, layers_)
-        delete sceneObject;
+    foreach(SceneObject * layer, layers_)
+        delete layer;
     layers_.clear();
 
     // XXX Shouldn't this clear left/top/width/height too?
@@ -176,10 +176,10 @@ void Scene::save(QTextStream & out)
     out << Save::newField("SceneObjects");
     out << "\n" << Save::indent() << "[";
     Save::incrIndent();
-    foreach(SceneObject *sceneObject, layers_)
+    foreach(SceneObject * layer, layers_)
     {
         out << Save::openCurlyBrackets();
-        sceneObject->save(out);
+        layer->save(out);
         out << Save::closeCurlyBrackets();
     }
     Save::decrIndent();
@@ -193,10 +193,10 @@ void Scene::exportSVG(Time t, QTextStream & out)
     background_->exportSVG(t.frame(), out,
                            left(), top(), width(), height());
 
-    // Export VAC
-    foreach(SceneObject *sceneObject, layers_)
+    // Export Layers
+    foreach(SceneObject * layer, layers_)
     {
-        sceneObject->exportSVG(t, out);
+        layer->exportSVG(t, out);
     }
 }
 
@@ -357,15 +357,10 @@ void Scene::drawCanvas(ViewSettings & /*viewSettings*/)
 
 void Scene::draw(Time time, ViewSettings & viewSettings)
 {
-    // Draw VAC
-    // XXX this was over-engineered. Should revert to something simpler:
-    //  vac_->draw(time, viewSettings);
-    // and later:
-    //   foreach(Layer * layer, layers_)
-    //     layer->draw(time, viewSettings);
-    foreach(SceneObject *sceneObject, layers_)
+    // Draw layers
+    foreach(SceneObject *layer, layers_)
     {
-        sceneObject->draw(time, viewSettings);
+        layer->draw(time, viewSettings);
     }
 }
 
@@ -648,8 +643,8 @@ VectorAnimationComplex::VAC * Scene::activeLayer()
     }
     else
     {
-        SceneObject * sceneObject = layers_[0];
-        VAC * vac = dynamic_cast<VAC *>(sceneObject);
+        SceneObject * layer = layers_[0];
+        VAC * vac = dynamic_cast<VAC *>(layer);
         return vac;
     }
 }
