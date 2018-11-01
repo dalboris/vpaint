@@ -42,8 +42,6 @@ public:
     void clear(bool silent = false);
     ~Scene();
 
-    QList<SceneObject*> sceneObjects() {return layers_;}
-
     // Keyboard events
       void keyPressEvent(QKeyEvent *event);
       void keyReleaseEvent(QKeyEvent *event);
