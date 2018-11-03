@@ -100,6 +100,14 @@ void Layer::invertSelection()
 
 void Layer::exportSVG_(Time t, QTextStream & out)
 {
-    // For now, we don't export the background
+    // This function does not export the background, because the API
+    // for Background::exportSVG() requires the canvas' size, which
+    // we don't know here.
+    //
+    // Therefore, it is the responsibility of clients to manually call
+    // background()->exportSVG beforehand if they wish.
+    //
+    // XXX We should improve this ugly design
+    //
     vac()->exportSVG(t, out);
 }
