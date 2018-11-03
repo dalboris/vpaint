@@ -189,7 +189,8 @@ HEADERS += MainWindow.h \
     UpdateCheck.h \
     VectorAnimationComplex/BoundingBox.h \
     VectorAnimationComplex/TransformTool.h \
-    LayersWidget.h
+    LayersWidget.h \
+    Layer.h
 
 SOURCES += main.cpp \
     SaveAndLoad.cpp \
@@ -280,4 +281,5 @@ SOURCES += main.cpp \
     UpdateCheck.cpp \
     VectorAnimationComplex/BoundingBox.cpp \
     VectorAnimationComplex/TransformTool.cpp \
-    LayersWidget.cpp
+    LayersWidget.cpp \
+    Layer.cpp
