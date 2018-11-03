@@ -35,7 +35,7 @@ Scene::Scene() :
     background_(new Background(this))
 {
     VectorAnimationComplex::VAC * vac = new VectorAnimationComplex::VAC();
-    connect(vac,SIGNAL(selectionChanged()),this,SIGNAL(selectionChanged()));
+    connect(vac,SIGNAL(selectionChanged()),this,SIGNAL(selectionChanged())); // XXX why isn't this in addLayer() ?
     connect(background_, SIGNAL(changed()), this, SIGNAL(changed()));
     connect(background_, SIGNAL(checkpoint()), this, SIGNAL(checkpoint()));
     addLayer(vac);
@@ -369,7 +369,7 @@ void Scene::drawPick(Time time, ViewSettings & viewSettings)
     for(int i=0; i<layers_.size(); i++)
     {
         Picking::setIndex(i);
-          layers_[i]->drawPick(time, viewSettings);
+        layers_[i]->drawPick(time, viewSettings);
     }
 }
 
