@@ -31,6 +31,7 @@ class VAC;
 class InbetweenFace;
 }
 class QDir;
+class Layer;
 
 class Scene: public QObject
 {
@@ -70,14 +71,15 @@ public:
     void exportSVG(Time t, QTextStream & out);
     void save(QTextStream & out);
     void read(QTextStream & in);
-    void write(XmlStreamWriter & xml);
-    void read(XmlStreamReader & xml);
+    void writeAllLayers(XmlStreamWriter & xml);
+    void readOneLayer(XmlStreamReader & xml);
     void readCanvas(XmlStreamReader & xml);
     void writeCanvas(XmlStreamWriter & xml);
     void relativeRemap(const QDir & oldDir, const QDir & newDir);
 
     // Get the active layer
-    VectorAnimationComplex::VAC * activeLayer();
+    Layer * activeLayer() const;
+    VectorAnimationComplex::VAC * activeVAC() const;
     
     // GUI
     void populateToolBar(QToolBar * toolBar);
@@ -96,9 +98,6 @@ public:
     void setWidth(double w);
     void setHeight(double h);
     void setCanvasDefaultValues();
-
-    // Background
-    Background * background() const;
     
 public slots:
     // --------- Tools ----------
@@ -162,8 +161,8 @@ signals:
 
     
 private:
-    void addLayer(SceneObject * layer, bool silent = false);
-    QList<SceneObject*> layers_;
+    void addLayer(Layer * layer, bool silent = false);
+    QList<Layer*> layers_;
 
     int indexHovered_;
 
@@ -171,8 +170,6 @@ private:
     double top_;
     double width_;
     double height_;
-
-    Background * background_;
 };
     
 #endif

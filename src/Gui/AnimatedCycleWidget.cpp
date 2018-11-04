@@ -512,14 +512,18 @@ void AnimatedCycleWidget::createItem(AnimatedCycleNode * node)
 
 void AnimatedCycleWidget::addSelectedCells()
 {
-    CellSet selectedCells = global()->mainWindow()->scene()->activeLayer()->selectedCells();
+    VectorAnimationComplex::VAC * vac = global()->mainWindow()->scene()->activeVAC();
+    if (vac)
+    {
+        CellSet selectedCells = vac->selectedCells();
 
-    foreach(Cell * cell, selectedCells)
-        createNodeAndItem(cell);
+        foreach(Cell * cell, selectedCells)
+            createNodeAndItem(cell);
 
-    computeItemHeightAndY();
+        computeItemHeightAndY();
 
-    save();
+        save();
+    }
 }
 
 

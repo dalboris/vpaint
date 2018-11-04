@@ -37,8 +37,9 @@ View3D::View3D(Scene *scene, QWidget *parent) :
     vac_(0)
 {
     // Make renderers
-    Background * bg = scene_->background();
-    backgroundRenderers_[bg] = new BackgroundRenderer(bg, context(), this);
+    // XXX Make it work with layers
+    //Background * bg = scene_->background();
+    //backgroundRenderers_[bg] = new BackgroundRenderer(bg, context(), this);
 
 
     viewSettingsWidget_ = new View3DSettingsWidget(viewSettings_);
@@ -367,7 +368,10 @@ void View3D::drawScene()
     using namespace VectorAnimationComplex;
 
     // Get VAC
-    VAC * vac = scene_->activeLayer();
+    VAC * vac = scene_->activeVAC();
+    if (!vac) {
+        return;
+    }
 
     // Get t-position of camera eye to determine back-to front order
     double zEye = camera_.position()[2];
@@ -517,7 +521,8 @@ void View3D::drawScene()
         if(params.drawCanvas)
         {
             drawCanvas_();
-            drawBackground_(scene_->background(), t);
+            // XXX Make it work with layers
+            //drawBackground_(scene_->background(), t);
         }
 
         // Draw cells
@@ -576,14 +581,10 @@ void View3D::drawScene()
  */
 
 void View3D::drawPick3D()
-{/*
-    foreach(int i, displayedTimes_)
+{
+    if(scene_->activeVAC())
     {
-    Picking::setTime(i);*/
-    //Picking::setTime(0);
-    if(scene_->activeLayer())
-    {
-        scene_->activeLayer()->drawPick3D(viewSettings_);
+        scene_->activeVAC()->drawPick3D(viewSettings_);
     }
 }
 

@@ -10,6 +10,8 @@
 
 #include "Background/Background.h"
 #include "VectorAnimationComplex/VAC.h"
+#include "XmlStreamReader.h"
+#include "XmlStreamWriter.h"
 
 Layer::Layer(NoInit_)
 {
@@ -96,6 +98,42 @@ void Layer::deselectAll()
 void Layer::invertSelection()
 {
     vac()->invertSelection();
+}
+
+void Layer::read(XmlStreamReader & xml)
+{
+    while (xml.readNextStartElement())
+    {
+        if (xml.name() == "background")
+        {
+            background()->read(xml);
+        }
+        else if (xml.name() == "objects")
+        {
+            vac()->read(xml);
+        }
+        else
+        {
+            xml.skipCurrentElement();
+        }
+    }
+
+    emit needUpdatePicking();
+    emit changed();
+    emit selectionChanged();
+}
+
+void Layer::write(XmlStreamWriter & xml)
+{
+    // Background
+    xml.writeStartElement("background");
+    background()->write(xml);
+    xml.writeEndElement();
+
+    // Vector animation complex
+    xml.writeStartElement("objects");
+    vac()->write(xml);
+    xml.writeEndElement();
 }
 
 void Layer::exportSVG_(Time t, QTextStream & out)

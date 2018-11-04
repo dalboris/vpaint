@@ -178,7 +178,13 @@ MainWindow::MainWindow() :
 
 void MainWindow::updateObjectProperties()
 {
-    inspector->setObjects(scene()->activeLayer()->selectedCells());
+    VectorAnimationComplex::CellSet selectedCells;
+    VectorAnimationComplex::VAC * vac = scene()->activeVAC();
+    if (vac)
+    {
+        selectedCells = vac->selectedCells();
+    }
+    inspector->setObjects(selectedCells);
 }
 
 View * MainWindow::activeView() const
@@ -950,10 +956,8 @@ void MainWindow::write(XmlStreamWriter &xml)
         scene()->writeCanvas(xml);
         xml.writeEndElement();
 
-        // Layer
-        xml.writeStartElement("layer");
-        scene()->write(xml);
-        xml.writeEndElement();
+        // Layers
+        scene()->writeAllLayers(xml);
     }
     xml.writeEndElement();
 
@@ -963,6 +967,8 @@ void MainWindow::write(XmlStreamWriter &xml)
 
 void MainWindow::read(XmlStreamReader & xml)
 {
+    scene_->clear();
+
     if (xml.readNextStartElement())
     {
         if (xml.name() != "vec")
@@ -973,7 +979,6 @@ void MainWindow::read(XmlStreamReader & xml)
             return;
         }
 
-        int numLayer = 0;
         while (xml.readNextStartElement())
         {
             // Playback
@@ -991,17 +996,7 @@ void MainWindow::read(XmlStreamReader & xml)
             // Layer
             else if (xml.name() == "layer")
             {
-                // For now, only supports one layer, i.e., it reads the first one and
-                // ignore all the others
-                ++numLayer;
-                if(numLayer == 1)
-                {
-                    scene_->read(xml);
-                }
-                else
-                {
-                    xml.skipCurrentElement();
-                }
+                scene_->readOneLayer(xml);
             }
 
             // Unknown
@@ -1917,8 +1912,9 @@ void MainWindow::createDocks()
     // ----- Background ---------
 
     // Widget
+    // XXX TODO: now we have several backgrounds...
     backgroundWidget = new BackgroundWidget();
-    backgroundWidget->setBackground(scene()->background());
+    //backgroundWidget->setBackground(scene()->background());
 
     // Dock
     dockBackgroundWidget = new QDockWidget(tr("Background"));

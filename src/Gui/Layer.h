@@ -13,6 +13,8 @@
 
 class Background;
 namespace VectorAnimationComplex { class VAC; }
+class XmlStreamReader;
+class XmlStreamWriter;
 
 class Layer : public SceneObject
 {
@@ -42,6 +44,9 @@ public:
     void deselectAll(Time time) override;
     void deselectAll() override;
     void invertSelection() override;
+
+    void read(XmlStreamReader & xml);
+    void write(XmlStreamWriter & xml);
 
     Background * background() const { return background_; }
     VectorAnimationComplex::VAC * vac() const { return vac_; }
