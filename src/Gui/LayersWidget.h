@@ -38,6 +38,9 @@ public:
     bool isActive() const;
     void setActive(bool b);
 
+    bool visibility() const;
+    void setVisibility(bool b);
+
     QString name() const;
     void setName(const QString& name);
 
@@ -49,15 +52,17 @@ protected:
 
 signals:
     void activated(int layerIndex);
+    void visibilityChanged(int layerIndex);
     void nameChanged(int layerIndex);
 
 private slots:
+    void onVisibilityCheckBoxStateChanged_(int);
     void onNameEditingFinished_();
 
 private:
     int index_;    
     bool isActive_;
-    QCheckBox * checkBox_;
+    QCheckBox * visibilityCheckBox_;
     QLabel * nameLabel_;
     QLineEdit * nameLineEdit_;
 
@@ -80,6 +85,7 @@ public:
 
 private slots:
     void onLayerWidgetActivated_(int index);
+    void onLayerWidgetVisibilityChanged_(int index);
     void onLayerWidgetNameChanged_(int index);
 
     void onNewLayerClicked_();

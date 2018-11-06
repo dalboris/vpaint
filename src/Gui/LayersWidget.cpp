@@ -35,9 +35,10 @@ LayerWidget::LayerWidget(int index) :
     index_(index),
     isActive_(false)
 {
-    checkBox_ = new QCheckBox();
-    checkBox_->setCheckState(Qt::Checked);
-    checkBox_->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+    visibilityCheckBox_ = new QCheckBox();
+    visibilityCheckBox_->setCheckState(Qt::Checked);
+    visibilityCheckBox_->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+    connect(visibilityCheckBox_, SIGNAL(stateChanged(int)), this, SLOT(onVisibilityCheckBoxStateChanged_(int)));
 
     nameLabel_ = new QLabel();
     nameLabel_->setMinimumHeight(30);
@@ -48,7 +49,7 @@ LayerWidget::LayerWidget(int index) :
     connect(nameLineEdit_, &QLineEdit::editingFinished, this, &LayerWidget::onNameEditingFinished_);
 
     QHBoxLayout * layout = new QHBoxLayout();
-    layout->addWidget(checkBox_);
+    layout->addWidget(visibilityCheckBox_);
     layout->addWidget(nameLabel_);
     layout->addWidget(nameLineEdit_);
     setLayout(layout);
@@ -82,6 +83,21 @@ void LayerWidget::setActive(bool b)
         {
             emit activated(index());
         }
+    }
+}
+
+bool LayerWidget::visibility() const
+{
+    return visibilityCheckBox_->isChecked();
+}
+
+void LayerWidget::setVisibility(bool b)
+{
+    if (b != visibility())
+    {
+        visibilityCheckBox_->setChecked(b);
+        // Note: we don't emit a signal here, as it will be emitted
+        // in onVisibilityCheckBoxStateChanged_.
     }
 }
 
@@ -124,6 +140,11 @@ void LayerWidget::mousePressEvent(QMouseEvent*)
 void LayerWidget::mouseDoubleClickEvent(QMouseEvent*)
 {
     enterNameEditingMode();
+}
+
+void LayerWidget::onVisibilityCheckBoxStateChanged_(int)
+{
+    emit visibilityChanged(index());
 }
 
 void LayerWidget::onNameEditingFinished_()
@@ -230,6 +251,15 @@ void LayersWidget::onLayerWidgetActivated_(int index)
     scene()->setActiveLayer(numVisibleLayerWidgets_ - 1 - index);
 }
 
+void LayersWidget::onLayerWidgetVisibilityChanged_(int index)
+{
+    if (0 <= index && index < numVisibleLayerWidgets_) {
+        int j = numVisibleLayerWidgets_ - 1 - index;
+        bool visibility = layerWidgets_[index]->visibility();
+        scene()->layer(j)->setVisible(visibility);
+    }
+}
+
 void LayersWidget::onLayerWidgetNameChanged_(int index)
 {
     if (0 <= index && index < numVisibleLayerWidgets_) {
@@ -300,14 +330,14 @@ void LayersWidget::updateUiFromScene_()
     }
     numVisibleLayerWidgets_ = numLayers;
 
-    // Set LayerWidgets names
+    // Set LayerWidgets names and visibility
     for (int i = 0; i < numVisibleLayerWidgets_; ++i) {
         int j = numVisibleLayerWidgets_ - 1 - i;
+        bool visibility= scene()->layer(j)->isVisible();
         QString name = scene()->layer(j)->name();
+        layerWidgets_[i]->setVisibility(visibility);
         layerWidgets_[i]->setName(name);
     }
-
-    // XXX TODO: set LayerWidgets visibility
 
     // Set active LayerWidget
     int jActive = scene()->activeLayerIndex();
@@ -330,5 +360,6 @@ void LayersWidget::createNewLayerWidget_()
     layerWidgets_.push_back(layerWidget);
     layerListLayout_->addWidget(layerWidget);
     connect(layerWidget, &impl_::LayerWidget::activated, this, &LayersWidget::onLayerWidgetActivated_);
+    connect(layerWidget, &impl_::LayerWidget::visibilityChanged, this, &LayersWidget::onLayerWidgetVisibilityChanged_);
     connect(layerWidget, &impl_::LayerWidget::nameChanged, this, &LayersWidget::onLayerWidgetNameChanged_);
 }

@@ -184,6 +184,8 @@ void Layer::setVisible(bool b)
     if (b != isVisible_)
     {
         isVisible_ = b;
+        emit changed();
+        emit needUpdatePicking();
         emit layerAttributesChanged();
     }
 }
