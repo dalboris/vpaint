@@ -241,6 +241,7 @@ void Scene::readOneLayer(XmlStreamReader & xml)
     emit needUpdatePicking();
     emit changed();
     emit selectionChanged();
+    emit layerAttributesChanged();
 }
 
 void Scene::readCanvas(XmlStreamReader & xml)

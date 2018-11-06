@@ -126,6 +126,28 @@ void Layer::invertSelection()
 
 void Layer::read(XmlStreamReader & xml)
 {
+    // Name
+    name_ = "Layer";
+    if(xml.attributes().hasAttribute("name"))
+    {
+        name_ = xml.attributes().value("name").toString();
+    }
+
+    // Visible
+    isVisible_ = true;
+    if(xml.attributes().hasAttribute("visible"))
+    {
+        QString value = xml.attributes().value("visible").toString();
+        if (value == "true")
+        {
+            isVisible_ = true;
+        }
+        else if (value == "false")
+        {
+            isVisible_ = false;
+        }
+    }
+
     while (xml.readNextStartElement())
     {
         if (xml.name() == "background")
@@ -145,10 +167,17 @@ void Layer::read(XmlStreamReader & xml)
     emit needUpdatePicking();
     emit changed();
     emit selectionChanged();
+    emit layerAttributesChanged();
 }
 
 void Layer::write(XmlStreamWriter & xml)
 {
+    // Name
+    xml.writeAttribute("name", name());
+
+    // Visible
+    xml.writeAttribute("visible", isVisible() ? "true" : "false");
+
     // Background
     xml.writeStartElement("background");
     background()->write(xml);
