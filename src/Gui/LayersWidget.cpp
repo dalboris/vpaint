@@ -8,6 +8,8 @@
 
 #include "LayersWidget.h"
 
+#include <cmath>
+
 #include <QCheckBox>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -16,16 +18,22 @@
 #include <QScrollArea>
 #include <QVBoxLayout>
 
+#include "Layer.h"
+#include "Scene.h"
+
 namespace
 {
-const QColor layerColorIfCurrent = QColor::fromRgb(128, 190, 230);
-const QColor layerColorIfNotCurrent = QColor::fromRgb(255, 255, 255);
-const QColor layerListBackgroundColor = QColor::fromRgb(255, 255, 255);
+const QColor activeLayerBackgroundColor = QColor::fromRgb(128, 190, 230);
+const QColor inactiveLayerBackgroundColor = QColor::fromRgb(255, 255, 255);
+const QColor noLayerBackgroundColor = QColor::fromRgb(255, 255, 255);
 } // namespace
 
-LayerWidget::LayerWidget(int index, bool isCurrent) :
+namespace impl_
+{
+
+LayerWidget::LayerWidget(int index) :
     index_(index),
-    isCurrent_(isCurrent)
+    isActive_(false)
 {
     checkBox_ = new QCheckBox();
     checkBox_->setCheckState(Qt::Checked);
@@ -33,7 +41,6 @@ LayerWidget::LayerWidget(int index, bool isCurrent) :
 
     nameLabel_ = new QLabel();
     nameLabel_->setMinimumHeight(30);
-    setName( tr("Layer %1").arg(index));
 
     nameLineEdit_ = new QLineEdit();
     nameLineEdit_->setMinimumHeight(30);
@@ -55,40 +62,54 @@ LayerWidget::~LayerWidget()
 
 }
 
-QString LayerWidget::name() const
-{
-    return nameLabel_->text();
-}
-
-void LayerWidget::setName(const QString& name)
-{
-    nameLabel_->setText(name);
-}
-
 int LayerWidget::index() const
 {
     return index_;
 }
 
-void LayerWidget::setIndex(int index)
+bool LayerWidget::isActive() const
 {
-    index_ = index;
+    return isActive_;
 }
 
-bool LayerWidget::isCurrent() const
+void LayerWidget::setActive(bool b)
 {
-    return isCurrent_;
+    if (b != isActive_)
+    {
+        isActive_ = b;
+        updateBackground_();
+        if (isActive_)
+        {
+            emit activated(index());
+        }
+    }
 }
 
-void LayerWidget::setCurrent(bool b)
+QString LayerWidget::name() const
 {
-    isCurrent_ = b;
-    updateBackground_();
+    return nameLabel_->text();
+}
+
+void LayerWidget::setName(const QString& newName)
+{
+    // Abort editing if any
+    if (nameLineEdit_->isVisible())
+    {
+        nameLineEdit_->hide();
+        nameLabel_->show();
+    }
+
+    // Set new name if different form current name
+    if (newName != name())
+    {
+        nameLabel_->setText(newName);
+        emit nameChanged(index());
+    }
 }
 
 void LayerWidget::enterNameEditingMode()
 {
-    nameLineEdit_->setText(nameLabel_->text());
+    nameLineEdit_->setText(name());
     nameLabel_->hide();
     nameLineEdit_->show();
     nameLineEdit_->selectAll();
@@ -97,7 +118,7 @@ void LayerWidget::enterNameEditingMode()
 
 void LayerWidget::mousePressEvent(QMouseEvent*)
 {
-    emit requestCurrent(index());
+    setActive(true);
 }
 
 void LayerWidget::mouseDoubleClickEvent(QMouseEvent*)
@@ -107,35 +128,38 @@ void LayerWidget::mouseDoubleClickEvent(QMouseEvent*)
 
 void LayerWidget::onNameEditingFinished_()
 {
-    nameLabel_->setText(nameLineEdit_->text());
-    nameLineEdit_->hide();
-    nameLabel_->show();
+    setName(nameLineEdit_->text());
 }
 
 void LayerWidget::updateBackground_()
 {
-    QColor color = isCurrent() ? layerColorIfCurrent : layerColorIfNotCurrent;
+    QColor color = isActive() ? activeLayerBackgroundColor : inactiveLayerBackgroundColor;
 
     QPalette p = palette();
     p.setColor(QPalette::Background, color);
     setPalette(p);
 }
 
-LayersWidget::LayersWidget() :
+} // namespace impl_
+
+LayersWidget::LayersWidget(Scene * scene) :
+    scene_(scene),
     numVisibleLayerWidgets_(0),
-    currentLayer_(nullptr)
+    activeLayerWidget_(nullptr)
 {
     // VBoxLayout with all the individual LayerWidget instances
     layerListLayout_ = new QVBoxLayout();
     layerListLayout_->setContentsMargins(0,0,0,0);
     layerListLayout_->setSpacing(0);
 
-    // Create a few LayerWidget instances for testing
-    // XXX Why is this not working when I move this to the end of this function??
+    // Create one LayerWidget right now. It will be hidden shortly after if the
+    // scene has in fact no layers.
+    //
+    // This is required because for some reason, LayerWidgets won't show up if
+    // none exist before layerListLayout_ is added to the scrollArea. I suspect
+    // this to be a bug of Qt.
+    //
     createNewLayerWidget_();
-    createNewLayerWidget_();
-    createNewLayerWidget_();
-    setCurrentLayer_(numVisibleLayerWidgets_ - 1);
 
     // Wrap the layerListLayout_ into yet another VBoxLayout.
     // We need this because:
@@ -160,7 +184,7 @@ LayersWidget::LayersWidget() :
 
     // Set background color for scrollarea
     QPalette p = scrollArea->palette();
-    p.setColor(QPalette::Background, layerListBackgroundColor);
+    p.setColor(QPalette::Background, noLayerBackgroundColor);
     scrollArea->setPalette(p);
     scrollArea->setAutoFillBackground(true);
 
@@ -185,6 +209,10 @@ LayersWidget::LayersWidget() :
     layout->addWidget(scrollArea);
     layout->addLayout(buttonsLayout);
     setLayout(layout);
+
+    // Connect to scene
+    updateUiFromScene_();
+    connect(scene_, SIGNAL(layerAttributesChanged()), this, SLOT(onSceneLayerAttributesChanged_()));
 }
 
 LayersWidget::~LayersWidget()
@@ -192,129 +220,115 @@ LayersWidget::~LayersWidget()
 
 }
 
-void LayersWidget::setCurrentLayer_(int index)
+Scene * LayersWidget::scene() const
 {
-    // Early return if already current
-    if (currentLayer_ && currentLayer_->index() == index) {
-        return;
-    }
+    return scene_;
+}
 
-    // Set current layer (if any) as not current anymore
-    if (currentLayer_) {
-        currentLayer_->setCurrent(false);
-        currentLayer_ = nullptr;
-    }
+void LayersWidget::onLayerWidgetActivated_(int index)
+{
+    scene()->setActiveLayer(numVisibleLayerWidgets_ - 1 - index);
+}
 
-    // Set new current layer if provided index is valid
-    size_t index_ = index;
+void LayersWidget::onLayerWidgetNameChanged_(int index)
+{
     if (0 <= index && index < numVisibleLayerWidgets_) {
-        LayerWidget * newCurrentLayer = layerWidgets_[index_];
-        newCurrentLayer->setCurrent(true);
-        currentLayer_ = newCurrentLayer;
+        int j = numVisibleLayerWidgets_ - 1 - index;
+        QString name = layerWidgets_[index]->name();
+        scene()->layer(j)->setName(name);
     }
 }
 
 void LayersWidget::onNewLayerClicked_()
 {
-    // Show or create one more LayerWidget
-    if (numVisibleLayerWidgets_ < static_cast<int>(layerWidgets_.size())) {
-        layerWidgets_[numVisibleLayerWidgets_]->show();
-        ++numVisibleLayerWidgets_;
-    }
-    else {
-        createNewLayerWidget_();
-    }
+    // Create layer. This should indirectly create the corresponding
+    // LayerWidget, unless using asynchronous signals/slots.
+    Layer * layer = scene()->createLayer(tr("New Layer"));
 
-    // Insert above current layer, or keep last if no current layer
-    int newCurrentIndex = numVisibleLayerWidgets_ - 1;
-    if (currentLayer_) {
-        newCurrentIndex = currentLayer_->index();
-        for (int i = numVisibleLayerWidgets_ - 1; i > newCurrentIndex; --i) {
-            layerWidgets_[i]->setName(layerWidgets_[i-1]->name());
+    // Enter name editing mode. We need to check in case of asynchronous
+    // signals/slots.
+    //
+    if (activeLayerWidget_)
+    {
+        int j = numVisibleLayerWidgets_ - 1 - activeLayerWidget_->index();
+        if (scene()->layer(j) == layer)
+        {
+            activeLayerWidget_->enterNameEditingMode();
         }
     }
-    layerWidgets_[newCurrentIndex]->setName("New Layer");
-    setCurrentLayer_(newCurrentIndex);
-    currentLayer_->enterNameEditingMode();
 }
 
 void LayersWidget::onDeleteLayerClicked_()
 {
-    if (currentLayer_) {
-        int currentIndex = currentLayer_->index();
-        for (int i = currentIndex; i < numVisibleLayerWidgets_ - 1; ++i) {
-            layerWidgets_[i]->setName(layerWidgets_[i+1]->name());
-        }
-        layerWidgets_[numVisibleLayerWidgets_ - 1]->hide();
-        --numVisibleLayerWidgets_;
-
-        // Set layer below as current, unless it was the bottom layer,
-        // in which case we set the layer above as current
-        if (currentIndex < numVisibleLayerWidgets_) {
-            setCurrentLayer_(currentIndex);
-        }
-        else {
-            setCurrentLayer_(currentIndex - 1);
-        }
-    }
+    scene()->destroyActiveLayer();
 }
 
 void LayersWidget::onMoveLayerUpClicked_()
 {
-    if (currentLayer_) {
-        int i = currentLayer_->index();
-        if (i > 0) {
-            int j = i - 1;
-            QString temp = layerWidgets_[j]->name();
-            layerWidgets_[j]->setName(layerWidgets_[i]->name());
-            layerWidgets_[i]->setName(temp);
-            setCurrentLayer_(j);
-        }
-    }
+    scene()->moveActiveLayerUp();
 }
 
 void LayersWidget::onMoveLayerDownClicked_()
 {
-    if (currentLayer_) {
-        int i = currentLayer_->index();
-        if (i < numVisibleLayerWidgets_ - 1) {
-            int j = i + 1;
-            QString temp = layerWidgets_[j]->name();
-            layerWidgets_[j]->setName(layerWidgets_[i]->name());
-            layerWidgets_[i]->setName(temp);
-            setCurrentLayer_(j);
-        }
+    scene()->moveActiveLayerDown();
+}
+
+void LayersWidget::onSceneLayerAttributesChanged_()
+{
+    updateUiFromScene_();
+}
+
+void LayersWidget::updateUiFromScene_()
+{
+    // Show as many existing LayerWidgets as necessary
+    int numLayers = scene()->numLayers();
+    int numLayerWidgets = layerWidgets_.size();
+    int newNumVisibleLayerWidgets = std::min(numLayers, numLayerWidgets);
+    for (int i = numVisibleLayerWidgets_; i < newNumVisibleLayerWidgets; ++i) {
+        layerWidgets_[i]->show();
+        ++numVisibleLayerWidgets_;
+    }
+
+    // Create as many new LayerWidgets as necessary
+    for (int i = numVisibleLayerWidgets_; i < numLayers; ++i) {
+        createNewLayerWidget_();
+    }
+
+    // Hide superfluous LayerWidgets
+    for (int i = numLayers; i < numVisibleLayerWidgets_; ++i) {
+        layerWidgets_[i]->hide();
+    }
+    numVisibleLayerWidgets_ = numLayers;
+
+    // Set LayerWidgets names
+    for (int i = 0; i < numVisibleLayerWidgets_; ++i) {
+        int j = numVisibleLayerWidgets_ - 1 - i;
+        QString name = scene()->layer(j)->name();
+        layerWidgets_[i]->setName(name);
+    }
+
+    // XXX TODO: set LayerWidgets visibility
+
+    // Set active LayerWidget
+    int jActive = scene()->activeLayerIndex();
+    int iActive = numVisibleLayerWidgets_ - 1 - jActive;
+    if (activeLayerWidget_ && activeLayerWidget_->index() != iActive) {
+        activeLayerWidget_->setActive(false);
+        activeLayerWidget_ = nullptr;
+    }
+    if (0 <= iActive && iActive < numVisibleLayerWidgets_) {
+        activeLayerWidget_ = layerWidgets_[iActive];
+        activeLayerWidget_->setActive(true);
     }
 }
 
+// Precondition: all LayerWidgets are visible
 void LayersWidget::createNewLayerWidget_()
 {
-    // Create layer
-    LayerWidget * layer = new LayerWidget(layerWidgets_.size());
+    impl_::LayerWidget * layerWidget = new impl_::LayerWidget(layerWidgets_.size());
     ++numVisibleLayerWidgets_;
-    layerWidgets_.push_back(layer);
-    layerListLayout_->addWidget(layer);
-    connect(layer, &LayerWidget::requestCurrent, this, &LayersWidget::setCurrentLayer_);
-}
-
-void LayersWidget::destroyLastLayerWidget_()
-{
-    // Get layer to destroy
-    LayerWidget * layer = layerWidgets_.back();
-
-    // If it was the current layer, set the layer above (if any) as current
-    if (layer->isCurrent()) {
-        setCurrentLayer_(layer->index() - 1); // safe even when index == 0
-    }
-
-    // If it was visible, decrease the number of visible LayerWidgets
-    if (layer->isVisible()) {
-        --numVisibleLayerWidgets_;
-    }
-
-    // Destroy layer
-    disconnect(layer, &LayerWidget::requestCurrent, this, &LayersWidget::setCurrentLayer_);
-    layerListLayout_->takeAt(layer->index());
-    layerWidgets_.pop_back();
-    delete layer;
+    layerWidgets_.push_back(layerWidget);
+    layerListLayout_->addWidget(layerWidget);
+    connect(layerWidget, &impl_::LayerWidget::activated, this, &LayersWidget::onLayerWidgetActivated_);
+    connect(layerWidget, &impl_::LayerWidget::nameChanged, this, &LayersWidget::onLayerWidgetNameChanged_);
 }

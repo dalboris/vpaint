@@ -30,12 +30,12 @@
 #include "Layer.h"
 
 Scene::Scene() :
+    activeLayerIndex_(-1),
     left_(0),
     top_(0),
     width_(1280),
     height_(720)
 {
-    addLayer(new Layer()); // XXX This is temporary. There should be zero layers by default.
     indexHovered_ = -1;
 }
 
@@ -105,7 +105,13 @@ void Scene::copyFrom(Scene * other)
 
     // Copy layers
     foreach(Layer * layer, other->layers_)
-        addLayer(layer->clone(), true);
+        addLayer_(layer->clone(), true);
+    if (numLayers() > 0) {
+        activeLayerIndex_ = 0;
+    }
+    else {
+        activeLayerIndex_ = -1;
+    }
 
     // Reset hovered
     indexHovered_ = -1;
@@ -127,6 +133,7 @@ void Scene::clear(bool silent)
     foreach(Layer * layer, layers_)
         delete layer;
     layers_.clear();
+    activeLayerIndex_ = -1;
 
     // XXX Shouldn't this clear left/top/width/height too?
 
@@ -227,7 +234,7 @@ void Scene::readOneLayer(XmlStreamReader & xml)
 
     Layer * layer = new Layer();
     layer->read(xml);
-    addLayer(layer, true);
+    addLayer_(layer, true);
 
     // XXX Remove these: only emit once after finishing to read the file
     blockSignals(false);
@@ -499,17 +506,24 @@ void Scene::keyReleaseEvent(QKeyEvent *event)
     event->ignore();
 }
 
-void Scene::addLayer(Layer * layer, bool silent)
+void Scene::addLayer_(Layer * layer, bool silent)
 {
     layers_ << layer;
+    if (activeLayerIndex_ < 0) {
+        activeLayerIndex_ = 0;
+    }
+
     connect(layer, SIGNAL(changed()), this, SIGNAL(changed()));
     connect(layer, SIGNAL(checkpoint()), this, SIGNAL(checkpoint()));
     connect(layer, SIGNAL(needUpdatePicking()), this, SIGNAL(needUpdatePicking()));
     connect(layer, SIGNAL(selectionChanged()), this, SIGNAL(selectionChanged()));
+    connect(layer, SIGNAL(layerAttributesChanged()), this, SIGNAL(layerAttributesChanged()));
+
     if(!silent)
     {
         emitChanged();
         emit needUpdatePicking();
+        emit layerAttributesChanged();
     }
 }
 
@@ -545,25 +559,168 @@ void Scene::smartDelete()
     }
 }
 
-Layer * Scene::activeLayer() const
+int Scene::numLayers() const
 {
-    // For now, the first layer is always the active layer
-    // XXX Sync active layer between back-end and front-end
+    return layers_.size();
+}
 
-    if(layers_.isEmpty())
+Layer* Scene::layer(int i) const
+{
+    if (0 <= i && i < numLayers())
     {
-        return nullptr;
+        return layers_[i];
     }
     else
     {
-        return layers_[0];
+        return nullptr;
     }
+}
+
+void Scene::setActiveLayer(int i)
+{
+    if(i != activeLayerIndex_ && 0 <= i && i < numLayers())
+    {
+        deselectAll();
+
+        activeLayerIndex_ = i;
+
+        emitChanged();
+        emit needUpdatePicking();
+        emit layerAttributesChanged();
+    }
+}
+
+Layer * Scene::activeLayer() const
+{
+    return layer(activeLayerIndex_);
+}
+
+int Scene::activeLayerIndex() const
+{
+    return activeLayerIndex_;
 }
 
 VectorAnimationComplex::VAC * Scene::activeVAC() const
 {
     Layer * layer = activeLayer();
     return layer ? layer->vac() : nullptr;
+}
+
+Layer * Scene::createLayer()
+{
+    return createLayer(tr("Layer %1").arg(numLayers() + 1));
+}
+
+Layer * Scene::createLayer(const QString & name)
+{
+    // Create new layer, add it on top for now
+    Layer * layer = new Layer(name);
+    addLayer_(layer, true);
+
+    // Move above active layer, or keep last if no active layer
+    int newActiveLayerIndex = layers_.size() - 1;
+    if (0 <= activeLayerIndex_ && activeLayerIndex_ < newActiveLayerIndex - 1)
+    {
+        newActiveLayerIndex = activeLayerIndex_ + 1;
+        for (int i = layers_.size() - 1; i > newActiveLayerIndex; --i)
+        {
+            layers_[i] = layers_[i-1];
+        }
+        layers_[newActiveLayerIndex] = layer;
+    }
+
+    // Set as active
+    activeLayerIndex_ = newActiveLayerIndex;
+
+    // Emit signals
+    emitChanged();
+    emit needUpdatePicking();
+    emit layerAttributesChanged();
+    // XXX emit checkpoint() ?
+
+    return layer;
+}
+
+void Scene::moveActiveLayerUp()
+{
+    int i = activeLayerIndex_;
+    if(0 <= i && i < numLayers() - 1)
+    {
+        // Swap out layers
+        int j = i + 1;
+        std::swap(layers_[i], layers_[j]);
+
+        // Set new active index.
+        // Note: we don't call setActiveLayer(j) to avoid calling deselectAll().
+        activeLayerIndex_ = j;
+
+        // Emit signals. Note: it may be tempting to think that updating
+        // picking is unnecessary (because the pickable cells haven't moved),
+        // however the picking image data contains the layer index which has
+        // changed, and therefore this picking image needs to be re-rendered.
+        emitChanged();
+        emit needUpdatePicking();
+        emit layerAttributesChanged();
+    }
+}
+
+void Scene::moveActiveLayerDown()
+{
+    int i = activeLayerIndex_;
+    if(0 < i && i < numLayers())
+    {
+        // Swap out layers
+        int j = i - 1;
+        std::swap(layers_[i], layers_[j]);
+
+        // Set new active index.
+        // Note: we don't call setActiveLayer(j) to avoid calling deselectAll().
+        activeLayerIndex_ = j;
+
+        // Emit signals. Note: it may be tempting to think that updating
+        // picking is unnecessary (because the pickable cells haven't moved),
+        // however the picking image data contains the layer index which has
+        // changed, and therefore this picking image needs to be re-rendered.
+        emitChanged();
+        emit needUpdatePicking();
+        emit layerAttributesChanged();
+    }
+}
+
+void Scene::destroyActiveLayer()
+{
+    int i = activeLayerIndex_;
+    if(0 <= i && i < numLayers())
+    {
+        deselectAll();
+
+        Layer * toBeDestroyedLayer = layers_[i];
+        layers_.removeAt(i);
+
+        // Set as active the layer below, unless it was the bottom-most layer
+        // or the only layer in the scene.
+        if (numLayers() == 0)
+        {
+            // no more layers
+            activeLayerIndex_ = -1;
+        }
+        else if (activeLayerIndex_ == 0)
+        {
+            // was the bottom-most layer
+            activeLayerIndex_ = 0;
+        }
+        else
+        {
+            // had layer below
+            --activeLayerIndex_;
+        }
+
+        delete toBeDestroyedLayer;
+
+        emitChanged();
+        emit needUpdatePicking();
+        emit layerAttributesChanged();
+    }
 }
 
 VectorAnimationComplex::InbetweenFace * Scene::createInbetweenFace()

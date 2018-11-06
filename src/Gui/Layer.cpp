@@ -18,9 +18,11 @@ Layer::Layer(NoInit_)
 
 }
 
-Layer::Layer() :
+Layer::Layer(const QString & layerName) :
     background_(new Background(this)),
-    vac_(new VectorAnimationComplex::VAC())
+    vac_(new VectorAnimationComplex::VAC()),
+    name_(layerName),
+    isVisible_(true)
 {
     connect(background_, SIGNAL(changed()), this, SIGNAL(changed()));
     connect(background_, SIGNAL(checkpoint()), this, SIGNAL(checkpoint()));
@@ -39,9 +41,27 @@ Layer::~Layer()
 Layer * Layer::clone()
 {
     Layer * res = new Layer(NoInit_());
-    res->background_ = new Background(background());
+    res->background_ = new Background(*background());
     res->vac_ = vac_->clone();
+    res->name_ = name_;
+    res->isVisible_ = isVisible_;
     return res;
+
+    // Note:
+    //
+    // When I first implemented this function, I wrote:
+    //
+    //   Background(background())
+    //
+    // instead of
+    //
+    //   Background(*background())
+    //
+    // This caused a crash because it called the Background(QObject*)
+    // constructor, not the copy constructor as I intended. In retrospect, the
+    // "clone()" idiom seems safer and better suited for pointer-like objects
+    // with identity, even though using the copy constructor seemed like
+    // more idiomatic C++.
 }
 
 QString Layer::stringType()
@@ -52,12 +72,16 @@ QString Layer::stringType()
 void Layer::draw(Time time, ViewSettings & viewSettings)
 {
     // Draw the VAC only. Drawing the background is handled by View.
-    vac()->draw(time, viewSettings);
+    if (isVisible()) {
+        vac()->draw(time, viewSettings);
+    }
 }
 
 void Layer::drawPick(Time time, ViewSettings & viewSettings)
 {
-    vac()->drawPick(time, viewSettings);
+    if (isVisible()) {
+        vac()->drawPick(time, viewSettings);
+    }
 }
 
 void Layer::setHoveredObject(Time time, int id)
@@ -134,6 +158,34 @@ void Layer::write(XmlStreamWriter & xml)
     xml.writeStartElement("objects");
     vac()->write(xml);
     xml.writeEndElement();
+}
+
+QString Layer::name() const
+{
+    return name_;
+}
+
+void Layer::setName(const QString & newName)
+{
+    if (newName != name_)
+    {
+        name_ = newName;
+        emit layerAttributesChanged();
+    }
+}
+
+bool Layer::isVisible() const
+{
+    return isVisible_;
+}
+
+void Layer::setVisible(bool b)
+{
+    if (b != isVisible_)
+    {
+        isVisible_ = b;
+        emit layerAttributesChanged();
+    }
 }
 
 void Layer::exportSVG_(Time t, QTextStream & out)

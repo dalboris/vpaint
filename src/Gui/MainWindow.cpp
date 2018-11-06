@@ -1926,7 +1926,7 @@ void MainWindow::createDocks()
     // ----- Layers ---------
 
     // Widget
-    layersWidget = new LayersWidget();
+    layersWidget = new LayersWidget(scene());
 
     // Dock
     dockLayersWidget = new QDockWidget(tr("Layers"));

@@ -27,7 +27,7 @@ private:
     Layer(NoInit_);
 
 public:
-    Layer();
+    Layer(const QString & layerName = "Layer");
     ~Layer() override;
 
     Layer * clone() override;
@@ -51,11 +51,18 @@ public:
     Background * background() const { return background_; }
     VectorAnimationComplex::VAC * vac() const { return vac_; }
 
+    QString name() const;
+    void setName(const QString & name);
+
+    bool isVisible() const;
+    void setVisible(bool b);
+
 signals:
     void changed();
     void checkpoint();
     void needUpdatePicking();
     void selectionChanged();
+    void layerAttributesChanged();
 
 protected:
     void exportSVG_(Time t, QTextStream & out) override;
@@ -63,6 +70,8 @@ protected:
 private:
     Background * background_;
     VectorAnimationComplex::VAC * vac_;
+    QString name_;
+    bool isVisible_;
 };
 
 #endif

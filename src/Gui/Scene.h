@@ -39,7 +39,7 @@ class Scene: public QObject
     
 public:
     Scene();
-    void copyFrom(Scene * other);
+    void copyFrom(Scene * other); // XXX "copy" is a better name but already taken (see copy/paste slots). We should rename the slots.
     void clear(bool silent = false);
     ~Scene();
 
@@ -77,9 +77,25 @@ public:
     void writeCanvas(XmlStreamWriter & xml);
     void relativeRemap(const QDir & oldDir, const QDir & newDir);
 
-    // Get the active layer
+    // Get layer from index
+    int numLayers() const;
+    Layer* layer(int i) const;
+
+    // Active layer
+    void setActiveLayer(int i);
     Layer * activeLayer() const;
+    int activeLayerIndex() const; // returns -1 if no active layers.
     VectorAnimationComplex::VAC * activeVAC() const;
+
+    // Create layer above active layer, or last if no active layer
+    // Set as active layer
+    Layer * createLayer();
+    Layer * createLayer(const QString & name);
+    void moveActiveLayerUp();
+    void moveActiveLayerDown();
+
+    // destroy the given layer
+    void destroyActiveLayer();
     
     // GUI
     void populateToolBar(QToolBar * toolBar);
@@ -158,11 +174,15 @@ signals:
     void needUpdatePicking(); // Make sure to call this only once, when necessary
 
     void selectionChanged();
+    void layerAttributesChanged();
 
     
 private:
-    void addLayer(Layer * layer, bool silent = false);
+    // Layers are ordered back to front,
+    // Example: layers_[0] is the bottom-most layer, rendered first
+    void addLayer_(Layer * layer, bool silent = false);
     QList<Layer*> layers_;
+    int activeLayerIndex_;
 
     int indexHovered_;
 
