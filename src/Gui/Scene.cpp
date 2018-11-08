@@ -106,12 +106,7 @@ void Scene::copyFrom(Scene * other)
     // Copy layers
     foreach(Layer * layer, other->layers_)
         addLayer_(layer->clone(), true);
-    if (numLayers() > 0) {
-        activeLayerIndex_ = 0;
-    }
-    else {
-        activeLayerIndex_ = -1;
-    }
+    activeLayerIndex_ = other->activeLayerIndex_;
 
     // Reset hovered
     indexHovered_ = -1;
@@ -122,6 +117,8 @@ void Scene::copyFrom(Scene * other)
     // Emit signals
     emit needUpdatePicking();
     emitChanged();
+    emit selectionChanged();
+    emit layerAttributesChanged();
 }
 
 void Scene::clear(bool silent)
@@ -146,6 +143,7 @@ void Scene::clear(bool silent)
         emitChanged();
         emit needUpdatePicking();
         emit selectionChanged();
+        emit layerAttributesChanged();
     }
 }
 
@@ -637,7 +635,6 @@ Layer * Scene::createLayer(const QString & name)
     emitChanged();
     emit needUpdatePicking();
     emit layerAttributesChanged();
-    // XXX emit checkpoint() ?
 
     return layer;
 }

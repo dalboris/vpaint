@@ -39,6 +39,7 @@ LayerWidget::LayerWidget(int index) :
     visibilityCheckBox_->setCheckState(Qt::Checked);
     visibilityCheckBox_->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
     connect(visibilityCheckBox_, SIGNAL(stateChanged(int)), this, SLOT(onVisibilityCheckBoxStateChanged_(int)));
+    connect(visibilityCheckBox_, SIGNAL(clicked(bool)), this, SLOT(onVisibilityCheckBoxClicked_(bool)));
 
     nameLabel_ = new QLabel();
     nameLabel_->setMinimumHeight(30);
@@ -46,7 +47,7 @@ LayerWidget::LayerWidget(int index) :
     nameLineEdit_ = new QLineEdit();
     nameLineEdit_->setMinimumHeight(30);
     nameLineEdit_->hide();
-    connect(nameLineEdit_, &QLineEdit::editingFinished, this, &LayerWidget::onNameEditingFinished_);
+    connect(nameLineEdit_, &QLineEdit::editingFinished, this, &LayerWidget::onNameLineEditEditingFinished_);
 
     QHBoxLayout * layout = new QHBoxLayout();
     layout->addWidget(visibilityCheckBox_);
@@ -106,40 +107,46 @@ QString LayerWidget::name() const
     return nameLabel_->text();
 }
 
-void LayerWidget::setName(const QString& newName)
+bool LayerWidget::setName(const QString& newName)
 {
-    // Abort editing if any
-    if (nameLineEdit_->isVisible())
-    {
-        nameLineEdit_->hide();
-        nameLabel_->show();
-    }
+    // Abord name editing if any
+    abortNameEditing_();
 
     // Set new name if different form current name
     if (newName != name())
     {
         nameLabel_->setText(newName);
         emit nameChanged(index());
+        return true;
+    }
+    else
+    {
+        return false;
     }
 }
 
-void LayerWidget::enterNameEditingMode()
+void LayerWidget::startNameEditing()
 {
-    nameLineEdit_->setText(name());
-    nameLabel_->hide();
-    nameLineEdit_->show();
-    nameLineEdit_->selectAll();
-    nameLineEdit_->setFocus();
+    startNameEditing_(NameEditingReason_::ExternalRequest);
 }
 
 void LayerWidget::mousePressEvent(QMouseEvent*)
 {
-    setActive(true);
+    if (!isActive_)
+    {
+        setActive(true);
+        emit checkpoint();
+    }
 }
 
 void LayerWidget::mouseDoubleClickEvent(QMouseEvent*)
 {
-    enterNameEditingMode();
+    startNameEditing_(NameEditingReason_::DoubleClick);
+}
+
+void LayerWidget::onVisibilityCheckBoxClicked_(bool)
+{
+    emit checkpoint();
 }
 
 void LayerWidget::onVisibilityCheckBoxStateChanged_(int)
@@ -147,9 +154,57 @@ void LayerWidget::onVisibilityCheckBoxStateChanged_(int)
     emit visibilityChanged(index());
 }
 
-void LayerWidget::onNameEditingFinished_()
+void LayerWidget::onNameLineEditEditingFinished_()
 {
-    setName(nameLineEdit_->text());
+    finishNameEditing_();
+}
+
+void LayerWidget::startNameEditing_(NameEditingReason_ reason)
+{
+    if (!nameLineEdit_->isVisible())
+    {
+        nameEditingReason_ = reason;
+        nameLineEdit_->setText(name());
+        nameLabel_->hide();
+        nameLineEdit_->show();
+        nameLineEdit_->selectAll();
+        nameLineEdit_->setFocus();
+    }
+}
+
+void LayerWidget::abortNameEditing_()
+{
+    if (nameLineEdit_->isVisible())
+    {
+        nameLineEdit_->hide();
+        nameLabel_->show();
+    }
+}
+
+void LayerWidget::finishNameEditing_()
+{
+    if (nameLineEdit_->isVisible())
+    {
+        QString newName = nameLineEdit_->text();
+
+        nameLineEdit_->hide();
+        nameLabel_->show();
+
+        bool changed = setName(newName);
+        if (changed && nameEditingReason_ == NameEditingReason_::DoubleClick)
+        {
+            // We only emit checkpoint if the user action causing the scene to
+            // change is initiated from this LayerWidget. In other words, the
+            // widget responsible for starting a user action is the widget
+            // responsible for calling checkpoint.
+            emit checkpoint();
+        }
+
+        if (nameEditingReason_ == NameEditingReason_::ExternalRequest)
+        {
+            emit nameEditingFinished(index());
+        }
+    }
 }
 
 void LayerWidget::updateBackground_()
@@ -269,6 +324,16 @@ void LayersWidget::onLayerWidgetNameChanged_(int index)
     }
 }
 
+void LayersWidget::onLayerWidgetNameEditingFinished_(int)
+{
+    scene()->emitCheckpoint();
+}
+
+void LayersWidget::onLayerWidgetCheckpoint_()
+{
+    scene()->emitCheckpoint();
+}
+
 void LayersWidget::onNewLayerClicked_()
 {
     // Create layer. This should indirectly create the corresponding
@@ -283,24 +348,33 @@ void LayersWidget::onNewLayerClicked_()
         int j = numVisibleLayerWidgets_ - 1 - activeLayerWidget_->index();
         if (scene()->layer(j) == layer)
         {
-            activeLayerWidget_->enterNameEditingMode();
+            activeLayerWidget_->startNameEditing();
+            // Checkpoint will be emitted in onLayerWidgetNameEditingFinished_
         }
+    }
+    else
+    {
+        // This is not supposed to happen
+        scene()->emitCheckpoint();
     }
 }
 
 void LayersWidget::onDeleteLayerClicked_()
 {
     scene()->destroyActiveLayer();
+    scene()->emitCheckpoint();
 }
 
 void LayersWidget::onMoveLayerUpClicked_()
 {
     scene()->moveActiveLayerUp();
+    scene()->emitCheckpoint();
 }
 
 void LayersWidget::onMoveLayerDownClicked_()
 {
     scene()->moveActiveLayerDown();
+    scene()->emitCheckpoint();
 }
 
 void LayersWidget::onSceneLayerAttributesChanged_()
@@ -362,4 +436,6 @@ void LayersWidget::createNewLayerWidget_()
     connect(layerWidget, &impl_::LayerWidget::activated, this, &LayersWidget::onLayerWidgetActivated_);
     connect(layerWidget, &impl_::LayerWidget::visibilityChanged, this, &LayersWidget::onLayerWidgetVisibilityChanged_);
     connect(layerWidget, &impl_::LayerWidget::nameChanged, this, &LayersWidget::onLayerWidgetNameChanged_);
+    connect(layerWidget, &impl_::LayerWidget::nameEditingFinished, this, &LayersWidget::onLayerWidgetNameEditingFinished_);
+    connect(layerWidget, &impl_::LayerWidget::checkpoint, this, &LayersWidget::onLayerWidgetCheckpoint_);
 }

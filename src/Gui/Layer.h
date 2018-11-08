@@ -26,6 +26,12 @@ private:
     struct NoInit_{};
     Layer(NoInit_);
 
+    // Takes ownership of passed pointers
+    void init_(Background * background,
+               VectorAnimationComplex::VAC * vac,
+               const QString & layerName,
+               bool isVisible);
+
 public:
     Layer(const QString & layerName = "Layer");
     ~Layer() override;

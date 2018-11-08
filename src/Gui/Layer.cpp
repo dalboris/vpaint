@@ -18,12 +18,17 @@ Layer::Layer(NoInit_)
 
 }
 
-Layer::Layer(const QString & layerName) :
-    background_(new Background(this)),
-    vac_(new VectorAnimationComplex::VAC()),
-    name_(layerName),
-    isVisible_(true)
+void Layer::init_(
+        Background * background,
+        VectorAnimationComplex::VAC * vac,
+        const QString & layerName,
+        bool isVisible)
 {
+    background_ = background;
+    vac_ = vac;
+    name_ = layerName;
+    isVisible_ = isVisible;
+
     connect(background_, SIGNAL(changed()), this, SIGNAL(changed()));
     connect(background_, SIGNAL(checkpoint()), this, SIGNAL(checkpoint()));
 
@@ -33,6 +38,14 @@ Layer::Layer(const QString & layerName) :
     connect(vac_, SIGNAL(selectionChanged()), this, SIGNAL(selectionChanged()));
 }
 
+Layer::Layer(const QString & layerName)
+{
+    init_(new Background(this),
+          new VectorAnimationComplex::VAC(),
+          layerName,
+          true);
+}
+
 Layer::~Layer()
 {
     delete vac_;
@@ -40,28 +53,26 @@ Layer::~Layer()
 
 Layer * Layer::clone()
 {
-    Layer * res = new Layer(NoInit_());
-    res->background_ = new Background(*background());
-    res->vac_ = vac_->clone();
-    res->name_ = name_;
-    res->isVisible_ = isVisible_;
-    return res;
-
-    // Note:
-    //
-    // When I first implemented this function, I wrote:
-    //
-    //   Background(background())
-    //
+    // Two previous attempts at implementing this resulted
+    // in bugs. The first is because I called
+    //     new Background(background())
     // instead of
+    //     new Background(*background())
+    // And the second because new Background(this) was called
+    // in a constructor before "this" was properly initialized,
+    // that is, parent-child relationship were messed up.
+    // The conclusion is that using copy-constructor is much
+    // trickier than the "clone" idiom, which should be preferred
+    // based on this experience: it is much less bug-prone when dealing
+    // with pointer-like objects with identity.
     //
-    //   Background(*background())
-    //
-    // This caused a crash because it called the Background(QObject*)
-    // constructor, not the copy constructor as I intended. In retrospect, the
-    // "clone()" idiom seems safer and better suited for pointer-like objects
-    // with identity, even though using the copy constructor seemed like
-    // more idiomatic C++.
+
+    Layer * res = new Layer(NoInit_());
+    res->init_(new Background(*background(), res),
+               vac_->clone(),
+               name_,
+               isVisible_);
+    return res;
 }
 
 QString Layer::stringType()

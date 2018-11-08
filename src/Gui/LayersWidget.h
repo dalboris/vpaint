@@ -42,9 +42,10 @@ public:
     void setVisibility(bool b);
 
     QString name() const;
-    void setName(const QString& name);
+    bool setName(const QString& name); // returns whether the name actually changed
 
-    void enterNameEditingMode();
+    // Enter name editing.
+    void startNameEditing();
 
 protected:
     void mousePressEvent(QMouseEvent* event) override;
@@ -55,9 +56,20 @@ signals:
     void visibilityChanged(int layerIndex);
     void nameChanged(int layerIndex);
 
+    // This is called when name editing initiated from enterNameEditingMode()
+    // is finished. It is not called when name editing initiated from double
+    // click finished, or if name editing is aborted before being
+    // finished.
+    void nameEditingFinished(int layerIndex);
+
+    // This signal is emitted when a user action is complete
+    // and requires to add a copy of the scene to the undo stack
+    void checkpoint();
+
 private slots:
+    void onVisibilityCheckBoxClicked_(bool);
     void onVisibilityCheckBoxStateChanged_(int);
-    void onNameEditingFinished_();
+    void onNameLineEditEditingFinished_();
 
 private:
     int index_;    
@@ -65,6 +77,15 @@ private:
     QCheckBox * visibilityCheckBox_;
     QLabel * nameLabel_;
     QLineEdit * nameLineEdit_;
+
+    enum class NameEditingReason_ {
+        ExternalRequest,
+        DoubleClick
+    };
+    void startNameEditing_(NameEditingReason_ reason);
+    void abortNameEditing_();
+    void finishNameEditing_();
+    NameEditingReason_ nameEditingReason_;
 
     void updateBackground_();
 };
@@ -87,6 +108,8 @@ private slots:
     void onLayerWidgetActivated_(int index);
     void onLayerWidgetVisibilityChanged_(int index);
     void onLayerWidgetNameChanged_(int index);
+    void onLayerWidgetNameEditingFinished_(int index);
+    void onLayerWidgetCheckpoint_();
 
     void onNewLayerClicked_();
     void onDeleteLayerClicked_();
