@@ -9,7 +9,7 @@
 #include "BackgroundData.h"
 
 BackgroundData::BackgroundData() :
-    color(Qt::white),
+    color(Qt::transparent),
     imageUrl(""),
     position(0.0, 0.0),
     sizeType(SizeType::Cover),

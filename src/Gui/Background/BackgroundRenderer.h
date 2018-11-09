@@ -52,8 +52,12 @@ public:
               double xSceneMin, double xSceneMax,
               double ySceneMin, double ySceneMax);
 
+signals:
+    void backgroundDestroyed(Background * background);
+
 private slots:
     void clearCache_();
+    void onBackgroundDestroyed_();
 
 private:
     Background * background_;

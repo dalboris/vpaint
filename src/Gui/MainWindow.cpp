@@ -130,6 +130,10 @@ MainWindow::MainWindow() :
     connect(scene(),SIGNAL(selectionChanged()),selectionInfo_,SLOT(updateInfo()));
     //selectionInfo_->show();
 
+    // Background Widget
+    backgroundWidget = new BackgroundWidget();
+    connect(scene(), SIGNAL(layerAttributesChanged()), this, SLOT(onSceneLayerAttributesChanged_()));
+
     // redraw when the scene changes
     connect(scene_, SIGNAL(needUpdatePicking()),
             this, SLOT(updatePicking()));
@@ -1139,6 +1143,11 @@ void MainWindow::manual()
     userManual_->show();
 }
 
+void MainWindow::onSceneLayerAttributesChanged_()
+{
+    backgroundWidget->setBackground(scene()->activeBackground());
+}
+
 void MainWindow::about()
 {
     if(!aboutDialog_)
@@ -1910,11 +1919,6 @@ void MainWindow::createDocks()
     dockAnimatedCycleEditor->hide();
 
     // ----- Background ---------
-
-    // Widget
-    // XXX TODO: now we have several backgrounds...
-    backgroundWidget = new BackgroundWidget();
-    //backgroundWidget->setBackground(scene()->background());
 
     // Dock
     dockBackgroundWidget = new QDockWidget(tr("Background"));

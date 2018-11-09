@@ -21,6 +21,7 @@ BackgroundRenderer::BackgroundRenderer(
     context_(context)
 {
     connect(background_, SIGNAL(cacheCleared()), this, SLOT(clearCache_()));
+    connect(background_, SIGNAL(destroyed()), this, SLOT(onBackgroundDestroyed_()));
 }
 
 void BackgroundRenderer::clearCache_()
@@ -36,6 +37,13 @@ void BackgroundRenderer::clearCache_()
 
     // Clear map
     texIds_.clear();
+}
+
+void BackgroundRenderer::onBackgroundDestroyed_()
+{
+    Background * b = background_;
+    background_ = nullptr;
+    emit backgroundDestroyed(b);
 }
 
 GLuint BackgroundRenderer::texId_(int frame)
@@ -206,6 +214,10 @@ void BackgroundRenderer::draw(int frame, bool showCanvas,
                               double xSceneMin, double xSceneMax,
                               double ySceneMin, double ySceneMax)
 {
+    if (!background_) {
+        return;
+    }
+
     // Get canvas boundary
     const double & wc = canvasWidth;
     const double & hc = canvasHeight;

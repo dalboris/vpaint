@@ -56,11 +56,6 @@ View::View(Scene * scene, QWidget * parent) :
     currentAction_(0),
     vac_(0)
 {
-    // Make renderers
-    // XXX Make this work with layers
-    //Background * bg = scene_->background();
-    //backgroundRenderers_[bg] = new BackgroundRenderer(bg, context(), this);
-
     // View settings widget
     viewSettingsWidget_ = new ViewSettingsWidget(viewSettings_, this);
     connect(viewSettingsWidget_, SIGNAL(changed()), this, SLOT(update()));
@@ -961,13 +956,55 @@ void View::PMRReleaseEvent(int action, double x, double y)
  *              DRAWING
  */
 
+void View::onBackgroundDestroyed_(Background * background)
+{
+    destroyBackgroundRenderer_(background);
+}
+
+BackgroundRenderer * View::getBackgroundRenderer_(Background * background)
+{
+    auto it = backgroundRenderers_.find(background);
+    if (it != backgroundRenderers_.end())
+    {
+        return it.value();
+    }
+    else
+    {
+        return nullptr;
+    }
+}
+
+BackgroundRenderer * View::createBackgroundRenderer_(Background * background)
+{
+    BackgroundRenderer * res = new BackgroundRenderer(background, context(), this);
+    connect(res, &BackgroundRenderer::backgroundDestroyed, this, &View::onBackgroundDestroyed_);
+    backgroundRenderers_.insert(background, res);
+    return res;
+}
+
+void View::destroyBackgroundRenderer_(Background * background)
+{
+    BackgroundRenderer * br = getBackgroundRenderer_(background);
+    backgroundRenderers_.remove(background);
+    delete br;
+}
+
+BackgroundRenderer * View::getOrCreateBackgroundRenderer_(Background * background)
+{
+    BackgroundRenderer * br = getBackgroundRenderer_(background);
+    if (!br) {
+        br = createBackgroundRenderer_(background);
+    }
+    return br;
+}
+
 void View::drawBackground_(Background * background, int frame)
 {
-    backgroundRenderers_[background]->draw(
-                frame,
-                global()->showCanvas(),
-                scene_->left(), scene_->top(), scene_->width(), scene_->height(),
-                xSceneMin(), xSceneMax(), ySceneMin(), ySceneMax());
+    BackgroundRenderer * br = getOrCreateBackgroundRenderer_(background);
+    br->draw(frame,
+             global()->showCanvas(),
+             scene_->left(), scene_->top(), scene_->width(), scene_->height(),
+             xSceneMin(), xSceneMax(), ySceneMin(), ySceneMax());
 }
 
 void View::drawScene()
@@ -1014,54 +1051,66 @@ void View::drawScene()
 
 void View::drawSceneDelegate_(Time t)
 {
-    // XXX Make this work with layers
-
-    // Draw background
-    //drawBackground_(scene_->background(), t.frame()); // later: drawBackground_(layer_->background())
-
-    // Loop over all onion skins. Draw in this order:
-    //   1. onion skins before
-    //   2. onion skins after
-    //   3. current frame
-    //
-    // Note 1: When layers will be implemented, then only the active layer has onion skins
-    // Note 2: Backgrounds are always ignored for onion skinning
-
-    // Draw onion skins
-    viewSettings_.setMainDrawing(false);
-    if(viewSettings_.onionSkinningIsEnabled())
+    for (int j = 0; j < scene()->numLayers(); ++j)
     {
-        // Draw onion skins before
-        Time tOnion = t;
-        for(int i=0; i<viewSettings_.numOnionSkinsBefore(); ++i)
-        {
-            tOnion = tOnion - viewSettings_.onionSkinsTimeOffset();
-            glTranslated(-viewSettings_.onionSkinsXOffset(),-viewSettings_.onionSkinsYOffset(),0);
+        Layer * layer = scene()->layer(j);
+        if (!layer->isVisible()) {
+            continue;
         }
-        for(int i=0; i<viewSettings_.numOnionSkinsBefore(); ++i)
+        Background * background = layer->background();
+        VectorAnimationComplex::VAC * vac = layer->vac();
+
+        // Draw background
+        drawBackground_(background, t.frame());
+
+        // Loop over all onion skins. Draw in this order:
+        //   1. onion skins before
+        //   2. onion skins after
+        //   3. current frame
+        //
+        // Note 1: For now, we show onions skins for all layers
+        //         In the future, by default, we should show onion skins only
+        //         for the active layer, and allow user to show them for all
+        //         layer via a user option in the onion skin menu.
+        //
+        // Note 2: Backgrounds are always ignored for onion skinning
+
+        // Draw onion skins
+        viewSettings_.setMainDrawing(false);
+        if(viewSettings_.onionSkinningIsEnabled())
         {
-            scene_->draw(tOnion, viewSettings_); // XXX should be replaced by scene_->vectorAnimationComplex()->draw()
-            tOnion = tOnion + viewSettings_.onionSkinsTimeOffset();
-            glTranslated(viewSettings_.onionSkinsXOffset(),viewSettings_.onionSkinsYOffset(),0);
+            // Draw onion skins before
+            Time tOnion = t;
+            for(int i=0; i<viewSettings_.numOnionSkinsBefore(); ++i)
+            {
+                tOnion = tOnion - viewSettings_.onionSkinsTimeOffset();
+                glTranslated(-viewSettings_.onionSkinsXOffset(),-viewSettings_.onionSkinsYOffset(),0);
+            }
+            for(int i=0; i<viewSettings_.numOnionSkinsBefore(); ++i)
+            {
+                vac->draw(tOnion, viewSettings_);
+                tOnion = tOnion + viewSettings_.onionSkinsTimeOffset();
+                glTranslated(viewSettings_.onionSkinsXOffset(),viewSettings_.onionSkinsYOffset(),0);
+            }
+
+            // Draw onion skins after
+            tOnion = t;
+            for(int i=0; i<viewSettings_.numOnionSkinsAfter(); ++i)
+            {
+                glTranslated(viewSettings_.onionSkinsXOffset(),viewSettings_.onionSkinsYOffset(),0);
+                tOnion = tOnion + viewSettings_.onionSkinsTimeOffset();
+                vac->draw(tOnion, viewSettings_);
+            }
+            for(int i=0; i<viewSettings_.numOnionSkinsAfter(); ++i)
+            {
+                glTranslated(-viewSettings_.onionSkinsXOffset(),-viewSettings_.onionSkinsYOffset(),0);
+            }
         }
 
-        // Draw onion skins after
-        tOnion = t;
-        for(int i=0; i<viewSettings_.numOnionSkinsAfter(); ++i)
-        {
-            glTranslated(viewSettings_.onionSkinsXOffset(),viewSettings_.onionSkinsYOffset(),0);
-            tOnion = tOnion + viewSettings_.onionSkinsTimeOffset();
-            scene_->draw(tOnion, viewSettings_);
-        }
-        for(int i=0; i<viewSettings_.numOnionSkinsAfter(); ++i)
-        {
-            glTranslated(-viewSettings_.onionSkinsXOffset(),-viewSettings_.onionSkinsYOffset(),0);
-        }
+        // Draw current frame
+        viewSettings_.setMainDrawing(true);
+        vac->draw(t, viewSettings_);
     }
-
-    // Draw current frame
-    viewSettings_.setMainDrawing(true);
-    scene_->draw(t, viewSettings_);
 }
 
 void View::toggleOutline()

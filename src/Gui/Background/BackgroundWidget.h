@@ -51,6 +51,7 @@ public:
 private slots:
     // Update values from background
     void updateFromBackground_();
+    void onBackgroundDestroyed_();
 
     // Process user interaction with widgets
     // Color

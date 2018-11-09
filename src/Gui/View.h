@@ -141,6 +141,9 @@ signals:
 
     void settingsChanged();
 
+private slots:
+    void onBackgroundDestroyed_(Background * background);
+
 private:
     // What scene to draw
     // Note: which frame to render is specified in viewSettings
@@ -189,6 +192,10 @@ private:
     // Draw background
     // We use a map of BackgroundRenderer to anticipate the moment we have more
     // than one Background (i.e., one per layer)
+    BackgroundRenderer * getBackgroundRenderer_(Background * background);
+    BackgroundRenderer * createBackgroundRenderer_(Background * background);
+    void destroyBackgroundRenderer_(Background * background);
+    BackgroundRenderer * getOrCreateBackgroundRenderer_(Background * background);
     void drawBackground_(Background * background, int frame);
     QMap<Background *, BackgroundRenderer *> backgroundRenderers_;
 };

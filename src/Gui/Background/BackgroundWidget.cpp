@@ -28,7 +28,7 @@
 
 BackgroundWidget::BackgroundWidget(QWidget * parent) :
     QWidget(parent),
-    background_(0),
+    background_(nullptr),
     isUpdatingFromBackground_(false),
     isBeingEdited_(false)
 {
@@ -37,7 +37,7 @@ BackgroundWidget::BackgroundWidget(QWidget * parent) :
     setLayout(layout);
 
     // Color
-    colorSelector_ = new ColorSelector(Qt::white);
+    colorSelector_ = new ColorSelector(Qt::transparent);
     colorSelector_->setToolTip(tr("Set background color"));
     colorSelector_->setStatusTip(tr("Set background color, possibly transparent."));
     layout->addRow(tr("Color:"), colorSelector_);
@@ -190,12 +190,14 @@ BackgroundWidget::BackgroundWidget(QWidget * parent) :
             this, SLOT(processHoldCheckBoxToggled_(bool)));
 
     // Set no background
-    setBackground(0);
+    setBackground(nullptr);
 }
 
 void BackgroundWidget::setBackground(Background * background)
 {
-    // Delete previous connections
+    // Disconnect previous connections. This assumes that background_
+    // is either nullptr or not destroyed yet, which is ensured by
+    // onBackgroundDestroyed_().
     if (background_)
     {
         background_->disconnect(this);
@@ -216,6 +218,7 @@ void BackgroundWidget::setBackground(Background * background)
     // Update widget values when data changes
     if (background_)
     {
+        connect(background_, SIGNAL(destroyed()), this, SLOT(onBackgroundDestroyed_()));
         connect(background_, SIGNAL(changed()), this, SLOT(updateFromBackground_()));
     }
 }
@@ -271,6 +274,12 @@ void BackgroundWidget::updateFromBackground_()
         // Unset guard
         isUpdatingFromBackground_ = false;
     }
+}
+
+void BackgroundWidget::onBackgroundDestroyed_()
+{
+    background_ = nullptr;
+    setBackground(nullptr);
 }
 
 Background * BackgroundWidget::background() const

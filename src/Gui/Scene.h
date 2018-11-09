@@ -86,6 +86,7 @@ public:
     Layer * activeLayer() const;
     int activeLayerIndex() const; // returns -1 if no active layers.
     VectorAnimationComplex::VAC * activeVAC() const;
+    Background * activeBackground() const;
 
     // Create layer above active layer, or last if no active layer
     // Set as active layer

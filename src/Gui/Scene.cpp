@@ -605,6 +605,12 @@ VectorAnimationComplex::VAC * Scene::activeVAC() const
     return layer ? layer->vac() : nullptr;
 }
 
+Background * Scene::activeBackground() const
+{
+    Layer * layer = activeLayer();
+    return layer ? layer->background() : nullptr;
+}
+
 Layer * Scene::createLayer()
 {
     return createLayer(tr("Layer %1").arg(numLayers() + 1));

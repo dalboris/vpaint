@@ -132,6 +132,9 @@ private slots:
     void onlineDocumentation();
     void gettingStarted();
     void manual();
+
+    // Update docks when scene changes
+    void onSceneLayerAttributesChanged_();
     
 private:
     // ---------- initializations --------------
