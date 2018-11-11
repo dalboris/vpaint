@@ -1779,7 +1779,9 @@ void VAC::endSketchEdge()
 {
     if(sketchedEdge_)
     {
-        InbetweenFace * sface = hoveredCell_->toInbetweenFace();
+        InbetweenFace * sface = nullptr;
+        if (hoveredCell_)
+            sface = hoveredCell_ ->toInbetweenFace();
         if(sface && global()->planarMapMode())
             hoveredCell_ = keyframe_(sface, timeInteractivity_);
 
