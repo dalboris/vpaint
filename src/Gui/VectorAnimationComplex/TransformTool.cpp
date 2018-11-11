@@ -8,15 +8,15 @@
 
 #include "TransformTool.h"
 
-#include "OpenGL.h"
-#include "Picking.h"
+#include "../OpenGL.h"
+#include "../Picking.h"
 #include "Cell.h"
 #include "KeyVertex.h"
 #include "KeyEdge.h"
 #include "EdgeGeometry.h"
 #include "VAC.h"
 #include "Algorithms.h"
-#include "Global.h"
+#include "../Global.h"
 
 #include <cmath>
 #include <vector>

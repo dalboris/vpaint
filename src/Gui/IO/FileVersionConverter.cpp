@@ -9,9 +9,9 @@
 #include "FileVersionConverter.h"
 
 #include "FileVersionConverterDialog.h"
-#include "XmlStreamReader.h"
-#include "XmlStreamWriter.h"
-#include "Global.h"
+#include "../XmlStreamReader.h"
+#include "../XmlStreamWriter.h"
+#include "../Global.h"
 
 #include "XmlStreamConverters/XmlStreamConverter_1_0_to_1_6.h"
 

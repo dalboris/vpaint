@@ -10,11 +10,11 @@
 
 #include "BackgroundUrlValidator.h"
 
-#include "XmlStreamReader.h"
-#include "XmlStreamWriter.h"
-#include "CssColor.h"
+#include "../XmlStreamReader.h"
+#include "../XmlStreamWriter.h"
+#include "../CssColor.h"
 
-#include "Global.h"
+#include "../Global.h"
 
 #include <QDir>
 #include <QFileInfo>

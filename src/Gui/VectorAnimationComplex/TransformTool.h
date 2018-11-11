@@ -12,7 +12,7 @@
 #include <QObject>
 
 #include <QSet>
-#include "TimeDef.h"
+#include "../TimeDef.h"
 #include "CellList.h"
 #include "BoundingBox.h"
 

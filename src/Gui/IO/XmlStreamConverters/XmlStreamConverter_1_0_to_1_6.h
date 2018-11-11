@@ -9,7 +9,7 @@
 #ifndef XMLSTREAMCONVERTER_1_0_TO_1_6_H
 #define XMLSTREAMCONVERTER_1_0_TO_1_6_H
 
-#include "IO/XmlStreamConverter.h"
+#include "../XmlStreamConverter.h"
 
 class XmlStreamConverter_1_0_to_1_6: public XmlStreamConverter
 {

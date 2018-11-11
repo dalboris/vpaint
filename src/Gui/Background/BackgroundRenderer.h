@@ -11,7 +11,7 @@
 
 #include <QObject>
 
-#include "OpenGL.h"
+#include "../OpenGL.h"
 
 #include <QMap>
 

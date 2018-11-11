@@ -11,7 +11,7 @@
 
 #include <QWidget>
 
-#include "Color.h"
+#include "../Color.h"
 #include "BackgroundData.h"
 
 class Background;

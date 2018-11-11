@@ -12,7 +12,7 @@
 #include <QObject>
 
 #include "BackgroundData.h"
-#include "Color.h"
+#include "../Color.h"
 
 #include <QString>
 #include <QImage>

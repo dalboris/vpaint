@@ -8,8 +8,8 @@
 
 #include "XmlStreamConverter_1_0_to_1_6.h"
 
-#include "XmlStreamReader.h"
-#include "XmlStreamWriter.h"
+#include "../../XmlStreamReader.h"
+#include "../../XmlStreamWriter.h"
 
 #include <QString>
 #include <QRegularExpression>

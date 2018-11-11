@@ -9,7 +9,7 @@
 #ifndef BACKGROUND_DATA_H
 #define BACKGROUND_DATA_H
 
-#include "Color.h"
+#include "../Color.h"
 
 #include <QString>
 #include <Eigen/Core>

@@ -8,7 +8,7 @@
 
 #include "FileVersionConverterDialog.h"
 
-#include "Global.h"
+#include "../Global.h"
 
 #include <QLabel>
 #include <QCheckBox>

@@ -10,8 +10,8 @@
 
 #include "Background.h"
 #include "BackgroundUrlValidator.h"
-#include "ColorSelector.h"
-#include "Global.h"
+#include "../ColorSelector.h"
+#include "../Global.h"
 
 #include <QFormLayout>
 #include <QHBoxLayout>

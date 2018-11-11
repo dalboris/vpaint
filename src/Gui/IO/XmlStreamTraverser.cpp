@@ -8,7 +8,7 @@
 
 #include "XmlStreamTraverser.h"
 
-#include "XmlStreamReader.h"
+#include "../XmlStreamReader.h"
 
 XmlStreamTraverser::XmlStreamTraverser(XmlStreamReader & xml) :
     xml_(xml),
