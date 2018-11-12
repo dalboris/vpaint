@@ -59,9 +59,16 @@ win32: CONFIG += embed_manifest_exe
 ###############################################################################
 #                     UNSHIPPED EXTERNAL LIBRARIES
 
+# OpenGL
+win32 {
+    LIBS += opengl32.lib
+}
+
 # GLU
 unix:!macx: LIBS += -lGLU
-
+win32 {
+    LIBS += glu32.lib
+}
 
 ###############################################################################
 #                      SHIPPED EXTERNAL LIBRARIES

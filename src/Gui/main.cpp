@@ -13,6 +13,8 @@
 
 int main(int argc, char *argv[])
 {
+    QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
+
     Application app(argc, argv);
     MainWindow mainWindow;
     UpdateCheck update(&mainWindow);
