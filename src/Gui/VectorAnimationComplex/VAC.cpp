@@ -5585,8 +5585,6 @@ void VAC::uncut()
 
 void VAC::cut(VAC* & clipboard)
 {
-    timeCopy_ = global()->activeTime();
-
     if(selectedCells().isEmpty())
         return;
 
@@ -5594,6 +5592,8 @@ void VAC::cut(VAC* & clipboard)
         delete clipboard;
 
     clipboard = subcomplex(selectedCells());
+    clipboard->timeCopy_ = global()->activeTime();
+
     smartDelete_(selectedCells());
 
     emit needUpdatePicking();
@@ -5612,6 +5612,7 @@ void VAC::copy(VAC* & clipboard)
         delete clipboard;
 
     clipboard = subcomplex(selectedCells());
+    clipboard->timeCopy_ = global()->activeTime();
 }
 
 void VAC::paste(VAC *& clipboard)
@@ -5619,7 +5620,7 @@ void VAC::paste(VAC *& clipboard)
     if(!clipboard) return;
 
     // Get different between current time and copy time
-    Time deltaTime = global()->activeTime() - timeCopy_;
+    Time deltaTime = global()->activeTime() - clipboard->timeCopy_;
 
     // Offset clipboard VAC by deltaTime
     VAC * cloneOfClipboard = clipboard->clone();
