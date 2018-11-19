@@ -21,13 +21,6 @@
 #include "Layer.h"
 #include "Scene.h"
 
-namespace
-{
-const QColor activeLayerBackgroundColor = QColor::fromRgb(128, 190, 230);
-const QColor inactiveLayerBackgroundColor = QColor::fromRgb(255, 255, 255);
-const QColor noLayerBackgroundColor = QColor::fromRgb(255, 255, 255);
-} // namespace
-
 namespace impl_
 {
 
@@ -209,11 +202,8 @@ void LayerWidget::finishNameEditing_()
 
 void LayerWidget::updateBackground_()
 {
-    QColor color = isActive() ? activeLayerBackgroundColor : inactiveLayerBackgroundColor;
-
-    QPalette p = palette();
-    p.setColor(QPalette::Background, color);
-    setPalette(p);
+    QPalette::ColorRole backgroundRole = isActive() ? QPalette::Highlight : QPalette::Base;
+    setBackgroundRole(backgroundRole);
 }
 
 } // namespace impl_
@@ -259,9 +249,7 @@ LayersWidget::LayersWidget(Scene * scene) :
     scrollArea->setWidget(layerList);
 
     // Set background color for scrollarea
-    QPalette p = scrollArea->palette();
-    p.setColor(QPalette::Background, noLayerBackgroundColor);
-    scrollArea->setPalette(p);
+    scrollArea->setBackgroundRole(QPalette::Base);
     scrollArea->setAutoFillBackground(true);
 
     // Create buttons
