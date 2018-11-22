@@ -88,7 +88,7 @@
                 <string>VPaint File</string>
 
                 <key>UTTypeReferenceUrl</key>
-                <string>https://github.com/dalboris/vpaint/wiki/.vec-File-Format</string>
+                <string>https://www.vpaint.org</string>
             </dict>
         </array>
 </dict>
