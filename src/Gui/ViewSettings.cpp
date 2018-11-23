@@ -270,6 +270,14 @@ ViewSettingsWidget::ViewSettingsWidget(ViewSettings & viewSettings, QWidget * pa
     // ----------------- MacOS X style ------------------------
 
 #ifdef Q_OS_MAC
+
+    // Differences with Windows/Linux:
+    //
+    // No show/hide view settings buttons, since hiding does not save space.
+    // However, this means that we lose the indicator of which view is active,
+    // but this indicator is probably not that useful as I expect most users
+    // to use a single view.
+
     // Set style
     setAutoFillBackground(true);
     setCursor(Qt::ArrowCursor);
@@ -281,19 +289,6 @@ ViewSettingsWidget::ViewSettingsWidget(ViewSettings & viewSettings, QWidget * pa
     onionSkinsTransparencyRatio_->setRange(0.0,1.0);
     onionSkinsTransparencyRatio_->setDecimals(2);
     */
-
-    // Button to show/hide view settings
-
-    showHideSettingsButton_ = new QPushButton("");
-    showHideSettingsButton_->setToolTip("Show/hide view settings");
-    showHideSettingsButton_->setIcon(QIcon(":images/view-settings.png"));
-    //showHideSettingsButton_->setIconSize(QSize(32,32));
-    showHideSettingsButton_->setCheckable(true);
-    showHideSettingsButton_->setChecked(true);
-    showHideSettingsButton_->setFixedSize(20,20);
-    showHideSettingsButton_->setAttribute(Qt::WA_LayoutUsesWidgetRect);
-    connect(showHideSettingsButton_, SIGNAL(toggled(bool)), this, SLOT(toggleVisible(bool)));
-
 
     // View label, frame number, zoom level
 
@@ -514,18 +509,7 @@ ViewSettingsWidget::ViewSettingsWidget(ViewSettings & viewSettings, QWidget * pa
     //hlayout->addLayout(frameZoomLayout);
     hlayout->addWidget(displayModeButton_);
     hlayout->addWidget(onionSkinningButton_);
-
-    containerWidget = new QWidget();
-    containerWidget->setLayout(hlayout);
-    containerWidget->setVisible(true);
-
-    QHBoxLayout * hlayoutfull = new QHBoxLayout();
-    hlayoutfull->setMargin(0);
-    hlayoutfull->setSpacing(0);
-    hlayoutfull->addWidget(showHideSettingsButton_);
-    hlayoutfull->addWidget(containerWidget);
-
-    setLayout(hlayoutfull);
+    setLayout(hlayout);
 
 
     // ----------------- Backend/Gui connections -----------------
@@ -876,6 +860,7 @@ ViewSettingsWidget::~ViewSettingsWidget()
 
 void ViewSettingsWidget::setActive(bool isActive)
 {
+#ifndef Q_OS_MAC
     if(isActive)
     {
         showHideSettingsButton_->setIcon(QIcon(":images/view-settings-active.png"));
@@ -884,12 +869,15 @@ void ViewSettingsWidget::setActive(bool isActive)
     {
         showHideSettingsButton_->setIcon(QIcon(":images/view-settings.png"));
     }
+#endif
 }
 
 void ViewSettingsWidget::toggleVisible(bool checked)
 {
+#ifndef Q_OS_MAC
     containerWidget->setVisible(checked);
     setFixedSize(sizeHint());
+#endif
 }
 
 void ViewSettingsWidget::processZoomValueChangedSignal(int n)

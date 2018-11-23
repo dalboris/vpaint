@@ -162,8 +162,10 @@ private:
     QDoubleSpinBox * onionSkinsYOffset_;
     QDoubleSpinBox * onionSkinsTransparencyRatio_;
 
+#ifndef Q_OS_MACOS
     QPushButton * showHideSettingsButton_;
     QWidget * containerWidget;
+#endif
 
     int buttonSize;
 
