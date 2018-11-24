@@ -218,7 +218,6 @@ private:
     QAction * actionGoToLastFrame_;
 
     // playing properties
-    QHBoxLayout * controlButtons_;
     QPushButton * firstFrameButton_;
     QPushButton * previousKeyFrameButton_;
     QPushButton * previousFrameButton_;

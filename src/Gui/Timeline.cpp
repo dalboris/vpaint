@@ -500,7 +500,11 @@ namespace
 QPushButton * makeButton_(const QString & iconPath, QAction * action)
 {
     QPushButton * button = new QPushButton(QIcon(iconPath), "");
+#ifdef Q_OS_MAC
+    button->setMaximumWidth(50);
+#else
     button->setMaximumSize(32,32);
+#endif
     button->setToolTip(action->toolTip());
     button->setStatusTip(action->statusTip());
     QObject::connect(button, SIGNAL(clicked()), action, SLOT(trigger()));
@@ -522,7 +526,11 @@ Timeline::Timeline(Scene *scene, QWidget *parent) :
 
     // Open settings
     QPushButton * settingsButton = new QPushButton(tr("Settings"));
+#ifdef Q_OS_MAC
+    settingsButton->setMaximumWidth(80);
+#else
     settingsButton->setMaximumSize(64,32);
+#endif
     connect(settingsButton, SIGNAL(clicked()),
           this, SLOT(openPlaybackSettingsDialog()));
 
@@ -582,7 +590,11 @@ Timeline::Timeline(Scene *scene, QWidget *parent) :
 
     // Set first frame
     firstFrameSpinBox_ = new QSpinBox();
+#ifdef Q_OS_MAC
+    firstFrameSpinBox_->setMaximumWidth(48);
+#else
     firstFrameSpinBox_->setMaximumSize(48,32);
+#endif
     firstFrameSpinBox_->setMinimum(-100000); // 100.000 frames = about 1h at 24fps
     firstFrameSpinBox_->setMaximum(100000); // 100.000 frames = about 1h at 24fps
     setFirstFrame(0);
@@ -590,7 +602,11 @@ Timeline::Timeline(Scene *scene, QWidget *parent) :
 
     // Set last Frame
     lastFrameSpinBox_ = new QSpinBox();
+#ifdef Q_OS_MAC
+    lastFrameSpinBox_->setMaximumWidth(48);
+#else
     lastFrameSpinBox_->setMaximumSize(48,32);
+#endif
     lastFrameSpinBox_->setMinimum(-100000); // 100.000 frames = about 1h at 24fps
     lastFrameSpinBox_->setMaximum(100000); // 100.000 frames = about 1h at 24fps
     setLastFrame(47);
@@ -601,21 +617,23 @@ Timeline::Timeline(Scene *scene, QWidget *parent) :
     setFps(24);
     connect(timer_, SIGNAL(timeout()), this, SLOT(timerTimeout()));
 
-    // Layout of control buttons
-    controlButtons_ = new QHBoxLayout();
-    controlButtons_->addWidget(firstFrameButton_);
-    controlButtons_->addWidget(previousFrameButton_);
-    controlButtons_->addWidget(playPauseButton_);
-    controlButtons_->addWidget(nextFrameButton_);
-    controlButtons_->addWidget(lastFrameButton_);
-    controlButtons_->setSizeConstraint(QLayout::SetFixedSize);
-
     // Global layout
     QHBoxLayout * layout = new QHBoxLayout();
+    layout->setSpacing(0);
+    layout->setMargin(0);
+    layout->setContentsMargins(0, 8, 5, 0);
     layout->addWidget(settingsButton);
-    layout->addLayout(controlButtons_);
+    layout->addSpacing(5);
+    layout->addWidget(firstFrameButton_);
+    layout->addWidget(previousFrameButton_);
+    layout->addWidget(playPauseButton_);
+    layout->addWidget(nextFrameButton_);
+    layout->addWidget(lastFrameButton_);
+    layout->addSpacing(5);
     layout->addWidget(firstFrameSpinBox_);
+    layout->addSpacing(5);
     layout->addWidget(hbar_);
+    layout->addSpacing(5);
     layout->addWidget(lastFrameSpinBox_);
     setLayout(layout);
 }
