@@ -281,51 +281,31 @@ ViewSettingsWidget::ViewSettingsWidget(ViewSettings & viewSettings, QWidget * pa
     // Set style
     setAutoFillBackground(true);
     setCursor(Qt::ArrowCursor);
-    buttonSize = 48;
-
-    /* THE FOLLOWING ARE NOT IMPLEMENTED OR DEEMED IRRELEVANT
-    screenRelative_ = new QCheckBox();
-    onionSkinsTransparencyRatio_ = new QDoubleSpinBox();
-    onionSkinsTransparencyRatio_->setRange(0.0,1.0);
-    onionSkinsTransparencyRatio_->setDecimals(2);
-    */
-
-    // View label, frame number, zoom level
-
-    //QGridLayout * frameZoomLayout = new QGridLayout();
-    //frameZoomLayout->setMargin(0);
-    //frameZoomLayout->setSpacing(0);
-
-    QPushButton * goToPreviousFrameButton = new QPushButton();
-    goToPreviousFrameButton->setFixedSize(20,20);
-    goToPreviousFrameButton->setIcon(QIcon(":/images/go-first-view.png"));
-    goToPreviousFrameButton->setAttribute(Qt::WA_LayoutUsesWidgetRect);
-    //frameZoomLayout->addWidget(goToPreviousFrameButton,0,0);
-
-    QPushButton * goToNextFrameButton = new QPushButton();
-    goToNextFrameButton->setFixedSize(20,20);
-    goToNextFrameButton->setIcon(QIcon(":/images/go-last-view.png"));
-    goToNextFrameButton->setAttribute(Qt::WA_LayoutUsesWidgetRect);
-    //frameZoomLayout->addWidget(goToNextFrameButton,0,2);
-
-    frameLineEdit_ = new QLineEdit();
-    frameLineEdit_->setFixedSize(40,20);
-    frameLineEdit_->setAlignment(Qt::AlignCenter);
-    frameLineEdit_->setAttribute(Qt::WA_LayoutUsesWidgetRect);
-    //frameZoomLayout->addWidget(frameLineEdit_,0,1);
 
     zoomSpinBox_ = new QSpinBox();
+    zoomSpinBox_->setMaximumWidth(70);
     zoomSpinBox_->setRange(1,1e7);
     zoomSpinBox_->setValue(100);
     zoomSpinBox_->setSuffix(" %");
-    zoomSpinBox_->setFixedSize(75,20);
     zoomSpinBox_->setAlignment(Qt::AlignCenter);
-    zoomSpinBox_->setAttribute(Qt::WA_LayoutUsesWidgetRect);
-    //zoomSpinBox_->setDecimals(0);
-    //frameZoomLayout->addWidget(zoomSpinBox_,1,0,1,3);
 
+    QPushButton * goToPreviousFrameButton = new QPushButton();
+    int frameButtonWidth = 40;
+    goToPreviousFrameButton->setMaximumWidth(frameButtonWidth);
+    goToPreviousFrameButton->setIcon(QIcon(":/images/go-first-view.png"));
+
+    frameLineEdit_ = new QLineEdit();
+    frameLineEdit_->setMaximumWidth(50);
+    frameLineEdit_->setAlignment(Qt::AlignCenter);
+
+    QPushButton * goToNextFrameButton = new QPushButton();
+    goToNextFrameButton->setMaximumWidth(frameButtonWidth);
+    goToNextFrameButton->setIcon(QIcon(":/images/go-last-view.png"));
 
     // Menu to change the display mode and options
+
+    QSize buttonSize(68, 48);
+    QSize buttonIconSize(24, 24);
 
     QHBoxLayout * displayModeLayout = new QHBoxLayout();
     displayModeLayout->setMargin(0);
@@ -342,8 +322,8 @@ ViewSettingsWidget::ViewSettingsWidget(ViewSettings & viewSettings, QWidget * pa
     displayModeButton_Normal_ = new QPushButton();
     displayModeButton_Normal_->setToolTip("Normal display mode");
     displayModeButton_Normal_->setIcon(QIcon(":images/display-mode-normal.png"));
-    displayModeButton_Normal_->setIconSize(QSize(32,32));
-    displayModeButton_Normal_->setFixedSize(buttonSize+20,buttonSize);
+    displayModeButton_Normal_->setIconSize(buttonIconSize);
+    displayModeButton_Normal_->setFixedSize(buttonSize);
     displayModeButton_Normal_->setAutoExclusive(true);
     displayModeButton_Normal_->setCheckable(true);
     displayModeButton_Normal_->setChecked(true);
@@ -351,8 +331,8 @@ ViewSettingsWidget::ViewSettingsWidget(ViewSettings & viewSettings, QWidget * pa
     displayModeButton_NormalOutline_ = new QPushButton();
     displayModeButton_NormalOutline_->setToolTip("Normal+Outline display mode");
     displayModeButton_NormalOutline_->setIcon(QIcon(":images/display-mode-normal-outline.png"));
-    displayModeButton_NormalOutline_->setIconSize(QSize(32,32));
-    displayModeButton_NormalOutline_->setFixedSize(buttonSize+20,buttonSize);
+    displayModeButton_NormalOutline_->setIconSize(buttonIconSize);
+    displayModeButton_NormalOutline_->setFixedSize(buttonSize);
     displayModeButton_NormalOutline_->setAutoExclusive(true);
     displayModeButton_NormalOutline_->setCheckable(true);
     displayModeButton_NormalOutline_->setChecked(false);
@@ -360,8 +340,8 @@ ViewSettingsWidget::ViewSettingsWidget(ViewSettings & viewSettings, QWidget * pa
     displayModeButton_Outline_ = new QPushButton();
     displayModeButton_Outline_->setToolTip("Outline display mode");
     displayModeButton_Outline_->setIcon(QIcon(":images/display-mode-outline.png"));
-    displayModeButton_Outline_->setIconSize(QSize(32,32));
-    displayModeButton_Outline_->setFixedSize(buttonSize+20,buttonSize);
+    displayModeButton_Outline_->setIconSize(buttonIconSize);
+    displayModeButton_Outline_->setFixedSize(buttonSize);
     displayModeButton_Outline_->setAutoExclusive(true);
     displayModeButton_Outline_->setCheckable(true);
     displayModeButton_Outline_->setChecked(false);
@@ -398,13 +378,12 @@ ViewSettingsWidget::ViewSettingsWidget(ViewSettings & viewSettings, QWidget * pa
 
     // Button to show/hide the display mode menu
 
+    int dropdownButtonWidth = 60;
     displayModeButton_ = new QPushButton();
     displayModeButton_->setToolTip("Display mode settings");
     displayModeButton_->setIcon(QIcon(":images/display-mode-normal.png"));
-    //displayModeButton_->setIconSize(QSize(32,32));
-    displayModeButton_->setFixedSize(40,20);
+    displayModeButton_->setMaximumWidth(dropdownButtonWidth);
     displayModeButton_->setMenu(displayModeMenu);
-    displayModeButton_->setAttribute(Qt::WA_LayoutUsesWidgetRect);
 
 
     // Menu to change onion skinning options
@@ -428,8 +407,8 @@ ViewSettingsWidget::ViewSettingsWidget(ViewSettings & viewSettings, QWidget * pa
     onionSkinningButton_Off_ = new QPushButton();
     onionSkinningButton_Off_->setToolTip("Onion skinning off");
     onionSkinningButton_Off_->setIcon(QIcon(":images/onion-skinning-off.png"));
-    onionSkinningButton_Off_->setIconSize(QSize(32,32));
-    onionSkinningButton_Off_->setFixedSize(buttonSize+20,buttonSize);
+    onionSkinningButton_Off_->setIconSize(buttonIconSize);
+    onionSkinningButton_Off_->setFixedSize(buttonSize);
     onionSkinningButton_Off_->setAutoExclusive(true);
     onionSkinningButton_Off_->setCheckable(true);
     onionSkinningButton_Off_->setChecked(true);
@@ -437,8 +416,8 @@ ViewSettingsWidget::ViewSettingsWidget(ViewSettings & viewSettings, QWidget * pa
     onionSkinningButton_On_ = new QPushButton();
     onionSkinningButton_On_->setToolTip("Onion skinning on");
     onionSkinningButton_On_->setIcon(QIcon(":images/onion-skinning-on.png"));
-    onionSkinningButton_On_->setIconSize(QSize(32,32));
-    onionSkinningButton_On_->setFixedSize(buttonSize+20,buttonSize);
+    onionSkinningButton_On_->setIconSize(buttonIconSize);
+    onionSkinningButton_On_->setFixedSize(buttonSize);
     onionSkinningButton_On_->setAutoExclusive(true);
     onionSkinningButton_On_->setCheckable(true);
     onionSkinningButton_On_->setChecked(false);
@@ -490,25 +469,25 @@ ViewSettingsWidget::ViewSettingsWidget(ViewSettings & viewSettings, QWidget * pa
     onionSkinningButton_ = new QPushButton();
     onionSkinningButton_->setToolTip("Onion skinning settings");
     onionSkinningButton_->setIcon(QIcon(":images/display-mode-normal.png"));
-    //onionSkinningButton_->setIconSize(QSize(32,32));
-    onionSkinningButton_->setFixedSize(40,20);
+    onionSkinningButton_->setMaximumWidth(dropdownButtonWidth);
     onionSkinningButton_->setMenu(onionSkinningMenu);
-    onionSkinningButton_->setAttribute(Qt::WA_LayoutUsesWidgetRect);
 
 
-    // Layouts and widgets for grouping
-
+    // Horizontal layout
+    int spacing = 5;
     QHBoxLayout * hlayout = new QHBoxLayout();
-    hlayout->setMargin(0);
+    hlayout->setContentsMargins(spacing, spacing, spacing, spacing);
     hlayout->setSpacing(0);
     hlayout->addWidget(zoomSpinBox_);
-    hlayout->addSpacing(5);
+    hlayout->addSpacing(spacing);
     hlayout->addWidget(goToPreviousFrameButton);
     hlayout->addWidget(frameLineEdit_);
     hlayout->addWidget(goToNextFrameButton);
-    //hlayout->addLayout(frameZoomLayout);
+    hlayout->addSpacing(spacing);
     hlayout->addWidget(displayModeButton_);
+    hlayout->addSpacing(spacing);
     hlayout->addWidget(onionSkinningButton_);
+    hlayout->addStretch();
     setLayout(hlayout);
 
 
@@ -552,9 +531,7 @@ ViewSettingsWidget::ViewSettingsWidget(ViewSettings & viewSettings, QWidget * pa
 
     // ----------------- Set position and size -----------------
 
-    setGeometry(10,10,100,100); // Move to (10,10) and resize arbitrarily to (100,100)
-    setFixedSize(sizeHint());   // Resize to optimal size
-
+    setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
 
 
     // ----------------- Windows or Linux style ------------------------
@@ -563,7 +540,7 @@ ViewSettingsWidget::ViewSettingsWidget(ViewSettings & viewSettings, QWidget * pa
     // Set style
     setAutoFillBackground(true);
     setCursor(Qt::ArrowCursor);
-    buttonSize = 48;
+    int buttonSize = 48;
 
     /* THE FOLLOWING ARE NOT IMPLEMENTED OR DEEMED IRRELEVANT
     screenRelative_ = new QCheckBox();

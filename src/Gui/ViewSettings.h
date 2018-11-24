@@ -167,8 +167,6 @@ private:
     QWidget * containerWidget;
 #endif
 
-    int buttonSize;
-
     QPushButton * displayModeButton_;
     QPushButton * displayModeButton_Normal_;
     QPushButton * displayModeButton_NormalOutline_;
