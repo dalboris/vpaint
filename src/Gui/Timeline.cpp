@@ -445,7 +445,7 @@ PlaybackSettingsDialog::PlaybackSettingsDialog(const PlaybackSettings & settings
     QFormLayout * formLayout = new QFormLayout();
     formLayout->addRow(tr("FPS"), fpsSpinBox_);
     formLayout->addRow(tr("Play Mode"), playModeSpinBox_);
-    formLayout->addRow(tr("Subrame Inbetweening"), subframeCheckBox_);
+    formLayout->addRow(tr("Subframe Inbetweening"), subframeCheckBox_);
 
     // Create OK/Cancel buttons
     QDialogButtonBox * buttonBox = new QDialogButtonBox(
