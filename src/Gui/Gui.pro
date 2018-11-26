@@ -103,7 +103,6 @@ HEADERS += MainWindow.h \
     Random.h \
     GLUtils.h \
     GLWidget.h \
-    GLWidget_Settings.h \
     GLWidget_Camera.h \
     GLWidget_Camera2D.h \
     GLWidget_Material.h \
@@ -205,7 +204,6 @@ SOURCES += main.cpp \
     Random.cpp \
     GLUtils.cpp  \
     GLWidget.cpp  \
-    GLWidget_Settings.cpp \
     MainWindow.cpp \
     GeometryUtils.cpp \
     SceneObject.cpp \

@@ -54,8 +54,6 @@ GLWidget::GLWidget(QWidget *parent, bool isOnly2D) :
     cameraDollyIsEnabled_(true),
     cameraTravellingIsEnabled_(true),
     cameraZoomIsEnabled_(true),
-
-    settings_(0),
     
     mouse_LeftButton_(false),
     mouse_MidButton_(false),
@@ -111,17 +109,12 @@ GLWidget::GLWidget(QWidget *parent, bool isOnly2D) :
     GL_LIGHT_[5] = GL_LIGHT5;
     GL_LIGHT_[6] = GL_LIGHT6;
     GL_LIGHT_[7] = GL_LIGHT7;
-
-    // Display settings
-    settings_ = new GLWidget_Settings();
-    connect(settings_, SIGNAL(changed()),
-            this, SLOT(updateGL()));
 }
 
 
 GLWidget::~GLWidget()
 {
-    delete settings_;
+
 }
 
 
@@ -165,11 +158,6 @@ void GLWidget::enableCameraMovement(bool value)
     cameraDollyIsEnabled_ = value;
     cameraTravellingIsEnabled_ = value;
     cameraZoomIsEnabled_ = value;
-}
-
-GLWidget_Settings * GLWidget::settings()
-{
-    return GLWidget::settings_;
 }
 
 bool GLWidget::isBusy()
@@ -1058,10 +1046,7 @@ void GLWidget::paintGL()
     glDepthMask(GL_TRUE);
     
     // Clear the window and buffers
-    glClearColor(settings_->backgroundColor_r(),
-                 settings_->backgroundColor_g(),
-                 settings_->backgroundColor_b(),
-                 1);
+    glClearColor(1, 1, 1, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Initialize the view and lighting
