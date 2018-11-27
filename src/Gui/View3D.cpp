@@ -42,10 +42,6 @@ View3D::View3D(Scene *scene, QWidget *parent) :
     //backgroundRenderers_[bg] = new BackgroundRenderer(bg, context(), this);
 
 
-    viewSettingsWidget_ = new View3DSettingsWidget(viewSettings_);
-    viewSettingsWidget_->setParent(this, Qt::Window);
-    connect(viewSettingsWidget_, SIGNAL(changed()), this, SLOT(update()));
-
     cameraTravellingIsEnabled_ = true;
     drawingIsEnable_ = false;
 
@@ -77,19 +73,8 @@ View3D::~View3D()
     deletePicking();
 }
 
-void View3D::openViewSettings()
-{
-    viewSettingsWidget_->show();
-}
-
-void View3D::closeViewSettings()
-{
-    viewSettingsWidget_->hide();
-}
-
-View3DSettingsWidget * View3D::view3DSettingsWidget() const
-{
-    return viewSettingsWidget_;
+View3DSettings * View3D::settings() {
+    return &viewSettings_;
 }
 
 void View3D::closeEvent(QCloseEvent * event)

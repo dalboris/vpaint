@@ -117,8 +117,13 @@ MainWindow::MainWindow() :
     connect(multiView_, SIGNAL(settingsChanged()), this, SLOT(updateViewMenu()));
 
     // 3D View
-    view3D_ = new View3D(scene_, 0);
+    view3D_ = new View3D(scene_, nullptr);
     view3D_->setParent(this, Qt::Window);
+    view3DSettingsWidget_ = new View3DSettingsWidget();
+    view3DSettingsWidget_->setParent(this, Qt::Window);
+    view3DSettingsWidget_->setViewSettings(view3D_->settings());
+    connect(view3DSettingsWidget_, SIGNAL(changed()), view3D_, SLOT(update()));
+
     //view3D_->show();
     connect(view3D_, SIGNAL(allViewsNeedToUpdate()), this, SLOT(update()));
     connect(view3D_, SIGNAL(allViewsNeedToUpdatePicking()), this, SLOT(updatePicking()));
@@ -1208,27 +1213,21 @@ void MainWindow::view3DActionSetChecked()
 
 void MainWindow::openClose3DSettings()
 {
-    if(view3D_)
+    if(view3DSettingsWidget_)
     {
-        if(view3D_->view3DSettingsWidget()->isVisible())
-        {
-            view3D_->hide();
-        }
-        else
-        {
-            view3D_->openViewSettings();
-        }
+        // toggle visibility
+        bool visible = view3DSettingsWidget_->isVisible();
+        view3DSettingsWidget_->setVisible(!visible);
     }
 
-    updateView3DActionCheckState();
-
+    updateView3DSettingsActionCheckState();
 }
 
 void MainWindow::updateView3DSettingsActionCheckState()
 {
-    if(view3D_)
+    if(view3DSettingsWidget_)
     {
-        if(view3D_->view3DSettingsWidget()->isVisible())
+        if(view3DSettingsWidget_->isVisible())
         {
             view3DSettingsActionSetChecked();
         }
@@ -1241,12 +1240,12 @@ void MainWindow::updateView3DSettingsActionCheckState()
 
 void MainWindow::view3DSettingsActionSetUnchecked()
 {
-    actionOpenView3DSettings->setChecked(false);
+    actionOpenCloseView3DSettings->setChecked(false);
 }
 
 void MainWindow::view3DSettingsActionSetChecked()
 {
-    actionOpenView3DSettings->setChecked(true);
+    actionOpenCloseView3DSettings->setChecked(true);
 }
 
 void MainWindow::updateViewMenu()
@@ -1479,13 +1478,13 @@ void MainWindow::createActions()
     actionOnionSkinning->setShortcutContext(Qt::ApplicationShortcut);
     connect(actionOnionSkinning, SIGNAL(triggered(bool)), this, SLOT(setOnionSkinningEnabled(bool)));
 
-    actionOpenView3DSettings = new QAction(tr("3D View Settings [Beta]"), this);
-    actionOpenView3DSettings->setCheckable(true);
-    actionOpenView3DSettings->setStatusTip(tr("Open the settings dialog for the 3D view"));
+    actionOpenCloseView3DSettings = new QAction(tr("3D View Settings [Beta]"), this);
+    actionOpenCloseView3DSettings->setCheckable(true);
+    actionOpenCloseView3DSettings->setStatusTip(tr("Open or Close the settings dialog for the 3D view"));
     //actionOpenView3DSettings->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_5));
-    actionOpenView3DSettings->setShortcutContext(Qt::ApplicationShortcut);
-    connect(actionOpenView3DSettings, SIGNAL(triggered()), view3D_, SLOT(openViewSettings()));
-    connect(view3D_->view3DSettingsWidget(), SIGNAL(closed()), this, SLOT(view3DSettingsActionSetUnchecked()));
+    //actionOpenView3DSettings->setShortcutContext(Qt::ApplicationShortcut);
+    connect(actionOpenCloseView3DSettings, SIGNAL(triggered()), this, SLOT(openClose3DSettings()));
+    connect(view3DSettingsWidget_, SIGNAL(closed()), this, SLOT(view3DSettingsActionSetUnchecked()));
 
     actionOpenClose3D = new QAction(tr("3D View [Beta]"), this);
     actionOpenClose3D->setCheckable(true);
@@ -1794,7 +1793,7 @@ void MainWindow::createMenus()
         advancedViewMenu->addAction(dockAdvancedSettings->toggleViewAction());
         advancedViewMenu->addAction(dockAnimatedCycleEditor->toggleViewAction());
         advancedViewMenu->addAction(actionOpenClose3D);
-        advancedViewMenu->addAction(actionOpenView3DSettings);
+        advancedViewMenu->addAction(actionOpenCloseView3DSettings);
     }
 
     menuBar()->addMenu(menuView);

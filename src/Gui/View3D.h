@@ -38,6 +38,10 @@ public:
     View3D(Scene *scene, QWidget *parent);
     virtual ~View3D();
 
+    // Returns a non-owning pointer to the View3DSettings owned
+    // by this View3D
+    View3DSettings * settings();
+
     virtual void keyPressEvent(QKeyEvent *event);
 
     virtual int decideClicAction();
@@ -60,9 +64,6 @@ public:
     Picking::Object getCloserObject(int x, int y);
     bool updateHighlightedObject(int x, int y);
 
-    // Settings widget
-    View3DSettingsWidget * view3DSettingsWidget() const;
-
     // Time info
     int activeFrame() const;
     Time activeTime() const;
@@ -70,9 +71,6 @@ public:
 public slots:
     void update();
     void updatePicking();
-
-    void openViewSettings();
-    void closeViewSettings();
 
 protected slots:
     void closeEvent(QCloseEvent * event);
@@ -121,7 +119,6 @@ struct MouseEvent
 
     // View Settings
     View3DSettings viewSettings_;
-    View3DSettingsWidget * viewSettingsWidget_;
 
     // Draw canvas
     void drawCanvas_();

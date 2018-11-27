@@ -298,9 +298,10 @@ void View3DSettings::setYSceneMax(double value)
 
 
 
-View3DSettingsWidget::View3DSettingsWidget(View3DSettings & viewSettings) :
+View3DSettingsWidget::View3DSettingsWidget() :
     QWidget(0),
-    viewSettings_(viewSettings)
+    viewSettings_(nullptr),
+    isUpdatingWidgetFromSettings_(false)
 {
     setWindowTitle("3D View Settings [Beta]");
 
@@ -372,9 +373,6 @@ View3DSettingsWidget::View3DSettingsWidget(View3DSettings & viewSettings) :
     layout->addRow("Mesh inverse spatial res:", k2_);
     setLayout(layout);
 
-    updateWidgetFromSettings(); // Might not be an exact match due to widget min/max values
-    updateSettingsFromWidget(); // Make sure its an exact match
-
     connect(spaceScale_, SIGNAL(valueChanged(double)), this, SLOT(updateSettingsFromWidget()));
     connect(timeScale_, SIGNAL(valueChanged(double)), this, SLOT(updateSettingsFromWidget()));
     connect(isTimeHorizontal_, SIGNAL(stateChanged(int)), this, SLOT(updateSettingsFromWidget()));
@@ -401,6 +399,15 @@ View3DSettingsWidget::View3DSettingsWidget(View3DSettings & viewSettings) :
 
 View3DSettingsWidget::~View3DSettingsWidget()
 {
+
+}
+
+void View3DSettingsWidget::setViewSettings(View3DSettings * viewSettings)
+{
+    viewSettings_ = viewSettings;
+
+    updateWidgetFromSettings(); // Might not be an exact match due to widget min/max values
+    updateSettingsFromWidget(); // Make sure its an exact match
 }
 
 void View3DSettingsWidget::closeEvent(QCloseEvent * event)
@@ -411,54 +418,64 @@ void View3DSettingsWidget::closeEvent(QCloseEvent * event)
 
 void View3DSettingsWidget::updateWidgetFromSettings()
 {
-    spaceScale_->setValue(viewSettings_.spaceScale());
-    timeScale_->setValue(viewSettings_.timeScale());
-    isTimeHorizontal_->setChecked(viewSettings_.isTimeHorizontal());
-    freezeSpaceRect_->setChecked(viewSettings_.freezeSpaceRect());
-    cameraFollowActiveTime_->setChecked(viewSettings_.cameraFollowActiveTime());
-    drawGrid_->setChecked(viewSettings_.drawGrid());
-    drawTimePlane_->setChecked(viewSettings_.drawTimePlane());
-    drawCurrentFrame_->setChecked(viewSettings_.drawCurrentFrame());
-    drawAllFrames_->setChecked(viewSettings_.drawAllFrames());
-    drawFramesAsTopology_->setChecked(viewSettings_.drawFramesAsTopology());
-    drawCurrentFrameAsTopology_->setChecked(viewSettings_.drawCurrentFrameAsTopology());
-    drawTopologyFaces_->setChecked(viewSettings_.drawTopologyFaces());
-    drawKeyCells_->setChecked(viewSettings_.drawKeyCells());
-    drawInbetweenCells_->setChecked(viewSettings_.drawInbetweenCells());
-    drawKeyVerticesAsDots_->setChecked(viewSettings_.drawKeyVerticesAsDots());
-    clipToSpaceTimeWindow_->setChecked(viewSettings_.clipToSpaceTimeWindow());
-    vertexTopologySize_->setValue(viewSettings_.vertexTopologySize());
-    edgeTopologyWidth_->setValue(viewSettings_.edgeTopologyWidth());
-    opacity_->setValue(viewSettings_.opacity());
-    drawAsMesh_->setChecked(viewSettings_.drawAsMesh());
-    k1_->setValue(viewSettings_.k1());
-    k2_->setValue(viewSettings_.k2());
+    isUpdatingWidgetFromSettings_ = true;
+
+    if (viewSettings_)
+    {
+        spaceScale_->setValue(viewSettings_->spaceScale());
+        timeScale_->setValue(viewSettings_->timeScale());
+        isTimeHorizontal_->setChecked(viewSettings_->isTimeHorizontal());
+        freezeSpaceRect_->setChecked(viewSettings_->freezeSpaceRect());
+        cameraFollowActiveTime_->setChecked(viewSettings_->cameraFollowActiveTime());
+        drawGrid_->setChecked(viewSettings_->drawGrid());
+        drawTimePlane_->setChecked(viewSettings_->drawTimePlane());
+        drawCurrentFrame_->setChecked(viewSettings_->drawCurrentFrame());
+        drawAllFrames_->setChecked(viewSettings_->drawAllFrames());
+        drawFramesAsTopology_->setChecked(viewSettings_->drawFramesAsTopology());
+        drawCurrentFrameAsTopology_->setChecked(viewSettings_->drawCurrentFrameAsTopology());
+        drawTopologyFaces_->setChecked(viewSettings_->drawTopologyFaces());
+        drawKeyCells_->setChecked(viewSettings_->drawKeyCells());
+        drawInbetweenCells_->setChecked(viewSettings_->drawInbetweenCells());
+        drawKeyVerticesAsDots_->setChecked(viewSettings_->drawKeyVerticesAsDots());
+        clipToSpaceTimeWindow_->setChecked(viewSettings_->clipToSpaceTimeWindow());
+        vertexTopologySize_->setValue(viewSettings_->vertexTopologySize());
+        edgeTopologyWidth_->setValue(viewSettings_->edgeTopologyWidth());
+        opacity_->setValue(viewSettings_->opacity());
+        drawAsMesh_->setChecked(viewSettings_->drawAsMesh());
+        k1_->setValue(viewSettings_->k1());
+        k2_->setValue(viewSettings_->k2());
+    }
+
+    isUpdatingWidgetFromSettings_ = false;
 }
 
 void View3DSettingsWidget::updateSettingsFromWidget()
 {
-    viewSettings_.setSpaceScale(spaceScale_->value());
-    viewSettings_.setTimeScale(timeScale_->value());
-    viewSettings_.setIsTimeHorizontal(isTimeHorizontal_->isChecked());
-    viewSettings_.setFreezeSpaceRect(freezeSpaceRect_->isChecked());
-    viewSettings_.setCameraFollowActiveTime(cameraFollowActiveTime_->isChecked());
-    viewSettings_.setDrawGrid(drawGrid_->isChecked());
-    viewSettings_.setDrawTimePlane(drawTimePlane_->isChecked());
-    viewSettings_.setDrawCurrentFrame(drawCurrentFrame_->isChecked());
-    viewSettings_.setDrawAllFrames(drawAllFrames_->isChecked());
-    viewSettings_.setDrawFramesAsTopology(drawFramesAsTopology_->isChecked());
-    viewSettings_.setDrawCurrentFrameAsTopology(drawCurrentFrameAsTopology_->isChecked());
-    viewSettings_.setDrawTopologyFaces(drawTopologyFaces_->isChecked());
-    viewSettings_.setDrawKeyCells(drawKeyCells_->isChecked());
-    viewSettings_.setDrawInbetweenCells(drawInbetweenCells_->isChecked());
-    viewSettings_.setDrawKeyVerticesAsDots(drawKeyVerticesAsDots_->isChecked());
-    viewSettings_.setClipToSpaceTimeWindow(clipToSpaceTimeWindow_->isChecked());
-    viewSettings_.setVertexTopologySize(vertexTopologySize_->value());
-    viewSettings_.setEdgeTopologyWidth(edgeTopologyWidth_->value());
-    viewSettings_.setOpacity(opacity_->value());
-    viewSettings_.setDrawAsMesh(drawAsMesh_->isChecked());
-    viewSettings_.setK1(k1_->value());
-    viewSettings_.setK2(k2_->value());
+    if (!isUpdatingWidgetFromSettings_ && viewSettings_)
+    {
+        viewSettings_->setSpaceScale(spaceScale_->value());
+        viewSettings_->setTimeScale(timeScale_->value());
+        viewSettings_->setIsTimeHorizontal(isTimeHorizontal_->isChecked());
+        viewSettings_->setFreezeSpaceRect(freezeSpaceRect_->isChecked());
+        viewSettings_->setCameraFollowActiveTime(cameraFollowActiveTime_->isChecked());
+        viewSettings_->setDrawGrid(drawGrid_->isChecked());
+        viewSettings_->setDrawTimePlane(drawTimePlane_->isChecked());
+        viewSettings_->setDrawCurrentFrame(drawCurrentFrame_->isChecked());
+        viewSettings_->setDrawAllFrames(drawAllFrames_->isChecked());
+        viewSettings_->setDrawFramesAsTopology(drawFramesAsTopology_->isChecked());
+        viewSettings_->setDrawCurrentFrameAsTopology(drawCurrentFrameAsTopology_->isChecked());
+        viewSettings_->setDrawTopologyFaces(drawTopologyFaces_->isChecked());
+        viewSettings_->setDrawKeyCells(drawKeyCells_->isChecked());
+        viewSettings_->setDrawInbetweenCells(drawInbetweenCells_->isChecked());
+        viewSettings_->setDrawKeyVerticesAsDots(drawKeyVerticesAsDots_->isChecked());
+        viewSettings_->setClipToSpaceTimeWindow(clipToSpaceTimeWindow_->isChecked());
+        viewSettings_->setVertexTopologySize(vertexTopologySize_->value());
+        viewSettings_->setEdgeTopologyWidth(edgeTopologyWidth_->value());
+        viewSettings_->setOpacity(opacity_->value());
+        viewSettings_->setDrawAsMesh(drawAsMesh_->isChecked());
+        viewSettings_->setK1(k1_->value());
+        viewSettings_->setK2(k2_->value());
 
-    emit changed();
+        emit changed();
+    }
 }

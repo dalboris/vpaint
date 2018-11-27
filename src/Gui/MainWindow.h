@@ -33,6 +33,7 @@ class ExportPngDialog;
 class AboutDialog;
 class BackgroundWidget;
 class LayersWidget;
+class View3DSettingsWidget;
 
 namespace VectorAnimationComplex
 {
@@ -188,6 +189,7 @@ private:
     VectorAnimationComplex::VAC * clipboard_;
     // 3D view
     View3D * view3D_;
+    View3DSettingsWidget * view3DSettingsWidget_;
     // timeline
     Timeline * timeline_;
     // Selection info
@@ -234,7 +236,7 @@ private:
       QAction * actionOnionSkinning;
       QAction * actionToggleOutline;
       QAction * actionToggleOutlineOnly;
-      QAction * actionOpenView3DSettings;
+      QAction * actionOpenCloseView3DSettings;
       QAction * actionOpenClose3D;
       QAction * actionSplitVertical;
       QAction * actionSplitHorizontal;

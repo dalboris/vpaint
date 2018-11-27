@@ -12,7 +12,6 @@
 #include "TimeDef.h"
 #include <QWidget>
 
-class View3DSettingsWidget;
 class View3DSettings
 {
 public:
@@ -138,8 +137,12 @@ class View3DSettingsWidget: public QWidget
     Q_OBJECT
 
 public:
-    View3DSettingsWidget(View3DSettings & viewSettings);
+    View3DSettingsWidget();
     ~View3DSettingsWidget();
+
+    // Set whose settings this widget controls.
+    // The passed viewSettings must outlive this View3DSettingsWidget.
+    void setViewSettings(View3DSettings * viewSettings);
 
 signals:
     void changed();
@@ -153,7 +156,7 @@ private slots:
     void updateSettingsFromWidget();
 
 private:
-    View3DSettings & viewSettings_;
+    View3DSettings * viewSettings_;
 
     QDoubleSpinBox * spaceScale_;
     QDoubleSpinBox * timeScale_;
@@ -180,6 +183,8 @@ private:
     QCheckBox * drawAsMesh_;
     QSpinBox * k1_;
     QSpinBox * k2_;
+
+    bool isUpdatingWidgetFromSettings_;
 };
 
 #endif // VIEW3DSETTINGS_H
