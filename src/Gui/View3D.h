@@ -69,7 +69,6 @@ public:
     Time activeTime() const;
 
 public slots:
-    void update();
     void updatePicking();
 
 protected slots:

@@ -10,10 +10,21 @@
 #include "MainWindow.h"
 #include "Global.h"
 #include "UpdateCheck.h"
+#include "GLUtils.h"
 
 int main(int argc, char *argv[])
 {
-    QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
+
+    // Init OpenGL. Must be called before QApplication creation. See Qt doc:
+    //
+    // Calling QSurfaceFormat::setDefaultFormat() before constructing the
+    // QApplication instance is mandatory on some platforms (for example,
+    // macOS) when an OpenGL core profile context is requested. This is to
+    // ensure that resource sharing between contexts stays functional as all
+    // internal contexts are created using the correct version and profile.
+    //
+    GLUtils::init();
+
 
     Application app(argc, argv);
     MainWindow mainWindow;

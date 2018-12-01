@@ -157,7 +157,8 @@ void View::update()
     GLWidget_Camera2D c = camera2D();
     c.setZoom(viewSettings_.zoom());
     setCamera2D(c);
-    updateGL();
+
+    GLWidget::update();
 }
 
 void View::updateZoomFromView()
@@ -976,7 +977,7 @@ BackgroundRenderer * View::getBackgroundRenderer_(Background * background)
 
 BackgroundRenderer * View::createBackgroundRenderer_(Background * background)
 {
-    BackgroundRenderer * res = new BackgroundRenderer(background, context(), this);
+    BackgroundRenderer * res = new BackgroundRenderer(background, this);
     connect(res, &BackgroundRenderer::backgroundDestroyed, this, &View::onBackgroundDestroyed_);
     backgroundRenderers_.insert(background, res);
     return res;

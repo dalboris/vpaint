@@ -109,18 +109,6 @@ View3D::MouseEvent View3D::mouseEvent() const
     return me;
 }
 
-void View3D::update()
-{
-    updateGL();
-    // at first, I've  put updatePicking here, but it  has an issue:
-    // when  the  window  is  resized, updateGL()  is  automatically
-    // called, but then not updatePicking...
-    //
-    // Hence, it  is now called  inside drawScene, even  though it's
-    // kinda weird
-}
-
-
 void View3D::MoveEvent(double x, double y)
 {
     bool hasChanged = updateHighlightedObject(x, y);

@@ -31,7 +31,7 @@
 #define GLWIDGET_H
 
 #include "OpenGL.h"
-#include <QGLWidget>
+#include <QOpenGLWidget>
 
 #include "GLWidget_Camera.h"
 #include "GLWidget_Camera2D.h"
@@ -54,7 +54,7 @@ public:
     static const int Zoom = 3;
 };
 
-class GLWidget : public QGLWidget
+class GLWidget : public QOpenGLWidget
 {
     Q_OBJECT
 

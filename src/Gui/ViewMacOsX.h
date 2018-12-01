@@ -13,6 +13,10 @@
 // (cf Qt doc, QGLWidget class)
 //
 // Therefore, on Mac, the ViewSettings do not lie on top of the view, but as a "toolbar"
+//
+// Update 2018: The comment above was written before switching from the deprecated
+// QGLWidget class to the more modern QOpenGLWidget class. Now, we should be able to
+// harmonize the macOS and Windows/Linux versions.
 
 #ifndef VIEWMACOSX_H
 #define VIEWMACOSX_H

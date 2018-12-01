@@ -12,12 +12,18 @@
 #include "OpenGL.h"
 #include <QPolygonF>
 #include <QRectF>
+#include <QOpenGLTexture>
 
 #include <Eigen/Core>
 
 class GLUtils
 {
 public:
+    /// This function must be called before creating the first
+    /// OpenGLWidget. It sets the appropriate Qt OpenGLFormat and
+    /// sets the Qt::AA_UseDesktopOpenGL attribute.
+    static void init();
+
     //static void UnitCircleZ();
     //static void UnitSphere();
     //static void Sphere(double radius);
@@ -45,15 +51,15 @@ public:
     
 private:
     // drawing text
-    static void genTex(const QString & filename, GLuint & tex);
-    static void drawText(GLuint tex,
+    static QOpenGLTexture * genTex(const QString & filename);
+    static void drawTex(QOpenGLTexture * tex,
                    double x1, double y1, double z1, 
                    double x2, double y2, double z2, 
                    double x3, double y3, double z3, 
                    double x4, double y4, double z4);
-    static GLuint textureX;
-    static GLuint textureY;
-    static GLuint textureTime;
+    static QOpenGLTexture * textureX;
+    static QOpenGLTexture * textureY;
+    static QOpenGLTexture * textureTime;
 };
 
 #endif

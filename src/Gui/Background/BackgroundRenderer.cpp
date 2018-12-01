@@ -10,33 +10,57 @@
 
 #include "Background.h"
 
-#include <QGLContext>
+#include <QOpenGLContext>
+#include <QOpenGLTexture>
 
 BackgroundRenderer::BackgroundRenderer(
         Background * background,
-        QGLContext * context,
         QObject * parent) :
     QObject(parent),
     background_(background),
-    context_(context)
+    isCacheDirty_(false)
 {
-    connect(background_, SIGNAL(cacheCleared()), this, SLOT(clearCache_()));
+    connect(background_, SIGNAL(cacheCleared()), this, SLOT(setDirty_()));
     connect(background_, SIGNAL(destroyed()), this, SLOT(onBackgroundDestroyed_()));
+}
+
+void BackgroundRenderer::cleanup()
+{
+    // Delete all textures allocated in GPU
+    foreach (QOpenGLTexture * texture, textures_)
+    {
+        // Note 1: Qt documentation doesn't specify whether QOpenGLTexture's
+        // destructor destroys the underlying OpenGL texture object, so we
+        // call destroy() explicitly before destroying texture.
+        //
+        // Note 2: this requires a current valid OpenGL context, reason why we
+        // defer calling cleanup() via the isCacheDirty_ flag.
+        //
+        // Note 3: texture may be nullptr, for example if users haven't set
+        // a background image
+        //
+        if (texture)
+        {
+            texture->destroy();
+            delete texture;
+        }
+    }
+
+    // Clear map
+    textures_.clear();
+
+    // Clear isCacheDirty_ flag
+    isCacheDirty_ = false;
+}
+
+void BackgroundRenderer::setDirty_()
+{
+    isCacheDirty_ = true;
 }
 
 void BackgroundRenderer::clearCache_()
 {
-    // Set OpenGL context (we are likely outside paintGL())
-    context_->makeCurrent();
-
-    // Delete all textures allocated in GPU
-    foreach (GLuint texId, texIds_)
-    {
-        context_->deleteTexture(texId);
-    }
-
-    // Clear map
-    texIds_.clear();
+    cleanup();
 }
 
 void BackgroundRenderer::onBackgroundDestroyed_()
@@ -46,31 +70,35 @@ void BackgroundRenderer::onBackgroundDestroyed_()
     emit backgroundDestroyed(b);
 }
 
-GLuint BackgroundRenderer::texId_(int frame)
+QOpenGLTexture * BackgroundRenderer::texture_(int frame)
 {
-    // Avoid allocating several textures for frames sharing the same image
+    // Avoid allocating several textures for frames sharing the same image.
+    // If users haven't set a background image at all, this sets frame to 0.
     frame = background_->referenceFrame(frame);
 
     // Load texture to GPU if not done already
-    if (!texIds_.contains(frame))
+    if (!textures_.contains(frame))
     {
         // Get QImage
         QImage img = background_->image(frame);
 
         if (img.isNull())
         {
-            // Set 0 as cached value, so we won't try to re-read the file later.
-            texIds_[frame] = (GLuint) 0;
+            // Set nullptr as cached value, so we won't try to re-read the file later.
+            // This includes the rare cases when the image couldn't be read, but
+            // also includes the very common case where no background image is
+            // set.
+            textures_[frame] = nullptr;
         }
         else
         {
             // Load texture to GPU.
-            texIds_[frame] = context_->bindTexture(img);
+            textures_[frame] = new QOpenGLTexture(img.mirrored());
         }
     }
 
     // Returned cached texture
-    return texIds_[frame];
+    return textures_[frame];
 }
 
 namespace
@@ -218,6 +246,10 @@ void BackgroundRenderer::draw(int frame, bool showCanvas,
         return;
     }
 
+    if (isCacheDirty_) {
+        clearCache_();
+    }
+
     // Get canvas boundary
     const double & wc = canvasWidth;
     const double & hc = canvasHeight;
@@ -278,11 +310,11 @@ void BackgroundRenderer::draw(int frame, bool showCanvas,
 
     // ----- Draw background image -----
 
-    // Get texture id
-    GLuint texId = texId_(frame);
+    // Get texture
+    QOpenGLTexture * texture = texture_(frame);
 
     // Draw image if non-zero
-    if (texId)
+    if (texture)
     {
         // Determine background quad positions and UVs
         double x1, x2, y1, y2, u1, u2, v1, v2;
@@ -297,7 +329,7 @@ void BackgroundRenderer::draw(int frame, bool showCanvas,
         {
             // Set texture and modulate by opacity
             glEnable(GL_TEXTURE_2D);
-            glBindTexture(GL_TEXTURE_2D, texId);
+            texture->bind();
             glColor4d(1.0, 1.0, 1.0, background_->opacity());
             glColor4d(1.0, 1.0, 1.0, background_->opacity());
 
@@ -312,7 +344,7 @@ void BackgroundRenderer::draw(int frame, bool showCanvas,
             glEnd();
 
             // Unset texture
-            glBindTexture(GL_TEXTURE_2D, 0);
+            texture->release();
             glDisable(GL_TEXTURE_2D);
         }
     }

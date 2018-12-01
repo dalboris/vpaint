@@ -16,7 +16,8 @@
 #include <QMap>
 
 class Background;
-class QGLContext;
+class QOpenGLContext;
+class QOpenGLTexture;
 
 class BackgroundRenderer: public QObject
 {
@@ -24,11 +25,13 @@ class BackgroundRenderer: public QObject
 
 public:
     BackgroundRenderer(Background * background,
-                       QGLContext * context,
                        QObject * parent = 0);
 
-    // Draw the background for specified frame.
+    // Destroys allocated GPU resources. This requires a current valid OpenGL
+    // context.
     //
+    void cleanup();
+
     // If showCanvas = true, then draw an area covering the canvas only, and
     // the variables xSceneMin, xSceneMax, ySceneMin, and ySceneMax are unused.
     //
@@ -56,15 +59,17 @@ signals:
     void backgroundDestroyed(Background * background);
 
 private slots:
+    void setDirty_();
     void clearCache_();
     void onBackgroundDestroyed_();
 
 private:
     Background * background_;
-    QGLContext * context_;
 
-    GLuint texId_(int frame);
-    QMap<int, GLuint> texIds_;
+    bool isCacheDirty_;
+
+    QOpenGLTexture * texture_(int frame);
+    QMap<int, QOpenGLTexture *> textures_;
 };
 
 #endif // BACKGROUND_RENDERER_H

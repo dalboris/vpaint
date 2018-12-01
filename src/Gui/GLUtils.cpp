@@ -8,6 +8,7 @@
 
 #include "GLUtils.h"
 
+#include <QCoreApplication>
 #include <QTransform>
 #include <QtDebug>
 #include "GLWidget.h"
@@ -35,20 +36,41 @@ void GLUtils::Sphere(double radius)
 }
 */
 
-GLuint GLUtils::textureX = 0;
-GLuint GLUtils::textureY = 0;
-GLuint GLUtils::textureTime = 0;
+QOpenGLTexture * GLUtils::textureX = nullptr;
+QOpenGLTexture * GLUtils::textureY = nullptr;
+QOpenGLTexture * GLUtils::textureTime = nullptr;
 
-void GLUtils::drawText(GLuint tex,
+void GLUtils::init()
+{
+    // Performance seems to be significantly impacted by format.setSamples().
+    // For now I keep setSamples(1). May change to 4 or 16 after investigation.
+
+    QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
+
+    QSurfaceFormat format;
+    format.setDepthBufferSize(24);
+    format.setStencilBufferSize(8);
+    format.setVersion(3, 2);
+    format.setProfile(QSurfaceFormat::CompatibilityProfile);
+    format.setSamples(1);
+    format.setSwapInterval(0);
+    QSurfaceFormat::setDefaultFormat(format);
+}
+
+void GLUtils::drawTex(QOpenGLTexture * tex,
                  double x1, double y1, double z1,
                  
                  double x2, double y2, double z2, 
                  double x3, double y3, double z3, 
                  double x4, double y4, double z4)
 {
+    if (!tex) {
+        return;
+    }
+
     glDisable(GL_LIGHTING);
     glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, tex);
+    tex->bind();
     
     glBegin(GL_QUADS);
     {
@@ -69,14 +91,9 @@ void GLUtils::drawText(GLuint tex,
     glDisable(GL_TEXTURE_2D);
 }
 
-void GLUtils::genTex(const QString & filename, GLuint & tex)
+QOpenGLTexture * GLUtils::genTex(const QString & filename)
 {
-    GLWidget * w = GLWidget::currentGLWidget_;
-    if (w)
-        tex = w->bindTexture(QPixmap(filename));
-        //, GL_TEXTURE_2D, GL_RGBA, 
-        //QGLContext::LinearFilteringBindOption | 
-        //    QGLContext::InvertedYBindOption);
+    return new QOpenGLTexture(QImage(filename).mirrored());
 }
 
 void GLUtils::drawX(double x1, double y1, double z1, 
@@ -85,12 +102,9 @@ void GLUtils::drawX(double x1, double y1, double z1,
               double x4, double y4, double z4)
 {
     if(!textureX)
-        genTex(QString(":/images/letter_x.png"), textureX);
+        textureX = genTex(QString(":/images/letter_x.png"));
     
-    if(!textureX)
-        return;
-    
-    drawText(textureX,
+    drawTex(textureX,
            x1, y1, z1,
            x2, y2, z2, 
            x3, y3, z3, 
@@ -103,12 +117,9 @@ void GLUtils::drawY(double x1, double y1, double z1,
               double x4, double y4, double z4)
 {
     if(!textureY)
-        genTex(QString(":/images/letter_y.png"), textureY);
+        textureY = genTex(QString(":/images/letter_y.png"));
     
-    if(!textureY)
-        return;
-    
-    drawText(textureY,
+    drawTex(textureY,
            x1, y1, z1,
            x2, y2, z2, 
            x3, y3, z3, 
@@ -121,12 +132,9 @@ void GLUtils::drawTime(double x1, double y1, double z1,
               double x4, double y4, double z4)
 {
     if(!textureTime)
-        genTex(QString(":/images/string_time.png"), textureTime);
+        textureTime = genTex(QString(":/images/string_time.png"));
     
-    if(!textureTime)
-        return;
-    
-    drawText(textureTime,
+    drawTex(textureTime,
            x1, y1, z1,
            x2, y2, z2, 
            x3, y3, z3, 

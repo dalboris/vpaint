@@ -21,33 +21,9 @@
 #define MIN_SIZE_DRAWING 5
 #define GLWIDGET_PI 3.1415926535897932
 
-namespace
-{
-QGLFormat format_()
-{
-    // Enable multisampling (for antialiasing)
-    QGLFormat res(QGL::SampleBuffers);
-    res.setSamples(16);
-    return res;
-
-    // Note: the Qt doc says that by default, it uses the maximum
-    // supported number of samples, but I tested and it's not true.
-    // In my configuration, if I don't do 'res.setSamples(16);' here,
-    // then calling format().samples() in the constructor of GLWidget
-    // returns 4. If I do 'res.setSamples(16);', then it returns
-    // 16 as expected, and there is a clear improvement of the
-    // anti-aliasing.
-    //
-    // Normally, one should use glGetIntegerv(GL_MAX_SAMPLES, &ms_samples)
-    // instead of using the hard coded number 16, but since this function
-    // has to be called before the OpenGL context is created, I'm not sure
-    // how I can achieve this, so the manual method is fine for now.
-}
-}
-
 GLWidget::GLWidget(QWidget *parent, bool isOnly2D) :
 
-    QGLWidget(format_(), parent),
+    QOpenGLWidget(parent),
 
     isOnly2D_(isOnly2D),
     
@@ -140,7 +116,7 @@ void GLWidget::setCamera2D(const GLWidget_Camera2D &newCamera)
 
 void GLWidget::setOrthographic(bool isOrtho)
 {
-    isOrtho_ = isOrtho; updateGL();
+    isOrtho_ = isOrtho; update();
 }
 
 double GLWidget::viewportHeight()
@@ -175,7 +151,7 @@ void GLWidget::rotateViewRight()
     if(cameraDollyIsEnabled_)
     {
         camera_.setPhi(  camera_.phi() + GLWIDGET_PI/24 * 0.1);
-        updateGL();
+        update();
     }
 }
 void GLWidget::rotateViewLeft()
@@ -183,7 +159,7 @@ void GLWidget::rotateViewLeft()
     if(cameraDollyIsEnabled_)
     {
         camera_.setPhi(  camera_.phi() - GLWIDGET_PI/24 * 0.1);
-        updateGL();
+        update();
     }    
 }
 void GLWidget::rotateViewUp()
@@ -191,7 +167,7 @@ void GLWidget::rotateViewUp()
     if(cameraDollyIsEnabled_)
     {
         camera_.setTheta(  camera_.theta() + GLWIDGET_PI/24 );
-        updateGL();
+        update();
     }
 }
 void GLWidget::rotateViewDown()
@@ -199,7 +175,7 @@ void GLWidget::rotateViewDown()
     if(cameraDollyIsEnabled_)
     {
         camera_.setTheta(  camera_.theta() - GLWIDGET_PI/24 );
-        updateGL();
+        update();
     }
 }
 
@@ -274,7 +250,7 @@ void GLWidget::keyPressEvent(QKeyEvent *event)
             break;
         case Qt::Key_O:
             isOrtho_ = !isOrtho_;
-            updateGL();
+            update();
             break;
 
         default:
