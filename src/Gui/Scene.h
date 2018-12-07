@@ -38,9 +38,18 @@ class Scene: public QObject
     Q_OBJECT
     
 public:
+    // Creates an empty scene, that is, a scene with zero layers
     Scene();
-    void copyFrom(Scene * other); // XXX "copy" is a better name but already taken (see copy/paste slots). We should rename the slots.
+
+    // Makes this scene a clone of the other scene
+    // Note: "copy" would be a better name but is already taken (copy/paste slots)
+    void copyFrom(Scene * other);
+
+    // Clears the scene by deleting all its layers. If silent is true, then
+    // this function no signal will be emitted.
     void clear(bool silent = false);
+
+    // Destroys the scene
     ~Scene();
 
     // Keyboard events
