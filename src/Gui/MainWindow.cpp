@@ -26,6 +26,7 @@
 #include "VectorAnimationComplex/VAC.h"
 #include "VectorAnimationComplex/InbetweenFace.h"
 #include "LayersWidget.h"
+#include "Layer.h"
 
 #include "IO/FileVersionConverter.h"
 #include "XmlStreamWriter.h"
@@ -93,7 +94,7 @@ MainWindow::MainWindow() :
     new DevSettings();
 
     // Scene
-    scene_ = new Scene();
+    scene_ = Scene::createDefaultScene();
 
     // Timeline (must exist before multiview is created, so that newly created views can register to timeline)
     timeline_ = new Timeline(scene_, this);
@@ -137,6 +138,10 @@ MainWindow::MainWindow() :
 
     // Background Widget
     backgroundWidget = new BackgroundWidget();
+    if (scene() && scene()->activeLayer())
+    {
+        backgroundWidget->setBackground(scene()->activeLayer()->background());
+    }
     connect(scene(), SIGNAL(layerAttributesChanged()), this, SLOT(onSceneLayerAttributesChanged_()));
 
     // redraw when the scene changes
@@ -614,7 +619,7 @@ void MainWindow::newDocument()
         setDocumentFilePath_("");
 
         // Set empty scene
-        Scene * newScene = new Scene();
+        Scene * newScene = Scene::createDefaultScene();
         scene_->copyFrom(newScene);
         delete newScene;
 

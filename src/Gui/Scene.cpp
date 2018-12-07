@@ -39,6 +39,14 @@ Scene::Scene() :
     indexHovered_ = -1;
 }
 
+Scene * Scene::createDefaultScene()
+{
+    Scene * res = new Scene();
+    Layer * layer = res->createLayer(tr("Layer 1"));
+    layer->background()->setColor(Qt::white);
+    return res;
+}
+
 double Scene::left() const
 {
     return left_;

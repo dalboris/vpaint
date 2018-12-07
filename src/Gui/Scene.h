@@ -41,6 +41,9 @@ public:
     // Creates an empty scene, that is, a scene with zero layers
     Scene();
 
+    // Creates a scene with one default layer
+    static Scene * createDefaultScene();
+
     // Makes this scene a clone of the other scene
     // Note: "copy" would be a better name but is already taken (copy/paste slots)
     void copyFrom(Scene * other);
