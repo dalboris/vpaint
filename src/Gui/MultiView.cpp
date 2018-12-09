@@ -8,7 +8,7 @@
 
 #include "MultiView.h"
 #include "View.h"
-#include "ViewMacOsX.h"
+#include "ViewWidget.h"
 #include "Scene.h"
 #include "Timeline.h"
 #include "Global.h"
@@ -30,20 +30,12 @@ namespace
 
 ViewWidget * viewWidgetFromView_(View * view)
 {
-#ifdef Q_OS_MAC
     return qobject_cast<ViewWidget*>(view->parentWidget());
-#else
-    return view;
-#endif
 }
 
 View * viewFromViewWidget_(ViewWidget * viewWidget)
 {
-#ifdef Q_OS_MAC
     return viewWidget->view();
-#else
-    return viewWidget;
-#endif
 }
 
 QSplitter * getParentSplitter_(QSplitter * w)
@@ -56,14 +48,10 @@ QSplitter * getParentSplitter_(ViewWidget * w)
     return qobject_cast<QSplitter*>(w->parentWidget());
 }
 
-#ifdef Q_OS_MAC
-// Note: In Windows and Linux, defining this would not compile since
-//       ViewWidget == View, thus it would redefine the function above
 QSplitter * getParentSplitter_(View * w)
 {
     return getParentSplitter_(viewWidgetFromView_(w));
 }
-#endif
 
 }
 

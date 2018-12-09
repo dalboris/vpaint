@@ -6,14 +6,13 @@
 // license terms and conditions in the LICENSE.MIT file found in the top-level
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
-#include "ViewMacOsX.h"
-
+#include "ViewWidget.h"
 #include "View.h"
+#include "ViewSettings.h"
 
 #include <QVBoxLayout>
-#include <QPushButton>
 
-ViewMacOsX::ViewMacOsX(Scene *scene, QWidget *parent) :
+ViewWidget::ViewWidget(Scene *scene, QWidget *parent) :
     QWidget(parent)
 {
     view_ = new View(scene, this);
@@ -21,12 +20,16 @@ ViewMacOsX::ViewMacOsX(Scene *scene, QWidget *parent) :
     QVBoxLayout * layout = new QVBoxLayout();
     layout->setMargin(0);
     layout->setSpacing(0);
-    layout->addWidget(view_->viewSettingsWidget()); // steal ownership
     layout->addWidget(view_);
     setLayout(layout);
 }
 
-View * ViewMacOsX::view() const
+View * ViewWidget::view() const
 {
     return view_;
+}
+
+ViewSettingsWidget * ViewWidget::viewSettingsWidget() const
+{
+    return view()->viewSettingsWidget();
 }

@@ -24,18 +24,23 @@
 #include <QWidget>
 
 class View;
+class ViewSettingsWidget;
 class Scene;
 
-class ViewMacOsX: public QWidget
+// A widget holding a View and a ViewSettingsWidget
+//
+class ViewWidget: public QWidget
 {
     Q_OBJECT
 
 public:
-    ViewMacOsX(Scene * scene, QWidget *parent);
+    ViewWidget(Scene * scene, QWidget *parent);
     View * view() const;
+    ViewSettingsWidget * viewSettingsWidget() const;
 
 private:
     View * view_;
+    ViewSettingsWidget * viewSettingsWidget_;
 };
 
 #endif // VIEWMACOSX_H

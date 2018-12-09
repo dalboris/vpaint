@@ -178,7 +178,7 @@ HEADERS += MainWindow.h \
     EditCanvasSizeDialog.h \
     ExportPngDialog.h \
     AboutDialog.h \
-    ViewMacOsX.h \
+    ViewWidget.h \
     Application.h \
     Background/Background.h \
     Background/BackgroundData.h \
@@ -269,7 +269,7 @@ SOURCES += main.cpp \
     EditCanvasSizeDialog.cpp \
     ExportPngDialog.cpp \
     AboutDialog.cpp \
-    ViewMacOsX.cpp \
+    ViewWidget.cpp \
     Application.cpp \
     Background/Background.cpp \
     Background/BackgroundData.cpp \

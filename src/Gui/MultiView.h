@@ -15,16 +15,9 @@
 
 class Scene;
 class View;
-class ViewMacOsX;
+class ViewWidget;
 class QSplitter;
 class GLWidget;
-
-// typedef to solve the MacOSX / Win+Linux discrepency
-#ifdef Q_OS_MAC
-typedef ViewMacOsX ViewWidget;
-#else
-typedef View       ViewWidget;
-#endif
 
 #include "ViewSettings.h"
 
