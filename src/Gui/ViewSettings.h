@@ -136,7 +136,6 @@ signals:
 public slots:
     void updateWidgetFromSettings();
     void updateSettingsFromWidget();
-    void toggleVisible(bool checked);
     void processZoomValueChangedSignal(int n);
 
 private slots:
@@ -161,11 +160,6 @@ private:
     QDoubleSpinBox * onionSkinsXOffset_;
     QDoubleSpinBox * onionSkinsYOffset_;
     QDoubleSpinBox * onionSkinsTransparencyRatio_;
-
-#ifndef Q_OS_MACOS
-    QPushButton * showHideSettingsButton_;
-    QWidget * containerWidget;
-#endif
 
     QPushButton * displayModeButton_;
     QPushButton * displayModeButton_Normal_;
