@@ -268,7 +268,6 @@ ViewSettingsWidget::ViewSettingsWidget(ViewSettings & viewSettings, QWidget * pa
     ignoreZoomValueChangedSignal_(false)
 {
     // Set style
-    setAutoFillBackground(true);
     setCursor(Qt::ArrowCursor);
 
     zoomSpinBox_ = new QSpinBox();
