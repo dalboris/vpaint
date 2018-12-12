@@ -15,6 +15,7 @@
 
 #include <QFormLayout>
 #include <QHBoxLayout>
+#include <QVBoxLayout>
 #include <QGridLayout>
 #include <QLabel>
 #include <QLineEdit>
@@ -32,9 +33,15 @@ BackgroundWidget::BackgroundWidget(QWidget * parent) :
     isUpdatingFromBackground_(false),
     isBeingEdited_(false)
 {
-    // Layout
+    // Clarify that there is one background per layer
+    QVBoxLayout * whichLayerAndFormLayout = new QVBoxLayout();
+    setLayout(whichLayerAndFormLayout);
+    whichLayerAndFormLayout->addWidget(new QLabel(tr("(Note: each layer has its own background)")));
+
+    // Form layout (contains everything except the clarification note above)
     QFormLayout * layout = new QFormLayout();
-    setLayout(layout);
+    whichLayerAndFormLayout->addLayout(layout);
+    whichLayerAndFormLayout->addStretch();
 
     // Color
     colorSelector_ = new ColorSelector(Qt::transparent);
