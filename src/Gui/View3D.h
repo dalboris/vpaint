@@ -9,8 +9,6 @@
 #ifndef VIEW_3D_H
 #define VIEW_3D_H
 
-#include "OpenGL.h"
-
 #include <cmath>
 #include <iostream>
 #include "Picking.h"
@@ -21,7 +19,6 @@
 #include <QPoint>
 
 #include "View3DSettings.h"
-
 
 // pre-declarations
 

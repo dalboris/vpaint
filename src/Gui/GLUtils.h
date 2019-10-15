@@ -9,12 +9,12 @@
 #ifndef GLUTILS_H
 #define GLUTILS_H
 
-#include "OpenGL.h"
 #include <QPolygonF>
 #include <QRectF>
-#include <QOpenGLTexture>
 
 #include <Eigen/Core>
+
+class QOpenGLTexture;
 
 class GLUtils
 {

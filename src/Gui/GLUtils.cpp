@@ -11,7 +11,10 @@
 #include <QCoreApplication>
 #include <QTransform>
 #include <QtDebug>
-#include "GLWidget.h"
+#include <QOpenGLTexture>
+#include <QSurfaceFormat>
+
+#include "OpenGL.h"
 
 /*
 void GLUtils::UnitCircleZ()
@@ -48,12 +51,19 @@ void GLUtils::init()
     QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
 
     QSurfaceFormat format;
+    format.setVersion(VPAINT_OPENGL_VERSION_MAJOR, VPAINT_OPENGL_VERSION_MINOR);
+    format.setOption(QSurfaceFormat::DeprecatedFunctions);
     format.setDepthBufferSize(24);
+    format.setRedBufferSize(8);
+    format.setGreenBufferSize(8);
+    format.setBlueBufferSize(8);
+    format.setAlphaBufferSize(0);
     format.setStencilBufferSize(8);
-    format.setVersion(3, 2);
-    format.setProfile(QSurfaceFormat::CompatibilityProfile);
     format.setSamples(1);
+    format.setSwapBehavior(QSurfaceFormat::DefaultSwapBehavior);
     format.setSwapInterval(0);
+    format.setColorSpace(QSurfaceFormat::DefaultColorSpace);
+    format.setProfile(QSurfaceFormat::CompatibilityProfile);
     QSurfaceFormat::setDefaultFormat(format);
 }
 

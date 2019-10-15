@@ -30,13 +30,13 @@
 #ifndef GLWIDGET_H
 #define GLWIDGET_H
 
-#include "OpenGL.h"
 #include <QOpenGLWidget>
 
 #include "GLWidget_Camera.h"
 #include "GLWidget_Camera2D.h"
 #include "GLWidget_Light.h"
 #include "GLWidget_Material.h"
+#include "OpenGL.h"
 #include <QMouseEvent>
 #include <QElapsedTimer>
 

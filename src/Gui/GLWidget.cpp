@@ -6,8 +6,6 @@
 // license terms and conditions in the LICENSE.MIT file found in the top-level
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
-#include "OpenGL.h"
-
 #include <iostream>
 #include <QtDebug>
 
@@ -726,13 +724,10 @@ void GLWidget::leaveEvent(QEvent * /*event*/)
 
 void GLWidget::initializeGL()
 {
-    // Initialize GLEW
-    GLenum err = glewInit();
-    if (GLEW_OK != err)
-    {
-        qDebug("Error: %s\n", glewGetErrorString(err));
-    }
-    //qDebug("Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
+    qInfo() << "Initializing OpenGL, using the following format:";
+    qInfo() << format();
+
+    auto* f = context()->versionFunctions<OpenGLFunctions>();
 
     // Depth test
     if(isOnly2D_)
@@ -745,7 +740,7 @@ void GLWidget::initializeGL()
 
     // Alpha blending
     glEnable(GL_BLEND);
-    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA,
+    f->glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA,
                         GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     
     // Line Antialiasing

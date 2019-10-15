@@ -6,23 +6,26 @@
 // license terms and conditions in the LICENSE.MIT file found in the top-level
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
+// Include this file if you need to call OpenGL functions.
+//
+// OpenGL 2.1 functions can be directly called as global functions, assuming that
+// a valid OpenGL context is current.
+//
+// OpenGL 3.0+ functions must be called from an OpenGLFunctions instance, which
+// you can obtain via a QOpenGLContext:
+//
+//   auto* f = context()->versionFunctions<OpenGLFunctions>();
+//   f->glBlendFuncSeparate(...)
+//
+
 #ifndef OPENGL_H
 #define OPENGL_H
 
-// --------- GLEW --------- //
+#include <QOpenGLFunctions_3_0>
 
-#define GLEW_STATIC
-#include <GLEW/glew.h>
+using OpenGLFunctions = QOpenGLFunctions_3_0;
 
-
-// --------- GLU ---------- //
-
-// Glu functionalities should be provided by GLEW already
-//#ifdef Q_OS_MAC
-//# include <OpenGL/glu.h>
-//#else
-//# include <GL/glu.h>
-//#endif
-
+#define VPAINT_OPENGL_VERSION_MAJOR 3
+#define VPAINT_OPENGL_VERSION_MINOR 0
 
 #endif

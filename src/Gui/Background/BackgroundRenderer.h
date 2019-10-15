@@ -10,9 +10,6 @@
 #define BACKGROUND_RENDERER_H
 
 #include <QObject>
-
-#include "../OpenGL.h"
-
 #include <QMap>
 
 class Background;

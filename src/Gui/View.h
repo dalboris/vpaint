@@ -9,8 +9,6 @@
 #ifndef VIEW_H
 #define VIEW_H
 
-#include "OpenGL.h"
-
 #include <cmath>
 #include <iostream>
 #include "Picking.h"
@@ -25,7 +23,6 @@
 #include <QMap>
 
 #include "ViewSettings.h"
-
 
 class Scene;
 namespace VectorAnimationComplex

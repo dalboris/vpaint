@@ -6,8 +6,6 @@
 // license terms and conditions in the LICENSE.MIT file found in the top-level
 // directory of this distribution and at http://opensource.org/licenses/MIT
 
-#include "../OpenGL.h"
-
 #include <QTextStream>
 #include <QtDebug>
 #include <QMessageBox>
@@ -29,6 +27,14 @@
 
 #include "../XmlStreamReader.h"
 #include "../XmlStreamWriter.h"
+
+#include "../OpenGL.h"
+
+#if defined(__APPLE__) && defined(__MACH__)
+#  include <OpenGL/glu.h>
+#else
+#  include <GL/glu.h>
+#endif
 
 // ------- Unnamed namespace for non-friend non-member helper functions -------
 
