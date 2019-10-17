@@ -679,7 +679,12 @@ void AnimatedCycle::replaceInbetweenEdge(InbetweenEdge * se,
     if(se->isClosed())
     {
         // Get old nodes, sorted
-        AnimatedCycleNode * oldNodeFirst = *getNodes(se).begin();
+        QSet<AnimatedCycleNode*> oldNodesUnsorted = getNodes(se);
+        if (oldNodesUnsorted.isEmpty()) {
+            // Nothing to do if `se` doesn't belong to this animated cycle
+            return;
+        }
+        AnimatedCycleNode * oldNodeFirst = *oldNodesUnsorted.begin();
         AnimatedCycleNode * oldNode = oldNodeFirst;
         QList<AnimatedCycleNode *> oldNodes;
         do
