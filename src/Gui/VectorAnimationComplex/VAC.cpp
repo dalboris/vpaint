@@ -4828,6 +4828,11 @@ KeyVertex * VAC::keyframe_(InbetweenVertex * svertex, Time time)
         sface->processGeometryChanged_();
     }
 
+    // Transfer Z-ordering of old cell to new cells
+    zOrdering_.moveBelow(inbetweenVertexBefore, svertex);
+    zOrdering_.moveBelow(keyVertex, svertex);
+    zOrdering_.moveBelow(inbetweenVertexAfter, svertex);
+
     // Delete old cell
     deleteCell(svertex);
 
@@ -4963,10 +4968,10 @@ KeyEdge * VAC::keyframe_(InbetweenEdge * sedge, Time time)
     inbetweenEdgeBefore->setColor(color);
     inbetweenEdgeAfter->setColor(color);
 
-    // Set correct Z-ordering
-    zOrdering_.moveBelowBoundary(keyEdge);
-    zOrdering_.moveBelowBoundary(inbetweenEdgeBefore);
-    zOrdering_.moveBelowBoundary(inbetweenEdgeAfter);
+    // Transfer Z-ordering of old cell to new cells
+    zOrdering_.moveBelow(inbetweenEdgeBefore, sedge);
+    zOrdering_.moveBelow(keyEdge, sedge);
+    zOrdering_.moveBelow(inbetweenEdgeAfter, sedge);
 
     // Delete old cell
     deleteCell(sedge);
@@ -5125,10 +5130,10 @@ KeyFace * VAC::keyframe_(InbetweenFace * sface, Time time)
     inbetweenFaceBefore->setColor(color);
     inbetweenFaceAfter->setColor(color);
 
-    // Set correct Z-ordering
-    zOrdering_.moveBelowBoundary(keyFace);
-    zOrdering_.moveBelowBoundary(inbetweenFaceBefore);
-    zOrdering_.moveBelowBoundary(inbetweenFaceAfter);
+    // Transfer Z-ordering of old cell to new cells
+    zOrdering_.moveBelow(inbetweenFaceBefore, sface);
+    zOrdering_.moveBelow(keyFace, sface);
+    zOrdering_.moveBelow(inbetweenFaceAfter, sface);
 
     // Delete old cell
     deleteCell(sface);
