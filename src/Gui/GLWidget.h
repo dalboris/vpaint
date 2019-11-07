@@ -32,6 +32,7 @@
 
 #include <QOpenGLWidget>
 
+#include <memory>
 #include "GLWidget_Camera.h"
 #include "GLWidget_Camera2D.h"
 #include "GLWidget_Light.h"
@@ -181,6 +182,10 @@ protected slots:
 
       
 protected:
+    // Access to OpenGL 2.x functions and extensions
+    OpenGLFunctions* gl_;
+    std::unique_ptr<QOpenGLExtension_ARB_framebuffer_object> gl_fbo_;
+
     // Member variables
     bool isOnly2D_;
     bool cameraDollyIsEnabled_;

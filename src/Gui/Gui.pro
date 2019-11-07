@@ -17,7 +17,7 @@
 TEMPLATE = app
 TARGET = VPaint
 CONFIG += qt c++11
-QT += opengl network
+QT += opengl openglextensions network
 
 # App version
 MYVAR = 1.6

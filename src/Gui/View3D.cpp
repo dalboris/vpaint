@@ -661,9 +661,8 @@ void View3D::deletePicking()
 {
     if(pickingImg_)
     {
-        auto* f = context()->versionFunctions<OpenGLFunctions>();
-        f->glDeleteFramebuffers(1, &fboId_);
-        f->glDeleteRenderbuffers(1, &rboId_);
+        gl_fbo_->glDeleteFramebuffers(1, &fboId_);
+        gl_fbo_->glDeleteRenderbuffers(1, &rboId_);
         glDeleteTextures(1, &textureId_);
         highlightedObject_ = Picking::Object();
         delete[] pickingImg_;
@@ -676,8 +675,6 @@ void View3D::deletePicking()
 void View3D::newPicking()
 {
     //  code adapted from http://www.songho.ca/opengl/gl_fbo.html
-
-    auto* f = context()->versionFunctions<OpenGLFunctions>();
 
     // create a texture object
     glGenTextures(1, &textureId_);
@@ -692,26 +689,26 @@ void View3D::newPicking()
     glBindTexture(GL_TEXTURE_2D, 0);
 
     // create a renderbuffer object to store depth info
-    f->glGenRenderbuffers(1, &rboId_);
-    f->glBindRenderbuffer(GL_RENDERBUFFER, rboId_);
-    f->glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT,
-                    WINDOW_SIZE_X_, WINDOW_SIZE_Y_);
-    f->glBindRenderbuffer(GL_RENDERBUFFER, 0);
+    gl_fbo_->glGenRenderbuffers(1, &rboId_);
+    gl_fbo_->glBindRenderbuffer(GL_RENDERBUFFER, rboId_);
+    gl_fbo_->glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT,
+                                   WINDOW_SIZE_X_, WINDOW_SIZE_Y_);
+    gl_fbo_->glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
     // create a framebuffer object
-    f->glGenFramebuffers(1, &fboId_);
-    f->glBindFramebuffer(GL_FRAMEBUFFER, fboId_);
+    gl_fbo_->glGenFramebuffers(1, &fboId_);
+    gl_fbo_->glBindFramebuffer(GL_FRAMEBUFFER, fboId_);
     
     // attach the texture to FBO color attachment point
-    f->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                     GL_TEXTURE_2D, textureId_, 0);
+    gl_fbo_->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                                    GL_TEXTURE_2D, textureId_, 0);
 
     // attach the renderbuffer to depth attachment point
-    f->glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-                      GL_RENDERBUFFER, rboId_);
+    gl_fbo_->glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+                                       GL_RENDERBUFFER, rboId_);
 
     // check FBO status
-    GLenum status = f->glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    GLenum status = gl_fbo_->glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if(status != GL_FRAMEBUFFER_COMPLETE)
     {
         qDebug() << "ERROR void View3D::newPicking()"
@@ -720,7 +717,7 @@ void View3D::newPicking()
     }
 
     // switch back to window-system-provided framebuffer
-    f->glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    gl_fbo_->glBindFramebuffer(GL_FRAMEBUFFER, defaultFramebufferObject());
 
     // allocate memory for picking
     pickingImg_ = new uchar[4 * WINDOW_SIZE_X_ * WINDOW_SIZE_Y_];
@@ -729,8 +726,6 @@ void View3D::newPicking()
 
 void View3D::updatePicking()
 {
-    auto* f = context()->versionFunctions<OpenGLFunctions>();
-
     // get the viewport size, allocate memory if necessary
     GLint m_viewport[4];
     glGetIntegerv( GL_VIEWPORT, m_viewport );
@@ -755,7 +750,7 @@ void View3D::updatePicking()
     }
     
     // set rendering destination to FBO
-    f->glBindFramebuffer(GL_FRAMEBUFFER, fboId_);
+    gl_fbo_->glBindFramebuffer(GL_FRAMEBUFFER, fboId_);
 
     // clear buffers
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -764,7 +759,7 @@ void View3D::updatePicking()
     drawPick3D();
     
     // unbind FBO
-    f->glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    gl_fbo_->glBindFramebuffer(GL_FRAMEBUFFER, defaultFramebufferObject());
 
     // extract the texture info from GPU to RAM
     glBindTexture(GL_TEXTURE_2D, textureId_); 

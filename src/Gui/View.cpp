@@ -1370,9 +1370,8 @@ void View::deletePicking()
 {
     if(pickingImg_)
     {
-        auto* f = context()->versionFunctions<OpenGLFunctions>();
-        f->glDeleteFramebuffers(1, &fboId_);
-        f->glDeleteRenderbuffers(1, &rboId_);
+        gl_fbo_->glDeleteFramebuffers(1, &fboId_);
+        gl_fbo_->glDeleteRenderbuffers(1, &rboId_);
         glDeleteTextures(1, &textureId_);
         hoveredObject_ = Picking::Object();
         delete[] pickingImg_;
@@ -1386,8 +1385,6 @@ void View::newPicking()
 {
     //  code adapted from http://www.songho.ca/opengl/gl_fbo.html
 
-    auto* f = context()->versionFunctions<OpenGLFunctions>();
-
     // create a texture object
     glGenTextures(1, &textureId_);
     glBindTexture(GL_TEXTURE_2D, textureId_);
@@ -1397,30 +1394,30 @@ void View::newPicking()
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE); // automatic mipmap
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, WINDOW_SIZE_X_, WINDOW_SIZE_Y_, 0,
-             GL_RGBA, GL_UNSIGNED_BYTE, 0);
+                 GL_RGBA, GL_UNSIGNED_BYTE, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
 
     // create a renderbuffer object to store depth info
-    f->glGenRenderbuffers(1, &rboId_);
-    f->glBindRenderbuffer(GL_RENDERBUFFER, rboId_);
-    f->glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT,
-                    WINDOW_SIZE_X_, WINDOW_SIZE_Y_);
-    f->glBindRenderbuffer(GL_RENDERBUFFER, 0);
+    gl_fbo_->glGenRenderbuffers(1, &rboId_);
+    gl_fbo_->glBindRenderbuffer(GL_RENDERBUFFER, rboId_);
+    gl_fbo_->glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT,
+                                   WINDOW_SIZE_X_, WINDOW_SIZE_Y_);
+    gl_fbo_->glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
     // create a framebuffer object
-    f->glGenFramebuffers(1, &fboId_);
-    f->glBindFramebuffer(GL_FRAMEBUFFER, fboId_);
+    gl_fbo_->glGenFramebuffers(1, &fboId_);
+    gl_fbo_->glBindFramebuffer(GL_FRAMEBUFFER, fboId_);
 
     // attach the texture to FBO color attachment point
-    f->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                     GL_TEXTURE_2D, textureId_, 0);
+    gl_fbo_->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                                    GL_TEXTURE_2D, textureId_, 0);
 
     // attach the renderbuffer to depth attachment point
-    f->glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-                      GL_RENDERBUFFER, rboId_);
+    gl_fbo_->glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+                                       GL_RENDERBUFFER, rboId_);
 
     // check FBO status
-    GLenum status = f->glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    GLenum status = gl_fbo_->glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if(status != GL_FRAMEBUFFER_COMPLETE)
     {
         qDebug() << "ERROR void View::newPicking()"
@@ -1429,7 +1426,7 @@ void View::newPicking()
     }
 
     // switch back to window-system-provided framebuffer
-    f->glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    gl_fbo_->glBindFramebuffer(GL_FRAMEBUFFER, defaultFramebufferObject());
 
     // allocate memory for picking
     pickingImg_ = new uchar[4 * WINDOW_SIZE_X_ * WINDOW_SIZE_Y_];
@@ -1466,8 +1463,6 @@ QImage View::drawToImage(double x, double y, double w, double h, int imgW, int i
 
 QImage View::drawToImage(Time t, double x, double y, double w, double h, int imgW, int imgH, bool useViewSettings)
 {
-    auto* f = context()->versionFunctions<OpenGLFunctions>();
-
     // Convenient alias
     GLuint IMG_SIZE_X = imgW;
     GLuint IMG_SIZE_Y = imgH;
@@ -1486,21 +1481,21 @@ QImage View::drawToImage(Time t, double x, double y, double w, double h, int img
     // Maximum supported samples
     glGetIntegerv(GL_MAX_SAMPLES, &ms_samples);
     // Create FBO
-    f->glGenFramebuffers(1, &ms_fboId);
-    f->glBindFramebuffer(GL_FRAMEBUFFER, ms_fboId);
+    gl_fbo_->glGenFramebuffers(1, &ms_fboId);
+    gl_fbo_->glBindFramebuffer(GL_FRAMEBUFFER, ms_fboId);
     // Create multisample color buffer
-    f->glGenRenderbuffers(1, &ms_ColorBufferId);
-    f->glBindRenderbuffer(GL_RENDERBUFFER, ms_ColorBufferId);
-    f->glRenderbufferStorageMultisample(GL_RENDERBUFFER, ms_samples, GL_RGBA8, IMG_SIZE_X, IMG_SIZE_Y);
+    gl_fbo_->glGenRenderbuffers(1, &ms_ColorBufferId);
+    gl_fbo_->glBindRenderbuffer(GL_RENDERBUFFER, ms_ColorBufferId);
+    gl_fbo_->glRenderbufferStorageMultisample(GL_RENDERBUFFER, ms_samples, GL_RGBA8, IMG_SIZE_X, IMG_SIZE_Y);
     // Create multisample depth buffer
-    f->glGenRenderbuffers(1, &ms_DepthBufferId);
-    f->glBindRenderbuffer(GL_RENDERBUFFER, ms_DepthBufferId);
-    f->glRenderbufferStorageMultisample(GL_RENDERBUFFER, ms_samples, GL_DEPTH_COMPONENT24, IMG_SIZE_X, IMG_SIZE_Y);
+    gl_fbo_->glGenRenderbuffers(1, &ms_DepthBufferId);
+    gl_fbo_->glBindRenderbuffer(GL_RENDERBUFFER, ms_DepthBufferId);
+    gl_fbo_->glRenderbufferStorageMultisample(GL_RENDERBUFFER, ms_samples, GL_DEPTH_COMPONENT24, IMG_SIZE_X, IMG_SIZE_Y);
     // Attach render buffers to FBO
-    f->glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, ms_ColorBufferId);
-    f->glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, ms_DepthBufferId);
+    gl_fbo_->glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, ms_ColorBufferId);
+    gl_fbo_->glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, ms_DepthBufferId);
     // Check FBO status
-    GLenum ms_status = f->glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    GLenum ms_status = gl_fbo_->glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if(ms_status != GL_FRAMEBUFFER_COMPLETE) {
         qDebug() << "Error: FBO ms_status != GL_FRAMEBUFFER_COMPLETE";
         return QImage();
@@ -1514,8 +1509,8 @@ QImage View::drawToImage(Time t, double x, double y, double w, double h, int img
     GLuint rboId;
 
     // Create FBO
-    f->glGenFramebuffers(1, &fboId);
-    f->glBindFramebuffer(GL_FRAMEBUFFER, fboId);
+    gl_fbo_->glGenFramebuffers(1, &fboId);
+    gl_fbo_->glBindFramebuffer(GL_FRAMEBUFFER, fboId);
     // Create color texture
     glGenTextures(1, &textureId);
     glBindTexture(GL_TEXTURE_2D, textureId);
@@ -1528,15 +1523,15 @@ QImage View::drawToImage(Time t, double x, double y, double w, double h, int img
                  GL_RGBA, GL_UNSIGNED_BYTE, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
     // Create depth buffer
-    f->glGenRenderbuffers(1, &rboId);
-    f->glBindRenderbuffer(GL_RENDERBUFFER, rboId);
-    f->glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, IMG_SIZE_X, IMG_SIZE_Y);
-    f->glBindRenderbuffer(GL_RENDERBUFFER, 0);
+    gl_fbo_->glGenRenderbuffers(1, &rboId);
+    gl_fbo_->glBindRenderbuffer(GL_RENDERBUFFER, rboId);
+    gl_fbo_->glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, IMG_SIZE_X, IMG_SIZE_Y);
+    gl_fbo_->glBindRenderbuffer(GL_RENDERBUFFER, 0);
     // Attach render buffers / textures to FBO
-    f->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureId, 0);
-    f->glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboId);
+    gl_fbo_->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureId, 0);
+    gl_fbo_->glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboId);
     // Check FBO status
-    GLenum status = f->glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    GLenum status = gl_fbo_->glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if(status != GL_FRAMEBUFFER_COMPLETE) {
         qDebug() << "Error: FBO status != GL_FRAMEBUFFER_COMPLETE";
         return QImage();
@@ -1546,7 +1541,7 @@ QImage View::drawToImage(Time t, double x, double y, double w, double h, int img
     // ------------ Render scene to multisample FBO --------------------
 
     // Bind FBO
-    f->glBindFramebuffer(GL_FRAMEBUFFER, ms_fboId);
+    gl_fbo_->glBindFramebuffer(GL_FRAMEBUFFER, ms_fboId);
 
     // Set viewport size
     double oldViewportWidth = viewportWidth_;
@@ -1597,19 +1592,19 @@ QImage View::drawToImage(Time t, double x, double y, double w, double h, int img
     glViewport(0, 0, viewportWidth_, viewportHeight_);
 
     // Unbind FBO
-    f->glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    gl_fbo_->glBindFramebuffer(GL_FRAMEBUFFER, defaultFramebufferObject());
 
 
     // ------ Blit multisample FBO to standard FBO ---------
 
     // Bind multisample FBO for reading
-    f->glBindFramebuffer(GL_READ_FRAMEBUFFER, ms_fboId);
+    gl_fbo_->glBindFramebuffer(GL_READ_FRAMEBUFFER, ms_fboId);
     // Bind standard FBO for drawing
-    f->glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fboId);
+    gl_fbo_->glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fboId);
     // Blit
-    f->glBlitFramebuffer(0, 0, IMG_SIZE_X, IMG_SIZE_Y, 0, 0, IMG_SIZE_X, IMG_SIZE_Y, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+    gl_fbo_->glBlitFramebuffer(0, 0, IMG_SIZE_X, IMG_SIZE_Y, 0, 0, IMG_SIZE_X, IMG_SIZE_Y, GL_COLOR_BUFFER_BIT, GL_NEAREST);
     // Unbind FBO
-    f->glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    gl_fbo_->glBindFramebuffer(GL_FRAMEBUFFER, defaultFramebufferObject());
 
 
     // ------ Read standard FBO to RAM data ---------
@@ -1625,11 +1620,11 @@ QImage View::drawToImage(Time t, double x, double y, double w, double h, int img
 
     // ------ Release allocated GPU memory  ---------
 
-    f->glDeleteFramebuffers(1, &ms_fboId);
-    f->glDeleteRenderbuffers(1, &ms_ColorBufferId);
-    f->glDeleteRenderbuffers(1, &ms_DepthBufferId);
-    f->glDeleteFramebuffers(1, &fboId);
-    f->glDeleteRenderbuffers(1, &rboId);
+    gl_fbo_->glDeleteFramebuffers(1, &ms_fboId);
+    gl_fbo_->glDeleteRenderbuffers(1, &ms_ColorBufferId);
+    gl_fbo_->glDeleteRenderbuffers(1, &ms_DepthBufferId);
+    gl_fbo_->glDeleteFramebuffers(1, &fboId);
+    gl_fbo_->glDeleteRenderbuffers(1, &rboId);
     glDeleteTextures(1, &textureId);
 
 
@@ -1677,8 +1672,6 @@ QImage View::drawToImage(Time t, double x, double y, double w, double h, int img
 
 void View::updatePicking()
 {
-    auto* f = context()->versionFunctions<OpenGLFunctions>();
-
     // Remove previously highlighted object
     hoveredObject_ = Picking::Object();
 
@@ -1712,7 +1705,7 @@ void View::updatePicking()
     }
 
     // set rendering destination to FBO
-    f->glBindFramebuffer(GL_FRAMEBUFFER, fboId_);
+    gl_fbo_->glBindFramebuffer(GL_FRAMEBUFFER, fboId_);
 
     // clear buffers
     glClearColor(1.0, 1.0, 1.0, 1.0);
@@ -1728,7 +1721,7 @@ void View::updatePicking()
     drawPick();
 
     // unbind FBO
-    f->glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    gl_fbo_->glBindFramebuffer(GL_FRAMEBUFFER, defaultFramebufferObject());
 
     // extract the texture info from GPU to RAM: EXPENSIVE + MAY CAUSE OPENGL STALL
     glBindTexture(GL_TEXTURE_2D, textureId_);
