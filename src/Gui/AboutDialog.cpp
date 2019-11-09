@@ -52,7 +52,7 @@ AboutDialog::AboutDialog(bool showAtStartup)
             " just enter your email address below.</b>").arg(qApp->applicationVersion());
 
     QString licenseText = tr(
-            "Copyright (C) 2012-2019 The VPaint Developers..<br>"
+            "Copyright (C) 2012-2019 The VPaint Developers.<br>"
             "See the COPYRIGHT file at <a href=\"https://github.com/dalboris/vpaint/blob/master/COPYRIGHT\">"
             "https://github.com/dalboris/vpaint/blob/master/COPYRIGHT</a><br><br>"
             " "
