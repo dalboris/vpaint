@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2019 The VPaint Developers
+# Copyright (C) 2012-2019 The VPaint Developers.
 # See the COPYRIGHT file at the top-level directory of this distribution
 # and at https:#github.com/dalboris/vpaint/blob/master/COPYRIGHT
 #

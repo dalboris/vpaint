@@ -5,7 +5,7 @@ from pathlib import Path
 
 before = "Copyright (C) 2012-2019 The VPaint Developers"
 
-after = "Copyright (C) 2012-2019 The VPaint Developers"
+after = "Copyright (C) 2012-2019 The VPaint Developers."
 
 if __name__ == "__main__":
 
