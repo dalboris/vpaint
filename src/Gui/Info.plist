@@ -91,5 +91,14 @@
                 <string>https://www.vpaint.org</string>
             </dict>
         </array>
+
+        <key>LSMinimumSystemVersion</key>
+        <string>10.12</string>
+
+        <key>NSPrincipalClass</key>
+        <string>NSApplication</string>
+
+        <key>NSSupportsAutomaticGraphicsSwitching</key>
+        <true/>
 </dict>
 </plist>
