@@ -171,7 +171,8 @@ public slots:
     void updateCellsToConsiderForCutting();
 
     // ------ Selection ----
-    void selectAll();
+    void selectAllInFrame();
+    void selectAllInAnimation();
     void deselectAll();
     void invertSelection();
     void selectConnected();

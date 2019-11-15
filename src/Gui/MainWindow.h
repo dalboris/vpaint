@@ -245,7 +245,8 @@ private:
       QMenu * advancedViewMenu;
     // SELECTION
     QMenu * menuSelection;
-      QAction * actionSelectAll;
+      QAction * actionSelectAllInFrame;
+      QAction * actionSelectAllInAnimation;
       QAction * actionDeselectAll;
       QAction * actionInvertSelection;
       QAction * actionSelectConnected;

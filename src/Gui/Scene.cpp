@@ -430,7 +430,16 @@ void Scene::invertSelection()
         layer->invertSelection();
 }
 
-void Scene::selectAll()
+void Scene::selectAllInFrame()
+{
+    Layer * layer = activeLayer();
+    if(layer)
+    {
+        layer->vac()->selectAllAtTime(global()->activeTime());
+    }
+}
+
+void Scene::selectAllInAnimation()
 {
     Layer * layer = activeLayer();
     if(layer)

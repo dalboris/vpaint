@@ -1527,12 +1527,19 @@ void MainWindow::createActions()
 
     ///////////////        SELECTION        ///////////////
 
-    // Select All
-    actionSelectAll = new QAction(tr("Select all"), this);
-    actionSelectAll->setStatusTip(tr("Select all the objects."));
-    actionSelectAll->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_A));
-    actionSelectAll->setShortcutContext(Qt::ApplicationShortcut);
-    connect(actionSelectAll, SIGNAL(triggered()), scene_, SLOT(selectAll()));
+    // Select All In Frame
+    actionSelectAllInFrame = new QAction(tr("Select all (current frame)"), this);
+    actionSelectAllInFrame->setStatusTip(tr("Select all the objects in the current frame."));
+    actionSelectAllInFrame->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_A));
+    actionSelectAllInFrame->setShortcutContext(Qt::ApplicationShortcut);
+    connect(actionSelectAllInFrame, SIGNAL(triggered()), scene_, SLOT(selectAllInFrame()));
+
+    // Select All In Animation
+    actionSelectAllInAnimation = new QAction(tr("Select all (whole animation)"), this);
+    actionSelectAllInAnimation->setStatusTip(tr("Select all the objects in the whole animation."));
+    actionSelectAllInAnimation->setShortcut(QKeySequence(Qt::CTRL + Qt::ALT + Qt::Key_A));
+    actionSelectAllInAnimation->setShortcutContext(Qt::ApplicationShortcut);
+    connect(actionSelectAllInAnimation, SIGNAL(triggered()), scene_, SLOT(selectAllInAnimation()));
 
     // Deselect All
     actionDeselectAll = new QAction(tr("Deselect all"), this);
@@ -1805,7 +1812,8 @@ void MainWindow::createMenus()
 
     /// ---- SELECTION ----
     menuSelection = new QMenu(tr("&Selection"));
-    menuSelection->addAction(actionSelectAll);
+    menuSelection->addAction(actionSelectAllInFrame);
+    menuSelection->addAction(actionSelectAllInAnimation);
     menuSelection->addAction(actionDeselectAll);
     menuSelection->addAction(actionInvertSelection);
     menuSelection->addSeparator();

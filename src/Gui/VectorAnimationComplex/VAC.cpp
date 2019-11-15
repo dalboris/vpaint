@@ -1188,6 +1188,17 @@ CellSet VAC::cells()
     return res;
 }
 
+CellSet VAC::cells(Time time)
+{
+    CellSet res;
+    foreach(Cell * c, cells_)
+    {
+        if(c->exists(time))
+            res << c;
+    }
+    return res;
+}
+
 VertexCellList VAC::vertices()
 {
     VertexCellList res;
@@ -6082,6 +6093,11 @@ void VAC::setSelectedCells(const CellSet & cells, bool emitSignal)
 void VAC::selectAll(bool emitSignal)
 {
     addToSelection(cells(), emitSignal);
+}
+
+void VAC::selectAllAtTime(Time time, bool emitSignal)
+{
+    setSelectedCells(cells(time), emitSignal);
 }
 
 void VAC::selectConnected(bool emitSignal)

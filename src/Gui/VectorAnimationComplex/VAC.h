@@ -135,6 +135,7 @@ public:
     KeyVertexList instantVertices();
 
     // Get all cells of a given type existing at a given time
+    CellSet cells(Time time);
     EdgeCellList edges(Time time);
     KeyEdgeList instantEdges(Time time);
     KeyVertexList instantVertices(Time time);
@@ -214,6 +215,7 @@ public:
 
 public slots:
     void selectAll(bool emitSignal = true);
+    void selectAllAtTime(Time time, bool emitSignal = true);
     void selectConnected(bool emitSignal = true);
     void selectClosure(bool emitSignal = true);
     void selectVertices(bool emitSignal = true);
