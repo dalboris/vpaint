@@ -470,7 +470,8 @@ InbetweenEdge::InbetweenEdge(VAC * vac, XmlStreamReader & xml) :
         }
         double maxLength = std::max(beforeLength,afterLength);
         // Compute uniform sampling of key paths
-        int numSamples = (int) (maxLength/5.0) + 2;
+        int minSamples = isClosed() ? 4 : 2;
+        int numSamples = std::max(minSamples, (int) (maxLength/5.0) + 2);
         QList<Eigen::Vector2d> beforeSampling;
         QList<Eigen::Vector2d> afterSampling;
         if(isClosed())
@@ -539,7 +540,8 @@ InbetweenEdge::InbetweenEdge(VAC * vac, XmlStreamReader & xml) :
 
         // Compute uniform sampling of key paths
         double ds = DevSettings::getDouble("ds");
-        int numSamples = (int) (maxLength/ds) + 2;
+        int minSamples = isClosed() ? 4 : 2;
+        int numSamples = std::max(minSamples, (int) (maxLength/ds) + 2);
         QList<EdgeSample> beforeSampling;
         QList<EdgeSample> afterSampling;
         if(isClosed())
