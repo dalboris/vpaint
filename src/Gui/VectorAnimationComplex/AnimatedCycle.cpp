@@ -1081,7 +1081,6 @@ void AnimatedCycle::remapPointers(VAC * newVAC)
 void AnimatedCycle::convertTempIdsToPointers(VAC * vac)
 {
     int n = tempNodes_.size();
-    assert(n > 0);
 
     // First pass, create all nodes
     QList<AnimatedCycleNode*> nodes;
@@ -1109,9 +1108,11 @@ void AnimatedCycle::convertTempIdsToPointers(VAC * vac)
     }
 
     // Find first
-    first_ = nodes[0];
-    while(first_->before())
-        first_ = first_->before();
+    if (n > 0) {
+        first_ = nodes[0];
+        while(first_->before())
+            first_ = first_->before();
+    }
 
     // Clean
     tempNodes_.clear();
