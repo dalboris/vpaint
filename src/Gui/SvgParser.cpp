@@ -272,7 +272,7 @@ bool SvgParser::readRect_(XmlStreamReader & xml, SvgPresentationAttributes &pa)
     rx = qBound(0.0, rx, width / 2);
     ry = qBound(0.0, ry, height / 2);
 
-    // Build verticies and edges
+    // Build vertices and edges
     VectorAnimationComplex::KeyVertex * v1 = global()->scene()->activeVAC()->newKeyVertex(global()->activeTime(), Eigen::Vector2d(x, y));
     VectorAnimationComplex::KeyVertex * v2 = global()->scene()->activeVAC()->newKeyVertex(global()->activeTime(), Eigen::Vector2d(x + width, y));
     VectorAnimationComplex::KeyVertex * v3 = global()->scene()->activeVAC()->newKeyVertex(global()->activeTime(), Eigen::Vector2d(x + width, y + height));
@@ -337,7 +337,7 @@ bool SvgParser::readLine_(XmlStreamReader & xml, SvgPresentationAttributes &pa)
     double y2 = xml.attributes().hasAttribute("y2") ? xml.attributes().value("y2").toDouble(&okay) : 0;
     if(!okay) y2 = 0;
 
-    // Build verticies and edges
+    // Build vertices and edges
     VectorAnimationComplex::KeyVertex * v1 = global()->scene()->activeVAC()->newKeyVertex(global()->activeTime(), Eigen::Vector2d(x1, y1));
     VectorAnimationComplex::KeyVertex * v2 = global()->scene()->activeVAC()->newKeyVertex(global()->activeTime(), Eigen::Vector2d(x2, y2));
     SculptCurve::Curve<VectorAnimationComplex::EdgeSample> c(VectorAnimationComplex::EdgeSample(v1->pos()[0], v1->pos()[1], pa.strokeWidth), VectorAnimationComplex::EdgeSample(v2->pos()[0], v2->pos()[1], pa.strokeWidth));
@@ -366,10 +366,10 @@ bool SvgParser::readPolyline_(XmlStreamReader &xml, SvgPresentationAttributes &p
     // Don't render isn't at least one complete coordinate
     if(points.size() < 2) return true;
 
-    QVector<VectorAnimationComplex::KeyVertex *> verticies(points.size() / 2);
+    QVector<VectorAnimationComplex::KeyVertex *> vertices(points.size() / 2);
 
     // Parse points
-    for(int i = 0; i < verticies.size(); i++) {
+    for(int i = 0; i < vertices.size(); i++) {
         // X
         double x = points[i * 2].toDouble(&okay);
         if(!okay) return false;
@@ -378,13 +378,13 @@ bool SvgParser::readPolyline_(XmlStreamReader &xml, SvgPresentationAttributes &p
         double y = points[i * 2 + 1].toDouble(&okay);
         if(!okay) return false;
 
-        verticies[i] = global()->scene()->activeVAC()->newKeyVertex(global()->activeTime(), Eigen::Vector2d(x, y));
-        verticies[i]->setColor(pa.stroke);
+        vertices[i] = global()->scene()->activeVAC()->newKeyVertex(global()->activeTime(), Eigen::Vector2d(x, y));
+        vertices[i]->setColor(pa.stroke);
     }
 
     // Create edges
-    for(int i = 1; i < verticies.size(); i++) {
-        VectorAnimationComplex::KeyEdge * e = global()->scene()->activeVAC()->newKeyEdge(global()->activeTime(), verticies[i-1], verticies[i], (new VectorAnimationComplex::LinearSpline(SculptCurve::Curve<VectorAnimationComplex::EdgeSample>(VectorAnimationComplex::EdgeSample(verticies[i-1]->pos()[0], verticies[i-1]->pos()[1], pa.strokeWidth), VectorAnimationComplex::EdgeSample(verticies[i]->pos()[0], verticies[i]->pos()[1], pa.strokeWidth)))), pa.strokeWidth);
+    for(int i = 1; i < vertices.size(); i++) {
+        VectorAnimationComplex::KeyEdge * e = global()->scene()->activeVAC()->newKeyEdge(global()->activeTime(), vertices[i-1], vertices[i], (new VectorAnimationComplex::LinearSpline(SculptCurve::Curve<VectorAnimationComplex::EdgeSample>(VectorAnimationComplex::EdgeSample(vertices[i-1]->pos()[0], vertices[i-1]->pos()[1], pa.strokeWidth), VectorAnimationComplex::EdgeSample(vertices[i]->pos()[0], vertices[i]->pos()[1], pa.strokeWidth)))), pa.strokeWidth);
         e->setColor(pa.stroke);
     }
 
@@ -406,10 +406,10 @@ bool SvgParser::readPolygon_(XmlStreamReader &xml, SvgPresentationAttributes &pa
     // Fail if there isn't at least one complete coordinate
     if(points.size() < 2) return false;
 
-    QVector<VectorAnimationComplex::KeyVertex *> verticies(points.size() / 2);
+    QVector<VectorAnimationComplex::KeyVertex *> vertices(points.size() / 2);
 
     // Parse points
-    for(int i = 0; i < verticies.size(); i++) {
+    for(int i = 0; i < vertices.size(); i++) {
         // X
         double x = points[i * 2].toDouble(&okay);
         if(!okay) return false;
@@ -418,21 +418,21 @@ bool SvgParser::readPolygon_(XmlStreamReader &xml, SvgPresentationAttributes &pa
         double y = points[i * 2 + 1].toDouble(&okay);
         if(!okay) return false;
 
-        verticies[i] = global()->scene()->activeVAC()->newKeyVertex(global()->activeTime(), Eigen::Vector2d(x, y));
-        verticies[i]->setColor(pa.stroke);
+        vertices[i] = global()->scene()->activeVAC()->newKeyVertex(global()->activeTime(), Eigen::Vector2d(x, y));
+        vertices[i]->setColor(pa.stroke);
     }
 
     // Create Edges
-    QVector<VectorAnimationComplex::KeyEdge *> edges(verticies.size() - 1);
-    for(int i = 1; i < verticies.size(); i++) {
-        VectorAnimationComplex::KeyEdge * e = global()->scene()->activeVAC()->newKeyEdge(global()->activeTime(), verticies[i-1], verticies[i], (new VectorAnimationComplex::LinearSpline(SculptCurve::Curve<VectorAnimationComplex::EdgeSample>(VectorAnimationComplex::EdgeSample(verticies[i-1]->pos()[0], verticies[i-1]->pos()[1], pa.strokeWidth), VectorAnimationComplex::EdgeSample(verticies[i]->pos()[0], verticies[i]->pos()[1], pa.strokeWidth)))), pa.strokeWidth);
+    QVector<VectorAnimationComplex::KeyEdge *> edges(vertices.size() - 1);
+    for(int i = 1; i < vertices.size(); i++) {
+        VectorAnimationComplex::KeyEdge * e = global()->scene()->activeVAC()->newKeyEdge(global()->activeTime(), vertices[i-1], vertices[i], (new VectorAnimationComplex::LinearSpline(SculptCurve::Curve<VectorAnimationComplex::EdgeSample>(VectorAnimationComplex::EdgeSample(vertices[i-1]->pos()[0], vertices[i-1]->pos()[1], pa.strokeWidth), VectorAnimationComplex::EdgeSample(vertices[i]->pos()[0], vertices[i]->pos()[1], pa.strokeWidth)))), pa.strokeWidth);
         e->setColor(pa.stroke);
         edges[i-1] = e;
     }
 
     // Close the loop if it isn't yet closed
-    if(verticies.first()->pos() != verticies.last()->pos()) {
-        VectorAnimationComplex::KeyEdge * e = global()->scene()->activeVAC()->newKeyEdge(global()->activeTime(), verticies.last(), verticies[0], (new VectorAnimationComplex::LinearSpline(SculptCurve::Curve<VectorAnimationComplex::EdgeSample>(VectorAnimationComplex::EdgeSample(verticies.last()->pos()[0], verticies.last()->pos()[1], pa.strokeWidth), VectorAnimationComplex::EdgeSample(verticies[0]->pos()[0], verticies[0]->pos()[1], pa.strokeWidth)))), pa.strokeWidth);
+    if(vertices.first()->pos() != vertices.last()->pos()) {
+        VectorAnimationComplex::KeyEdge * e = global()->scene()->activeVAC()->newKeyEdge(global()->activeTime(), vertices.last(), vertices[0], (new VectorAnimationComplex::LinearSpline(SculptCurve::Curve<VectorAnimationComplex::EdgeSample>(VectorAnimationComplex::EdgeSample(vertices.last()->pos()[0], vertices.last()->pos()[1], pa.strokeWidth), VectorAnimationComplex::EdgeSample(vertices[0]->pos()[0], vertices[0]->pos()[1], pa.strokeWidth)))), pa.strokeWidth);
         e->setColor(pa.stroke);
         edges.push_back(e);
     }
@@ -479,7 +479,7 @@ bool SvgParser::readCircle_(XmlStreamReader &xml, SvgPresentationAttributes &pa)
     // A radius of 0 does not result in an error, but disables rendering of the object
     if(r == 0) return true;
 
-    // Build verticies and edges
+    // Build vertices and edges
     QVector<VectorAnimationComplex::KeyVertex *> v;
     v.push_back(global()->scene()->activeVAC()->newKeyVertex(global()->activeTime(), Eigen::Vector2d(cx + r, cy)));
     v.push_back(global()->scene()->activeVAC()->newKeyVertex(global()->activeTime(), Eigen::Vector2d(cx, cy + r)));
@@ -552,7 +552,7 @@ bool SvgParser::readEllipse_(XmlStreamReader &xml, SvgPresentationAttributes &pa
     // A x or y radius of 0 does not result in an error, but disables rendering of the object
     if(rx == 0 || ry == 0) return true;
 
-    // Build verticies and edges
+    // Build vertices and edges
     QVector<VectorAnimationComplex::KeyVertex *> v;
     v.push_back(global()->scene()->activeVAC()->newKeyVertex(global()->activeTime(), Eigen::Vector2d(cx + rx, cy)));
     v.push_back(global()->scene()->activeVAC()->newKeyVertex(global()->activeTime(), Eigen::Vector2d(cx, cy + ry)));
