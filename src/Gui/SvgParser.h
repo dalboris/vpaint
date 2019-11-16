@@ -15,6 +15,7 @@
 #include <QtMath>
 
 #include <VectorAnimationComplex/EdgeSample.h>
+#include <VectorAnimationComplex/Cell.h>
 
 class QString;
 
@@ -50,11 +51,18 @@ class SvgParser;
 class SvgPresentationAttributes
 {
 public:
-    SvgPresentationAttributes(XmlStreamReader & xml, SvgParser & parser);
+    SvgPresentationAttributes();
+    SvgPresentationAttributes(XmlStreamReader &xml, SvgParser &parser);
+
+    void reset();
+    void init(XmlStreamReader &xml, SvgParser &parser);
+
+    operator QString() const;
+
     QColor fill, stroke;
     qreal strokeWidth;
 
-    bool hasFill() const { return fill.isValid(); }
+    bool hasFill() const { return fill.isValid() && fill.alpha() != 0; }
 };
 
 class SvgParser
@@ -62,15 +70,16 @@ class SvgParser
 public:
     SvgParser();
 //private:
-    bool readRect_(XmlStreamReader & xml);
-    bool readLine_(XmlStreamReader & xml);
-    bool readPolyline_(XmlStreamReader & xml);
-    bool readPolygon_(XmlStreamReader & xml);
-    bool readCircle_(XmlStreamReader & xml);
-    bool readEllipse_(XmlStreamReader & xml);
-    bool readPath_(XmlStreamReader & xml);
-    void readElement_(XmlStreamReader & xml);
-    void readSvg_(XmlStreamReader & xml);
+    bool readRect_(XmlStreamReader &xml, SvgPresentationAttributes &pa);
+    bool readLine_(XmlStreamReader &xml, SvgPresentationAttributes &pa);
+    bool readPolyline_(XmlStreamReader &xml, SvgPresentationAttributes &pa);
+    bool readPolygon_(XmlStreamReader &xml, SvgPresentationAttributes &pa);
+    bool readCircle_(XmlStreamReader &xml, SvgPresentationAttributes &pa);
+    bool readEllipse_(XmlStreamReader &xml, SvgPresentationAttributes &pa);
+    bool readPath_(XmlStreamReader &xml, SvgPresentationAttributes &pa);
+
+    void readElement_(XmlStreamReader &xml, QStack<SvgPresentationAttributes> pa);
+    void readSvg_(XmlStreamReader &xml);
 
     // Utilities
     QColor parseColor_(QString s);

@@ -1561,7 +1561,7 @@ void VAC::setMaxID_(int maxID)
 KeyVertex* VAC::newKeyVertex(Time time, const Eigen::Vector2d & pos)
 {
     KeyVertex * node = new KeyVertex(this, time, pos);
-    insertCell_(node);
+    insertCellLast_(node);
     return node;
 }
 
@@ -1580,7 +1580,7 @@ KeyEdge * VAC::newKeyEdge(Time time,
     }
 
     KeyEdge * edge = new KeyEdge(this, time, left, right, geometry);
-    insertCell_(edge);
+    insertCellLast_(edge);
     return edge;
 }
 
@@ -1592,7 +1592,7 @@ KeyEdge * VAC::newKeyEdge(Time time,
 
     geometry->makeLoop();
     KeyEdge * edge = new KeyEdge(this, time, geometry);
-    insertCell_(edge);
+    insertCellLast_(edge);
     return edge;
 }
 
@@ -1601,7 +1601,7 @@ InbetweenVertex * VAC::newInbetweenVertex(
         KeyVertex * after)
 {
     InbetweenVertex * svertex = new InbetweenVertex(this, before, after);
-    insertCell_(svertex);
+    insertCellLast_(svertex);
     return svertex;
 }
 
@@ -1612,7 +1612,7 @@ InbetweenEdge * VAC::newInbetweenEdge(
         const AnimatedVertex & endAnimatedVertex)
 {
     InbetweenEdge * sedge = new InbetweenEdge(this, beforePath, afterPath, startAnimatedVertex, endAnimatedVertex);
-    insertCell_(sedge);
+    insertCellLast_(sedge);
     return sedge;
 }
 InbetweenEdge * VAC::newInbetweenEdge(
@@ -1620,28 +1620,28 @@ InbetweenEdge * VAC::newInbetweenEdge(
         const Cycle & afterCycle)
 {
     InbetweenEdge * sedge = new InbetweenEdge(this, beforeCycle, afterCycle);
-    insertCell_(sedge);
+    insertCellLast_(sedge);
     return sedge;
 }
 
 KeyFace * VAC::newKeyFace(const Time & t)
 {
     KeyFace * face = new KeyFace(this, t);
-    insertCell_(face);
+    insertCellLast_(face);
     return face;
 }
 
 KeyFace * VAC::newKeyFace(const Cycle & cycle)
 {
     KeyFace * face = new KeyFace(this, cycle);
-    insertCell_(face);
+    insertCellLast_(face);
     return face;
 }
 
 KeyFace * VAC::newKeyFace(const QList<Cycle> & cycles)
 {
     KeyFace * face = new KeyFace(this, cycles);
-    insertCell_(face);
+    insertCellLast_(face);
     return face;
 }
 InbetweenFace * VAC::newInbetweenFace(const QList<AnimatedCycle> & cycles,
@@ -1649,7 +1649,7 @@ InbetweenFace * VAC::newInbetweenFace(const QList<AnimatedCycle> & cycles,
                                       const QSet<KeyFace*> & afterFaces)
 {
     InbetweenFace * sface = new InbetweenFace(this, cycles, beforeFaces, afterFaces);
-    insertCell_(sface);
+    insertCellLast_(sface);
     return sface;
 }
 

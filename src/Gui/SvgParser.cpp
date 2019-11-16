@@ -23,6 +23,8 @@
 #include <View.h>
 #include <Global.h>
 #include <QRegExp>
+#include <QStack>
+#include <QApplication>
 
 SvgParser::SvgParser()
 {
@@ -39,7 +41,7 @@ QColor SvgParser::parseColor_(QString s)
     // Remove excess whitespace
     s = s.trimmed();
     if(s == "none") {
-        return QColor();
+        return Qt::transparent;
     }
     if(s.startsWith("rgba") && s.endsWith(")") && s.contains("("))
     {
@@ -209,7 +211,7 @@ QColor SvgParser::parseColor_(QString s)
 // Reads a <rect> object
 // https://www.w3.org/TR/SVG11/shapes.html#RectElement
 // @return true on success, false on failure
-bool SvgParser::readRect_(XmlStreamReader & xml)
+bool SvgParser::readRect_(XmlStreamReader & xml, SvgPresentationAttributes &pa)
 {
     // Check to make sure we are reading a rect object
     if(xml.name() != "rect") return true;
@@ -268,9 +270,6 @@ bool SvgParser::readRect_(XmlStreamReader & xml)
     rx = qBound(0.0, rx, width / 2);
     ry = qBound(0.0, ry, height / 2);
 
-    // Get presentation attributes
-    SvgPresentationAttributes pa(xml, *this);
-
     // Build verticies and edges
     VectorAnimationComplex::KeyVertex * v1 = global()->currentVAC()->newKeyVertex(global()->activeTime(), Eigen::Vector2d(x, y));
     VectorAnimationComplex::KeyVertex * v2 = global()->currentVAC()->newKeyVertex(global()->activeTime(), Eigen::Vector2d(x + width, y));
@@ -311,7 +310,7 @@ bool SvgParser::readRect_(XmlStreamReader & xml)
     return true;
 }
 
-bool SvgParser::readLine_(XmlStreamReader & xml)
+bool SvgParser::readLine_(XmlStreamReader & xml, SvgPresentationAttributes &pa)
 {
     // Check to make sure we are reading a line object
     if(xml.name() != "line") return true;
@@ -336,9 +335,6 @@ bool SvgParser::readLine_(XmlStreamReader & xml)
     double y2 = xml.attributes().hasAttribute("y2") ? xml.attributes().value("y2").toDouble(&okay) : 0;
     if(!okay) y2 = 0;
 
-    // Get presentation attributes
-    SvgPresentationAttributes pa(xml, *this);
-
     // Build verticies and edges
     VectorAnimationComplex::KeyVertex * v1 = global()->currentVAC()->newKeyVertex(global()->activeTime(), Eigen::Vector2d(x1, y1));
     VectorAnimationComplex::KeyVertex * v2 = global()->currentVAC()->newKeyVertex(global()->activeTime(), Eigen::Vector2d(x2, y2));
@@ -353,15 +349,12 @@ bool SvgParser::readLine_(XmlStreamReader & xml)
     return true;
 }
 
-bool SvgParser::readPolyline_(XmlStreamReader &xml)
+bool SvgParser::readPolyline_(XmlStreamReader &xml, SvgPresentationAttributes &pa)
 {
     // Check to make sure we are reading a polyline object
     if(xml.name() != "polyline" || !xml.attributes().hasAttribute("points")) return true;
 
     bool okay = true;
-
-    // Get presentation attributes
-    SvgPresentationAttributes pa(xml, *this);
 
     // Read and split points
     // Technically the parsing of separators is a bit more complicated,
@@ -396,15 +389,12 @@ bool SvgParser::readPolyline_(XmlStreamReader &xml)
     return true;
 }
 
-bool SvgParser::readPolygon_(XmlStreamReader &xml)
+bool SvgParser::readPolygon_(XmlStreamReader &xml, SvgPresentationAttributes &pa)
 {
     // Check to make sure we are reading a polygon object
     if(xml.name() != "polygon" || !xml.attributes().hasAttribute("points")) return true;
 
     bool okay = true;
-
-    // Get presentation attributes
-    SvgPresentationAttributes pa(xml, *this);
 
     // Read and split points
     // Technically the parsing of separators is a bit more complicated,
@@ -460,7 +450,7 @@ bool SvgParser::readPolygon_(XmlStreamReader &xml)
     return true;
 }
 
-bool SvgParser::readCircle_(XmlStreamReader &xml)
+bool SvgParser::readCircle_(XmlStreamReader &xml, SvgPresentationAttributes &pa)
 {
     // Check to make sure we are reading a circle object
     if(xml.name() != "circle") return true;
@@ -486,9 +476,6 @@ bool SvgParser::readCircle_(XmlStreamReader &xml)
     if(r < 0) return false;
     // A radius of 0 does not result in an error, but disables rendering of the object
     if(r == 0) return true;
-
-    // Get presentation attributes
-    SvgPresentationAttributes pa(xml, *this);
 
     // Build verticies and edges
     QVector<VectorAnimationComplex::KeyVertex *> v;
@@ -531,7 +518,7 @@ bool SvgParser::readCircle_(XmlStreamReader &xml)
     return true;
 }
 
-bool SvgParser::readEllipse_(XmlStreamReader &xml)
+bool SvgParser::readEllipse_(XmlStreamReader &xml, SvgPresentationAttributes &pa)
 {
     // Check to make sure we are reading an ellipse object
     if(xml.name() != "ellipse") return true;
@@ -562,9 +549,6 @@ bool SvgParser::readEllipse_(XmlStreamReader &xml)
     if(rx < 0 || ry < 0) return false;
     // A x or y radius of 0 does not result in an error, but disables rendering of the object
     if(rx == 0 || ry == 0) return true;
-
-    // Get presentation attributes
-    SvgPresentationAttributes pa(xml, *this);
 
     // Build verticies and edges
     QVector<VectorAnimationComplex::KeyVertex *> v;
@@ -608,15 +592,12 @@ bool SvgParser::readEllipse_(XmlStreamReader &xml)
     return true;
 }
 
-bool SvgParser::readPath_(XmlStreamReader &xml)
+bool SvgParser::readPath_(XmlStreamReader &xml, SvgPresentationAttributes &pa)
 {
     // Check to make sure we are reading a path object
     if(xml.name() != "path" || !xml.attributes().hasAttribute("d")) return true;
 
     // Get attributes
-
-    // Get presentation attributes
-    SvgPresentationAttributes pa(xml, *this);
 
     QString d = xml.attributes().value("d").toString();
 
@@ -624,7 +605,7 @@ bool SvgParser::readPath_(XmlStreamReader &xml)
 }
 
 // TODO refactor tail recursion
-bool SvgParser::parsePath(QString &data, const SvgPresentationAttributes & pa, const Eigen::Vector2d startPos) {
+bool SvgParser::parsePath(QString &data, const SvgPresentationAttributes &pa, const Eigen::Vector2d startPos) {
     QList<PotentialPoint> samples;
 
     // Remove whitespace characters from the beginning
@@ -637,19 +618,20 @@ bool SvgParser::parsePath(QString &data, const SvgPresentationAttributes & pa, c
     }
 
     bool ok = true;
-
+    char prevMode = 'M';
     while(!data.isEmpty())
     {
         bool relative = true;
         char c = data[0].cell();
         data.remove(0, 1);
+
         switch(c) {
         // Ignore whitespace characters
         case 0x20:
         case 0x9:
         case 0xD:
         case 0xA:
-            break;
+            continue;
         // Move
         case 'M':
             relative = false;
@@ -662,6 +644,9 @@ bool SvgParser::parsePath(QString &data, const SvgPresentationAttributes & pa, c
             if(samples.isEmpty())
             {
                 // If this is the first command add it as the first point
+                if(relative) {
+                    start += startPos;
+                }
                 samples.append(PotentialPoint(start[0], start[1], pa.strokeWidth));
             }
             else
@@ -675,8 +660,12 @@ bool SvgParser::parsePath(QString &data, const SvgPresentationAttributes & pa, c
             }
             break;
         }
+        case 'S':
+        case 'T':
         case 'L':
             relative = false;
+        case 's':
+        case 't':
         case 'l':
             ok = addLineTo(samples, data, pa, relative);
             break;
@@ -695,21 +684,21 @@ bool SvgParser::parsePath(QString &data, const SvgPresentationAttributes & pa, c
         case 'c':
             ok = addCurveTo(samples, data, pa, relative);
             break;
-        case 'S':
+        /*case 'S': // Temporarily using line instead of this
             relative = false;
         case 's':
             ok = addSmoothCurveTo(samples, data, relative);
-            break;
+            break;*/
         case 'Q':
             relative = false;
         case 'q':
             ok = addQuadraticBezierCurveTo(samples, data, pa, relative);
             break;
-        case 'T':
+        /*case 'T':
             relative = false;
         case 't':
             ok = addSmoothQuadraticBezierCurveTo(samples, data, relative);
-            break;
+            break;*/
         case 'A':
             relative = false;
         case 'a':
@@ -719,8 +708,14 @@ bool SvgParser::parsePath(QString &data, const SvgPresentationAttributes & pa, c
         case 'z':
             return parsePath(data, pa, finishPath(samples, pa, true));
             break;
+        default:
+            data.prepend(c);
+            data.prepend(prevMode);
+            continue;
         }
         if(!ok) return false;
+
+        prevMode = c;
     }
     finishPath(samples, pa);
     return true;
@@ -800,10 +795,12 @@ bool SvgParser::addHorizontalLineTo(QList<PotentialPoint> & samplingPoints, QStr
 
 bool SvgParser::addCurveTo(QList<PotentialPoint> & samplingPoints, QString & data, const SvgPresentationAttributes & pa, bool relative)
 {
-    trimFront(data);
     bool hasLooped = false, ok;
+
+    //qDebug() << "First startloc for adCurveTo" << samplingPoints.last().getX() << samplingPoints.last().getY();
     while(true)
     {
+        trimFront(data);
         PotentialPoint startLoc = samplingPoints.last();
 
         Eigen::Vector2d cp1 = getNextCoordinatePair(data, &ok);
@@ -834,6 +831,7 @@ bool SvgParser::addCurveTo(QList<PotentialPoint> & samplingPoints, QString & dat
     return hasLooped;
 }
 
+// TODO Implement this
 bool SvgParser::addSmoothCurveTo(QList<PotentialPoint> & samplingPoints, QString & data, bool relative) {}
 
 bool SvgParser::addQuadraticBezierCurveTo(QList<PotentialPoint> & samplingPoints, QString & data, const SvgPresentationAttributes & pa, bool relative)
@@ -867,6 +865,7 @@ bool SvgParser::addQuadraticBezierCurveTo(QList<PotentialPoint> & samplingPoints
     return hasLooped;
 }
 
+// TODO Implement this
 bool SvgParser::addSmoothQuadraticBezierCurveTo(QList<PotentialPoint> & samplingPoints, QString & data, bool relative) {}
 
 void SvgParser::printVec(const Eigen::Vector2d & v, QString name)
@@ -924,6 +923,7 @@ bool SvgParser::addEllipticalArc(QList<PotentialPoint> & samplingPoints, QString
             rx *= qSqrt(sFactor);
             ry *= qSqrt(sFactor);
         }
+        // TODO figure out why cCoeff can be NaN in some cases
         double cCoeff = qSqrt((rx*rx*ry*ry-rx*rx*midLoc[1]*midLoc[1]-ry*ry*midLoc[0]*midLoc[0]) / (rx*rx*midLoc[1]*midLoc[1]+ry*ry*midLoc[0]*midLoc[0]));
         if(largeArc == positiveSweep) cCoeff *= -1;
         Eigen::Vector2d center(cCoeff * rx * midLoc[1] / ry, cCoeff * -ry * midLoc[0] / rx);
@@ -974,6 +974,15 @@ Eigen::Vector2d SvgParser::finishPath(QList<PotentialPoint> & samplingPoints, co
         return Eigen::Vector2d(0, 0);
     }
 
+    VectorAnimationComplex::VAC *vac = global()->currentVAC();
+
+    // Reverse points
+    /*QList<PotentialPoint> samplingPoints;
+    while(!samplingPointsR.empty()) {
+        samplingPoints.append(samplingPointsR.first());
+        samplingPointsR.removeFirst();
+    }*/
+
     // If the endpoints are not the same, join endpoints on a closed path or a path with a face
     // TODO consider making EdgeSample equality operators
     if((closed || pa.hasFill()) && samplingPoints.first().distanceTo(samplingPoints.last()) == 0) {
@@ -990,12 +999,12 @@ Eigen::Vector2d SvgParser::finishPath(QList<PotentialPoint> & samplingPoints, co
     {
         if(!point.isSmooth()) {
             // The point is non-smooth, so close off the current curve if necessary and make a new vertex
-            VectorAnimationComplex::KeyVertex * newV = global()->currentVAC()->newKeyVertex(global()->activeTime(), Eigen::Vector2d(point.getX(), point.getY()));
+            VectorAnimationComplex::KeyVertex * newV = vac->newKeyVertex(global()->activeTime(), Eigen::Vector2d(point.getX(), point.getY()));
             if(curC.size() != 0)
             {
                 curC.continueSketch(point.getEdgeSample());
                 curC.endSketch();
-                e.push_back(global()->currentVAC()->newKeyEdge(global()->activeTime(), v.last(), newV, (new VectorAnimationComplex::LinearSpline(curC)), pa.strokeWidth));
+                e.push_back(vac->newKeyEdge(global()->activeTime(), v.last(), newV, (new VectorAnimationComplex::LinearSpline(curC)), pa.strokeWidth));
                 e.last()->setColor(pa.stroke);
             }
             v.push_back(newV);
@@ -1007,7 +1016,7 @@ Eigen::Vector2d SvgParser::finishPath(QList<PotentialPoint> & samplingPoints, co
     }
 
     if(closed) {
-        e.push_back(global()->currentVAC()->newKeyEdge(global()->activeTime(), v.last(), v.first(), new VectorAnimationComplex::LinearSpline(SculptCurve::Curve<VectorAnimationComplex::EdgeSample>(samplingPoints.last().getEdgeSample(), samplingPoints.first().getEdgeSample())), pa.strokeWidth));
+        e.push_back(vac->newKeyEdge(global()->activeTime(), v.last(), v.first(), new VectorAnimationComplex::LinearSpline(SculptCurve::Curve<VectorAnimationComplex::EdgeSample>(samplingPoints.last().getEdgeSample(), samplingPoints.first().getEdgeSample())), pa.strokeWidth));
         e.last()->setColor(pa.stroke);
     }
     else if(pa.hasFill()) {
@@ -1015,7 +1024,7 @@ Eigen::Vector2d SvgParser::finishPath(QList<PotentialPoint> & samplingPoints, co
         start.setWidth(0);
         end.setWidth(0);
 
-        e.push_back(global()->currentVAC()->newKeyEdge(global()->activeTime(), v.last(), v.first(), new VectorAnimationComplex::LinearSpline(SculptCurve::Curve<VectorAnimationComplex::EdgeSample>(start, end)), 0));
+        e.push_back(vac->newKeyEdge(global()->activeTime(), v.last(), v.first(), new VectorAnimationComplex::LinearSpline(SculptCurve::Curve<VectorAnimationComplex::EdgeSample>(start, end)), 0));
         e.last()->setColor(QColor());
     }
 
@@ -1025,60 +1034,68 @@ Eigen::Vector2d SvgParser::finishPath(QList<PotentialPoint> & samplingPoints, co
             halfEdges.append(VectorAnimationComplex::KeyHalfedge(edge, true));
         }
         VectorAnimationComplex::Cycle cycle(halfEdges);
-        VectorAnimationComplex::KeyFace * face = global()->currentVAC()->newKeyFace(cycle);
+        VectorAnimationComplex::KeyFace * face = vac->newKeyFace(cycle);
         face->setColor(pa.fill);
     }
 
     return Eigen::Vector2d(samplingPoints.last().getX(), samplingPoints.last().getY());
 }
 
-void SvgParser::readElement_(XmlStreamReader & xml)
+void SvgParser::readElement_(XmlStreamReader &xml, QStack<SvgPresentationAttributes> attributeStack)
 {
-    if(xml.isStartElement() || xml.isEndElement())
+    if(xml.isStartElement())
     {
+        SvgPresentationAttributes pa(attributeStack.top());
+        pa.init(xml, *this);
+        attributeStack.push(pa);
+        qDebug() << "Pushing" << pa;
+
         qDebug() << xml.name();
 
         if(xml.name() == "rect")
         {
-            if(!readRect_(xml)) return;
+            if(!readRect_(xml, pa)) return;
         }
         else if(xml.name() == "line")
         {
-            if(!readLine_(xml)) return;
+            if(!readLine_(xml, pa)) return;
         }
         else if(xml.name() == "polyline")
         {
-            if(!readPolyline_(xml)) return;
+            if(!readPolyline_(xml, pa)) return;
         }
         else if(xml.name() == "polygon")
         {
-            if(!readPolygon_(xml)) return;
+            if(!readPolygon_(xml, pa)) return;
         }
         else if(xml.name() == "circle")
         {
-            if(!readCircle_(xml)) return;
+            if(!readCircle_(xml, pa)) return;
         }
         else if(xml.name() == "ellipse")
         {
-            if(!readEllipse_(xml)) return;
+            if(!readEllipse_(xml, pa)) return;
         }
         else if(xml.name() == "path")
         {
-            if(!readPath_(xml)) return;
+            if(!readPath_(xml, pa)) return;
+        }
+        else if(xml.name() == "g") {
+            // We don't have to do anything more here
         }
         else {
             // Warning
         }
+    }
 
-        if(xml.name() != "g")
-        {
-            xml.skipCurrentElement();
-        }
+    if(xml.isEndElement()) {
+        SvgPresentationAttributes rmPa = attributeStack.pop();
+        qDebug() << "Popping" << rmPa;
     }
 
     if(!xml.atEnd()) {
         xml.readNext();
-        readElement_(xml);
+        readElement_(xml, attributeStack);
     }
 }
 
@@ -1089,44 +1106,67 @@ void SvgParser::readSvg_(XmlStreamReader & xml)
         // Error
     }
     xml.readNextStartElement();
-    readElement_(xml);
+    SvgPresentationAttributes pa;
+    QStack<SvgPresentationAttributes> attributeStack;
+    SvgPresentationAttributes baseStyle;
+    attributeStack.push(baseStyle);
+    readElement_(xml, attributeStack);
+}
+
+SvgPresentationAttributes::SvgPresentationAttributes() {
+    reset();
 }
 
 SvgPresentationAttributes::SvgPresentationAttributes(XmlStreamReader &xml, SvgParser & parser) {
+    reset();
+    init(xml, parser);
+}
+
+void SvgPresentationAttributes::reset() {
+    strokeWidth = 1;
+    fill = Qt::black;
+    stroke = Qt::transparent;
+}
+
+void SvgPresentationAttributes::init(XmlStreamReader &xml, SvgParser &parser) {
     bool okay = true;
 
     // Stroke width
-    strokeWidth = xml.attributes().hasAttribute("stroke-width") ? qMax(0.0, xml.attributes().value("stroke-width").toDouble(&okay)) : 1;
-    if(!okay) strokeWidth = 1;
+    if(xml.attributes().hasAttribute("stroke-width")) {
+        double tempStrokeWidth = qMax(0.0, xml.attributes().value("stroke-width").toDouble(&okay));
+        if(okay) strokeWidth = tempStrokeWidth;
+    }
 
     // Fill (color)
-    fill = xml.attributes().hasAttribute("fill") ? parser.parseColor_(xml.attributes().value("fill").toString()) : QColor();
+    if(xml.attributes().hasAttribute("fill")) {
+        QColor tempFill = parser.parseColor_(xml.attributes().value("fill").toString());
+        if(tempFill.isValid()) fill = tempFill;
+    }
 
     // Stroke (color)
-    stroke = xml.attributes().hasAttribute("stroke") ? parser.parseColor_(xml.attributes().value("stroke").toString()) : QColor("none");
-    if(!stroke.isValid()) fill = QColor("none");
-
-    // Fill opacity
-    double fillOpacity = xml.attributes().hasAttribute("fill-opacity") ? qBound(0.0, xml.attributes().value("fill-opacity").toDouble(&okay), 1.0) : 1;
-    if(!okay) fillOpacity = 1;
-
-    // Stroke opacity
-    double strokeOpacity = xml.attributes().hasAttribute("stroke-opacity") ? qBound(0.0, xml.attributes().value("stroke-opacity").toDouble(&okay), 1.0) : 1;
-    if(!okay) strokeOpacity = 1;
+    if(xml.attributes().hasAttribute("stroke")) {
+        QColor tempStroke = parser.parseColor_(xml.attributes().value("stroke").toString());
+        if(tempStroke.isValid()) stroke = tempStroke;
+    }
 
     // Opacity (whole object)
     double opacity = xml.attributes().hasAttribute("opacity") ? qBound(0.0, xml.attributes().value("opacity").toDouble(&okay), 1.0) : 1;
     if(!okay) opacity = 1;
 
-    // Opacities appear to stack
-    fill.setAlphaF(fill.alphaF() * fillOpacity * opacity);
-    stroke.setAlphaF(stroke.alphaF() * strokeOpacity * opacity);
+    // Fill opacity
+    double tempFillOpacity = xml.attributes().hasAttribute("fill-opacity") ? qBound(0.0, xml.attributes().value("fill-opacity").toDouble(&okay), 1.0) : 1;
+    if(!okay) tempFillOpacity = 1;
+    fill.setAlphaF(fill.alphaF() * tempFillOpacity * opacity);
 
-    // If stroke is none, then just set stroke opacity to 0
-    if(xml.attributes().value("stroke").trimmed() == "none")
-    {
-        stroke.setAlphaF(0);
-    }
+    // Stroke opacity
+    double tempStrokeOpacity = xml.attributes().hasAttribute("stroke-opacity") ? qBound(0.0, xml.attributes().value("stroke-opacity").toDouble(&okay), 1.0) : 1;
+    if(!okay) tempStrokeOpacity = 1;
+    stroke.setAlphaF(stroke.alphaF() * tempStrokeOpacity * opacity);
+}
+
+SvgPresentationAttributes::operator QString() const
+{
+    return QString("SvgPresentationAttribute(Fill = %1, Stroke = %2 @ %3 px)").arg(fill.name(QColor::HexArgb), stroke.name(QColor::HexArgb), QString::number(strokeWidth));
 }
 
 bool SvgParser::getNextFlag(QString & source, bool * ok)
@@ -1143,7 +1183,7 @@ bool SvgParser::getNextFlag(QString & source, bool * ok)
 
 double SvgParser::getNextDouble(QString & source, bool * ok)
 {
-    QRegExp realNumberExp("[+\\-]?(([0-9]+\\.?[0-9]*)|(\\.[0-9]+))([Ee][0-9]+)?");
+    QRegExp realNumberExp("[+\\-]?(([0-9]*\\.?[0-9]*)|(\\.[0-9]+))([Ee][0-9]+)?");
     if(realNumberExp.indexIn(source) != 0)
     {
         *ok = false;
