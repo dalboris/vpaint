@@ -197,7 +197,8 @@ HEADERS += MainWindow.h \
     VectorAnimationComplex/BoundingBox.h \
     VectorAnimationComplex/TransformTool.h \
     LayersWidget.h \
-    Layer.h
+    Layer.h \
+    SvgParser.h
 
 SOURCES += main.cpp \
     SaveAndLoad.cpp \
@@ -288,4 +289,5 @@ SOURCES += main.cpp \
     VectorAnimationComplex/BoundingBox.cpp \
     VectorAnimationComplex/TransformTool.cpp \
     LayersWidget.cpp \
-    Layer.cpp
+    Layer.cpp \
+    SvgParser.cpp
