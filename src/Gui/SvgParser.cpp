@@ -8,6 +8,10 @@
 
 #include "SvgParser.h"
 
+#include <regex>
+#include <sstream>
+#include <vector>
+
 #include <QApplication>
 #include <QDebug>
 #include <QRegExp>
@@ -27,6 +31,433 @@
 #include "VectorAnimationComplex/VAC.h"
 #include "View.h"
 #include "XmlStreamReader.h"
+
+namespace {
+
+// All possible path command types.
+//
+enum class SvgPathCommandType : unsigned char {
+    ClosePath = 0, // Z (none)
+    MoveTo    = 1, // M (x y)+
+    LineTo    = 2, // L (x y)+
+    HLineTo   = 3, // H x+
+    VLineTo   = 4, // V y+
+    CCurveTo  = 5, // C (x1 y1 x2 y2 x y)+
+    SCurveTo  = 6, // S (x2 y2 x y)+
+    QCurveTo  = 7, // Q (x1 y1 x y)+
+    TCurveTo  = 8, // T (x y)+
+    ArcTo     = 9  // A (rx ry x-axis-rotation large-arc-flag sweep-flag x y)+
+};
+
+// All possible argument types of path commands.
+//
+enum class SvgPathArgumentType : unsigned char {
+    Number,
+    Unsigned,
+    Flag
+};
+
+// Returns the signature of the given path command type, that is, the
+// description of the number and types of its arguments.
+//
+const std::vector<SvgPathArgumentType>& signature(SvgPathCommandType commandType)
+{
+    using a = SvgPathArgumentType;
+    static const std::vector<SvgPathArgumentType> s[10] = {
+        /* ClosePath */ {},
+        /* MoveTo    */ {a::Number, a::Number},
+        /* LineTo    */ {a::Number, a::Number},
+        /* HLineTo   */ {a::Number},
+        /* VLineTo   */ {a::Number},
+        /* CCurveTo  */ {a::Number, a::Number, a::Number, a::Number, a::Number, a::Number},
+        /* SCurveTo  */ {a::Number, a::Number, a::Number, a::Number},
+        /* QCurveTo  */ {a::Number, a::Number, a::Number, a::Number},
+        /* TCurveTo  */ {a::Number, a::Number},
+        /* Arc       */ {a::Unsigned, a::Unsigned, a::Number, a::Flag, a::Flag, a::Number, a::Number}
+    };
+    return s[static_cast<unsigned char>(commandType)];
+}
+
+// Represents one path command, that is, a command character followed by all
+// its arguments, possibly implicitely repeated. For example, the string
+//
+//   L 10 10 10 20
+//
+// can be represented as one SvgPathCommand, but is represented as two
+// SvgPathCommands when normalized:
+//
+//   L 10 10 L 10 20
+//
+struct SvgPathCommand {
+    SvgPathCommandType type;
+    bool relative;
+    std::vector<double> args;
+
+    SvgPathCommand(SvgPathCommandType type, bool relative, std::vector<double>&& args) :
+        type(type), relative(relative), args(args) {}
+};
+
+// Returns whether the string [it, end) starts with a number (or an unsigned
+// number if `isSignAllowed` is false), as defined by the SVG 1.1 grammar:
+//
+//   https://www.w3.org/TR/SVG11/paths.html#PathDataBNF
+//
+//   number:   sign? unsigned
+//   unsigned: ((digit+ "."?) | (digit* "." digit+)) exp?
+//   exp:      ("e" | "E") sign? digit+
+//   sign:     "+" | "-"
+//   digit:    "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+//
+// If a number is found, then the iterator `it` is advanced to the position
+// just after the number. Otherwise, it is left unchanged.
+//
+// If a number is found, and the optional output parameter `number` is given,
+// then it is set to the value of the number. Otherwise, it is left unchanged.
+//
+// Note: This function does NOT ignore leading whitespaces, that is,
+// isNumber(" 42") returns false.
+//
+// Note: This function consumes as much as possible of the input string, as per
+// the SVG grammar specification:
+//
+//   https://www.w3.org/TR/SVG11/paths.html#PathDataBNF
+//
+//   The processing of the BNF must consume as much of a given BNF production
+//   as possible, stopping at the point when a character is encountered which
+//   no longer satisfies the production. Thus, in the string "M 100-200", the
+//   first coordinate for the "moveto" consumes the characters "100" and stops
+//   upon encountering the minus sign because the minus sign cannot follow a
+//   digit in the production of a "coordinate". The result is that the first
+//   coordinate will be "100" and the second coordinate will be "-200".
+//
+//   Similarly, for the string "M 0.6.5", the first coordinate of the "moveto"
+//   consumes the characters "0.6" and stops upon encountering the second
+//   decimal point because the production of a "coordinate" only allows one
+//   decimal point. The result is that the first coordinate will be "0.6" and
+//   the second coordinate will be ".5".
+//
+// Note: In SVG 2, trailing commas have been disallowed, that is, "42." is a
+// valid number in SVG 1.1, but invalid in SVG 2. We continue to accept them
+// regardless. See:
+//
+//   https://svgwg.org/svg2-draft/paths.html#PathDataBNF
+//
+//   The grammar of previous specifications allowed a trailing decimal point
+//   without any decimal digits for numbers (e.g 23.). SVG 2 harmonizes number
+//   parsing with CSS [css-syntax-3], disallowing the relaxed grammar for
+//   numbers. However, user agents may continue to accept numbers with trailing
+//   decimal points when parsing is unambiguous. Authors and authoring tools
+//   must not use the disallowed number format.
+//
+bool readNumber(
+        bool isSignAllowed,
+        std::string::const_iterator& it,
+        std::string::const_iterator end,
+        double* number = nullptr)
+{
+    // Build once and cache the signed regex
+    static const std::regex sregex(
+        "[+-]?(([0-9]+\\.?)|([0-9]*\\.[0-9]+))([eE][+-]?[0-9]+)?",
+        std::regex::extended | // Use "leftmost longest" rule
+        std::regex::optimize); // Faster searches, slower constructor
+
+    // Build once and cache the unsigned regex
+    static const std::regex uregex(
+        "(([0-9]+\\.?)|([0-9]*\\.[0-9]+))([eE][+-]?[0-9]+)?",
+        std::regex::extended | // Use "leftmost longest" rule
+        std::regex::optimize); // Faster searches, slower constructor
+
+    // Perform the regex search
+    std::smatch match;
+    bool isNumber = std::regex_search(
+        it, end, match,                          // Search from it to end
+        isSignAllowed ? sregex : uregex,         // Which regex to use
+        std::regex_constants::match_continuous); // Only match at beginning of range
+
+    // Advance iterator, convert to double, and return whether found.
+    //
+    // Note: aside from unlikely out-of-memory errors, the conversion can't
+    // fail since the SVG number grammar is a subset of the C++ number grammar.
+    //
+    // Note: repeatedly constructing an std::istringstream is slow. For
+    // performance, cppreference recommends reusing a unique istringstream, and
+    // resetting its value via str(). See:
+    //
+    // https://en.cppreference.com/w/cpp/io/basic_istringstream/basic_istringstream
+    //
+    // Unfortunately, passing such pre-allocated istringstream to this function
+    // would complicate its API, and globally constructing it (e.g., as a
+    // static local variable), would make this function neither thread-safe nor
+    // reentrant.
+    //
+    // Also, note that even using str(), we need first to copy the data from d
+    // to a new string s, then pass this string to istringstream::str(s), which
+    // performs a copy itself. This is not going to be fast either. In VGC, we
+    // implement our own string to double conversion to avoid all those
+    // unnecessary allocations and copies.
+    //
+    // Finally, note that we need to use the "C" locale for string to double
+    // conversions, that is, use "." as decimal point regardless of global user
+    // preferences. See:
+    //
+    // See: https://en.cppreference.com/w/cpp/locale/num_get
+    //
+    if (isNumber) {
+        auto numEnd = it + match.length(0);
+        if (number) {
+            std::string s(it, numEnd);
+            std::istringstream in(s);
+            in.imbue(std::locale::classic());
+            in >> *number;
+        }
+        it = numEnd;
+    }
+    return isNumber;
+}
+
+// Calls readNumber() with isSignedAllowed = true.
+//
+bool readNumber(
+        std::string::const_iterator& it,
+        std::string::const_iterator end,
+        double* number = nullptr)
+{
+    return readNumber(true, it, end, number);
+}
+
+// Calls isNumber() with isSignedAllowed = false.
+//
+bool readUnsigned(
+        std::string::const_iterator& it,
+        std::string::const_iterator end,
+        double* number = nullptr)
+{
+    return readNumber(false, it, end, number);
+}
+
+// Returns whether the string [it, end) starts with a flag, that is, the
+// character '0' or '1'.
+//
+// If a flag is found, then the iterator `it` is advanced to the position
+// just after the flag. Otherwise, it is left unchanged.
+//
+// If a flag is found, and the optional output parameter `number` is given,
+// then it is set to the value of the flag expressed as a double (0.0 or 1.0).
+//
+// Note: This function does NOT ignore leading whitespaces, that is,
+// isFlag(" 0") returns false.
+//
+bool readFlag(
+        std::string::const_iterator& it,
+        std::string::const_iterator end,
+        double* number = nullptr)
+{
+    if (it != end && (*it == '0' || *it == '1')) {
+        if (number) {
+            *number = (*it == '0') ? 0.0 : 1.0;
+        }
+        ++it;
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+// Returns whether the given character is a whitespace character.
+//
+bool isWhitespace(char c)
+{
+    return c == 0x20 || c == 0x9  || c == 0xD  || c == 0xA;
+}
+
+// Advances the given iterator `it` forward until a non-whitespace character or
+// the `end` is found.
+//
+void readWhitespaces(
+        std::string::const_iterator& it,
+        std::string::const_iterator end)
+{
+    while (it != end && isWhitespace(*it)) {
+        ++it;
+    }
+}
+
+// Advances the given iterator `it` forward until a non-whitespace-non-comma
+// character or the `end` is found. Only one comma is allowed, that is, if a
+// second comma is encountered, it stops reading just before the second comma.
+//
+void readCommaWhitespaces(
+        std::string::const_iterator& it,
+        std::string::const_iterator end)
+{
+    readWhitespaces(it, end);
+    if (it != end && *it == ',') {
+        ++it;
+        readWhitespaces(it, end);
+    }
+}
+
+// Parses the given path data string `d` into a sequence of SvgPathCommands,
+// according to the SVG 1.1 grammar:
+//
+//   https://www.w3.org/TR/SVG11/paths.html#PathDataBNF
+//
+// In case of invalid syntax, an error string is written to the optional output
+// parameter `error`, and the returned SvgPathCommands is the path data up to
+// (but not including) the first command segment with an invalid syntax, as per
+// the SVG recommendation:
+//
+//   https://www.w3.org/TR/SVG11/implnote.html#PathElementImplementationNotes
+//   https://svgwg.org/svg2-draft/paths.html#PathDataErrorHandling
+//
+//   The general rule for error handling in path data is that the SVG user
+//   agent shall render a ‘path’ element up to (but not including) the path
+//   command containing the first error in the path data specification. This
+//   will provide a visual clue to the user or developer about where the error
+//   might be in the path data specification. This rule will greatly discourage
+//   generation of invalid SVG path data.
+//
+//   If a path data command contains an incorrect set of parameters, then the
+//   given path data command is rendered up to and including the last correctly
+//   defined path segment, even if that path segment is a sub-component of a
+//   compound path data command, such as a "lineto" with several pairs of
+//   coordinates. For example, for the path data string 'M 10,10 L 20,20,30',
+//   there is an odd number of parameters for the "L" command, which requires
+//   an even number of parameters. The user agent is required to draw the line
+//   from (10,10) to (20,20) and then perform error reporting since 'L 20 20'
+//   is the last correctly defined segment of the path data specification.
+//
+//   Wherever possible, all SVG user agents shall report all errors to the
+//   user.
+//
+std::vector<SvgPathCommand> parsePathData(
+        const std::string& d, std::string* error = nullptr)
+{
+    using t = SvgPathCommandType;
+    using a = SvgPathArgumentType;
+    auto it = d.cbegin();
+    auto end = d.cend();
+    std::vector<SvgPathCommand> cmds;
+    readWhitespaces(it, end);
+    while (it != end) {
+
+        // Read command type and relativeness
+        SvgPathCommandType type;
+        bool relative;
+        switch(*it) {
+        case 'Z': type = t::ClosePath; relative = false; break;
+        case 'M': type = t::MoveTo;    relative = false; break;
+        case 'L': type = t::LineTo;    relative = false; break;
+        case 'H': type = t::HLineTo;   relative = false; break;
+        case 'V': type = t::VLineTo;   relative = false; break;
+        case 'C': type = t::CCurveTo;  relative = false; break;
+        case 'S': type = t::SCurveTo;  relative = false; break;
+        case 'Q': type = t::QCurveTo;  relative = false; break;
+        case 'T': type = t::TCurveTo;  relative = false; break;
+        case 'A': type = t::ArcTo;     relative = false; break;
+
+        case 'z': type = t::ClosePath; relative = true; break;
+        case 'm': type = t::MoveTo;    relative = true; break;
+        case 'l': type = t::LineTo;    relative = true; break;
+        case 'h': type = t::HLineTo;   relative = true; break;
+        case 'v': type = t::VLineTo;   relative = true; break;
+        case 'c': type = t::CCurveTo;  relative = true; break;
+        case 's': type = t::SCurveTo;  relative = true; break;
+        case 'q': type = t::QCurveTo;  relative = true; break;
+        case 't': type = t::TCurveTo;  relative = true; break;
+        case 'a': type = t::ArcTo;     relative = true; break;
+
+        default:
+            // Unknown command character, or failed to parse first arg
+            // of non-first argtuple of previous command.
+            if (error) {
+                *error = "Failed to read command type or argument: ";
+                *error += *it;
+            }
+            return cmds;
+        }
+
+        // Ensure first command is a MoveTo
+        if (cmds.empty() && type != t::MoveTo) {
+            if (error) {
+                *error = "First command must be 'M' or 'm'. Found '";
+                *error += *it;
+                *error += "' instead.";
+            }
+            return cmds;
+        }
+
+        // Advance iterator on success
+        ++it;
+
+        // Read command arguments, unless the command take zero arguments.
+        const std::vector<SvgPathArgumentType>& sig = signature(type);
+        bool readArgtuples = (sig.size() > 0);
+        bool isFirstArgtuple = true;
+        bool hasError = false;
+        std::vector<double> args;
+        args.reserve(sig.size());
+        while (readArgtuples) {
+            readWhitespaces(it, end);
+            for (size_t i = 0; i < sig.size(); ++i) {
+                if (i != 0) {
+                    readCommaWhitespaces(it, end);
+                }
+                // Check whether next symbol is a valid argument
+                bool isArg;
+                double number;
+                switch (sig[i]) {
+                case a::Number:   isArg = readNumber(it, end, &number);   break;
+                case a::Unsigned: isArg = readUnsigned(it, end, &number); break;
+                case a::Flag:     isArg = readFlag(it, end, &number);     break;
+                }
+                if (isArg) {
+                    // If there's an argument, keep reading
+                    args.push_back(number);
+                }
+                else {
+                    // If there's no valid argument, but an argument was
+                    // mandatory, then drop previous args in argtuple, and
+                    // report error.
+                    if (i != 0 || isFirstArgtuple) {
+                        hasError = true;
+                        if (error) {
+                            *error = "Failed to read argument.";
+                        }
+                        while (i > 0) {
+                            args.pop_back();
+                            --i;
+                        }
+                    }
+                    // Whether it's an error or not, since there's no valid
+                    // argument, we stop reading args for this command, and
+                    // move on to the next command.
+                    readArgtuples = false;
+                    break;
+                }
+            }
+            isFirstArgtuple = false;
+        }
+
+        // Add command to path data. Note that even in case of errors, we still
+        // add the command if at least one argtuple was successfully read.
+        if (!hasError || args.size() > 0) {
+            cmds.push_back(SvgPathCommand(type, relative, std::move(args)));
+        }
+
+        // Return now in case of errors in argument parsing
+        if (hasError) {
+            return cmds;
+        }
+
+        // Read whitespaces and move on to the next command
+        readWhitespaces(it, end);
+    }
+    return cmds;
+}
+
+} // namespace
 
 SvgParser::SvgParser()
 {
@@ -603,10 +1034,25 @@ bool SvgParser::readPath_(XmlStreamReader &xml, SvgPresentationAttributes &pa)
 
     QString d = xml.attributes().value("d").toString();
 
+    // Parse path data.
+    // TODO: Remove debug printing
+    // TODO: Show errors to users as a message box.
+    std::string error;
+    std::vector<SvgPathCommand> cmds = parsePathData(d.toStdString(), &error);
+    qDebug() << "FOUND PATH DATA:\n" << d;
+    qDebug() << "PARSED PATH DATA:";
+    for (const SvgPathCommand& cmd : cmds) {
+        qDebug() << static_cast<unsigned char>(cmd.type) << cmd.relative << cmd.args;
+    }
+    if (!error.empty()) {
+        qDebug() << "ERROR:" << QString::fromStdString(error);
+    }
+
+    // TODO Convert from SvgPathCommands to VGC data structure,
+    // instead of reparsing using below function.
     return parsePath(d, pa);
 }
 
-// TODO refactor tail recursion
 bool SvgParser::parsePath(QString &data, const SvgPresentationAttributes &pa, const Eigen::Vector2d startPos) {
     QList<PotentialPoint> samples;
 
