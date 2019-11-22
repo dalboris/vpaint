@@ -48,6 +48,14 @@ private:
 
 class SvgParser;
 
+// https://www.w3.org/TR/SVG11/painting.html#SpecifyingPaint
+struct SvgPaint {
+    SvgPaint() : hasColor(false), color(Qt::black) {}
+    SvgPaint(const QColor& color) : hasColor(true), color(color) {}
+    bool hasColor;
+    QColor color;
+};
+
 class SvgPresentationAttributes
 {
 public:
@@ -59,10 +67,8 @@ public:
 
     operator QString() const;
 
-    QColor fill, stroke;
+    SvgPaint fill, stroke;
     qreal strokeWidth;
-
-    bool hasFill() const { return fill.isValid() && fill.alpha() != 0; }
 };
 
 class SvgParser
@@ -82,6 +88,7 @@ public:
     void readSvg_(XmlStreamReader &xml);
 
     // Utilities
+    SvgPaint parsePaint_(QString s);
     QColor parseColor_(QString s);
     bool getNextFlag(QString & source, bool * ok = 0);
     double getNextDouble(QString & source, bool * ok = 0);
