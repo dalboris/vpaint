@@ -616,6 +616,11 @@ bool importPathData(
     // https://www.w3.org/TR/SVG11/paths.html#PathDataMovetoCommands
     Eigen::Vector2d p(0.0, 0.0);
 
+    // Previous command and last Bezier control point. This is used
+    // for the "smooth" bezier curveto variants, that is, S and T.
+    SvgPathCommandType previousCommandType = SvgPathCommandType::MoveTo;
+    Eigen::Vector2d lastControlPoint(0.0, 0.0);
+
     // Argument tuple of current command segment
     std::vector<double> args;
     args.reserve(7);
@@ -712,7 +717,105 @@ bool importPathData(
                 }
             }
 
-            // Add curves and arcs, for now just draw a straight line
+            // Add cubic Bezier segments
+            else if (cmd.type == SvgPathCommandType::CCurveTo ||
+                     cmd.type == SvgPathCommandType::SCurveTo) {
+                Eigen::Vector2d q, r, s;
+                if (cmd.type == SvgPathCommandType::CCurveTo) {
+                    q = Eigen::Vector2d(args[0], args[1]);
+                    r = Eigen::Vector2d(args[2], args[3]);
+                    s = Eigen::Vector2d(args[4], args[5]);
+                }
+                else {
+                    if (previousCommandType == SvgPathCommandType::CCurveTo ||
+                        previousCommandType == SvgPathCommandType::SCurveTo) {
+                        q = 2 * p - lastControlPoint;
+                    }
+                    else {
+                        q = p;
+                    }
+                    if (cmd.relative) {
+                        q -= p;
+                    }
+                    r = Eigen::Vector2d(args[0], args[1]);
+                    s = Eigen::Vector2d(args[2], args[3]);
+                }
+                if (cmd.relative) {
+                    q += p;
+                    r += p;
+                    s += p;
+                }
+                lastControlPoint = r;
+                if (splitAtAllControlPoints) {
+                    createEdge(vac, time, samples, edges, pa);
+                    samples.push_back(EdgeSample(p[0], p[1], width));
+                }
+                // Add 8 samples. Will be resampled anyway later.
+                int nsamples = 8;
+                double du = 1.0 / static_cast<double>(nsamples);
+                for (int j = 1; j <= nsamples; ++j) {
+                    double u = j * du;
+                    Eigen::Vector2d b =     (1-u) * (1-u) * (1-u) * p +
+                                        3 * (1-u) * (1-u) *   u   * q +
+                                        3 * (1-u) *   u   *   u   * r +
+                                              u   *   u   *   u   * s;
+                    samples.push_back(EdgeSample(b[0], b[1], width));
+                }
+                p = s;
+                if (splitAtAllControlPoints) {
+                    createEdge(vac, time, samples, edges, pa);
+                    samples.push_back(EdgeSample(p[0], p[1], width));
+                }
+            }
+
+            // Add quadratic Bezier segments
+            else if (cmd.type == SvgPathCommandType::QCurveTo ||
+                     cmd.type == SvgPathCommandType::TCurveTo) {
+                Eigen::Vector2d q, r;
+                if (cmd.type == SvgPathCommandType::QCurveTo) {
+                    q = Eigen::Vector2d(args[0], args[1]);
+                    r = Eigen::Vector2d(args[2], args[3]);
+                }
+                else {
+                    if (previousCommandType == SvgPathCommandType::QCurveTo ||
+                        previousCommandType == SvgPathCommandType::TCurveTo) {
+                        q = 2 * p - lastControlPoint;
+                    }
+                    else {
+                        q = p;
+                    }
+                    if (cmd.relative) {
+                        q -= p;
+                    }
+                    r = Eigen::Vector2d(args[0], args[1]);
+                }
+                if (cmd.relative) {
+                    q += p;
+                    r += p;
+                }
+                lastControlPoint = q;
+                if (splitAtAllControlPoints) {
+                    createEdge(vac, time, samples, edges, pa);
+                    samples.push_back(EdgeSample(p[0], p[1], width));
+                }
+                // Add 8 samples. Will be resampled anyway later.
+                int nsamples = 8;
+                double du = 1.0 / static_cast<double>(nsamples);
+                for (int j = 1; j <= nsamples; ++j) {
+                    double u = j * du;
+                    Eigen::Vector2d b =     (1-u) * (1-u) * p +
+                                        2 * (1-u) *   u   * q +
+                                              u   *   u   * r;
+                    samples.push_back(EdgeSample(b[0], b[1], width));
+                }
+                p = r;
+                if (splitAtAllControlPoints) {
+                    createEdge(vac, time, samples, edges, pa);
+                    samples.push_back(EdgeSample(p[0], p[1], width));
+                }
+            }
+
+            // Add elliptical arcs (for now just draw a straight line)
             else {
                 Eigen::Vector2d q(args[arity - 2], args[arity - 1]);
                 if (cmd.relative) {
@@ -731,6 +834,7 @@ bool importPathData(
                     samples.push_back(EdgeSample(p[0], p[1], width));
                 }
             }
+            previousCommandType = cmd.type;
         }
     }
     createEdge(vac, time, samples, edges, pa);
