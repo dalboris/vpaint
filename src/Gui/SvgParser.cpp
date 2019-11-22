@@ -403,7 +403,13 @@ std::vector<SvgPathCommand> parsePathData(
         std::vector<double> args;
         args.reserve(sig.size());
         while (readArgtuples) {
-            readWhitespaces(it, end);
+            auto itBeforeArgtuple = it;
+            if (isFirstArgtuple) {
+                readWhitespaces(it, end);
+            }
+            else {
+                readCommaWhitespaces(it, end);
+            }
             for (size_t i = 0; i < sig.size(); ++i) {
                 if (i != 0) {
                     readCommaWhitespaces(it, end);
@@ -436,7 +442,12 @@ std::vector<SvgPathCommand> parsePathData(
                     }
                     // Whether it's an error or not, since there's no valid
                     // argument, we stop reading args for this command, and
-                    // move on to the next command.
+                    // move on to the next command. Note that we need to
+                    // move back the iterator to where it was before attempting
+                    // to read arguments, since a comma may have been read, which
+                    // is allowed between argtuples, but not allowed between
+                    // an argtuple and the next command.
+                    it = itBeforeArgtuple;
                     readArgtuples = false;
                     break;
                 }
