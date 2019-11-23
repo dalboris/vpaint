@@ -8,6 +8,7 @@
 
 #include "SvgParser.h"
 
+#include <cmath>
 #include <regex>
 #include <sstream>
 #include <vector>
@@ -586,6 +587,17 @@ void finishSubpath(
     edges.clear();
 }
 
+// Returns the angle between two vectors
+//
+double angle(const Eigen::Vector2d& a, const Eigen::Vector2d& b)
+{
+    // Note: Eigen doesn't have "2D cross product" yet :-(
+    // https://eigen.tuxfamily.org/bz/show_bug.cgi?id=1037
+    double dot = a.dot(b);               // = a[0]*b[0] + a[1]*b[1];
+    double det = a[0]*b[1] - a[1]*b[0];  // = a."cross2"(b) = "Matrix2d(a, b)".determinant()
+    return atan2(det, dot);
+}
+
 // Creates new vertices, edges, and faces from the given path data commands.
 //
 bool importPathData(
@@ -815,9 +827,16 @@ bool importPathData(
                 }
             }
 
-            // Add elliptical arcs (for now just draw a straight line)
+            // Add elliptical arcs
+            // See https://www.w3.org/TR/SVG11/implnote.html#ArcImplementationNotes
             else {
-                Eigen::Vector2d q(args[arity - 2], args[arity - 1]);
+                const double eps = 1e-6;
+                double rx = std::abs(args[0]);
+                double ry = std::abs(args[1]);
+                double phi = args[2] / 180.0 * M_PI;
+                bool fa = (args[3] > 0.5);
+                bool fs = (args[4] > 0.5);
+                Eigen::Vector2d q(args[5], args[6]);
                 if (cmd.relative) {
                     q += p;
                 }
@@ -825,11 +844,62 @@ bool importPathData(
                     createEdge(vac, time, samples, edges, pa);
                     samples.push_back(EdgeSample(p[0], p[1], width));
                 }
-                // TODO: add more than just one sample to avoid
-                // smoothing out corner.
-                samples.push_back(EdgeSample(q[0], q[1], width));
+                if (rx < eps || ry < eps) {
+                    // Draw a line instead.
+                    // TODO: add more than just one sample to avoid
+                    // smoothing out corner.
+                    samples.push_back(EdgeSample(q[0], q[1], width));
+                }
+                else {
+                    // Correction of out-of-range radii
+                    double cosphi = std::cos(phi);
+                    double sinphi = std::sin(phi);
+                    double rx2 = rx*rx;
+                    double ry2 = ry*ry;
+                    Eigen::Matrix2d rot; rot << cosphi, -sinphi, sinphi, cosphi;
+                    Eigen::Matrix2d rotInv; rotInv << cosphi, sinphi, -sinphi, cosphi;
+                    Eigen::Vector2d p_ = rotInv * (0.5 * (p - q));
+                    double px_2 = p_[0]*p_[0];
+                    double py_2 = p_[1]*p_[1];
+                    double D = px_2/rx2 + py_2/ry2;
+                    if (D > 1) {
+                        double d = std::sqrt(D);
+                        rx *= d; ry *= d; rx2 = rx*rx; ry2 = ry*ry;
+                    }
+                    // Conversion from endpoint to center parameterization.
+                    double rx2py_2 = rx2*py_2;
+                    double ry2px_2 = ry2*px_2;
+                    double A = (rx2*ry2 - rx2py_2 - ry2px_2) / (rx2py_2 + ry2px_2);
+                    double a = std::sqrt(std::abs(A));
+                    if (fa == fs) {
+                        a *= -1;
+                    }
+                    Eigen::Vector2d c_(a*p_[1]*rx/ry, -a*p_[0]*ry/rx);
+                    Eigen::Vector2d c = rot * c_ + 0.5 * (p + q);
+                    Eigen::Vector2d rInv(1/rx, 1/ry);
+                    Eigen::Vector2d e1(1, 0);
+                    Eigen::Vector2d e2 = rInv.cwiseProduct(  p_ - c_);
+                    Eigen::Vector2d e3 = rInv.cwiseProduct(- p_ - c_);
+                    double theta1 = angle(e1, e2);
+                    double Dtheta = angle(e2, e3);
+                    if (fs == false && Dtheta > 0) {
+                        Dtheta -= 2 * M_PI;
+                    }
+                    else if (fs == true && Dtheta < 0) {
+                        Dtheta += 2 * M_PI;
+                    }
+                    // Add 12 samples per quarter-circle.
+                    int nsamples = 1 + static_cast<int>(std::floor(24 * std::abs(Dtheta) / M_PI));
+                    double dtheta = Dtheta / static_cast<double>(nsamples);
+                    for (int j = 1; j <= nsamples; ++j) {
+                        double theta = theta1 + j * dtheta;
+                        Eigen::Vector2d b(rx * std::cos(theta), ry * std::sin(theta));
+                        b = c + rot * b;
+                        samples.push_back(EdgeSample(b[0], b[1], width));
+                    }
+                }
                 p = q;
-                if (splitAtLineTo) {
+                if (splitAtAllControlPoints) {
                     createEdge(vac, time, samples, edges, pa);
                     samples.push_back(EdgeSample(p[0], p[1], width));
                 }
