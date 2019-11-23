@@ -30,6 +30,7 @@ class KeyVertex: public KeyCell, public VertexCell
 public:
     // Constructor
     KeyVertex(VAC * vac, Time time, const Eigen::Vector2d & pos);
+    KeyVertex(VAC * vac, Time time, const EdgeSample& sample);
     KeyVertex(VAC * vac, Time time);
 
     // Geometry

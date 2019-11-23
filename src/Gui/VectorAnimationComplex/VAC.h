@@ -29,6 +29,7 @@
 #include "ZOrderedCells.h"
 #include "Eigen.h"
 #include "TransformTool.h"
+#include "EdgeSample.h"
 
 #include "../View3DSettings.h"
 
@@ -270,6 +271,7 @@ public:
     //       include algorithms if needed, but cells constructor must have valid boundary already
     //       specified.
     KeyVertex * newKeyVertex(Time time, const Eigen::Vector2d & pos = Eigen::Vector2d(0,0));
+    KeyVertex * newKeyVertex(Time time, const EdgeSample& sample);
     KeyEdge * newKeyEdge(Time time,
                KeyVertex * left,
                KeyVertex * right,

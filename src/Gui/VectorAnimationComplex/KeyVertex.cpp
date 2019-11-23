@@ -43,6 +43,17 @@ KeyVertex::KeyVertex(VAC * vac, Time time, const Eigen::Vector2d & pos) :
     size_ = global()->edgeWidth() * 1.7;
 }
 
+KeyVertex::KeyVertex(VAC * vac, Time time, const EdgeSample& sample) :
+    Cell(vac),
+    KeyCell(vac, time),
+    VertexCell(vac),
+    pos_(sample.x(), sample.y())
+{
+    initColor();
+
+    size_ = sample.width() * 1.7;
+}
+
 KeyVertex::KeyVertex(VAC * vac, Time time) :
     Cell(vac),
     KeyCell(vac, time),

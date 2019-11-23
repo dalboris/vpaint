@@ -1584,6 +1584,13 @@ KeyVertex* VAC::newKeyVertex(Time time, const Eigen::Vector2d & pos)
     return node;
 }
 
+KeyVertex* VAC::newKeyVertex(Time time, const EdgeSample& sample)
+{
+    KeyVertex * node = new KeyVertex(this, time, sample);
+    insertCell_(node);
+    return node;
+}
+
 KeyEdge * VAC::newKeyEdge(Time time,
                           KeyVertex * left,
                           KeyVertex * right,
