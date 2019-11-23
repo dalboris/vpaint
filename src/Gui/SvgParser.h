@@ -60,10 +60,10 @@ class SvgPresentationAttributes
 {
 public:
     SvgPresentationAttributes();
-    SvgPresentationAttributes(XmlStreamReader &xml, SvgParser &parser);
+    SvgPresentationAttributes(XmlStreamReader &xml);
 
     void reset();
-    void init(XmlStreamReader &xml, SvgParser &parser);
+    void init(XmlStreamReader &xml);
 
     operator QString() const;
 
@@ -75,40 +75,29 @@ class SvgParser
 {
 public:
     SvgParser();
-//private:
-    bool readRect_(XmlStreamReader &xml, SvgPresentationAttributes &pa);
-    bool readLine_(XmlStreamReader &xml, SvgPresentationAttributes &pa);
-    bool readPolyline_(XmlStreamReader &xml, SvgPresentationAttributes &pa);
-    bool readPolygon_(XmlStreamReader &xml, SvgPresentationAttributes &pa);
-    bool readCircle_(XmlStreamReader &xml, SvgPresentationAttributes &pa);
-    bool readEllipse_(XmlStreamReader &xml, SvgPresentationAttributes &pa);
-    bool readPath_(XmlStreamReader &xml, SvgPresentationAttributes &pa);
 
-    void readElement_(XmlStreamReader &xml, QStack<SvgPresentationAttributes> pa);
-    void readSvg_(XmlStreamReader &xml);
+    static void readSvg(XmlStreamReader &xml);
+
+    static SvgPaint parsePaint_(QString s);
+    static QColor parseColor_(QString s);
+
+private:
+    static bool readRect_(XmlStreamReader &xml, SvgPresentationAttributes &pa);
+    static bool readLine_(XmlStreamReader &xml, SvgPresentationAttributes &pa);
+    static bool readPolyline_(XmlStreamReader &xml, SvgPresentationAttributes &pa);
+    static bool readPolygon_(XmlStreamReader &xml, SvgPresentationAttributes &pa);
+    static bool readCircle_(XmlStreamReader &xml, SvgPresentationAttributes &pa);
+    static bool readEllipse_(XmlStreamReader &xml, SvgPresentationAttributes &pa);
+    static bool readPath_(XmlStreamReader &xml, SvgPresentationAttributes &pa);
+
+    static void readElement_(XmlStreamReader &xml, QStack<SvgPresentationAttributes> pa);
 
     // Utilities
-    SvgPaint parsePaint_(QString s);
-    QColor parseColor_(QString s);
-    bool getNextFlag(QString & source, bool * ok = 0);
-    double getNextDouble(QString & source, bool * ok = 0);
-    Eigen::Vector2d getNextCoordinatePair(QString & source, bool * ok = 0);
-    void trimFront(QString & string, QVector<QChar> chars = { 0x20, 0x9, 0xD, 0xA });
-    void trimCommaWspFront(QString & string);
-    QList<PotentialPoint>::iterator populateSamplesRecursive(double paramVal, double paramSpan, QList<PotentialPoint> & edgeSamples, QList<PotentialPoint>::iterator pointLoc, double strokeWidth, double ds, std::function<Eigen::Vector2d (double)> getPoint);
-    void printVec(const Eigen::Vector2d & v, QString name);
+    static QList<PotentialPoint>::iterator populateSamplesRecursive(
+            double paramVal, double paramSpan, QList<PotentialPoint> & edgeSamples,
+            QList<PotentialPoint>::iterator pointLoc, double strokeWidth, double ds,
+            std::function<Eigen::Vector2d (double)> getPoint);
 
-    // Path things
-    bool parsePath(QString & data, const SvgPresentationAttributes & pa, const Eigen::Vector2d startPos = Eigen::Vector2d(0, 0));
-    bool addLineTo(QList<PotentialPoint> & samplingPoints, QString & data, const SvgPresentationAttributes & pa, bool relative);
-    bool addVerticalLineTo(QList<PotentialPoint> & samplingPoints, QString & data, const SvgPresentationAttributes & pa, bool relative);
-    bool addHorizontalLineTo(QList<PotentialPoint> & samplingPoints, QString & data, const SvgPresentationAttributes & pa, bool relative);
-    bool addCurveTo(QList<PotentialPoint> & samplingPoints, QString & data, const SvgPresentationAttributes &pa, bool relative);
-    bool addSmoothCurveTo(QList<PotentialPoint> & samplingPoints, QString & data, bool relative);
-    bool addQuadraticBezierCurveTo(QList<PotentialPoint> & samplingPoints, QString & data, const SvgPresentationAttributes &pa, bool relative);
-    bool addSmoothQuadraticBezierCurveTo(QList<PotentialPoint> & samplingPoints, QString & data, bool relative);
-    bool addEllipticalArc(QList<PotentialPoint> & samplingPoints, QString & data, const SvgPresentationAttributes & pa, bool relative);
-    Eigen::Vector2d finishPath(QList<PotentialPoint> & samplingPoints, const SvgPresentationAttributes pa, bool closed = false);
 };
 
 #endif // SVGPARSER_H

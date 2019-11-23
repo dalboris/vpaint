@@ -865,7 +865,6 @@ void MainWindow::open_(const QString & filePath)
 
 void MainWindow::doImportSvg(const QString & filePath)
 {
-    SvgParser parser;
     QFile file(filePath);
     if (!file.open(QFile::ReadOnly | QFile::Text))
     {
@@ -874,7 +873,7 @@ void MainWindow::doImportSvg(const QString & filePath)
     }
 
     XmlStreamReader xml(&file);
-    parser.readSvg_(xml);
+    SvgParser::readSvg(xml);
 
     // Close file
     file.close();
