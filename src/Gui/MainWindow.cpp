@@ -1775,13 +1775,13 @@ void MainWindow::createMenus()
     menuFile = new QMenu(tr("&File"));
     menuFile->addAction(actionNew);
     menuFile->addAction(actionOpen);
-    QMenu * importMenu = menuFile->addMenu(tr("Import")); {
-        importMenu->addAction(actionImportSvg);
-    }
     menuFile->addSeparator();
     menuFile->addAction(actionSave);
     menuFile->addAction(actionSaveAs);
     menuFile->addSeparator();
+    QMenu * importMenu = menuFile->addMenu(tr("Import")); {
+        importMenu->addAction(actionImportSvg);
+    }
     QMenu * exportMenu = menuFile->addMenu(tr("Export")); {
         exportMenu->addAction(actionExportPNG);
         exportMenu->addAction(actionExportSVG);
