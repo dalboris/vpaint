@@ -35,8 +35,8 @@
         <file>images/onion-skinning-off.png</file>
         <file>images/onion-skinning-on.png</file>
         <file>images/view-settings-active.png</file>
-        <file>images/logo_currentversion.png</file>
         <file>images/icon-256.png</file>
         <file>images/checkerboard.png</file>
+        <file>images/logobeta.png</file>
     </qresource>
 </RCC>

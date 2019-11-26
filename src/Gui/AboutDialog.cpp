@@ -76,9 +76,22 @@ AboutDialog::AboutDialog(bool showAtStartup)
     // About widget
     QWidget * aboutWidget = new QWidget();
 
+    QHBoxLayout * logoLayout = new QHBoxLayout();
+    QPixmap logo(":/images/logobeta.png");
     QLabel * logoLabel = new QLabel();
-    logoLabel->setPixmap(QPixmap(":/images/logo_currentversion.png"));
-    logoLabel->setAlignment(Qt::AlignTop | Qt::AlignHCenter);
+    if (logo.width() > 0) {
+        logoLabel->setPixmap(QPixmap(":/images/logobeta.png"));
+        logoLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+        logoLabel->setAlignment(Qt::AlignTop | Qt::AlignHCenter);
+        logoLabel->setMaximumSize(logo.width() / 2, logo.height() / 2);
+        logoLabel->setScaledContents(true);
+    }
+    logoLayout->addStretch();
+    logoLayout->addWidget(logoLabel);
+    logoLayout->addStretch();
+
+    QLabel * versionLabel = new QLabel(tr("Version: ") + qApp->applicationVersion());
+    versionLabel->setAlignment(Qt::AlignTop | Qt::AlignHCenter);
 
     QLabel * websiteLabel = new QLabel(websiteText);
     websiteLabel->setTextFormat(Qt::RichText);
@@ -105,7 +118,9 @@ AboutDialog::AboutDialog(bool showAtStartup)
     subscribeLayout->addWidget(subscribeButton);
 
     QVBoxLayout * aboutWidgetLayout = new QVBoxLayout();
-    aboutWidgetLayout->addWidget(logoLabel);
+    aboutWidgetLayout->addLayout(logoLayout);
+    aboutWidgetLayout->addSpacing(10);
+    aboutWidgetLayout->addWidget(versionLabel);
     aboutWidgetLayout->addSpacing(10);
     aboutWidgetLayout->addWidget(websiteLabel);
     aboutWidgetLayout->addSpacing(10);
