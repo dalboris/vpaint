@@ -37,6 +37,6 @@
         <file>images/view-settings-active.png</file>
         <file>images/icon-256.png</file>
         <file>images/checkerboard.png</file>
-        <file>images/logobeta.png</file>
+        <file>images/aboutlogo.png</file>
     </qresource>
 </RCC>

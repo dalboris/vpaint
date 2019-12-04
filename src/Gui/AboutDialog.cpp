@@ -16,40 +16,74 @@
 
 #include "AboutDialog.h"
 
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QTabWidget>
-#include <QLabel>
 #include <QCheckBox>
-#include <QDialogButtonBox>
-#include <QLineEdit>
-#include <QPushButton>
 #include <QDesktopServices>
-#include <QUrl>
+#include <QDialogButtonBox>
+#include <QHBoxLayout>
+#include <QKeyEvent>
+#include <QLabel>
+#include <QLineEdit>
 #include <QMessageBox>
+#include <QPushButton>
+#include <QTabWidget>
+#include <QUrl>
+#include <QVBoxLayout>
 #include <QtNetwork>
+
+PushLineEdit::PushLineEdit(QWidget * parent) :
+    QWidget(parent)
+{
+    pushButton_ = new QPushButton();
+    lineEdit_ = new QLineEdit();
+    QHBoxLayout * layout = new QHBoxLayout();
+    layout->addWidget(lineEdit_);
+    layout->addWidget(pushButton_);
+    setLayout(layout);
+    setSizePolicy(lineEdit_->sizePolicy());
+}
+
+void PushLineEdit::keyPressEvent(QKeyEvent *event)
+{
+    if (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter) {
+        pushButton_->click();
+    }
+    else {
+        QWidget::keyPressEvent(event);
+    }
+}
 
 AboutDialog::AboutDialog(bool showAtStartup)
 {
-    QString websiteText = tr("<a href=\"http://www.vpaint.org\">http://www.vpaint.org</a>");
-
     QString aboutText = tr(
-            "VPaint is an experimental vector graphics editor based on the Vector Animation"
-            " Complex (VAC), a technology developed by a collaboration of researchers at"
-            " Inria and the University of British Columbia, featured at SIGGRAPH 2015. It"
-            " allows you to create resolution-independent illustrations and animations using"
-            " innovative techniques.<br><br>"
+            "Version: %1<br><br>"
             " "
-            "<b>DISCLAIMER:</b> VPaint %1, or any upcoming 1.x release, is considered BETA: it"
+            "<a href=\"https://www.vpaint.org\" style=\"text-decoration: none;\">https://www.vpaint.org</a><br>"
+            "<a href=\"https://www.vgc.io\" style=\"text-decoration: none;\">https://www.vgc.io</a><br><br>"
+            " "
+            "VPaint is an <b>experimental prototype</b> based on the Vector"
+            " Graphics Complex (<b>VGC</b>), a technology developed by a"
+            " collaboration of researchers at Inria and the University of"
+            " British Columbia. It allows you to create resolution-independent"
+            " illustrations and animations using innovative techniques.<br><br>"
+            " "
+            "<b>DISCLAIMER</b><br><br>"
+            " "
+            "VPaint is considered BETA, and always will: it"
             " lacks plenty of useful features commonly found in other editors, and you"
-            " should expect glitches and crashes once in a while. <b>It is distributed"
+            " should expect glitches and crashes once in a while. It is distributed"
             " primarily for research purposes, and for curious artists interested in early"
-            " testing of cutting-edge but unstable technology.</b><br><br>"
+            " testing of cutting-edge but unstable technology.<br><br>"
             " "
-            "New VPaint 1.x versions are expected every two months, with"
-            " new features and increased stability. VPaint 2.0, full-featured and stable, is"
-            " expected for 2017. <b>If you want to be notified when a new version is released,"
-            " just enter your email address below.</b>").arg(qApp->applicationVersion());
+            "<b>VGC ACCOUNT</b><br><br>"
+            " "
+            "Because VPaint is just a prototype, we may or may not release new versions."
+            " However, we are currently developing two new apps, called VGC Illustration and "
+            " VGC Animation, based on what we learned from VPaint. These new apps will significantly "
+            " improve performance compared to VPaint, and have more features. <b>If you would like to be notified if/when "
+            " a new version of VPaint is released, or when VGC Illustration and VGC Animation are released</b>, you "
+            " can sign up for a VGC account by entering your email address below, and following the "
+            " instructions in the email which will be sent to you. Thanks for your interest, and have fun "
+            " testing VPaint!").arg(qApp->applicationVersion());
 
     QString licenseText = tr(
             "Copyright (C) 2012-2019 The VPaint Developers.<br>"
@@ -77,10 +111,10 @@ AboutDialog::AboutDialog(bool showAtStartup)
     QWidget * aboutWidget = new QWidget();
 
     QHBoxLayout * logoLayout = new QHBoxLayout();
-    QPixmap logo(":/images/logobeta.png");
+    QPixmap logo(":/images/aboutlogo.png");
     QLabel * logoLabel = new QLabel();
     if (logo.width() > 0) {
-        logoLabel->setPixmap(QPixmap(":/images/logobeta.png"));
+        logoLabel->setPixmap(logo);
         logoLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
         logoLabel->setAlignment(Qt::AlignTop | Qt::AlignHCenter);
         logoLabel->setMaximumSize(logo.width() / 2, logo.height() / 2);
@@ -90,44 +124,25 @@ AboutDialog::AboutDialog(bool showAtStartup)
     logoLayout->addWidget(logoLabel);
     logoLayout->addStretch();
 
-    QLabel * versionLabel = new QLabel(tr("Version: ") + qApp->applicationVersion());
-    versionLabel->setAlignment(Qt::AlignTop | Qt::AlignHCenter);
-
-    QLabel * websiteLabel = new QLabel(websiteText);
-    websiteLabel->setTextFormat(Qt::RichText);
-    websiteLabel->setAlignment(Qt::AlignTop | Qt::AlignHCenter);
-    websiteLabel->setOpenExternalLinks(true);
-    QFont websiteFont = websiteLabel->font();
-    websiteFont.setPointSize(15);
-    websiteLabel->setFont(websiteFont);
-
     QLabel * aboutLabel = new QLabel(aboutText);
     aboutLabel->setWordWrap(true);
     aboutLabel->setTextFormat(Qt::RichText);
     aboutLabel->setAlignment(Qt::AlignTop | Qt::AlignLeft);
 
-    subscribeLineEdit_ = new QLineEdit();
-    subscribeLineEdit_->setPlaceholderText(tr("Your email address"));
+    signup_ = new PushLineEdit();
+    signup_->lineEdit()->setPlaceholderText(tr("Your email address"));
+    signup_->pushButton()->setText(tr("Sign up!"));
+    connect(signup_->pushButton(), SIGNAL(clicked(bool)), this, SLOT(processSignup_()));
+
     networkManager_ = new QNetworkAccessManager(this);
-
-    QPushButton * subscribeButton = new QPushButton(tr("Subscribe"));
-    connect(subscribeButton, SIGNAL(clicked(bool)), this, SLOT(processSubscribe_()));
-
-    QHBoxLayout * subscribeLayout = new QHBoxLayout();
-    subscribeLayout->addWidget(subscribeLineEdit_);
-    subscribeLayout->addWidget(subscribeButton);
 
     QVBoxLayout * aboutWidgetLayout = new QVBoxLayout();
     aboutWidgetLayout->addLayout(logoLayout);
     aboutWidgetLayout->addSpacing(10);
-    aboutWidgetLayout->addWidget(versionLabel);
-    aboutWidgetLayout->addSpacing(10);
-    aboutWidgetLayout->addWidget(websiteLabel);
-    aboutWidgetLayout->addSpacing(10);
     aboutWidgetLayout->addWidget(aboutLabel);
     aboutWidgetLayout->addSpacing(10);
-    aboutWidgetLayout->addLayout(subscribeLayout);
-    aboutWidgetLayout->addStretch();
+    aboutWidgetLayout->addWidget(signup_);
+    aboutWidgetLayout->addSpacing(10);
     aboutWidget->setLayout(aboutWidgetLayout);
 
     // License widget
@@ -165,12 +180,12 @@ AboutDialog::AboutDialog(bool showAtStartup)
     setLayout(layout);
 }
 
-void AboutDialog::processSubscribe_()
+void AboutDialog::processSignup_()
 {
     // Set query
     QUrlQuery urlQuery;
-    urlQuery.addQueryItem("emailaddress", subscribeLineEdit_->text());
-    QUrl url = QUrl("http://www.vpaint.org/subscribeext.php");
+    urlQuery.addQueryItem("email", signup_->lineEdit()->text());
+    QUrl url = QUrl("https://www.vgc.io/signup");
     QNetworkRequest networkRequest(url);
     networkRequest.setHeader(QNetworkRequest::ContentTypeHeader,
                              "application/x-www-form-urlencoded; charset=utf-8");
@@ -186,40 +201,31 @@ void AboutDialog::processSubscribe_()
 
 void AboutDialog::processFinished_()
 {
-    QString okMessage = tr(
-                "Thank you for your interest in VPaint! You should receive an email shortly"
-                " which confirms your subscription.");
-
-    QString invalidemailMessage = tr(
-                "Sorry, it seems that your email address is invalid. Please try again,"
-                " and if you are still having issues, contact me at dalboris@cs.ubc.ca.");
-
-    QString errorMessage = tr(
-                "Oops... it seems something went wrong, I suggest that you try again. If"
-                " you are still having issues,"
-                " then I apologize for the inconvenience. Please contact me (Boris Dalstein) at"
-                " dalboris@cs.ubc.ca and I'll be happy to help you out.");
-
-
-    QString replyString = reply_->readAll();
-    if(replyString == QString("ok"))
+    QVariant status = reply_->attribute(QNetworkRequest::HttpStatusCodeAttribute);
+    QMessageBox msgBox(this);
+    msgBox.setTextFormat(Qt::RichText);
+    if (status.isValid() && status.toInt() == 200)
     {
-        QMessageBox::information(this, tr("Subscription successful"), okMessage, QMessageBox::Ok);
-        subscribeLineEdit_->clear();
-    }
-    else if(replyString == QString("invalidemail"))
-    {
-        QMessageBox::warning(this, tr("Subscription failed"), invalidemailMessage, QMessageBox::Ok);
-    }
-    else if(replyString == QString("invalidemail"))
-    {
-        QMessageBox::warning(this, tr("Subscription failed"), errorMessage, QMessageBox::Ok);
+        msgBox.setIcon(QMessageBox::Information);
+        msgBox.setWindowTitle(tr("Activate your VGC account"));
+        msgBox.setText(tr(
+            "Thank you!<br><br>"
+            "Please check your inbox and"
+            " <b>follow the remaining instructions</b> to activate your VGC account.<br><br>"
+            "Contact us at <a href=\"mailto:support@vgc.io\">support@vgc.io</a>"
+            " if you haven't received our email after a few minutes."));
+        signup_->lineEdit()->clear();
     }
     else
     {
-        QMessageBox::warning(this, tr("Subscription failed"), errorMessage, QMessageBox::Ok);
+        msgBox.setIcon(QMessageBox::Warning);
+        msgBox.setWindowTitle(tr("Error"));
+        msgBox.setText(tr(
+            "Oops... something went wrong. Please try again, or contact us"
+            " at <a href=\"mailto:support@vgc.io\">support@vgc.io</a> if "
+            " the problem persists."));
     }
-
+    msgBox.exec();
     reply_->deleteLater();
 }
 

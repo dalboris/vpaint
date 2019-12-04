@@ -23,6 +23,28 @@ class QLineEdit;
 class QCheckBox;
 class QNetworkAccessManager;
 class QNetworkReply;
+class QPushButton;
+
+/// This class represents a QLineEdit associated with a QPushButton, where the
+/// button is automatically clicked when the user presses Enter or Return from
+/// the QLineEdit.
+///
+class PushLineEdit: public QWidget
+{
+    Q_OBJECT
+
+public:
+    PushLineEdit(QWidget * parent = nullptr);
+    QPushButton * pushButton() const { return pushButton_; }
+    QLineEdit * lineEdit() const { return lineEdit_; }
+
+protected:
+    void keyPressEvent(QKeyEvent * event) override;
+
+private:
+    QPushButton* pushButton_;
+    QLineEdit* lineEdit_;
+};
 
 class AboutDialog: public QDialog
 {
@@ -34,14 +56,14 @@ public:
     bool showAtStartup() const;
 
 private slots:
-    void processSubscribe_();
+    void processSignup_();
     void processFinished_();
 
 private:
     QNetworkAccessManager * networkManager_;
     QNetworkReply * reply_;
 
-    QLineEdit * subscribeLineEdit_;
+    PushLineEdit * signup_;
     QCheckBox * showAtStartupCheckBox_;
 };
 
