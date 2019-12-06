@@ -15,6 +15,7 @@
 
 #include <QApplication>
 #include <QDebug>
+#include <QMessageBox>
 #include <QRegExp>
 #include <QStack>
 #include <QString>
@@ -22,6 +23,7 @@
 #include <QVector>
 
 #include "Global.h"
+#include "MainWindow.h"
 #include "Scene.h"
 #include "VectorAnimationComplex/EdgeGeometry.h"
 #include "VectorAnimationComplex/EdgeSample.h"
@@ -612,7 +614,7 @@ bool importPathData(
     bool splitAtAllControlPoints = true;
 
     // Edge width
-    double width = pa.stroke.hasColor ? pa.strokeWidth : 0.0;
+    double width = pa.strokeWidth;
 
     // Previous subpaths (or empty list if no face is to be created)
     QList<VectorAnimationComplex::Cycle> cycles;
@@ -1526,122 +1528,197 @@ bool SvgParser::readPath_(XmlStreamReader &xml, SvgPresentationAttributes &pa)
     return importPathData(cmds, pa, vac, t);
 }
 
-void SvgParser::readElement_(XmlStreamReader &xml, QStack<SvgPresentationAttributes> attributeStack)
-{
-    if(xml.isStartElement())
-    {
-        SvgPresentationAttributes pa(attributeStack.top());
-        pa.init(xml);
-        attributeStack.push(pa);
-        if(xml.name() == "rect")
-        {
-            if(!readRect_(xml, pa)) return;
-        }
-        else if(xml.name() == "line")
-        {
-            if(!readLine_(xml, pa)) return;
-        }
-        else if(xml.name() == "polyline")
-        {
-            if(!readPolyline_(xml, pa)) return;
-        }
-        else if(xml.name() == "polygon")
-        {
-            if(!readPolygon_(xml, pa)) return;
-        }
-        else if(xml.name() == "circle")
-        {
-            if(!readCircle_(xml, pa)) return;
-        }
-        else if(xml.name() == "ellipse")
-        {
-            if(!readEllipse_(xml, pa)) return;
-        }
-        else if(xml.name() == "path")
-        {
-            if(!readPath_(xml, pa)) return;
-        }
-        else if(xml.name() == "g") {
-            // We don't have to do anything more here
-        }
-        else {
-            // Warning
-        }
-    }
-
-    if(xml.isEndElement()) {
-        attributeStack.pop();
-    }
-
-    if(!xml.atEnd()) {
-        xml.readNext();
-        readElement_(xml, attributeStack);
-    }
-}
-
 void SvgParser::readSvg(XmlStreamReader & xml)
 {
+    // Ensure that this is a SVG file
     xml.readNextStartElement();
     if(xml.name() != "svg") {
-        // Error
+        QMessageBox::warning(global()->mainWindow(),
+                             QObject::tr("Not a SVG file"),
+                             QObject::tr("This file doesn't seem to be a SVG file."));
+        return;
     }
-    xml.readNextStartElement();
-    SvgPresentationAttributes pa;
+
+    // Initialize attribute stack
     QStack<SvgPresentationAttributes> attributeStack;
-    SvgPresentationAttributes baseStyle;
-    attributeStack.push(baseStyle);
-    readElement_(xml, attributeStack);
+    SvgPresentationAttributes defaultStyle;
+    attributeStack.push(defaultStyle);
+
+    // Iterate over all XML tokens, including the <svg> start element
+    // which may have style attributes or transforms
+    while (!xml.atEnd())
+    {
+        if(xml.isStartElement())
+        {
+            SvgPresentationAttributes pa = attributeStack.top();
+            pa.applyChildStyle(xml);
+            attributeStack.push(pa);
+            if(xml.name() == "rect")
+            {
+                if(!readRect_(xml, pa)) return;
+            }
+            else if(xml.name() == "line")
+            {
+                if(!readLine_(xml, pa)) return;
+            }
+            else if(xml.name() == "polyline")
+            {
+                if(!readPolyline_(xml, pa)) return;
+            }
+            else if(xml.name() == "polygon")
+            {
+                if(!readPolygon_(xml, pa)) return;
+            }
+            else if(xml.name() == "circle")
+            {
+                if(!readCircle_(xml, pa)) return;
+            }
+            else if(xml.name() == "ellipse")
+            {
+                if(!readEllipse_(xml, pa)) return;
+            }
+            else if(xml.name() == "path")
+            {
+                if(!readPath_(xml, pa)) return;
+            }
+            else if(xml.name() == "g") {
+                // We don't have to do anything more here
+            }
+            else {
+                // Warning
+            }
+        }
+
+        if(xml.isEndElement()) {
+            attributeStack.pop();
+        }
+
+        xml.readNext();
+    }
 }
 
-SvgPresentationAttributes::SvgPresentationAttributes() {
-    reset();
+SvgPresentationAttributes::SvgPresentationAttributes() :
+    fill_(Qt::black), // = {true, black}
+    stroke_(),        // = {false, black}
+    fillOpacity_(1.0),
+    strokeOpacity_(1.0),
+    strokeWidth_(1.0),
+    opacity_(1.0)
+{
+    update_();
 }
 
-SvgPresentationAttributes::SvgPresentationAttributes(XmlStreamReader &xml) {
-    reset();
-    init(xml);
-}
-
-void SvgPresentationAttributes::reset() {
-    strokeWidth = 1;
-    stroke.hasColor = false;
-    stroke.color = Qt::black;
-    fill.hasColor = true;
-    fill.color = Qt::black;
-}
-
-void SvgPresentationAttributes::init(XmlStreamReader &xml) {
-    bool okay = true;
+void SvgPresentationAttributes::applyChildStyle(XmlStreamReader &xml)
+{
+    bool ok;
 
     // Stroke width
     if(xml.attributes().hasAttribute("stroke-width")) {
-        double tempStrokeWidth = qMax(0.0, xml.attributes().value("stroke-width").toDouble(&okay));
-        if(okay) strokeWidth = tempStrokeWidth;
+        double x = xml.attributes().value("stroke-width").toDouble(&ok);
+        if(ok) {
+            strokeWidth = qMax(0.0, x);
+        }
     }
 
     // Fill (color)
     if(xml.attributes().hasAttribute("fill")) {
-        fill = SvgParser::parsePaint_(xml.attributes().value("fill").toString());
+        fill_ = SvgParser::parsePaint_(xml.attributes().value("fill").toString());
     }
 
     // Stroke (color)
     if(xml.attributes().hasAttribute("stroke")) {
-        stroke = SvgParser::parsePaint_(xml.attributes().value("stroke").toString());
+        stroke_ = SvgParser::parsePaint_(xml.attributes().value("stroke").toString());
     }
 
-    // Opacity (whole object)
-    double opacity = xml.attributes().hasAttribute("opacity") ? qBound(0.0, xml.attributes().value("opacity").toDouble(&okay), 1.0) : 1;
-    if(!okay) opacity = 1;
-
     // Fill opacity
-    double tempFillOpacity = xml.attributes().hasAttribute("fill-opacity") ? qBound(0.0, xml.attributes().value("fill-opacity").toDouble(&okay), 1.0) : 1;
-    if(!okay) tempFillOpacity = 1;
-    fill.color.setAlphaF(fill.color.alphaF() * tempFillOpacity * opacity);
+    if(xml.attributes().hasAttribute("fill-opacity")) {
+        double x = xml.attributes().value("fill-opacity").toDouble(&ok);
+        if (ok) {
+            strokeOpacity_ = qBound(0.0, x, 1.0);
+        }
+    }
 
     // Stroke opacity
-    double tempStrokeOpacity = xml.attributes().hasAttribute("stroke-opacity") ? qBound(0.0, xml.attributes().value("stroke-opacity").toDouble(&okay), 1.0) : 1;
-    if(!okay) tempStrokeOpacity = 1;
-    stroke.color.setAlphaF(stroke.color.alphaF() * tempStrokeOpacity * opacity);
+    if(xml.attributes().hasAttribute("stroke-opacity")) {
+        double x = xml.attributes().value("stroke-opacity").toDouble(&ok);
+        if (ok) {
+            strokeOpacity_ = qBound(0.0, x, 1.0);
+        }
+    }
+
+    // Group or Element Opacity
+    //
+    // Note that unlike other style attributes (including `fill-opacity` and
+    // `stroke-opacity`), the `opacity` attribute is not "inherited" by
+    // children. Instead, children of a group are supposed to be rendered in an
+    // offscreen buffer, then the buffer should be composited with the
+    // background based on its opacity.
+    //
+    // Example 1:
+    //
+    // <g opacity="0.5">                            // => opacity = 0.5  fill-opacity = 1.0
+    //   <circle cx="0" cy="0" r="10" fill="red">   // => opacity = 1.0  fill-opacity = 1.0
+    //   <circle cx="0" cy="0" r="10" fill="green"> // => opacity = 1.0  fill-opacity = 1.0
+    // </g>
+    //
+    // A fully-opaque green circle is drawn over a fully opaque red circle, so
+    // you get a fully opaque green circle in the offscreen buffer. After
+    // applying the 50% opacity of the group, you get a semi-transparent green
+    // circle: rgba(0, 255, 0, 0.5).
+    //
+    // Example 2:
+    //
+    // <g fill-opacity="0.5">                       // => opacity = 1.0  fill-opacity = 0.5
+    //   <circle cx="0" cy="0" r="10" fill="red">   // => opacity = 1.0  fill-opacity = 0.5
+    //   <circle cx="0" cy="0" r="10" fill="green"> // => opacity = 1.0  fill-opacity = 0.5
+    // </g>
+    //
+    // A semi-transparent green circle:               rgba(0, 255, 0, 0.5)    = Er, Eg, Eb, Ea  - Element
+    // is drawn over a semi-transparent red circle:   rgba(255, 0, 0, 0.5)    = Cr, Cg, Cb, Ca  - Canvas (before blending)
+    // so you get the following circle color/opacity: rgba(127, 255, 0, 0.75) = Cr',Cg',Cb',Ea' - Canvas (after blending)
+    // in the offscreen buffer after applying the alpha blending rules:
+    //     https://www.w3.org/TR/SVG11/masking.html#SimpleAlphaBlending
+    //     Cr' = (1 - Ea) * Cr + Er
+    //     Cg' = (1 - Ea) * Cg + Eg
+    //     Cb' = (1 - Ea) * Cb + Eb
+    //     Ca' = 1 - (1 - Ea) * (1 - Ca)
+    // After applying the 100% opacity of the group (groups ignore fill-opacity),
+    // you get the following circle: rgba(127, 255, 0, 0.75)
+    //
+    // Unfortunately, the behavior of Example 1 is impossible to achieve with the current
+    // rendering model of VPaint, since we don't use any offscreen buffers for
+    // compositing purposes. Therefore, we instead compose the group opacity
+    // directly into the fill/stroke-opacity of children, which is not
+    // equivalent (it gives you the same result as example 2), but is at least
+    // better than ignoring the property altogether.
+    //
+    // Nice example to test behaviour:
+    // https://www.w3.org/TR/SVG11/images/masking/opacity01.svg
+    //
+    if(xml.attributes().hasAttribute("opacity")) {
+        double x = xml.attributes().value("opacity").toDouble(&ok);
+        if(ok) {
+            // Compose with children (instead of inherit)
+            opacity_ *= qBound(0.0, x, 1.0);
+        }
+    }
+
+    update_();
+}
+
+void SvgPresentationAttributes::update_()
+{
+    // Compose the different opacity attributes together. In a compliant SVG
+    // renderer, we would still have this step but without the last
+    // multiplication with opacity_. The opacity_ would be applied differently,
+    // using an offscreen buffer.
+    fill = fill_;
+    stroke = stroke_;
+    fill.color.setAlphaF(fill.color.alphaF() * fillOpacity_ * opacity_);
+    stroke.color.setAlphaF(stroke.color.alphaF() * strokeOpacity_ * opacity_);
+
+    // Set strokeWidth to zero if stroke = none
+    strokeWidth = stroke.hasColor ? strokeWidth_ : 0.0;
 }
 
 SvgPresentationAttributes::operator QString() const
