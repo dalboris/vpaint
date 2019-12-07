@@ -20,7 +20,6 @@
 #include "ProperPath.h"
 #include "ProperCycle.h"
 
-class KeyVertex;
 class QTextStream;
 
 ////////////// Forward declare global serialization operators /////////////////
