@@ -1616,7 +1616,7 @@ void SvgPresentationAttributes::applyChildStyle(XmlStreamReader &xml)
     if(xml.attributes().hasAttribute("stroke-width")) {
         double x = xml.attributes().value("stroke-width").toDouble(&ok);
         if(ok) {
-            strokeWidth = qMax(0.0, x);
+            strokeWidth_ = qMax(0.0, x);
         }
     }
 
