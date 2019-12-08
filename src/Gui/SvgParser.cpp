@@ -1958,6 +1958,57 @@ bool readPath(XmlStreamReader &xml, VAC* vac, Time t,
 
 } // namespace
 
+// Read the SVG.
+//
+// Error Handling
+// --------------
+//
+// In case of errors in path data or basic shapes attributes, such as if
+// rect.height < 0, the SVG specification mandates to stop processing the
+// document, that is, not render any other XML element that might exist after
+// the error. See:
+//
+//   https://www.w3.org/TR/SVG11/implnote.html#ErrorProcessing
+//
+//   The document shall (ed: "MUST") be rendered up to, but not including, the
+//   first element which has an error. Exceptions:
+//
+//   - If a ‘path’ element is the first element which has an error
+//     and the only errors are in the path data specification, then
+//     render the ‘path’ up to the point of the path data error.
+//     For related information, see ‘path’ element implementation
+//     notes.
+//
+//   - If a ‘polyline’ or ‘polygon’ element is the first element
+//     which has an error and the only errors are within the
+//     ‘points’ attribute, then render the ‘polyline’ or ‘polygon’
+//     up to the segment with the error.
+//
+//   This approach will provide a visual clue to the user or
+//   developer about where the error might be in the document.
+//
+// However, we purposefully violate this mandated behavior, that is, we keep
+// reading subsequent XML elements. Indeed, we're not a "renderer" but an
+// "importer", in which case the added value of providing a visual clue matters
+// less than the ability to import whatever geometry exists in the document.
+// Also, this makes the importer more robust to bugs in its implementation.
+//
+// Besides, this is the error handling policy which we will use for VGC.
+// Indeed, for VGC, we will use a different error handling policy that the one
+// specified by SVG. In a VGC document, if an XML element is erroneous, then it
+// should simply be ignored (or be partially rendered via a well-defined
+// behavior, like SVG path data), but processing should continue for other XML
+// elements, as long as it isn't an XML syntax error. This makes it much more
+// robust to small bugs in user scripts or implementation which invariably
+// happen, especially when approaching a deadline. When producing a movie,
+// things are messy, and a broken image is much more useful than no image at
+// all. Especially for geometric data, where some interpolation that overshoots
+// (e.g., Catmull-Rom) might easily make height < 0 temporarily, in which case
+// it is really silly not to render subsequent valid elements.
+//
+// Of course, we should have a proper warning system to let users be aware of
+// errors, which we don't have in VPaint, but we will have in VGC.
+//
 void SvgParser::readSvg(XmlStreamReader & xml)
 {
     // Ensure that this is a SVG file
