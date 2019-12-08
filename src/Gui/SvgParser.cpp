@@ -94,15 +94,9 @@ Eigen::Vector2d applyTransform(const Transform& t, const Eigen::Vector2d& v)
 //
 EdgeSample applyTransform(const Transform& t, const EdgeSample& s)
 {
-    Eigen::Vector2d v = t * applyTransform(t, Eigen::Vector2d(s.x(), s.y()));
+    Eigen::Vector2d v = applyTransform(t, Eigen::Vector2d(s.x(), s.y()));
     double w = applyTransform(t, s.width());
     return EdgeSample(v[0], v[1], w);
-}
-
-Transform parseTransform(const std::string& s)
-{
-    // TODO
-    return Transform::Identity();
 }
 
 // All possible path command types.
@@ -186,7 +180,7 @@ struct SvgPathCommand {
 // then it is set to the value of the number. Otherwise, it is left unchanged.
 //
 // Note: This function does NOT ignore leading whitespaces, that is,
-// isNumber(" 42") returns false.
+// readNumber(" 42") returns false.
 //
 // Note: This function consumes as much as possible of the input string, as per
 // the SVG grammar specification:
@@ -296,7 +290,7 @@ bool readNumber(
     return readNumber(true, it, end, number);
 }
 
-// Calls isNumber() with isSignedAllowed = false.
+// Calls readNumber() with isSignedAllowed = false.
 //
 bool readUnsigned(
         std::string::const_iterator& it,
@@ -339,33 +333,330 @@ bool readFlag(
 //
 bool isWhitespace(char c)
 {
+    // Note: CSS accepts form feeds ('\f' or 0xC in C++), but SVG doesn't.
+    //
     return c == 0x20 || c == 0x9  || c == 0xD  || c == 0xA;
+}
+
+// Returns whether the given character is a [a-zA-Z] character.
+//
+bool isAlphanum(char c)
+{
+    return ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z');
+}
+
+// Returns whether the given character is a [0-9] character.
+//
+bool isDigit(char c)
+{
+    return '0' <= c && c <= '9';
 }
 
 // Advances the given iterator `it` forward until a non-whitespace character or
 // the `end` is found.
 //
-void readWhitespaces(
+// Returns whether at least one character was read.
+//
+bool readWhitespaces(
         std::string::const_iterator& it,
         std::string::const_iterator end)
 {
+    auto it0 = it;
     while (it != end && isWhitespace(*it)) {
         ++it;
     }
+    return it0 != it;
 }
 
-// Advances the given iterator `it` forward until a non-whitespace-non-comma
+// Advances the given iterator `it` forward until an open parenthesis is found non-whitespace-non-comma
 // character or the `end` is found. Only one comma is allowed, that is, if a
 // second comma is encountered, it stops reading just before the second comma.
 //
-void readCommaWhitespaces(
+// Returns whether at least one character was read.
+//
+bool readCommaWhitespaces(
         std::string::const_iterator& it,
         std::string::const_iterator end)
 {
+    auto it0 = it;
     readWhitespaces(it, end);
     if (it != end && *it == ',') {
         ++it;
         readWhitespaces(it, end);
+    }
+    return it0 != it;
+}
+
+// Returns whether the string [it, end) starts with a function name, that is, a
+// [a-zA-Z_] character, followed by any number of [a-zA-Z0-9_-] characters.
+//
+// If a function name is found, then the iterator `it` is advanced to the
+// position just after the function name. Otherwise, it is left unchanged.
+//
+// If a function name is found, and the optional output parameter
+// `functionName` is given, then it is set to the name of the function.
+// Otherwise, it is left unchanged.
+//
+// Note: This function does NOT ignore leading whitespaces, that is,
+// readFunctionName(" scale") returns false.
+//
+// Note: Unlike generic CSS functions, but like all transform functions, we do
+// not accept functions starting with `--` or `-`, or including non-ASCII
+// characters or espace sequences.
+//
+bool readFunctionName(
+        std::string::const_iterator& it,
+        std::string::const_iterator end,
+        std::string* functionName = nullptr)
+{
+    auto it0 = it;
+
+    // Read first [a-zA-Z_] characters
+    if (it != end && (isAlphanum(*it) || *it == '_')) {
+        ++it;
+    }
+    else {
+        it = it0;
+        return false;
+    }
+
+    // Read subsequent [a-zA-Z0-9_] characters
+    while (it != end && (isAlphanum(*it) || isDigit(*it) || *it == '_' || *it == '-')) {
+        ++it;
+    }
+    if (functionName) {
+        functionName->assign(it0, it);
+    }
+    return true;
+}
+
+// Returns whether the string [it, end) starts with a function
+// call, that is:
+//
+// function-name: [a-zA-Z_] [a-zA-Z0-9_-]*
+// function-args: number (comma-wsp? number)*
+// function-call: function-name wsp* '(' wsp* function-args? wsp* ')'
+//
+// If a function call is found, then the iterator `it` is advanced to the
+// position just after the close parenthesis. Otherwise, it is left unchanged.
+//
+// If a function call is found, and the optional output parameter
+// `functionName` is given, then it is set to the name of the function.
+// Otherwise, it is set to an empty string.
+//
+// If a function call is found, and the optional output parameter `args` is
+// given, then it is set to the list of arguments of the function. Otherwise,
+// it is set to an empty list.
+//
+// Note: This function does NOT ignore leading whitespaces, that is,
+// readFunctionCall(" scale(2)") returns false.
+//
+// Note: CSS doesn't allow for whitespaces between a function name and the open
+// parenthesis, but the transform attribute of SVG does:
+//
+// SVG 1.1: https://www.w3.org/TR/SVG11/coords.html#TransformAttribute
+// SVG 2:   https://drafts.csswg.org/css-transforms/#svg-syntax
+// CSS 3:   https://drafts.csswg.org/css-syntax-3/#function-token-diagram
+//
+bool readFunctionCall(
+        std::string::const_iterator& it,
+        std::string::const_iterator end,
+        std::string* functionName = nullptr,
+        std::vector<double>* args = nullptr)
+{
+    auto it0 = it;
+
+    // Read function name
+    if (!readFunctionName(it, end, functionName)) {
+        it = it0;
+        if (functionName) functionName->clear();
+        if (args) args->clear();
+        return false;
+    }
+
+    // Read whitespaces and open parenthesis
+    readWhitespaces(it, end);
+    if (it != end && *it == '(') {
+        ++it;
+    }
+    else {
+        it = it0;
+        if (functionName) functionName->clear();
+        if (args) args->clear();
+        return false;
+    }
+
+    // Read arguments
+    if (args) args->clear();
+    bool readArgs = true;
+    bool isFirstArg = true;
+    while (readArgs) {
+        auto itBeforeArg = it;
+        if (isFirstArg) {
+            readWhitespaces(it, end);
+        }
+        else {
+            readCommaWhitespaces(it, end);
+        }
+        double number;
+        if (readNumber(it, end, &number)) {
+            if (args) args->push_back(number);
+        }
+        else {
+            it = itBeforeArg; // move before comma if any
+            readArgs = false;
+        }
+        isFirstArg = false;
+    }
+
+    // Read whitespaces and close parenthesis
+    readWhitespaces(it, end);
+    if (it != end && *it == ')') {
+        ++it;
+        return true;
+    }
+    else {
+        // => Error: invalid arg or missing close parenthesis
+        it = it0;
+        if (functionName) functionName->clear();
+        if (args) args->clear();
+        return false;
+    }
+}
+
+// Parses the given string into a transform.
+//
+// Note that it is unclear from the SVG specification which exact syntax is
+// allowed, as it has slightly changed from SVG 1.1 to SVG 2 (= CSS Transforms
+// Module Level 1):
+//
+// https://www.w3.org/TR/SVG11/coords.html#TransformAttribute
+// https://drafts.csswg.org/css-transforms/#svg-syntax
+//
+// - SVG 1.1 forces at least one comma-wsp between transform functions (ex1 =
+//   "scale(2)scale(3)" is forbidden), but allows for multiple commas (ex2 =
+//   "scale(2),,scale(3)" is allowed). On the other hand, in SVG 2, ex1 is
+//   allowed, but ex2 is forbidden.
+//
+//   SVG 1.1:  transforms: transform | transform comma-wsp+ transforms
+//   SVG 2:    transforms: transform | transform wsp* comma-wsp? transforms
+//
+// - In SVG 1.1, a comma-wsp is mandatory between arguments of a transform
+//   function, while it is optional in SVG 2 (i.e., it allows "100-200" like in
+//   path data).
+//
+//   SVG 1.1:  scale: "scale" wsp* "(" wsp* number (comma-wsp  number)? wsp* ")"
+//   SVG 2:    scale: "scale" wsp* "(" wsp* number (comma-wsp? number)? wsp* ")"
+//
+// Therefore, we take a liberal approach and accept them all, using the SVG 2
+// syntax for function arguments, and the following syntax for transforms:
+//
+//   transforms:     transform | transform comma-wsp* transforms
+//   transform-list: wsp* transforms? wsp*
+//
+Transform parseTransform(const std::string& s)
+{
+    Transform res = Transform::Identity();
+    auto it = s.cbegin();
+    auto end = s.cend();
+    bool readFunctions = true;
+    bool isFirstFunction = true;
+    while (readFunctions) {
+        auto itBeforeFunction = it;
+        if (isFirstFunction) {
+            readWhitespaces(it, end);
+        }
+        else {
+            while (readCommaWhitespaces(it, end)) {
+                // keep reading comma-whitespaces
+            }
+        }
+        std::string functionName;
+        std::vector<double> args;
+        if (readFunctionCall(it, end, &functionName, &args)) {
+            if (functionName == "matrix") { // a b c d e f
+                if (args.size() != 6) {
+                    // Error: incorrect number of arguments
+                    return Transform::Identity();
+                }
+                Eigen::Matrix<double, 2, 3> m;
+                m << args[0], args[2], args[4],
+                     args[1], args[3], args[5];
+                res *= m;
+            }
+            else if (functionName == "translate") { // tx [ty=0]
+                if (args.size() != 1 && args.size() != 2) {
+                    // Error: incorrect number of arguments
+                    return Transform::Identity();
+                }
+                if (args.size() == 1) {
+                    args.push_back(0.0);
+                }
+                res *= Eigen::Translation2d(args[0], args[1]);
+            }
+            else if (functionName == "scale") { // sx [sy=sx]
+                if (args.size() != 1 && args.size() != 2) {
+                    // Error: incorrect number of arguments
+                    return Transform::Identity();
+                }
+                if (args.size() == 1) {
+                    args.push_back(args[0]);
+                }
+                res *= Eigen::Scaling(args[0], args[1]);
+            }
+            else if (functionName == "rotate") { // angle [cx=0 cy=0]
+                if (args.size() != 1 && args.size() != 3) {
+                    // Error: incorrect number of arguments
+                    return Transform::Identity();
+                }
+                if (args.size() == 1) {
+                    args.push_back(0.0);
+                    args.push_back(0.0);
+                }
+                res *= Eigen::Translation2d(args[1], args[2]);
+                res *= Eigen::Rotation2Dd(args[0] / 180.0 * M_PI);
+                res *= Eigen::Translation2d(-args[1], args[2]);
+            }
+            else if (functionName == "skewX") { // angle
+                if (args.size() != 1) {
+                    // Error: incorrect number of arguments
+                    return Transform::Identity();
+                }
+                double t = std::tan(args[0] / 180.0 * M_PI);
+                Eigen::Matrix2d m;
+                m << 1, t,
+                     0, 1;
+                res *= m;
+            }
+            else if (functionName == "skewY") { // angle
+                if (args.size() != 1) {
+                    // Error: incorrect number of arguments
+                    return Transform::Identity();
+                }
+                double t = std::tan(args[0] / 180.0 * M_PI);
+                Eigen::Matrix2d m;
+                m << 1, 0,
+                     t, 1;
+                res *= m;
+            }
+            else {
+                // Error: Unknown function
+                return Transform::Identity();
+            }
+        }
+        else {
+            it = itBeforeFunction; // move before commas if any
+            readFunctions = false;
+        }
+        isFirstFunction = false;
+    }
+    readWhitespaces(it, end);
+    if (it != end) {
+        // Error: unexpected character
+        return Transform::Identity();
+    }
+    else {
+        return res;
     }
 }
 
@@ -686,8 +977,11 @@ bool importPathData(
     // Previous subpaths (or empty list if no face is to be created)
     QList<Cycle> cycles;
 
-    // Previous edges of current subpath
+    // Previous edges of current subpath (their geometry is in global coordinates)
     QList<KeyHalfedge> edges;
+
+    // First position of current subpath, in local coordinates
+    Eigen::Vector2d z(0.0, 0.0);
 
     // Previous samples of current edge, in local coordinates
     EdgeSamples samples;
@@ -727,27 +1021,17 @@ bool importPathData(
                 if ( cmd.type == SvgPathCommandType::ClosePath &&
                     (!edges.empty() || samples.size() > 1)) {
 
-                    // Get start position of current subpath
-                    Eigen::Vector2d q;
-                    if (edges.empty()) {
-                        q[0] = samples.front().x();
-                        q[1] = samples.front().y();
-                    }
-                    else {
-                        q = edges.first().startVertex()->pos();
-                    }
-
                     // Add straight line (unless already geometrically closed)
-                    if ((q-p).norm() > 1e-6) {
+                    if ((z-p).norm() > 1e-6) {
                         if (splitAtLineTo) {
                             createEdge(vac, time, samples, edges, pa, ctm);
                             samples.push_back(EdgeSample(p[0], p[1], width));
                         }
                         // TODO: add more than just one sample to avoid
                         // smoothing out corner.
-                        samples.push_back(EdgeSample(q[0], q[1], width));
+                        samples.push_back(EdgeSample(z[0], z[1], width));
                     }
-                    p = q;
+                    p = z;
                 }
 
                 // Create edge from current subpath, if any
@@ -763,6 +1047,7 @@ bool importPathData(
                     }
                     p = q;
                 }
+                z = p;
                 samples.push_back(EdgeSample(p[0], p[1], width));
             }
 
