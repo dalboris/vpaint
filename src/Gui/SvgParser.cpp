@@ -1825,7 +1825,7 @@ bool readCircle(XmlStreamReader &xml, VAC* vac, Time t,
         SculptCurve::Curve<EdgeSample> newC;
 
         // TODO: use fixed number of samples and let SculptCurve resample
-        populateSamplesRecursive((i + 0.5) * (M_PI / 2), M_PI / 2, es, es.begin(), edgeWidth, newC.ds(), [&] (const double t) -> Eigen::Vector2d { return Eigen::Vector2d(r * qCos(t) + cx, r * qSin(t) + cy); });
+        populateSamplesRecursive((i + 0.5) * (M_PI / 2), M_PI / 2, es, es.begin(), edgeWidth, newC.ds(), [&] (const double t) -> Eigen::Vector2d { return applyTransform(ctm, Eigen::Vector2d(r * qCos(t) + cx, r * qSin(t) + cy)); });
 
         newC.beginSketch(es.first().getEdgeSample());
         for(int j = 1; j < es.size(); j++) {
@@ -1906,7 +1906,7 @@ bool readEllipse(XmlStreamReader &xml, VAC* vac, Time t,
         SculptCurve::Curve<EdgeSample> newC;
 
         // TODO: use fixed number of samples and let SculptCurve resample
-        populateSamplesRecursive((i + 0.5) * (M_PI / 2), M_PI / 2, es, es.begin(), edgeWidth, newC.ds(), [&] (const double t) -> Eigen::Vector2d { return Eigen::Vector2d(rx * qCos(t) + cx, ry * qSin(t) + cy); });
+        populateSamplesRecursive((i + 0.5) * (M_PI / 2), M_PI / 2, es, es.begin(), edgeWidth, newC.ds(), [&] (const double t) -> Eigen::Vector2d { return applyTransform(ctm, Eigen::Vector2d(rx * qCos(t) + cx, ry * qSin(t) + cy)); });
 
         newC.beginSketch(es.first().getEdgeSample());
         for(int j = 1; j < es.size(); j++) {
