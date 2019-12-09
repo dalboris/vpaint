@@ -2037,6 +2037,7 @@ void SvgParser::readSvg(XmlStreamReader & xml)
     // which may have style attributes or transforms
     while (!xml.atEnd())
     {
+        // Process start elements
         if(xml.isStartElement())
         {
             // Apply child attributes
@@ -2052,42 +2053,289 @@ void SvgParser::readSvg(XmlStreamReader & xml)
             }
             transformStack.push(ctm);
 
-            if(xml.name() == "rect")
-            {
-                if(!readRect(xml, vac, t, pa, ctm)) return;
-            }
-            else if(xml.name() == "line")
-            {
-                if(!readLine(xml, vac, t, pa, ctm)) return;
-            }
-            else if(xml.name() == "polyline")
-            {
-                if(!readPolyline(xml, vac, t, pa, ctm)) return;
-            }
-            else if(xml.name() == "polygon")
-            {
-                if(!readPolygon(xml, vac, t, pa, ctm)) return;
-            }
-            else if(xml.name() == "circle")
-            {
-                if(!readCircle(xml, vac, t, pa, ctm)) return;
-            }
-            else if(xml.name() == "ellipse")
-            {
-                if(!readEllipse(xml, vac, t, pa, ctm)) return;
-            }
-            else if(xml.name() == "path")
-            {
-                if(!readPath(xml, vac, t, pa, ctm)) return;
+            // STRUCTURAL ELEMENTS: svg, g, defs, symbol, use
+            //
+            // https://www.w3.org/TR/SVG11/struct.html
+            //
+            if(xml.name() == "svg") {
+                // https://www.w3.org/TR/SVG11/struct.html#NewDocument
+                //
+                // TODO: implement x, y, width, height, viewBox and preserveAspectRatio.
+                // Note that SVG elements can be nested inside other SVG elements.
+                //
+                // Allowed children:
+                //  structural elements
+                //  struct-ish elements
+                //  descriptive elements
+                //  shape elements
+                //  text-font elements
+                //  styling elements
+                //  interactivity elements
+                //  animation elements
             }
             else if(xml.name() == "g") {
-                // We don't have to do anything more here
+                // https://www.w3.org/TR/SVG11/struct.html#Groups
+                // We support this. We just have to keep reading its children.
+                // Allowed children: same as <svg>
             }
+            else if(xml.name() == "defs") {
+                // https://www.w3.org/TR/SVG11/struct.html#Head
+                // This is an unrendered group where to define referenced
+                // content such as symbols, markers, gradients, etc. Note that
+                // many referenced content can in fact be defined anywhere in
+                // the document, but defining them in defs is best practice.
+                // We don't support <defs> yet, but we may want to support it later.
+                // Allowed children: same as <svg>
+                xml.skipCurrentElement();
+            }
+            else if(xml.name() == "symbol") {
+                // https://www.w3.org/TR/SVG11/struct.html#SymbolElement
+                // This is an unrendered group to be instanciated with <use>.
+                // We don't support <symbol> yet, but we may want to support it later.
+                // Allowed children: same as <svg>
+                xml.skipCurrentElement();
+            }
+            else if(xml.name() == "use") {
+                // https://www.w3.org/TR/SVG11/struct.html#UseElement
+                // This is for instanciating a <symbol>.
+                // We don't support <use> yet, but we may want to support it later.
+                // Allowed children:
+                //  descriptive elements
+                //  animation elements
+                xml.skipCurrentElement();
+            }
+
+            // STRUCT-ISH ELEMENTS: switch, image, foreignObject
+            //
+            // https://www.w3.org/TR/SVG11/struct.html
+            // https://www.w3.org/TR/SVG11/backward.html
+            // https://www.w3.org/TR/SVG11/extend.html
+            //
+            else if (xml.name() == "switch") {
+                // https://www.w3.org/TR/SVG11/struct.html#ConditionalProcessing
+                // https://www.w3.org/TR/SVG11/struct.html#SwitchElement
+                // https://www.w3.org/TR/SVG11/backward.html
+                // This is for selecting which child to process based on feature availability.
+                // We don't support <switch> yet, but we may want to support it later.
+                // Allowed children:
+                //  subset of structural elements: svg, g, use
+                //  struct-ish elements
+                //  descriptive elements
+                //  shape elements
+                //  subset of text-font elements: text
+                //  subset of interactivity elements: a
+                //  animation elements
+                xml.skipCurrentElement();
+            }
+            else if (xml.name() == "image") {
+                // https://www.w3.org/TR/SVG11/struct.html#ImageElement
+                // This is for rendering an external image (e.g.: jpg, png, svg).
+                // We don't support <image> yet, but may want to support it later.
+                // Allowed children:
+                //  descriptive elements
+                //  animation elements
+                xml.skipCurrentElement();
+            }
+            else if (xml.name() == "foreignObject") {
+                // https://www.w3.org/TR/SVG11/extend.html#ForeignObjectElement
+                // This is for inline embedding of other XML documents which aren't
+                // SVG documents, such as MathML (for mathematical expressions), or
+                // XHML (useful for dynamically reflowing text).
+                // We don't support <foreignObject> yet, but may want to support it later,
+                // notably for XML formats which we support importing by themselves (e.g.,
+                // if we add support for importing standalone XHTML documents, we may want
+                // to support importing XHTML as foreignObject in SVG documents).
+                // Allowed children: Any elements or character data.
+                xml.skipCurrentElement();
+            }
+
+            // DESCRIPTIVE ELEMENTS: desc, title, metadata
+            //
+            // https://www.w3.org/TR/SVG11/struct.html#DescriptionAndTitleElements
+            // https://www.w3.org/TR/SVG11/metadata.html
+            //
+            // Allowed children: any elements or character data.
+            //
+            // We ignore them and all their children as they don't affect
+            // geometry or rendering in any ways, and can't be meaningfully
+            // imported into VPaint.
+            //
+            else if (xml.name() == "desc" ||
+                     xml.name() == "title" ||
+                     xml.name() == "metadata") {
+                xml.skipCurrentElement();
+            }
+
+            // SHAPE ELEMENTS: path, rect, circle, ellipse, line, polyline, polygon
+            //
+            // https://www.w3.org/TR/SVG11/paths.html
+            // https://www.w3.org/TR/SVG11/shapes.html
+            //
+            // Allowed children:
+            //  descriptive elements
+            //  animation elements
+            //
+            else if(xml.name() == "path") {
+                if(!readPath(xml, vac, t, pa, ctm)) return;
+            }
+            else if(xml.name() == "rect") {
+                if(!readRect(xml, vac, t, pa, ctm)) return;
+            }
+            else if(xml.name() == "circle") {
+                if(!readCircle(xml, vac, t, pa, ctm)) return;
+            }
+            else if(xml.name() == "ellipse") {
+                if(!readEllipse(xml, vac, t, pa, ctm)) return;
+            }
+            else if(xml.name() == "line") {
+                if(!readLine(xml, vac, t, pa, ctm)) return;
+            }
+            else if(xml.name() == "polyline") {
+                if(!readPolyline(xml, vac, t, pa, ctm)) return;
+            }
+            else if(xml.name() == "polygon") {
+                if(!readPolygon(xml, vac, t, pa, ctm)) return;
+            }
+
+            // TEXT-FONT ELEMENTS: text, font, font-face, altGlyphDef
+            //
+            // TEXT CHILD ELEMENTS:        tspan, tref, textPath, altGlyph
+            // FONT CHILD ELEMENTS:        glyph, missing-glyph, hkern, vkern, font-face
+            // FONT-FACE CHILD ELEMENTS:   font-face-src, font-face-uri, font-face-format, font-face-name
+            // ALTGLYPHDEF CHILD ELEMENTS: glyphRef, altGlyphItem
+            //
+            // https://www.w3.org/TR/SVG11/text.html
+            // https://www.w3.org/TR/SVG11/fonts.html
+            //
+            // Note: the "child elements" types listed above only include the
+            // types not already listed in other categories, and they might
+            // only be allowed as direct or indirect children. See the above
+            // links for details on the content model.
+            //
+            // We don't support text-font elements for now, but we may want to
+            // support them in the future.
+            //
+            else if (xml.name() == "text" ||
+                     xml.name() == "font" ||
+                     xml.name() == "font-face" ||
+                     xml.name() == "altGlyphDef") {
+                xml.skipCurrentElement();
+            }
+
+            // STYLING ELEMENTS: style, marker, color-profile, linearGradient, radialGradient, pattern, clipPath, mask, filter
+            //
+            // GRADIENT CHILD ELEMENTS:   stop
+            // LIGHT SOURCE ELEMENTS:     feDistantLight, fePointLight, feSpotLight
+            // FILTER PRIMITIVE ELEMENTS: feBlend, feColorMatrix, feComponentTransfer, feComposite, feConvolveMatrix,
+            //                            feDiffuseLighting, feDisplacementMap, feFlood, feGaussianBlur, feImage, feMerge,
+            //                            feMorphology, feOffset, feSpecularLighting, feTile, feTurbulence
+            //
+            // https://www.w3.org/TR/SVG11/styling.html   style
+            // https://www.w3.org/TR/SVG11/painting.html  marker
+            // https://www.w3.org/TR/SVG11/color.html     color-profile
+            // https://www.w3.org/TR/SVG11/pservers.html  linearGradient, radialGradient, pattern
+            // https://www.w3.org/TR/SVG11/masking.html   clipPath, mask
+            // https://www.w3.org/TR/SVG11/filters.html   filter
+            //
+            // Note: the "child elements" types listed above only include the
+            // types not already listed in other categories, and they might
+            // only be allowed as direct or indirect children. See the above
+            // links for details on the content model.
+            //
+            // We don't support styling elements for now, but we may want to
+            // support them in the future.
+            //
+            else if (xml.name() == "style" ||
+                     xml.name() == "marker" ||
+                     xml.name() == "color-profile" ||
+                     xml.name() == "linearGradient" ||
+                     xml.name() == "radialGradient" ||
+                     xml.name() == "pattern" ||
+                     xml.name() == "clipPath" ||
+                     xml.name() == "mask" ||
+                     xml.name() == "filter") {
+                xml.skipCurrentElement();
+            }
+
+            // INTERACTIVITY ELEMENTS: cursor, a, view, script
+            //
+            // https://www.w3.org/TR/SVG11/interact.html
+            // https://www.w3.org/TR/SVG11/linking.html
+            // https://www.w3.org/TR/SVG11/script.html
+            //
+            // We ignore all of these as they make no sense in VPaint.
+            // We are not planning to ever support them in the future.
+            //
+            else if (xml.name() == "cursor") {
+                // https://www.w3.org/TR/SVG11/interact.html#CursorElement
+                // This is for defining a PNG image of a cursor, e.g. to define
+                // what the mouse cursor looks like when hovering some elements.
+                // This is irrelevant for VPaint, so we ignore it and all its children.
+                // Allowed children:
+                //  descriptive elements
+                xml.skipCurrentElement();
+            }
+            else if (xml.name() == "a") {
+                // https://www.w3.org/TR/SVG11/linking.html#Links
+                // This is to be redirected to another URI when clicking on
+                // any graphical element containted under the <a>. We ignore
+                // the clicking behavior, but we still process its children as if
+                // it was a normal group <g>.
+                // Allowed children: same as <svg>
+            }
+            else if (xml.name() == "view") {
+                // https://www.w3.org/TR/SVG11/linking.html#LinksIntoSVG
+                // https://www.w3.org/TR/SVG11/linking.html#ViewElement
+                // This is to predefine a specific viewBox or viewTarget within
+                // this SVG document, that other documents can link to, for
+                // example via "MyDrawing.svg#MyView", similar to the usage
+                // of id-based hashtags in HTML URLs.
+                // This is irrelevant for VPaint, so we ignore it and all its children.
+                // Allowed children:
+                //  descriptive elements
+                xml.skipCurrentElement();
+            }
+            else if (xml.name() == "script") {
+                // https://www.w3.org/TR/SVG11/script.html#ScriptElement
+                // This is for running scripts, or defining script functions to
+                // be run when interacting with SVG content (clicking, hovering, etc.)
+                // This is irrelevant for VPaint, so we ignore it and all its children.
+                // Allowed children: Any elements or character data.
+                xml.skipCurrentElement();
+            }
+
+            // ANIMATION ELEMENTS: animate, set, animateMotion, animateColor, animateTransform
+            //
+            // https://www.w3.org/TR/SVG11/animate.html
+            //
+            // Allowed children:
+            //  descriptive elements
+            //  mpath (only for animationMotion, and at most one)
+            //
+            // We don't support animation elements for now. VPaint being an
+            // animation tool, we obviously may want to support them in the
+            // future.
+            //
+            else if (xml.name() == "animate" ||
+                     xml.name() == "set" ||
+                     xml.name() == "animateMotion" ||
+                     xml.name() == "animateColor" ||
+                     xml.name() == "animateTransform") {
+                xml.skipCurrentElement();
+            }
+
+            // Unknown elements. These aren't part of SVG 1.1, such as
+            // Inkscape's "sodipodi:namedview".
             else {
-                // Warning
+                xml.skipCurrentElement();
             }
         }
 
+        // Process end elements.
+        //
+        // Note that we don't use "else if" since the current TokenType changes
+        // from StartElement to EndElement when calling skipCurrentElement().
+        //
         if(xml.isEndElement()) {
             attributeStack.pop();
             transformStack.pop();
