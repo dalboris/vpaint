@@ -1851,9 +1851,32 @@ bool readPolyline(const QXmlStreamAttributes& attrs, VAC* vac, Time t,
     }
 
     // Create edges
+    QVector<KeyEdge *> edges(vertices.size() - 1);
     for(int i = 1; i < vertices.size(); i++) {
         KeyEdge * e = vac->newKeyEdge(t, vertices[i-1], vertices[i], nullptr, edgeWidth);
         e->setColor(pa.stroke.color);
+        edges[i-1] = e;
+    }
+
+    // Add fill
+    // TODO: use finishSubpath
+    if(pa.fill.hasColor)
+    {
+        // Close the loop with a zero-width edge if it isn't yet closed
+        // TODO: use finishSubpath
+        KeyEdge * e = vac->newKeyEdge(t, vertices.last(), vertices[0]);
+        e->setColor(pa.stroke.color);
+        edges.push_back(e);
+
+        // Create face
+        // TODO: use finishSubpath
+        QList<KeyHalfedge> halfEdges;
+        for(int i = 0; i < edges.size(); i++) {
+            halfEdges.append(KeyHalfedge(edges[i], true));
+        }
+        Cycle cycle(halfEdges);
+        KeyFace * face = vac->newKeyFace(cycle);
+        face->setColor(pa.fill.color);
     }
 
     // TODO: we should create a face if fill != none
@@ -1920,6 +1943,8 @@ bool readPolygon(const QXmlStreamAttributes& attrs, VAC* vac, Time t,
 
     // Add fill
     // TODO: use finishSubpath
+    // XXX This fails if the loop hasn't been explicitly closed,
+    //     since "cycle" won't be a cycle.
     if(pa.fill.hasColor)
     {
         QList<KeyHalfedge> halfEdges;
