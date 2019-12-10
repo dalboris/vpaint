@@ -1510,31 +1510,26 @@ QList<PotentialPoint>::iterator populateSamplesRecursive(double paramVal, double
 // Reads a <rect> object
 // https://www.w3.org/TR/SVG11/shapes.html#RectElement
 // @return true on success, false on failure
-bool readRect(XmlStreamReader &xml, VAC* vac, Time t,
+bool readRect(const QXmlStreamAttributes& attrs, VAC* vac, Time t,
               SvgPresentationAttributes &pa, const Transform& ctm)
 {
-    // Check to make sure we are reading a rect object
-    if(xml.name() != "rect") return true;
-
     bool okay = true;
 
-    // Get attributes
-
     // X position
-    double x = xml.attributes().hasAttribute("x") ? xml.attributes().value("x").toDouble(&okay) : 0;
+    double x = attrs.hasAttribute("x") ? attrs.value("x").toDouble(&okay) : 0;
     if(!okay) x = 0;
 
     // Y position
-    double y = xml.attributes().hasAttribute("y") ? xml.attributes().value("y").toDouble(&okay) : 0;
+    double y = attrs.hasAttribute("y") ? attrs.value("y").toDouble(&okay) : 0;
     if(!okay) y = 0;
 
     // Width
-    double width = xml.attributes().value("width").toDouble(&okay);
+    double width = attrs.value("width").toDouble(&okay);
     // Error, width isn't a real number
     if(!okay) return false;
 
     // Height
-    double height = xml.attributes().value("height").toDouble(&okay);
+    double height = attrs.value("height").toDouble(&okay);
     // Error, height isn't a real number
     if(!okay) return false;
 
@@ -1547,13 +1542,13 @@ bool readRect(XmlStreamReader &xml, VAC* vac, Time t,
     // The rx and ry attributes have a slightly more advanced default value, see W3 specifications for details
     double rx, ry;
     bool rxOkay = false, ryOkay = false;
-    if(xml.attributes().hasAttribute("rx"))
+    if(attrs.hasAttribute("rx"))
     {
-        rx = xml.attributes().value("rx").toDouble(&rxOkay);
+        rx = attrs.value("rx").toDouble(&rxOkay);
     }
-    if(xml.attributes().hasAttribute("ry"))
+    if(attrs.hasAttribute("ry"))
     {
-        ry = xml.attributes().value("ry").toDouble(&ryOkay);
+        ry = attrs.value("ry").toDouble(&ryOkay);
     }
     if(!rxOkay && !ryOkay)
     {
@@ -1613,30 +1608,25 @@ bool readRect(XmlStreamReader &xml, VAC* vac, Time t,
     return true;
 }
 
-bool readLine(XmlStreamReader &xml, VAC* vac, Time t,
+bool readLine(const QXmlStreamAttributes& attrs, VAC* vac, Time t,
               SvgPresentationAttributes &pa, const Transform& ctm)
 {
-    // Check to make sure we are reading a line object
-    if(xml.name() != "line") return true;
-
     bool okay = true;
 
-    // Get attributes
-
     // X position 1
-    double x1 = xml.attributes().hasAttribute("x1") ? xml.attributes().value("x1").toDouble(&okay) : 0;
+    double x1 = attrs.hasAttribute("x1") ? attrs.value("x1").toDouble(&okay) : 0;
     if(!okay) x1 = 0;
 
     // Y position 1
-    double y1 = xml.attributes().hasAttribute("y1") ? xml.attributes().value("y1").toDouble(&okay) : 0;
+    double y1 = attrs.hasAttribute("y1") ? attrs.value("y1").toDouble(&okay) : 0;
     if(!okay) y1 = 0;
 
     // X position 2
-    double x2 = xml.attributes().hasAttribute("x2") ? xml.attributes().value("x2").toDouble(&okay) : 0;
+    double x2 = attrs.hasAttribute("x2") ? attrs.value("x2").toDouble(&okay) : 0;
     if(!okay) x2 = 0;
 
     // Y position 2
-    double y2 = xml.attributes().hasAttribute("y2") ? xml.attributes().value("y2").toDouble(&okay) : 0;
+    double y2 = attrs.hasAttribute("y2") ? attrs.value("y2").toDouble(&okay) : 0;
     if(!okay) y2 = 0;
 
     // Build vertices and edges
@@ -1656,20 +1646,20 @@ bool readLine(XmlStreamReader &xml, VAC* vac, Time t,
     return true;
 }
 
-bool readPolyline(XmlStreamReader &xml, VAC* vac, Time t,
+bool readPolyline(const QXmlStreamAttributes& attrs, VAC* vac, Time t,
                   SvgPresentationAttributes &pa, const Transform& ctm)
 {
-    // Check to make sure we are reading a polyline object
-    if(xml.name() != "polyline" || !xml.attributes().hasAttribute("points")) return true;
+    // Don't render if no points provided
+    if(!attrs.hasAttribute("points")) return true;
 
     bool okay = true;
 
     // Read and split points
     // Technically the parsing of separators is a bit more complicated,
     // but this will suffice as it correctly handles all standard-conforming svgs
-    QStringList points = xml.attributes().value("points").toString().split(QRegExp("[\\s,]+"), QString::SkipEmptyParts);
+    QStringList points = attrs.value("points").toString().split(QRegExp("[\\s,]+"), QString::SkipEmptyParts);
 
-    // Don't render isn't at least one complete coordinate
+    // Don't render if there isn't at least one complete coordinate
     if(points.size() < 2) return true;
 
     QVector<KeyVertex *> vertices(points.size() / 2);
@@ -1705,20 +1695,21 @@ bool readPolyline(XmlStreamReader &xml, VAC* vac, Time t,
     return true;
 }
 
-bool readPolygon(XmlStreamReader &xml, VAC* vac, Time t,
+bool readPolygon(const QXmlStreamAttributes& attrs, VAC* vac, Time t,
                  SvgPresentationAttributes &pa, const Transform& ctm)
 {
-    // Check to make sure we are reading a polygon object
-    if(xml.name() != "polygon" || !xml.attributes().hasAttribute("points")) return true;
+    // Don't render if no points provided
+    if(!attrs.hasAttribute("points")) return true;
 
     bool okay = true;
 
     // Read and split points
     // Technically the parsing of separators is a bit more complicated,
     // but this will suffice as it correctly handles all standard-conforming svgs
-    QStringList points = xml.attributes().value("points").toString().split(QRegExp("[\\s,]+"), QString::SkipEmptyParts);
+    QStringList points = attrs.value("points").toString().split(QRegExp("[\\s,]+"), QString::SkipEmptyParts);
 
     // Fail if there isn't at least one complete coordinate
+    // TODO: This shouldn't be an error; it just shouldn't be rendered.
     if(points.size() < 2) return false;
 
     QVector<KeyVertex *> vertices(points.size() / 2);
@@ -1776,26 +1767,21 @@ bool readPolygon(XmlStreamReader &xml, VAC* vac, Time t,
     return true;
 }
 
-bool readCircle(XmlStreamReader &xml, VAC* vac, Time t,
+bool readCircle(const QXmlStreamAttributes& attrs, VAC* vac, Time t,
                 SvgPresentationAttributes &pa, const Transform& ctm)
 {
-    // Check to make sure we are reading a circle object
-    if(xml.name() != "circle") return true;
-
     bool okay = true;
 
-    // Get attributes
-
     // Center X position
-    double cx = xml.attributes().hasAttribute("cx") ? xml.attributes().value("cx").toDouble(&okay) : 0;
+    double cx = attrs.hasAttribute("cx") ? attrs.value("cx").toDouble(&okay) : 0;
     if(!okay) cx = 0;
 
     // Center Y position
-    double cy = xml.attributes().hasAttribute("cy") ? xml.attributes().value("cy").toDouble(&okay) : 0;
+    double cy = attrs.hasAttribute("cy") ? attrs.value("cy").toDouble(&okay) : 0;
     if(!okay) cy = 0;
 
     // Radius
-    double r = xml.attributes().value("r").toDouble(&okay);
+    double r = attrs.value("r").toDouble(&okay);
     // Error, radius isn't a real number
     if(!okay) return false;
 
@@ -1838,7 +1824,7 @@ bool readCircle(XmlStreamReader &xml, VAC* vac, Time t,
     }
 
     // Add fill
-    if(xml.attributes().value("fill").trimmed() != "none")
+    if(attrs.value("fill").trimmed() != "none")
     {
         QList<KeyHalfedge> edges;
         for(KeyEdge * edge : e) {
@@ -1852,31 +1838,26 @@ bool readCircle(XmlStreamReader &xml, VAC* vac, Time t,
     return true;
 }
 
-bool readEllipse(XmlStreamReader &xml, VAC* vac, Time t,
+bool readEllipse(const QXmlStreamAttributes& attrs, VAC* vac, Time t,
                  SvgPresentationAttributes &pa, const Transform& ctm)
 {
-    // Check to make sure we are reading an ellipse object
-    if(xml.name() != "ellipse") return true;
-
     bool okay = true;
 
-    // Get attributes
-
     // Center X position
-    double cx = xml.attributes().hasAttribute("cx") ? xml.attributes().value("cx").toDouble(&okay) : 0;
+    double cx = attrs.hasAttribute("cx") ? attrs.value("cx").toDouble(&okay) : 0;
     if(!okay) cx = 0;
 
     // Center Y position
-    double cy = xml.attributes().hasAttribute("cy") ? xml.attributes().value("cy").toDouble(&okay) : 0;
+    double cy = attrs.hasAttribute("cy") ? attrs.value("cy").toDouble(&okay) : 0;
     if(!okay) cy = 0;
 
     // X radius
-    double rx = xml.attributes().value("rx").toDouble(&okay);
+    double rx = attrs.value("rx").toDouble(&okay);
     // Error, x radius isn't a real number
     if(!okay) return false;
 
     // Y radius
-    double ry = xml.attributes().value("ry").toDouble(&okay);
+    double ry = attrs.value("ry").toDouble(&okay);
     // Error, y radius isn't a real number
     if(!okay) return false;
 
@@ -1934,19 +1915,16 @@ bool readEllipse(XmlStreamReader &xml, VAC* vac, Time t,
     return true;
 }
 
-bool readPath(XmlStreamReader &xml, VAC* vac, Time t,
+bool readPath(const QXmlStreamAttributes& attrs, VAC* vac, Time t,
               SvgPresentationAttributes &pa, const Transform& ctm)
 {
-    // Check to make sure we are reading a path object
-    if(xml.name() != "path" || !xml.attributes().hasAttribute("d")) return true;
-
-    // Get attributes
-
-    QString d = xml.attributes().value("d").toString();
+    // Don't render if no path data provided
+    if(!attrs.hasAttribute("d")) return true;
 
     // Parse path data.
     // TODO: Show errors to users as a message box rather than printing to console.
     std::string error;
+    QString d = attrs.value("d").toString();
     std::vector<SvgPathCommand> cmds = parsePathData(d.toStdString(), &error);
     if (!error.empty()) {
         qDebug() << "ERROR:" << QString::fromStdString(error);
@@ -2040,15 +2018,18 @@ void SvgParser::readSvg(XmlStreamReader & xml)
         // Process start elements
         if(xml.isStartElement())
         {
-            // Apply child attributes
+            // Get XML attributes
+            QXmlStreamAttributes attrs = xml.attributes();
+
+            // Apply child style to current style
             SvgPresentationAttributes pa = attributeStack.top();
-            pa.applyChildStyle(xml);
+            pa.applyChildStyle(attrs);
             attributeStack.push(pa);
 
             // Apply child transform to CTM (= Current Transform Matrix)
             Transform ctm = transformStack.top();
-            if (xml.attributes().hasAttribute("transform")) {
-                std::string ts = xml.attributes().value("transform").toString().toStdString();
+            if (attrs.hasAttribute("transform")) {
+                std::string ts = attrs.value("transform").toString().toStdString();
                 ctm = ctm * parseTransform(ts);
             }
             transformStack.push(ctm);
@@ -2176,25 +2157,25 @@ void SvgParser::readSvg(XmlStreamReader & xml)
             //  animation elements
             //
             else if(xml.name() == "path") {
-                if(!readPath(xml, vac, t, pa, ctm)) return;
+                if(!readPath(attrs, vac, t, pa, ctm)) return;
             }
             else if(xml.name() == "rect") {
-                if(!readRect(xml, vac, t, pa, ctm)) return;
+                if(!readRect(attrs, vac, t, pa, ctm)) return;
             }
             else if(xml.name() == "circle") {
-                if(!readCircle(xml, vac, t, pa, ctm)) return;
+                if(!readCircle(attrs, vac, t, pa, ctm)) return;
             }
             else if(xml.name() == "ellipse") {
-                if(!readEllipse(xml, vac, t, pa, ctm)) return;
+                if(!readEllipse(attrs, vac, t, pa, ctm)) return;
             }
             else if(xml.name() == "line") {
-                if(!readLine(xml, vac, t, pa, ctm)) return;
+                if(!readLine(attrs, vac, t, pa, ctm)) return;
             }
             else if(xml.name() == "polyline") {
-                if(!readPolyline(xml, vac, t, pa, ctm)) return;
+                if(!readPolyline(attrs, vac, t, pa, ctm)) return;
             }
             else if(xml.name() == "polygon") {
-                if(!readPolygon(xml, vac, t, pa, ctm)) return;
+                if(!readPolygon(attrs, vac, t, pa, ctm)) return;
             }
 
             // TEXT-FONT ELEMENTS: text, font, font-face, altGlyphDef
@@ -2356,39 +2337,39 @@ SvgPresentationAttributes::SvgPresentationAttributes() :
     update_();
 }
 
-void SvgPresentationAttributes::applyChildStyle(XmlStreamReader &xml)
+void SvgPresentationAttributes::applyChildStyle(const QXmlStreamAttributes& attrs)
 {
     bool ok;
 
     // Stroke width
-    if(xml.attributes().hasAttribute("stroke-width")) {
-        double x = xml.attributes().value("stroke-width").toDouble(&ok);
+    if(attrs.hasAttribute("stroke-width")) {
+        double x = attrs.value("stroke-width").toDouble(&ok);
         if(ok) {
             strokeWidth_ = qMax(0.0, x);
         }
     }
 
     // Fill (color)
-    if(xml.attributes().hasAttribute("fill")) {
-        fill_ = parsePaint(xml.attributes().value("fill").toString());
+    if(attrs.hasAttribute("fill")) {
+        fill_ = parsePaint(attrs.value("fill").toString());
     }
 
     // Stroke (color)
-    if(xml.attributes().hasAttribute("stroke")) {
-        stroke_ = parsePaint(xml.attributes().value("stroke").toString());
+    if(attrs.hasAttribute("stroke")) {
+        stroke_ = parsePaint(attrs.value("stroke").toString());
     }
 
     // Fill opacity
-    if(xml.attributes().hasAttribute("fill-opacity")) {
-        double x = xml.attributes().value("fill-opacity").toDouble(&ok);
+    if(attrs.hasAttribute("fill-opacity")) {
+        double x = attrs.value("fill-opacity").toDouble(&ok);
         if (ok) {
             strokeOpacity_ = qBound(0.0, x, 1.0);
         }
     }
 
     // Stroke opacity
-    if(xml.attributes().hasAttribute("stroke-opacity")) {
-        double x = xml.attributes().value("stroke-opacity").toDouble(&ok);
+    if(attrs.hasAttribute("stroke-opacity")) {
+        double x = attrs.value("stroke-opacity").toDouble(&ok);
         if (ok) {
             strokeOpacity_ = qBound(0.0, x, 1.0);
         }
@@ -2443,8 +2424,8 @@ void SvgPresentationAttributes::applyChildStyle(XmlStreamReader &xml)
     // Nice example to test behaviour:
     // https://www.w3.org/TR/SVG11/images/masking/opacity01.svg
     //
-    if(xml.attributes().hasAttribute("opacity")) {
-        double x = xml.attributes().value("opacity").toDouble(&ok);
+    if(attrs.hasAttribute("opacity")) {
+        double x = attrs.value("opacity").toDouble(&ok);
         if(ok) {
             // Compose with children (instead of inherit)
             opacity_ *= qBound(0.0, x, 1.0);

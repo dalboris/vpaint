@@ -12,6 +12,7 @@
 #include <QColor>
 
 class QString;
+class QXmlStreamAttributes;
 class XmlStreamReader;
 
 // https://www.w3.org/TR/SVG11/painting.html#SpecifyingPaint
@@ -26,7 +27,7 @@ class SvgPresentationAttributes
 {
 public:
     SvgPresentationAttributes();
-    void applyChildStyle(XmlStreamReader &xml);
+    void applyChildStyle(const QXmlStreamAttributes& attrs);
 
     operator QString() const;
 
