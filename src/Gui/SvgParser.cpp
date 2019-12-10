@@ -1824,7 +1824,7 @@ bool readCircle(const QXmlStreamAttributes& attrs, VAC* vac, Time t,
     }
 
     // Add fill
-    if(attrs.value("fill").trimmed() != "none")
+    if(pa.fill.hasColor)
     {
         QList<KeyHalfedge> edges;
         for(KeyEdge * edge : e) {
