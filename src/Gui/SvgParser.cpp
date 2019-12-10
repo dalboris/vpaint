@@ -1507,6 +1507,25 @@ QList<PotentialPoint>::iterator populateSamplesRecursive(double paramVal, double
     return pointLoc;
 }
 
+bool readPath(const QXmlStreamAttributes& attrs, VAC* vac, Time t,
+              SvgPresentationAttributes &pa, const Transform& ctm)
+{
+    // Don't render if no path data provided
+    if(!attrs.hasAttribute("d")) return true;
+
+    // Parse path data.
+    // TODO: Show errors to users as a message box rather than printing to console.
+    std::string error;
+    QString d = attrs.value("d").toString();
+    std::vector<SvgPathCommand> cmds = parsePathData(d.toStdString(), &error);
+    if (!error.empty()) {
+        qDebug() << "ERROR:" << QString::fromStdString(error);
+    }
+
+    // Add into existing VAC by converting to vertices, edges, and faces.
+    return importPathData(cmds, vac, t, pa, ctm);
+}
+
 // Reads a <rect> object
 // https://www.w3.org/TR/SVG11/shapes.html#RectElement
 // @return true on success, false on failure
@@ -1600,6 +1619,154 @@ bool readRect(const QXmlStreamAttributes& attrs, VAC* vac, Time t,
         edges.append(KeyHalfedge(e2, true));
         edges.append(KeyHalfedge(e3, true));
         edges.append(KeyHalfedge(e4, true));
+        Cycle cycle(edges);
+        KeyFace * face = vac->newKeyFace(cycle);
+        face->setColor(pa.fill.color);
+    }
+
+    return true;
+}
+
+bool readCircle(const QXmlStreamAttributes& attrs, VAC* vac, Time t,
+                SvgPresentationAttributes &pa, const Transform& ctm)
+{
+    bool okay = true;
+
+    // Center X position
+    double cx = attrs.hasAttribute("cx") ? attrs.value("cx").toDouble(&okay) : 0;
+    if(!okay) cx = 0;
+
+    // Center Y position
+    double cy = attrs.hasAttribute("cy") ? attrs.value("cy").toDouble(&okay) : 0;
+    if(!okay) cy = 0;
+
+    // Radius
+    double r = attrs.value("r").toDouble(&okay);
+    // Error, radius isn't a real number
+    if(!okay) return false;
+
+    // Negative radius results in an error
+    if(r < 0) return false;
+    // A radius of 0 does not result in an error, but disables rendering of the object
+    if(r == 0) return true;
+
+    // Build vertices and edges
+    double w = pa.strokeWidth;
+    EdgeSample s0 = applyTransform(ctm, EdgeSample(cx + r, cy, w));
+    EdgeSample s1 = applyTransform(ctm, EdgeSample(cx, cy + r, w));
+    EdgeSample s2 = applyTransform(ctm, EdgeSample(cx - r, cy, w));
+    EdgeSample s3 = applyTransform(ctm, EdgeSample(cx, cy - r, w));
+    double edgeWidth = s0.width();
+    QVector<KeyVertex *> v;
+    v.push_back(vac->newKeyVertex(t, s0));
+    v.push_back(vac->newKeyVertex(t, s1));
+    v.push_back(vac->newKeyVertex(t, s2));
+    v.push_back(vac->newKeyVertex(t, s3));
+    QVector<KeyEdge *> e(4);
+
+    for(int i = 0; i < 4; i++) {
+        QList<PotentialPoint> es;
+        es.push_back(PotentialPoint(v[i]->pos(), edgeWidth));
+        es.push_back(PotentialPoint(v[(i+1)%4]->pos(), edgeWidth));
+        SculptCurve::Curve<EdgeSample> newC;
+
+        // TODO: use fixed number of samples and let SculptCurve resample
+        populateSamplesRecursive((i + 0.5) * (M_PI / 2), M_PI / 2, es, es.begin(), edgeWidth, newC.ds(), [&] (const double t) -> Eigen::Vector2d { return applyTransform(ctm, Eigen::Vector2d(r * qCos(t) + cx, r * qSin(t) + cy)); });
+
+        newC.beginSketch(es.first().getEdgeSample());
+        for(int j = 1; j < es.size(); j++) {
+            newC.continueSketch(es[j].getEdgeSample());
+        }
+        newC.endSketch();
+
+        e[i] = vac->newKeyEdge(t, v[i], v[(i+1)%4], new LinearSpline(newC));
+        e[i]->setColor(pa.stroke.color);
+    }
+
+    // Add fill
+    if(pa.fill.hasColor)
+    {
+        QList<KeyHalfedge> edges;
+        for(KeyEdge * edge : e) {
+            edges.append(KeyHalfedge(edge, true));
+        }
+        Cycle cycle(edges);
+        KeyFace * face = vac->newKeyFace(cycle);
+        face->setColor(pa.fill.color);
+    }
+
+    return true;
+}
+
+bool readEllipse(const QXmlStreamAttributes& attrs, VAC* vac, Time t,
+                 SvgPresentationAttributes &pa, const Transform& ctm)
+{
+    bool okay = true;
+
+    // Center X position
+    double cx = attrs.hasAttribute("cx") ? attrs.value("cx").toDouble(&okay) : 0;
+    if(!okay) cx = 0;
+
+    // Center Y position
+    double cy = attrs.hasAttribute("cy") ? attrs.value("cy").toDouble(&okay) : 0;
+    if(!okay) cy = 0;
+
+    // X radius
+    double rx = attrs.value("rx").toDouble(&okay);
+    // Error, x radius isn't a real number
+    if(!okay) return false;
+
+    // Y radius
+    double ry = attrs.value("ry").toDouble(&okay);
+    // Error, y radius isn't a real number
+    if(!okay) return false;
+
+    // Negative x or y radius results in an error
+    if(rx < 0 || ry < 0) return false;
+    // A x or y radius of 0 does not result in an error, but disables rendering of the object
+    if(rx == 0 || ry == 0) return true;
+
+    // Build vertices and edges
+    double w = pa.strokeWidth;
+    EdgeSample s0 = applyTransform(ctm, EdgeSample(cx + rx, cy, w));
+    EdgeSample s1 = applyTransform(ctm, EdgeSample(cx, cy + ry, w));
+    EdgeSample s2 = applyTransform(ctm, EdgeSample(cx - rx, cy, w));
+    EdgeSample s3 = applyTransform(ctm, EdgeSample(cx, cy - ry, w));
+    double edgeWidth = s0.width();
+    QVector<KeyVertex *> v;
+    v.push_back(vac->newKeyVertex(t, s0));
+    v.push_back(vac->newKeyVertex(t, s1));
+    v.push_back(vac->newKeyVertex(t, s2));
+    v.push_back(vac->newKeyVertex(t, s3));
+    QVector<KeyEdge *> e(4);
+
+    for(int i = 0; i < 4; i++) {
+        QList<PotentialPoint> es;
+        es.push_back(PotentialPoint(v[i]->pos(), edgeWidth));
+        es.push_back(PotentialPoint(v[(i+1)%4]->pos(), edgeWidth));
+        SculptCurve::Curve<EdgeSample> newC;
+
+        // TODO: use fixed number of samples and let SculptCurve resample
+        populateSamplesRecursive((i + 0.5) * (M_PI / 2), M_PI / 2, es, es.begin(), edgeWidth, newC.ds(), [&] (const double t) -> Eigen::Vector2d { return applyTransform(ctm, Eigen::Vector2d(rx * qCos(t) + cx, ry * qSin(t) + cy)); });
+
+        newC.beginSketch(es.first().getEdgeSample());
+        for(int j = 1; j < es.size(); j++) {
+            newC.continueSketch(es[j].getEdgeSample());
+        }
+        newC.endSketch();
+
+        e[i] = vac->newKeyEdge(t, v[i], v[(i+1)%4], new LinearSpline(newC));
+        e[i]->setColor(pa.stroke.color);
+    }
+
+    // Add fill
+    if(pa.fill.hasColor)
+    {
+        QList<KeyHalfedge> edges;
+        for(KeyEdge * edge : e)
+        {
+            edges.append(KeyHalfedge(edge, true));
+        }
         Cycle cycle(edges);
         KeyFace * face = vac->newKeyFace(cycle);
         face->setColor(pa.fill.color);
@@ -1765,173 +1932,6 @@ bool readPolygon(const QXmlStreamAttributes& attrs, VAC* vac, Time t,
     }
 
     return true;
-}
-
-bool readCircle(const QXmlStreamAttributes& attrs, VAC* vac, Time t,
-                SvgPresentationAttributes &pa, const Transform& ctm)
-{
-    bool okay = true;
-
-    // Center X position
-    double cx = attrs.hasAttribute("cx") ? attrs.value("cx").toDouble(&okay) : 0;
-    if(!okay) cx = 0;
-
-    // Center Y position
-    double cy = attrs.hasAttribute("cy") ? attrs.value("cy").toDouble(&okay) : 0;
-    if(!okay) cy = 0;
-
-    // Radius
-    double r = attrs.value("r").toDouble(&okay);
-    // Error, radius isn't a real number
-    if(!okay) return false;
-
-    // Negative radius results in an error
-    if(r < 0) return false;
-    // A radius of 0 does not result in an error, but disables rendering of the object
-    if(r == 0) return true;
-
-    // Build vertices and edges
-    double w = pa.strokeWidth;
-    EdgeSample s0 = applyTransform(ctm, EdgeSample(cx + r, cy, w));
-    EdgeSample s1 = applyTransform(ctm, EdgeSample(cx, cy + r, w));
-    EdgeSample s2 = applyTransform(ctm, EdgeSample(cx - r, cy, w));
-    EdgeSample s3 = applyTransform(ctm, EdgeSample(cx, cy - r, w));
-    double edgeWidth = s0.width();
-    QVector<KeyVertex *> v;
-    v.push_back(vac->newKeyVertex(t, s0));
-    v.push_back(vac->newKeyVertex(t, s1));
-    v.push_back(vac->newKeyVertex(t, s2));
-    v.push_back(vac->newKeyVertex(t, s3));
-    QVector<KeyEdge *> e(4);
-
-    for(int i = 0; i < 4; i++) {
-        QList<PotentialPoint> es;
-        es.push_back(PotentialPoint(v[i]->pos(), edgeWidth));
-        es.push_back(PotentialPoint(v[(i+1)%4]->pos(), edgeWidth));
-        SculptCurve::Curve<EdgeSample> newC;
-
-        // TODO: use fixed number of samples and let SculptCurve resample
-        populateSamplesRecursive((i + 0.5) * (M_PI / 2), M_PI / 2, es, es.begin(), edgeWidth, newC.ds(), [&] (const double t) -> Eigen::Vector2d { return applyTransform(ctm, Eigen::Vector2d(r * qCos(t) + cx, r * qSin(t) + cy)); });
-
-        newC.beginSketch(es.first().getEdgeSample());
-        for(int j = 1; j < es.size(); j++) {
-            newC.continueSketch(es[j].getEdgeSample());
-        }
-        newC.endSketch();
-
-        e[i] = vac->newKeyEdge(t, v[i], v[(i+1)%4], new LinearSpline(newC));
-        e[i]->setColor(pa.stroke.color);
-    }
-
-    // Add fill
-    if(pa.fill.hasColor)
-    {
-        QList<KeyHalfedge> edges;
-        for(KeyEdge * edge : e) {
-            edges.append(KeyHalfedge(edge, true));
-        }
-        Cycle cycle(edges);
-        KeyFace * face = vac->newKeyFace(cycle);
-        face->setColor(pa.fill.color);
-    }
-
-    return true;
-}
-
-bool readEllipse(const QXmlStreamAttributes& attrs, VAC* vac, Time t,
-                 SvgPresentationAttributes &pa, const Transform& ctm)
-{
-    bool okay = true;
-
-    // Center X position
-    double cx = attrs.hasAttribute("cx") ? attrs.value("cx").toDouble(&okay) : 0;
-    if(!okay) cx = 0;
-
-    // Center Y position
-    double cy = attrs.hasAttribute("cy") ? attrs.value("cy").toDouble(&okay) : 0;
-    if(!okay) cy = 0;
-
-    // X radius
-    double rx = attrs.value("rx").toDouble(&okay);
-    // Error, x radius isn't a real number
-    if(!okay) return false;
-
-    // Y radius
-    double ry = attrs.value("ry").toDouble(&okay);
-    // Error, y radius isn't a real number
-    if(!okay) return false;
-
-    // Negative x or y radius results in an error
-    if(rx < 0 || ry < 0) return false;
-    // A x or y radius of 0 does not result in an error, but disables rendering of the object
-    if(rx == 0 || ry == 0) return true;
-
-    // Build vertices and edges
-    double w = pa.strokeWidth;
-    EdgeSample s0 = applyTransform(ctm, EdgeSample(cx + rx, cy, w));
-    EdgeSample s1 = applyTransform(ctm, EdgeSample(cx, cy + ry, w));
-    EdgeSample s2 = applyTransform(ctm, EdgeSample(cx - rx, cy, w));
-    EdgeSample s3 = applyTransform(ctm, EdgeSample(cx, cy - ry, w));
-    double edgeWidth = s0.width();
-    QVector<KeyVertex *> v;
-    v.push_back(vac->newKeyVertex(t, s0));
-    v.push_back(vac->newKeyVertex(t, s1));
-    v.push_back(vac->newKeyVertex(t, s2));
-    v.push_back(vac->newKeyVertex(t, s3));
-    QVector<KeyEdge *> e(4);
-
-    for(int i = 0; i < 4; i++) {
-        QList<PotentialPoint> es;
-        es.push_back(PotentialPoint(v[i]->pos(), edgeWidth));
-        es.push_back(PotentialPoint(v[(i+1)%4]->pos(), edgeWidth));
-        SculptCurve::Curve<EdgeSample> newC;
-
-        // TODO: use fixed number of samples and let SculptCurve resample
-        populateSamplesRecursive((i + 0.5) * (M_PI / 2), M_PI / 2, es, es.begin(), edgeWidth, newC.ds(), [&] (const double t) -> Eigen::Vector2d { return applyTransform(ctm, Eigen::Vector2d(rx * qCos(t) + cx, ry * qSin(t) + cy)); });
-
-        newC.beginSketch(es.first().getEdgeSample());
-        for(int j = 1; j < es.size(); j++) {
-            newC.continueSketch(es[j].getEdgeSample());
-        }
-        newC.endSketch();
-
-        e[i] = vac->newKeyEdge(t, v[i], v[(i+1)%4], new LinearSpline(newC));
-        e[i]->setColor(pa.stroke.color);
-    }
-
-    // Add fill
-    if(pa.fill.hasColor)
-    {
-        QList<KeyHalfedge> edges;
-        for(KeyEdge * edge : e)
-        {
-            edges.append(KeyHalfedge(edge, true));
-        }
-        Cycle cycle(edges);
-        KeyFace * face = vac->newKeyFace(cycle);
-        face->setColor(pa.fill.color);
-    }
-
-    return true;
-}
-
-bool readPath(const QXmlStreamAttributes& attrs, VAC* vac, Time t,
-              SvgPresentationAttributes &pa, const Transform& ctm)
-{
-    // Don't render if no path data provided
-    if(!attrs.hasAttribute("d")) return true;
-
-    // Parse path data.
-    // TODO: Show errors to users as a message box rather than printing to console.
-    std::string error;
-    QString d = attrs.value("d").toString();
-    std::vector<SvgPathCommand> cmds = parsePathData(d.toStdString(), &error);
-    if (!error.empty()) {
-        qDebug() << "ERROR:" << QString::fromStdString(error);
-    }
-
-    // Add into existing VAC by converting to vertices, edges, and faces.
-    return importPathData(cmds, vac, t, pa, ctm);
 }
 
 } // namespace
