@@ -962,7 +962,7 @@ double angle(const Eigen::Vector2d& a, const Eigen::Vector2d& b)
 
 // Creates new vertices, edges, and faces from the given path data commands.
 //
-bool importPathData(
+void importPathData(
         const std::vector<SvgPathCommand>& cmds, VAC* vac, Time time,
         SvgPresentationAttributes &pa, const Transform& ctm)
 {
@@ -1269,8 +1269,6 @@ bool importPathData(
         KeyFace* face = vac->newKeyFace(cycles);
         face->setColor(pa.fill.color);
     }
-
-    return true;
 }
 
 // Parses color from string, will probably be moved to a class like CSSColor
@@ -1466,47 +1464,6 @@ SvgPaint parsePaint(QString s)
     }
 }
 
-class PotentialPoint
-{
-public:
-    PotentialPoint(double x, double y, double width) : sample_(x, y, width), left_(-1), right_(-1) {}
-    PotentialPoint(Eigen::Vector2d point, double width) : sample_(point[0], point[1], width), left_(-1), right_(-1) {}
-    PotentialPoint(Eigen::Vector3d point) : sample_(point), left_(-1), right_(-1) {}
-    PotentialPoint(EdgeSample sample) : sample_(sample), left_(-1), right_(-1) {}
-
-    double getLeftTangent() const { return left_; }
-    double getRightTangent() const { return right_; }
-    double getX() const { return sample_.x(); }
-    double getY() const { return sample_.y(); }
-    double getWidth() const { return sample_.width(); }
-    double distanceTo(const PotentialPoint & other) const { return sample_.distanceTo(other.getEdgeSample()); }
-    EdgeSample getEdgeSample() const { return sample_; }
-
-    void setLeftTangent(double angle) { left_ = fmod((fmod(angle, (2 * M_PI)) + (2 * M_PI)), (2 * M_PI)); }
-    void setRightTangent(double angle) { right_ = fmod((fmod(angle, (2 * M_PI)) + (2 * M_PI)), (2 * M_PI)); }
-
-    bool isSmooth() { return left_ > 0 && right_ > 0 && qAbs(left_ - right_) < angleThreshold; }
-
-private:
-    EdgeSample sample_;
-    static constexpr double angleThreshold = 0.01 * M_PI;
-    double left_, right_;
-};
-
-QList<PotentialPoint>::iterator populateSamplesRecursive(double paramVal, double paramSpan, QList<PotentialPoint> & edgeSamples, QList<PotentialPoint>::iterator pointLoc, double strokeWidth, double ds, std::function<Eigen::Vector2d (double)> getPoint)
-{
-    //if((*pointLoc).distanceTo(*(pointLoc+1)) <= ds) return;
-
-    Eigen::Vector2d newPoint = getPoint(paramVal);
-    EdgeSample newSample(newPoint[0], newPoint[1], strokeWidth);
-    if(newSample.distanceTo(pointLoc->getEdgeSample()) < ds / 2 || newSample.distanceTo((pointLoc+1)->getEdgeSample()) < ds / 2) return pointLoc;
-    pointLoc = edgeSamples.insert(pointLoc+1, newSample);
-
-    pointLoc = populateSamplesRecursive(paramVal + paramSpan / 4, paramSpan / 2, edgeSamples, pointLoc, strokeWidth, ds, getPoint);
-    pointLoc = populateSamplesRecursive(paramVal - paramSpan / 4, paramSpan / 2, edgeSamples, pointLoc-1, strokeWidth, ds, getPoint);
-    return pointLoc;
-}
-
 bool readPath(const QXmlStreamAttributes& attrs, VAC* vac, Time t,
               SvgPresentationAttributes &pa, const Transform& ctm)
 {
@@ -1522,8 +1479,9 @@ bool readPath(const QXmlStreamAttributes& attrs, VAC* vac, Time t,
         qDebug() << "ERROR:" << QString::fromStdString(error);
     }
 
-    // Add into existing VAC by converting to vertices, edges, and faces.
-    return importPathData(cmds, vac, t, pa, ctm);
+    // Import path data (up to, but not including, first invalid command)
+    importPathData(cmds, vac, t, pa, ctm);
+    return error.empty();
 }
 
 // Reads a <rect> object
@@ -1584,46 +1542,34 @@ bool readRect(const QXmlStreamAttributes& attrs, VAC* vac, Time t,
     rx = qBound(0.0, rx, width / 2);
     ry = qBound(0.0, ry, height / 2);
 
-    // Build vertices and edges
-    // TODO: take into account rounded corners.
-    double w = pa.strokeWidth;
-    EdgeSample s1 = applyTransform(ctm, EdgeSample(x, y, w));
-    EdgeSample s2 = applyTransform(ctm, EdgeSample(x + width, y, w));
-    EdgeSample s3 = applyTransform(ctm, EdgeSample(x + width, y + height, w));
-    EdgeSample s4 = applyTransform(ctm, EdgeSample(x, y + height, w));
-    double edgeWidth = s1.width();
-    KeyVertex * v1 = vac->newKeyVertex(t, s1);
-    KeyVertex * v2 = vac->newKeyVertex(t, s2);
-    KeyVertex * v3 = vac->newKeyVertex(t, s3);
-    KeyVertex * v4 = vac->newKeyVertex(t, s4);
-    KeyEdge * e1 = vac->newKeyEdge(t, v1, v2, nullptr, edgeWidth);
-    KeyEdge * e2 = vac->newKeyEdge(t, v2, v3, nullptr, edgeWidth);
-    KeyEdge * e3 = vac->newKeyEdge(t, v3, v4, nullptr, edgeWidth);
-    KeyEdge * e4 = vac->newKeyEdge(t, v4, v1, nullptr, edgeWidth);
-
-    // Apply stroke color
-    v1->setColor(pa.stroke.color);
-    v2->setColor(pa.stroke.color);
-    v3->setColor(pa.stroke.color);
-    v4->setColor(pa.stroke.color);
-    e1->setColor(pa.stroke.color);
-    e2->setColor(pa.stroke.color);
-    e3->setColor(pa.stroke.color);
-    e4->setColor(pa.stroke.color);
-
-    // Add fill
-    if(pa.fill.hasColor)
-    {
-        QList<KeyHalfedge> edges;
-        edges.append(KeyHalfedge(e1, true));
-        edges.append(KeyHalfedge(e2, true));
-        edges.append(KeyHalfedge(e3, true));
-        edges.append(KeyHalfedge(e4, true));
-        Cycle cycle(edges);
-        KeyFace * face = vac->newKeyFace(cycle);
-        face->setColor(pa.fill.color);
+    // Create equivalent path and import
+    std::vector<SvgPathCommand> cmds;
+    if (rx > 0 && ry > 0) {
+        // Rounded rect
+        cmds = {
+            {SvgPathCommandType::MoveTo,    false, {x+rx, y}},
+            {SvgPathCommandType::HLineTo,   false, {x+width-rx}},
+            {SvgPathCommandType::ArcTo,     false, {rx, ry, 0, 0, 1, x+width, y+ry}},
+            {SvgPathCommandType::VLineTo,   false, {y+height-ry}},
+            {SvgPathCommandType::ArcTo,     false, {rx, ry, 0, 0, 1, x+width-rx, y+height}},
+            {SvgPathCommandType::HLineTo,   false, {x+rx}},
+            {SvgPathCommandType::ArcTo,     false, {rx, ry, 0, 0, 1, x, y+height-ry}},
+            {SvgPathCommandType::VLineTo,   false, {y+ry}},
+            {SvgPathCommandType::ArcTo,     false, {rx, ry, 0, 0, 1, x+rx, y}},
+            {SvgPathCommandType::ClosePath, false, {}}
+        };
     }
-
+    else {
+        // Sharp rect
+        cmds = {
+            {SvgPathCommandType::MoveTo,    false, {x, y}},
+            {SvgPathCommandType::HLineTo,   false, {x+width}},
+            {SvgPathCommandType::VLineTo,   false, {y+height}},
+            {SvgPathCommandType::HLineTo,   false, {x}},
+            {SvgPathCommandType::ClosePath, false, {}}
+        };
+    }
+    importPathData(cmds, vac, t, pa, ctm);
     return true;
 }
 
@@ -1650,51 +1596,21 @@ bool readCircle(const QXmlStreamAttributes& attrs, VAC* vac, Time t,
     // A radius of 0 does not result in an error, but disables rendering of the object
     if(r == 0) return true;
 
-    // Build vertices and edges
-    double w = pa.strokeWidth;
-    EdgeSample s0 = applyTransform(ctm, EdgeSample(cx + r, cy, w));
-    EdgeSample s1 = applyTransform(ctm, EdgeSample(cx, cy + r, w));
-    EdgeSample s2 = applyTransform(ctm, EdgeSample(cx - r, cy, w));
-    EdgeSample s3 = applyTransform(ctm, EdgeSample(cx, cy - r, w));
-    double edgeWidth = s0.width();
-    QVector<KeyVertex *> v;
-    v.push_back(vac->newKeyVertex(t, s0));
-    v.push_back(vac->newKeyVertex(t, s1));
-    v.push_back(vac->newKeyVertex(t, s2));
-    v.push_back(vac->newKeyVertex(t, s3));
-    QVector<KeyEdge *> e(4);
-
-    for(int i = 0; i < 4; i++) {
-        QList<PotentialPoint> es;
-        es.push_back(PotentialPoint(v[i]->pos(), edgeWidth));
-        es.push_back(PotentialPoint(v[(i+1)%4]->pos(), edgeWidth));
-        SculptCurve::Curve<EdgeSample> newC;
-
-        // TODO: use fixed number of samples and let SculptCurve resample
-        populateSamplesRecursive((i + 0.5) * (M_PI / 2), M_PI / 2, es, es.begin(), edgeWidth, newC.ds(), [&] (const double t) -> Eigen::Vector2d { return applyTransform(ctm, Eigen::Vector2d(r * qCos(t) + cx, r * qSin(t) + cy)); });
-
-        newC.beginSketch(es.first().getEdgeSample());
-        for(int j = 1; j < es.size(); j++) {
-            newC.continueSketch(es[j].getEdgeSample());
-        }
-        newC.endSketch();
-
-        e[i] = vac->newKeyEdge(t, v[i], v[(i+1)%4], new LinearSpline(newC));
-        e[i]->setColor(pa.stroke.color);
-    }
-
-    // Add fill
-    if(pa.fill.hasColor)
-    {
-        QList<KeyHalfedge> edges;
-        for(KeyEdge * edge : e) {
-            edges.append(KeyHalfedge(edge, true));
-        }
-        Cycle cycle(edges);
-        KeyFace * face = vac->newKeyFace(cycle);
-        face->setColor(pa.fill.color);
-    }
-
+    // Create equivalent path and import
+    // Note: as per 2019-12-10, the SVG 2 draft specifies that we should
+    // use sweep-flag=0. I believe this is an error in the draft and
+    // that we should use sweep-flag=1 instead, like for rounded rects.
+    // The code below uses sweep-flag=1.
+    // See: https://github.com/w3c/svgwg/issues/765
+    std::vector<SvgPathCommand> cmds = {
+        {SvgPathCommandType::MoveTo,    false, {cx+r, cy}},
+        {SvgPathCommandType::ArcTo,     false, {r, r, 0, 0, 1, cx, cy+r}},
+        {SvgPathCommandType::ArcTo,     false, {r, r, 0, 0, 1, cx-r, cy}},
+        {SvgPathCommandType::ArcTo,     false, {r, r, 0, 0, 1, cx, cy-r}},
+        {SvgPathCommandType::ArcTo,     false, {r, r, 0, 0, 1, cx+r, cy}},
+        {SvgPathCommandType::ClosePath, false, {}}
+    };
+    importPathData(cmds, vac, t, pa, ctm);
     return true;
 }
 
@@ -1726,52 +1642,21 @@ bool readEllipse(const QXmlStreamAttributes& attrs, VAC* vac, Time t,
     // A x or y radius of 0 does not result in an error, but disables rendering of the object
     if(rx == 0 || ry == 0) return true;
 
-    // Build vertices and edges
-    double w = pa.strokeWidth;
-    EdgeSample s0 = applyTransform(ctm, EdgeSample(cx + rx, cy, w));
-    EdgeSample s1 = applyTransform(ctm, EdgeSample(cx, cy + ry, w));
-    EdgeSample s2 = applyTransform(ctm, EdgeSample(cx - rx, cy, w));
-    EdgeSample s3 = applyTransform(ctm, EdgeSample(cx, cy - ry, w));
-    double edgeWidth = s0.width();
-    QVector<KeyVertex *> v;
-    v.push_back(vac->newKeyVertex(t, s0));
-    v.push_back(vac->newKeyVertex(t, s1));
-    v.push_back(vac->newKeyVertex(t, s2));
-    v.push_back(vac->newKeyVertex(t, s3));
-    QVector<KeyEdge *> e(4);
-
-    for(int i = 0; i < 4; i++) {
-        QList<PotentialPoint> es;
-        es.push_back(PotentialPoint(v[i]->pos(), edgeWidth));
-        es.push_back(PotentialPoint(v[(i+1)%4]->pos(), edgeWidth));
-        SculptCurve::Curve<EdgeSample> newC;
-
-        // TODO: use fixed number of samples and let SculptCurve resample
-        populateSamplesRecursive((i + 0.5) * (M_PI / 2), M_PI / 2, es, es.begin(), edgeWidth, newC.ds(), [&] (const double t) -> Eigen::Vector2d { return applyTransform(ctm, Eigen::Vector2d(rx * qCos(t) + cx, ry * qSin(t) + cy)); });
-
-        newC.beginSketch(es.first().getEdgeSample());
-        for(int j = 1; j < es.size(); j++) {
-            newC.continueSketch(es[j].getEdgeSample());
-        }
-        newC.endSketch();
-
-        e[i] = vac->newKeyEdge(t, v[i], v[(i+1)%4], new LinearSpline(newC));
-        e[i]->setColor(pa.stroke.color);
-    }
-
-    // Add fill
-    if(pa.fill.hasColor)
-    {
-        QList<KeyHalfedge> edges;
-        for(KeyEdge * edge : e)
-        {
-            edges.append(KeyHalfedge(edge, true));
-        }
-        Cycle cycle(edges);
-        KeyFace * face = vac->newKeyFace(cycle);
-        face->setColor(pa.fill.color);
-    }
-
+    // Create equivalent path and import
+    // Note: as per 2019-12-10, the SVG 2 draft specifies that we should
+    // use sweep-flag=0. I believe this is an error in the draft and
+    // that we should use sweep-flag=1 instead, like for rounded rects.
+    // The code below uses sweep-flag=1.
+    // See: https://github.com/w3c/svgwg/issues/765
+    std::vector<SvgPathCommand> cmds = {
+        {SvgPathCommandType::MoveTo,    false, {cx+rx, cy}},
+        {SvgPathCommandType::ArcTo,     false, {rx, ry, 0, 0, 1, cx, cy+ry}},
+        {SvgPathCommandType::ArcTo,     false, {rx, ry, 0, 0, 1, cx-rx, cy}},
+        {SvgPathCommandType::ArcTo,     false, {rx, ry, 0, 0, 1, cx, cy-ry}},
+        {SvgPathCommandType::ArcTo,     false, {rx, ry, 0, 0, 1, cx+rx, cy}},
+        {SvgPathCommandType::ClosePath, false, {}}
+    };
+    importPathData(cmds, vac, t, pa, ctm);
     return true;
 }
 
@@ -1796,167 +1681,89 @@ bool readLine(const QXmlStreamAttributes& attrs, VAC* vac, Time t,
     double y2 = attrs.hasAttribute("y2") ? attrs.value("y2").toDouble(&okay) : 0;
     if(!okay) y2 = 0;
 
-    // Build vertices and edges
-    double w = pa.strokeWidth;
-    EdgeSample s1 = applyTransform(ctm, EdgeSample(x1, y1, w));
-    EdgeSample s2 = applyTransform(ctm, EdgeSample(x2, y2, w));
-    double edgeWidth = s1.width();
-    KeyVertex * v1 = vac->newKeyVertex(t, s1);
-    KeyVertex * v2 = vac->newKeyVertex(t, s2);
-    KeyEdge * e = vac->newKeyEdge(t, v1, v2, nullptr, edgeWidth);
-
-    // Apply stroke color
-    v1->setColor(pa.stroke.color);
-    v2->setColor(pa.stroke.color);
-    e->setColor(pa.stroke.color);
-
+    // Create equivalent path and import
+    std::vector<SvgPathCommand> cmds = {
+        {SvgPathCommandType::MoveTo, false, {x1, y1}},
+        {SvgPathCommandType::LineTo, false, {x2, y2}}
+    };
+    importPathData(cmds, vac, t, pa, ctm);
     return true;
+}
+
+bool readPolylineOrPolygon(
+        const QXmlStreamAttributes& attrs, VAC* vac, Time t,
+        SvgPresentationAttributes &pa, const Transform& ctm,
+        bool isPolygon)
+{
+    // Don't render if no points provided
+    if(!attrs.hasAttribute("points")) {
+        return true;
+    }
+
+    // Parse points attribute.
+    //
+    // TODO Make this spec-compliant. For example, "100-200" is valid as per
+    // SVG 1.1, but the code below doesn't parse it properly. See:
+    // https://github.com/w3c/svgwg/issues/763
+    //
+    // Note: If we fail to read a number, then we still render the points up to
+    // the last non-erroneous point. It's not clear from the spec whether this
+    // is the recommended approach (vs. not rendering anything at all), but our
+    // choice is consistent with path data error handling. See:
+    // https://github.com/w3c/svgwg/issues/764
+    //
+    QStringList coords = attrs.value("points").toString().split(QRegExp("[\\s,]+"), QString::SkipEmptyParts);
+    size_t numCoords = static_cast<size_t>(coords.size());
+    std::vector<double> d;
+    d.reserve(numCoords);
+    for (const QString& s: coords) {
+        bool ok;
+        double x = s.toDouble(&ok);
+        if (ok) {
+            d.push_back(x);
+        }
+        else {
+            break;
+        }
+    }
+
+    // Create equivalent path and import. As per spec:
+    //
+    // - If the number of coords is odd, it is an error
+    //   but we still render, ignoring the last coord.
+    //
+    // - If there are no points, it is a valid element
+    //   but there's nothing to render.
+    //
+    size_t numPoints = d.size() / 2;
+    if (numPoints > 0) {
+        std::vector<SvgPathCommand> cmds;
+        cmds.reserve(static_cast<size_t>(numPoints));
+        cmds.push_back({SvgPathCommandType::MoveTo, false, {d[0], d[1]}});
+        for (size_t i = 1; i < numPoints; ++i) {
+            cmds.push_back({SvgPathCommandType::LineTo, false, {d[2*i], d[2*i+1]}});
+        }
+        if (isPolygon) {
+            cmds.push_back({SvgPathCommandType::ClosePath, false, {}});
+        }
+        importPathData(cmds, vac, t, pa, ctm);
+    }
+    return 2 * numPoints == numCoords;
 }
 
 bool readPolyline(const QXmlStreamAttributes& attrs, VAC* vac, Time t,
                   SvgPresentationAttributes &pa, const Transform& ctm)
 {
-    // Don't render if no points provided
-    if(!attrs.hasAttribute("points")) return true;
+    bool isPolygon = false;
+    return readPolylineOrPolygon(attrs, vac, t, pa, ctm, isPolygon);
 
-    bool okay = true;
-
-    // Read and split points
-    // Technically the parsing of separators is a bit more complicated,
-    // but this will suffice as it correctly handles all standard-conforming svgs
-    QStringList points = attrs.value("points").toString().split(QRegExp("[\\s,]+"), QString::SkipEmptyParts);
-
-    // Don't render if there isn't at least one complete coordinate
-    if(points.size() < 2) return true;
-
-    QVector<KeyVertex *> vertices(points.size() / 2);
-
-    // Parse points
-    double w = pa.strokeWidth;
-    double edgeWidth = 0;
-    for(int i = 0; i < vertices.size(); i++) {
-        // X
-        double x = points[i * 2].toDouble(&okay);
-        if(!okay) return false;
-
-        // Y
-        double y = points[i * 2 + 1].toDouble(&okay);
-        if(!okay) return false;
-
-        EdgeSample s = applyTransform(ctm, EdgeSample(x, y, w));
-        edgeWidth = s.width();
-
-        vertices[i] = vac->newKeyVertex(t, s);
-        vertices[i]->setColor(pa.stroke.color);
-    }
-
-    // Create edges
-    QVector<KeyEdge *> edges(vertices.size() - 1);
-    for(int i = 1; i < vertices.size(); i++) {
-        KeyEdge * e = vac->newKeyEdge(t, vertices[i-1], vertices[i], nullptr, edgeWidth);
-        e->setColor(pa.stroke.color);
-        edges[i-1] = e;
-    }
-
-    // Add fill
-    // TODO: use finishSubpath
-    if(pa.fill.hasColor)
-    {
-        // Close the loop with a zero-width edge if it isn't yet closed
-        // TODO: use finishSubpath
-        KeyEdge * e = vac->newKeyEdge(t, vertices.last(), vertices[0]);
-        e->setColor(pa.stroke.color);
-        edges.push_back(e);
-
-        // Create face
-        // TODO: use finishSubpath
-        QList<KeyHalfedge> halfEdges;
-        for(int i = 0; i < edges.size(); i++) {
-            halfEdges.append(KeyHalfedge(edges[i], true));
-        }
-        Cycle cycle(halfEdges);
-        KeyFace * face = vac->newKeyFace(cycle);
-        face->setColor(pa.fill.color);
-    }
-
-    // TODO: we should create a face if fill != none
-    // TODO: use createEdge and finishSubpath, or better yet: importPathData with the equivalent path
-
-    return true;
 }
 
 bool readPolygon(const QXmlStreamAttributes& attrs, VAC* vac, Time t,
                  SvgPresentationAttributes &pa, const Transform& ctm)
 {
-    // Don't render if no points provided
-    if(!attrs.hasAttribute("points")) return true;
-
-    bool okay = true;
-
-    // Read and split points
-    // Technically the parsing of separators is a bit more complicated,
-    // but this will suffice as it correctly handles all standard-conforming svgs
-    QStringList points = attrs.value("points").toString().split(QRegExp("[\\s,]+"), QString::SkipEmptyParts);
-
-    // Fail if there isn't at least one complete coordinate
-    // TODO: This shouldn't be an error; it just shouldn't be rendered.
-    if(points.size() < 2) return false;
-
-    QVector<KeyVertex *> vertices(points.size() / 2);
-
-    // Parse points
-    double w = pa.strokeWidth;
-    double edgeWidth = 0;
-    for(int i = 0; i < vertices.size(); i++) {
-        // X
-        double x = points[i * 2].toDouble(&okay);
-        if(!okay) return false;
-
-        // Y
-        double y = points[i * 2 + 1].toDouble(&okay);
-        if(!okay) return false;
-
-        EdgeSample s = applyTransform(ctm, EdgeSample(x, y, w));
-        edgeWidth = s.width();
-
-        vertices[i] = vac->newKeyVertex(t, s);
-        vertices[i]->setColor(pa.stroke.color);
-    }
-
-    // Create Edges
-    // TODO: use createEdge
-    QVector<KeyEdge *> edges(vertices.size() - 1);
-    for(int i = 1; i < vertices.size(); i++) {
-        KeyEdge * e = vac->newKeyEdge(t, vertices[i-1], vertices[i], nullptr, edgeWidth);
-        e->setColor(pa.stroke.color);
-        edges[i-1] = e;
-    }
-
-    // Close the loop if it isn't yet closed
-    // TODO: the loop should ALWAYS be closed
-    // TODO: use finishSubpath
-    if(vertices.first()->pos() != vertices.last()->pos()) {
-        KeyEdge * e = vac->newKeyEdge(t, vertices.last(), vertices[0], nullptr, edgeWidth);
-        e->setColor(pa.stroke.color);
-        edges.push_back(e);
-    }
-
-    // Add fill
-    // TODO: use finishSubpath
-    // XXX This fails if the loop hasn't been explicitly closed,
-    //     since "cycle" won't be a cycle.
-    if(pa.fill.hasColor)
-    {
-        QList<KeyHalfedge> halfEdges;
-        for(int i = 0; i < edges.size(); i++) {
-            halfEdges.append(KeyHalfedge(edges[i], true));
-        }
-        Cycle cycle(halfEdges);
-        KeyFace * face = vac->newKeyFace(cycle);
-        face->setColor(pa.fill.color);
-    }
-
-    return true;
+    bool isPolygon = true;
+    return readPolylineOrPolygon(attrs, vac, t, pa, ctm, isPolygon);
 }
 
 } // namespace
