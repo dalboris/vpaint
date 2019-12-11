@@ -830,123 +830,186 @@ std::vector<SvgPathCommand> parsePathData(
     return cmds;
 }
 
-// This function does the following:
-// - Converts the samples from local to global coordinates
-// - Creates a new edge from the given samples
-// - Adds it the list of already created edges
-// - Clears the list of samples
+// This function populates the given VAC at the given time with new vertices
+// and edges based on samples, nodes, pa, ctm, and closed.
 //
-// When close = true, then:
-// - If edges is currently empty, a closed edge is created
-// - If edges isn't empty, an open edge is created, connected back
-//   to the first edge.
+// If samples.size() == 1, this function does nothing, which makes it correctly
+// handle the first subpath and consecutive M or Z commands.
 //
-// This function assumes that `edges` only contains open edges, which is the
-// case if it is used as intended, that is, `edges` is the list of edges in the
-// current subpath, which isn't closed yet. In other words, you must typically
-// call finishSubpath() just after this function if you call it with close ==
-// true.
+// If pa.fill.hasColor, this function also appends a new cycle to cycles.
 //
-// If there aren't at least 2 samples, then no edge is created. This makes it
-// possible to correctly handle all possible scenarios:
+// At the end of its processing, this function updates samples and nodes to
+// make them ready for the next subpath, if any.
 //
-// - Initial M command                  (samples.size() == 0)
-// - At least one drawto followed by Z  (samples.size() >= 2)
-// - At least one drawto followed by M  (samples.size() >= 2)
-// - Successive M commands              (samples.size() == 1)
-// - Successive Z commands              (samples.size() == 1)
-// - Z directly followed by M           (samples.size() == 1)
-// - M directly followed by Z           (samples.size() == 1)
-// - End of path-data                   (same as if it was a M)
+// Preconditions:
+//   samples.size() > 0
+//   nodes.size() > 0
+//   values in nodes are strictly increasing.
 //
-void createEdge(
-        VAC* vac,
-        Time time,
-        EdgeSamples& samples,
-        QList<KeyHalfedge>& edges,
-        const SvgPresentationAttributes& pa,
-        const Transform& ctm,
-        bool close = false)
-{
-    if (samples.size() >= 2) {
-        for (size_t i = 0; i < samples.size(); ++i) {
-            samples[i] = applyTransform(ctm, samples[i]);
-        }
-        LinearSpline* geometry = new LinearSpline(samples);
-        KeyEdge *edge;
-        if (edges.isEmpty() && close) {
-            edge = vac->newKeyEdge(time, geometry);
-        }
-        else {
-            KeyVertex * v1;
-            if (edges.isEmpty()) {
-                v1 = vac->newKeyVertex(time, samples.front());
-            }
-            else {
-                v1 = edges.last().endVertex(); // non-null because no closed edges
-            }
-            KeyVertex * v2;
-            if (close) {
-                v2 = edges.first().startVertex(); // non-null because no closed edges
-            }
-            else {
-                v2 = vac->newKeyVertex(time, samples.back());
-            }
-            edge = vac->newKeyEdge(time, v1, v2, geometry);
-        }
-        edge->setColor(pa.stroke.color);
-        edges << KeyHalfedge(edge, true);
-    }
-    samples.clear();
-}
-
-// If a face is to be created (that is, pa.fill.hasColor == true), then
-// this function does the following:
-//   - creates a cycle from the list of edges, possibly creating
-//     a final, zero-width edge.
-//   - adds the cycle to the list of cycles.
-//   - clears the list of edges
-//
-// Otherwise, this function only clears the list of edges
+// Postconditions:
+//   samples := [samples.back()]
+//   nodes   := [0]
 //
 void finishSubpath(
         VAC* vac,
         Time time,
-        QList<KeyHalfedge>& edges,
+        EdgeSamples& samples,
+        std::vector<size_t>& nodes,
         QList<Cycle>& cycles,
-        const SvgPresentationAttributes& pa)
+        const SvgPresentationAttributes& pa,
+        const Transform& ctm,
+        bool closed = false)
 {
-    if (pa.fill.hasColor) {
-        if (!edges.empty()) {
-            // Add zero-width straight edge if not already closed.
-            // Note: v1 == v2 == nullptr if `edges` is one single closed edge.
-            KeyVertex* v1 = edges.first().startVertex();
-            KeyVertex* v2 = edges.last().endVertex();
-            if (v1 != v2) {
-                Eigen::Vector2d p1 = v1->pos();
-                Eigen::Vector2d p2 = v2->pos();
-                if ((p1-p2).norm() < 1e-6) {
-                    // "Glue v2 to v1" (by creating a new edge with correct end vertex)
-                    KeyEdge* edge = edges.last().edge;
-                    EdgeGeometry* geometry = edge->geometry()->clone();
-                    KeyVertex* v3 = edge->startVertex();
-                    edges.removeLast();
-                    vac->deleteCell(edge);
-                    vac->deleteCell(v2);
-                    edge = vac->newKeyEdge(time, v3, v1, geometry);
-                    edge->setColor(pa.stroke.color);
-                    edges << KeyHalfedge(edge, true);
-                }
-                else {
-                    KeyEdge* edge = vac->newKeyEdge(time, v2, v1);
-                    edges << KeyHalfedge(edge, true);
-                }
+    // Notations:
+    //   *    sample[j]
+    //  [*]   sample[j] such that there exists i with j = nodes[i]
+    //  (*)   sample[j] such that there exists i with j = nodes[i],
+    //        but where no vertex is to be created there either because
+    //        it is the last sample of a closed subpath, or because users
+    //        prefer not to split subpaths at this node type.
+    //   O    closed == false
+    //   C    closed == true
+    //
+    // Input example #1: O [*]
+    // Input example #2: C (*)
+    // Input example #3: O [*][*]
+    // Input example #4: C [*](*)
+    // Input example #5: O [*] * (*) *  * [*] * [*]
+    // Input example #6: C [*] * (*) *  * [*] * (*)
+    // Input example #7: C (*) * (*) *  * [*] * (*)
+    // Input example #8: C (*) * (*) *  * (*) * (*)
+
+    // Nothing to do if this is an empty subpath (examples #1 and #4)
+    if (samples.size() == 0) {
+        qFatal("Empty samples in SvgParser.cpp:finishSubpath()");
+        return;
+    }
+    if (samples.size() == 1) {
+        return;
+    }
+
+    // Implicit LineTo command
+    if (closed && samples.back().distanceTo(samples.front()) > 1e-6) {
+        // TODO: add more than just one sample to avoid smoothing out corner.
+        samples.push_back(samples.front());
+        nodes.push_back(samples.size() - 1);
+    }
+
+    // Have open subpaths behave as closed subpaths if pa.fill.hasColor == true
+    // and if the subpath is geometrically closed. In theory, we may want to
+    // add a zero-width, zero-length open edge in this case, but in practice:
+    //
+    // - This results in artifacts due to our current implementation always
+    //   resampling zero-length edges into non-zero-length edges.
+    //
+    // - The author most likely meant to actually represent a closed subpath,
+    //   and either forgot the "Z", or the editor/minimizer removed it.
+    //
+    if (!closed && pa.fill.hasColor && samples.back().distanceTo(samples.front()) < 1e-6) {
+        closed = true;
+    }
+
+    // Remember last sample (will be the first sample of next subpath)
+    EdgeSample lastSample = samples.back();
+
+    // Remove last sample and last node if closed == true.
+    //
+    // TODO: detect nodes where we don't want to split (for closed subpaths,
+    // this may include the first node), and remove them from the nodes list.
+    //
+    // Output:
+    // #3: O [*][*]
+    // #4: C [*]                           // e.g.: "M 0 0 L 0 0 Z"
+    // #5: O [*] *  *  *  * [*] * [*]
+    // #6: C [*] *  *  *  * [*] *
+    // #7: C  *  *  *  *  * [*] *
+    // #8: C  *  *  *  *  *  *  *
+    //
+    if (closed) {
+        samples.pop_back();
+        nodes.pop_back();
+    }
+
+    // Apply transform
+    for (size_t j = 0; j < samples.size(); ++j) {
+        samples[j] = applyTransform(ctm, samples[j]);
+    }
+
+    // Create vertices
+    std::vector<KeyVertex*> vertices;
+    vertices.reserve(nodes.size());
+    for (size_t j : nodes) {
+        vertices.push_back(vac->newKeyVertex(time, samples[j]));
+    }
+
+    // Create edges
+    //
+    // #3: O [*][*]                    => 2 vertices, 1 open edge
+    // #4: C [*]                       => 1 vertex,   1 open edge
+    // #5: O [*] *  *  *  * [*] * [*]  => 3 vertices, 2 open edges
+    // #6: C [*] *  *  *  * [*] *      => 2 vertices, 2 open edges
+    // #7: C  *  *  *  *  * [*] *      => 1 vertex,   1 open edge
+    // #8: C  *  *  *  *  *  *  *      => 0 vertices, 1 closed edge
+    //
+    QList<KeyHalfedge> halfedges;
+    EdgeSamples edgeSamples;
+    if (nodes.empty()) {
+        // Create closed edge
+        LinearSpline* geometry = new LinearSpline(samples);
+        KeyEdge* edge = vac->newKeyEdge(time, geometry);
+        edge->setColor(pa.stroke.color);
+        halfedges.push_back(KeyHalfedge(edge, true));
+    }
+    else {
+        // Create open edges
+        size_t numSamples = samples.size();
+        size_t numVertices = vertices.size(); // == nodes.size()
+        size_t numEdges = closed ? numVertices : numVertices - 1;
+        for (size_t i = 0; i < numEdges; ++i) {
+            size_t i1 = i;
+            size_t i2 = (i+1) % numVertices;
+            KeyVertex* v1 = vertices[i1];
+            KeyVertex* v2 = vertices[i2];
+            size_t j1 = nodes[i1];
+            size_t j2 = nodes[i2];
+            if (j2 <= j1) {
+                // #6: when i == 1, we initially have j2 < j1
+                // #7: when i == 0, we initially have j2 == j1
+                j2 += numSamples;
             }
-            // Add cycle
-            cycles << Cycle(edges);
+            edgeSamples.clear();
+            edgeSamples.reserve(j2 - j1 + 1);
+            for (size_t j = j1; j <= j2; ++j) {
+                edgeSamples.push_back(samples[j % numSamples]);
+            }
+            LinearSpline* geometry = new LinearSpline(edgeSamples);
+            KeyEdge* edge = vac->newKeyEdge(time, v1, v2, geometry);
+            edge->setColor(pa.stroke.color);
+            halfedges.push_back(KeyHalfedge(edge, true));
         }
     }
-    edges.clear();
+
+    // Append cycle if pa.fill.hasColor == true
+    if (pa.fill.hasColor) {
+        // Create zero-width straight open edge if not already closed.
+        if (!halfedges.front().isClosed()) {
+            KeyVertex* v1 = halfedges.back().endVertex();
+            KeyVertex* v2 = halfedges.front().startVertex();
+            if (v1 != v2) {
+                KeyEdge* edge = vac->newKeyEdge(time, v1, v2);
+                edge->setColor(pa.stroke.color);
+                halfedges.push_back(KeyHalfedge(edge, true));
+            }
+        }
+        // Append cycle
+        cycles.push_back(Cycle(halfedges));
+    }
+
+    // Prepare samples and nodes for next subpath (if any)
+    samples.clear();
+    nodes.clear();
+    samples.push_back(lastSample);
+    nodes.push_back(0);
 }
 
 // Returns the angle between two vectors
@@ -968,8 +1031,8 @@ void importPathData(
 {
     // User settings
     // TODO: add these to a Dialog Box
-    bool splitAtLineTo = true;
-    bool splitAtAllControlPoints = true;
+    //bool splitAtLineTo = true;
+    //bool splitAtAllControlPoints = true;
 
     // Edge width, in local coordinates
     double width = pa.strokeWidth;
@@ -977,19 +1040,23 @@ void importPathData(
     // Previous subpaths (or empty list if no face is to be created)
     QList<Cycle> cycles;
 
-    // Previous edges of current subpath (their geometry is in global coordinates)
-    QList<KeyHalfedge> edges;
-
-    // First position of current subpath, in local coordinates
-    Eigen::Vector2d z(0.0, 0.0);
-
-    // Previous samples of current edge, in local coordinates
+    // Previous samples of current subpath.
+    // Invariant: samples.size() > 0:
+    // - samples.back() represents the current position
+    // - samples is initialized as [(0, 0, w)] so that the first MoveTo is
+    //   always interpreted as absolute, even 'm' is used, as per spec.
+    // - if samples.size() == 1 at the end of a subpath, we simply ignore it,
+    //   since this means it was either the first MoveTo, or that there were
+    //   no draw commands (e.g., M directly followed by Z or by another M)
     EdgeSamples samples;
+    samples.reserve(cmds.size());
+    samples.push_back(EdgeSample(0.0, 0.0, width));
 
-    // Current position. Must be initialized to (0, 0) so that the first MoveTo
-    // is always interpreted as absolute, even 'm' is used, as per spec. See:
-    // https://www.w3.org/TR/SVG11/paths.html#PathDataMovetoCommands
-    Eigen::Vector2d p(0.0, 0.0);
+    // Location of path nodes in the samples, that is, the boundaries
+    // between path segments.
+    std::vector<size_t> nodes;
+    nodes.reserve(cmds.size());
+    nodes.push_back(0);
 
     // Previous command and last Bezier control point. This is used
     // for the "smooth" bezier curveto variants, that is, S and T.
@@ -1016,39 +1083,16 @@ void importPathData(
             // are treated as implicit LineTo commands.
             if ( cmd.type == SvgPathCommandType::ClosePath ||
                 (cmd.type == SvgPathCommandType::MoveTo && k == 0)) {
-
-                // Geometrically close current subpath
-                if ( cmd.type == SvgPathCommandType::ClosePath &&
-                    (!edges.empty() || samples.size() > 1)) {
-
-                    // Add straight line (unless already geometrically closed)
-                    if ((z-p).norm() > 1e-6) {
-                        if (splitAtLineTo) {
-                            createEdge(vac, time, samples, edges, pa, ctm);
-                            samples.push_back(EdgeSample(p[0], p[1], width));
-                        }
-                        // TODO: add more than just one sample to avoid
-                        // smoothing out corner.
-                        samples.push_back(EdgeSample(z[0], z[1], width));
-                    }
-                    p = z;
-                }
-
-                // Create edge from current subpath, if any
                 bool close = (cmd.type == SvgPathCommandType::ClosePath);
-                createEdge(vac, time, samples, edges, pa, ctm, close);
-                finishSubpath(vac, time, edges, cycles, pa);
-
-                // Start new subpath
+                finishSubpath(vac, time, samples, nodes, cycles, pa, ctm, close);
                 if (cmd.type == SvgPathCommandType::MoveTo) {
-                    Eigen::Vector2d q(args[0], args[1]);
                     if (cmd.relative) {
-                        q += p;
+                        samples[0].translate(args[0], args[1]);
                     }
-                    p = q;
+                    else {
+                        samples[0].setPos(args[0], args[1]);
+                    }
                 }
-                z = p;
-                samples.push_back(EdgeSample(p[0], p[1], width));
             }
 
             // Add lines
@@ -1056,36 +1100,26 @@ void importPathData(
                      cmd.type == SvgPathCommandType::LineTo ||
                      cmd.type == SvgPathCommandType::HLineTo ||
                      cmd.type == SvgPathCommandType::VLineTo) {
-                Eigen::Vector2d q;
-                if (cmd.type == SvgPathCommandType::HLineTo) {
-                    q = Eigen::Vector2d(args[0], cmd.relative ? 0.0 : p[1]);
-                }
-                else if (cmd.type == SvgPathCommandType::VLineTo) {
-                    q = Eigen::Vector2d(cmd.relative ? 0.0 : p[0], args[0]);
-                }
-                else { // LineTo (possibly implicit via MoveTo)
-                    q = Eigen::Vector2d(args[0], args[1]);
-                }
+                EdgeSample q = samples.back();
                 if (cmd.relative) {
-                    q += p;
+                    if (cmd.type == SvgPathCommandType::HLineTo)      q.translate(args[0], 0.0);
+                    else if (cmd.type == SvgPathCommandType::VLineTo) q.translate(0.0, args[0]);
+                    else /* LineTo, possibly implicit via MoveTo */   q.translate(args[0], args[1]);
                 }
-                if (splitAtLineTo) {
-                    createEdge(vac, time, samples, edges, pa, ctm);
-                    samples.push_back(EdgeSample(p[0], p[1], width));
+                else {
+                    if (cmd.type == SvgPathCommandType::HLineTo)      q.setX(args[0]);
+                    else if (cmd.type == SvgPathCommandType::VLineTo) q.setY(args[0]);
+                    else /* LineTo, possibly implicit via MoveTo */   q.setPos(args[0], args[1]);
                 }
-                // TODO: add more than just one sample to avoid
-                // smoothing out corner.
-                samples.push_back(EdgeSample(q[0], q[1], width));
-                p = q;
-                if (splitAtLineTo) {
-                    createEdge(vac, time, samples, edges, pa, ctm);
-                    samples.push_back(EdgeSample(p[0], p[1], width));
-                }
+                // TODO: add more than just one sample to avoid smoothing out corner.
+                samples.push_back(q);
+                nodes.push_back(samples.size() - 1);
             }
 
             // Add cubic Bezier segments
             else if (cmd.type == SvgPathCommandType::CCurveTo ||
                      cmd.type == SvgPathCommandType::SCurveTo) {
+                Eigen::Vector2d p = samples.back().pos();
                 Eigen::Vector2d q, r, s;
                 if (cmd.type == SvgPathCommandType::CCurveTo) {
                     q = Eigen::Vector2d(args[0], args[1]);
@@ -1112,10 +1146,6 @@ void importPathData(
                     s += p;
                 }
                 lastControlPoint = r;
-                if (splitAtAllControlPoints) {
-                    createEdge(vac, time, samples, edges, pa, ctm);
-                    samples.push_back(EdgeSample(p[0], p[1], width));
-                }
                 // Add 8 samples. Will be resampled anyway later.
                 int nsamples = 8;
                 double du = 1.0 / static_cast<double>(nsamples);
@@ -1127,16 +1157,13 @@ void importPathData(
                                               u   *   u   *   u   * s;
                     samples.push_back(EdgeSample(b[0], b[1], width));
                 }
-                p = s;
-                if (splitAtAllControlPoints) {
-                    createEdge(vac, time, samples, edges, pa, ctm);
-                    samples.push_back(EdgeSample(p[0], p[1], width));
-                }
+                nodes.push_back(samples.size() - 1);
             }
 
             // Add quadratic Bezier segments
             else if (cmd.type == SvgPathCommandType::QCurveTo ||
                      cmd.type == SvgPathCommandType::TCurveTo) {
+                Eigen::Vector2d p = samples.back().pos();
                 Eigen::Vector2d q, r;
                 if (cmd.type == SvgPathCommandType::QCurveTo) {
                     q = Eigen::Vector2d(args[0], args[1]);
@@ -1160,10 +1187,6 @@ void importPathData(
                     r += p;
                 }
                 lastControlPoint = q;
-                if (splitAtAllControlPoints) {
-                    createEdge(vac, time, samples, edges, pa, ctm);
-                    samples.push_back(EdgeSample(p[0], p[1], width));
-                }
                 // Add 8 samples. Will be resampled anyway later.
                 int nsamples = 8;
                 double du = 1.0 / static_cast<double>(nsamples);
@@ -1174,11 +1197,7 @@ void importPathData(
                                               u   *   u   * r;
                     samples.push_back(EdgeSample(b[0], b[1], width));
                 }
-                p = r;
-                if (splitAtAllControlPoints) {
-                    createEdge(vac, time, samples, edges, pa, ctm);
-                    samples.push_back(EdgeSample(p[0], p[1], width));
-                }
+                nodes.push_back(samples.size() - 1);
             }
 
             // Add elliptical arcs
@@ -1190,18 +1209,14 @@ void importPathData(
                 double phi = args[2] / 180.0 * M_PI;
                 bool fa = (args[3] > 0.5);
                 bool fs = (args[4] > 0.5);
+                Eigen::Vector2d p = samples.back().pos();
                 Eigen::Vector2d q(args[5], args[6]);
                 if (cmd.relative) {
                     q += p;
                 }
-                if (splitAtAllControlPoints) {
-                    createEdge(vac, time, samples, edges, pa, ctm);
-                    samples.push_back(EdgeSample(p[0], p[1], width));
-                }
                 if (rx < eps || ry < eps) {
                     // Draw a line instead.
-                    // TODO: add more than just one sample to avoid
-                    // smoothing out corner.
+                    // TODO: add more than just one sample to avoid smoothing out corner.
                     samples.push_back(EdgeSample(q[0], q[1], width));
                 }
                 else {
@@ -1252,17 +1267,12 @@ void importPathData(
                         samples.push_back(EdgeSample(b[0], b[1], width));
                     }
                 }
-                p = q;
-                if (splitAtAllControlPoints) {
-                    createEdge(vac, time, samples, edges, pa, ctm);
-                    samples.push_back(EdgeSample(p[0], p[1], width));
-                }
+                nodes.push_back(samples.size() - 1);
             }
             previousCommandType = cmd.type;
         }
     }
-    createEdge(vac, time, samples, edges, pa, ctm);
-    finishSubpath(vac, time, edges, cycles, pa);
+    finishSubpath(vac, time, samples, nodes, cycles, pa, ctm);
 
     // Create face from cycles
     if (!cycles.empty()) {

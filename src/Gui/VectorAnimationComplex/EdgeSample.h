@@ -28,8 +28,11 @@ public:
     // Access position
     inline double x() const { return d_[0]; }
     inline double y() const { return d_[1]; }
+    inline Eigen::Vector2d pos() const { return Eigen::Vector2d(d_[0], d_[1]); }
     inline void setX(double newX) { d_[0] = newX; }
     inline void setY(double newY) { d_[1] = newY; }
+    inline void setPos(double x, double y) { d_[0] = x; d_[1] = y; }
+    inline void setPos(const Eigen::Vector2d& p) { d_[0] = p[0]; d_[1] = p[1]; }
 
     // Access width
     inline double width() const { return d_[2]; }
@@ -38,6 +41,10 @@ public:
     // Constructor
     EdgeSample(double x = 0, double y = 0, double w = 0): d_(x, y, w) {}
     EdgeSample(const Eigen::Vector3d & d): d_(d) {}
+
+    // Translate (keep width untouched)
+    inline void translate(double x, double y) { d_[0] += x; d_[1] += y; }
+    inline void translate(const Eigen::Vector2d& p) {d_[0] += p[0]; d_[1] += p[1]; }
 
     // Linear interpolation
     EdgeSample lerp(double u, const EdgeSample & other) const
@@ -55,6 +62,11 @@ public:
     }
 
     // Differential
+    //
+    // Note: adding two samples also adds their width! this is useful for
+    // interpolation purposes, but if you want to translate a sample don't add
+    // a new sample, instead use the translate() methods.
+    //
     EdgeSample operator-(const EdgeSample & other) const
     {
         return EdgeSample(d_ - other.d_);
@@ -69,7 +81,6 @@ public:
     {
         return EdgeSample(s * d_);
     }
-
 
     // Eigen alignement
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
