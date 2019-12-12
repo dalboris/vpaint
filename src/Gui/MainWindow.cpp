@@ -28,6 +28,7 @@
 #include "LayersWidget.h"
 #include "Layer.h"
 #include "SvgParser.h"
+#include "SvgImportDialog.h"
 
 #include "IO/FileVersionConverter.h"
 #include "XmlStreamWriter.h"
@@ -865,6 +866,9 @@ void MainWindow::open_(const QString & filePath)
 
 void MainWindow::doImportSvg(const QString & filePath)
 {
+    SvgImportDialog * dialog = new SvgImportDialog(this);
+    dialog->exec();
+
     QFile file(filePath);
     if (!file.open(QFile::ReadOnly | QFile::Text))
     {

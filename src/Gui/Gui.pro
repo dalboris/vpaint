@@ -198,7 +198,8 @@ HEADERS += MainWindow.h \
     VectorAnimationComplex/TransformTool.h \
     LayersWidget.h \
     Layer.h \
-    SvgParser.h
+    SvgParser.h \
+    SvgImportDialog.h
 
 SOURCES += main.cpp \
     SaveAndLoad.cpp \
@@ -290,4 +291,5 @@ SOURCES += main.cpp \
     VectorAnimationComplex/TransformTool.cpp \
     LayersWidget.cpp \
     Layer.cpp \
-    SvgParser.cpp
+    SvgParser.cpp \
+    SvgImportDialog.cpp
