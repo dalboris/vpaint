@@ -498,50 +498,13 @@ public:
 
 };
 
-EdgeSampling subdivided(const EdgeSampling & in, double w = 0.0625)
-{
-    int n = in.size();
-    int n2 = 2*n;
-    if(!in.isClosed())
-        n2--;
-    EdgeSampling out(n2,in.isClosed());
-    for(int i=0; i<n; ++i)
-    {
-        out[2*i] =  in[i];
-        if(in.isClosed() || i<n-1)
-            out[2*i+1] = (in[i]+in[i+1])*(0.5+w) - (in[i-1]+in[i+2])*w;
-    }
-    return out;
-}
-
-void triangulateHelper(const QList<EdgeSample> & samplesInput, Triangles & triangles, bool closed = false)
+void triangulateHelper(const QList<EdgeSample> & samples, Triangles & triangles, bool closed = false)
 {
     // Initialization and basic case
     triangles.clear();
-    int n=samplesInput.size();
+    int n=samples.size();
     if(n<2)
         return;
-
-    // Subdivision
-    int numSub = DevSettings::getInt("num sub");
-    EdgeSampling sampling1(samplesInput, closed);
-    EdgeSampling sampling2(closed);
-    for(int i=0; i<numSub; ++i)
-    {
-        if( (i%2) == 0 )
-            sampling2 = subdivided(sampling1);
-        else
-            sampling1 = subdivided(sampling2);
-    }
-    EdgeSampling & sampling = ( (numSub%2) == 0 ) ? sampling1 : sampling2;
-
-    // Samples after subdivision
-    QList<EdgeSample> samples;
-    for(int i=0; i<sampling.size(); ++i)
-        samples << sampling[i];
-    if(sampling.isClosed())
-        samples << sampling[0];
-    n=samples.size();
 
     // Helper function
     auto getD = [] (double x1, double y1, double x2, double y2)

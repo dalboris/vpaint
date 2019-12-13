@@ -39,8 +39,6 @@ DevSettings::DevSettings()
 
     createCheckBox("draw edge orientation", false);
 
-    createSpinBox("num sub", 0, 10, 2);
-
     setLayout(layout_);
 }
 
