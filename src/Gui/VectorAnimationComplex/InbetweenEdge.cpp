@@ -538,8 +538,11 @@ InbetweenEdge::InbetweenEdge(VAC * vac, XmlStreamReader & xml) :
         }
         double maxLength = std::max(beforeLength,afterLength);
 
-        // Compute uniform sampling of key paths
-        double ds = DevSettings::getDouble("ds");
+        // Compute uniform sampling of key paths.
+        // Note: we use a smaller ds for inbetween edges (ds = 2) than for key edges
+        // (ds = 5) to reduce flicker caused when resampling beforePath/Cycle and
+        // afterPath/Cycle to an equal number of samples.
+        double ds = 2.0;
         int minSamples = isClosed() ? 4 : 2;
         int numSamples = std::max(minSamples, (int) (maxLength/ds) + 2);
         QList<EdgeSample> beforeSampling;
