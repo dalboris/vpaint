@@ -30,6 +30,7 @@ void Settings::readFromDisk(QSettings & settings)
     keepOldVersion_ = settings.value("general-keepoldversion", true).toBool();
     dontNotifyConversion_ = settings.value("general-dontnotifyconversion", false).toBool();
     checkVersion_ = Version(settings.value("general-checkversion", qApp->applicationVersion()).toString());
+    svgImportVertexMode_ = toSvgImportVertexMode(settings.value("svgimport-vertexmode", toString(defaultSvgImportVertexMode)).toString());
 }
 
 void Settings::writeToDisk(QSettings & settings)
@@ -39,6 +40,7 @@ void Settings::writeToDisk(QSettings & settings)
     settings.setValue("general-keepoldversion", keepOldVersion_);
     settings.setValue("general-dontnotifyconversion", dontNotifyConversion_);
     settings.setValue("general-checkversion", checkVersion_.toString());
+    settings.setValue("svgimport-vertexmode", toString(svgImportVertexMode_));
 }
 
 // Edge width
@@ -59,3 +61,7 @@ void Settings::setDontNotifyConversion(bool value) { dontNotifyConversion_ = val
 // Check version
 Version Settings::checkVersion() const { return checkVersion_; }
 void Settings::setCheckVersion(Version value) { checkVersion_ = value; }
+
+// Import preferences
+SvgImportVertexMode Settings::svgImportVertexMode() const { return svgImportVertexMode_; }
+void Settings::setSvgImportVertexMode(SvgImportVertexMode value) { svgImportVertexMode_ = value; }

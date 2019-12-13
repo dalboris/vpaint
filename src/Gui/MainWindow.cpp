@@ -877,7 +877,7 @@ void MainWindow::doImportSvg(const QString & filePath)
     }
 
     XmlStreamReader xml(&file);
-    SvgParser::readSvg(xml);
+    SvgParser::readSvg(xml, SvgImportDialog::params());
 
     // Close file
     file.close();

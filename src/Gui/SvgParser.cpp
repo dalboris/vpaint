@@ -30,6 +30,7 @@
 #include "Global.h"
 #include "MainWindow.h"
 #include "Scene.h"
+#include "SvgImportParams.h"
 #include "VectorAnimationComplex/EdgeGeometry.h"
 #include "VectorAnimationComplex/EdgeSample.h"
 #include "VectorAnimationComplex/KeyEdge.h"
@@ -871,6 +872,7 @@ void finishSubpath(
         QList<Cycle>& cycles,
         const SvgPresentationAttributes& pa,
         const Transform& ctm,
+        const SvgImportParams& params,
         bool closed = false)
 {
     // Notations:
@@ -925,10 +927,9 @@ void finishSubpath(
     // Remember last sample (will be the first sample of next subpath)
     EdgeSample lastSample = samples.back();
 
-    // Remove last sample and last node if closed == true.
-    //
-    // TODO: detect nodes where we don't want to split (for closed subpaths,
-    // this may include the first node), and remove them from the nodes list.
+    // Remove the last sample and the last node if closed == true, then detect
+    // and remove the nodes where we don't want to split based on user
+    // preferences (for closed subpaths, this may include the first node).
     //
     // Output:
     // #3: O [*][*]
@@ -941,6 +942,10 @@ void finishSubpath(
     if (closed) {
         samples.pop_back();
         nodes.pop_back();
+    }
+    if (params.vertexMode == SvgImportVertexMode::Endpoints) {
+        if (closed) nodes = {};
+        else        nodes = {0, samples.size() - 1};
     }
 
     // Apply transform
@@ -1040,13 +1045,9 @@ double angle(const Eigen::Vector2d& a, const Eigen::Vector2d& b)
 //
 void importPathData(
         const std::vector<SvgPathCommand>& cmds, VAC* vac, Time time,
-        SvgPresentationAttributes &pa, const Transform& ctm)
+        SvgPresentationAttributes &pa, const Transform& ctm,
+        const SvgImportParams& params)
 {
-    // User settings
-    // TODO: add these to a Dialog Box
-    //bool splitAtLineTo = true;
-    //bool splitAtAllControlPoints = true;
-
     // Edge width, in local coordinates
     double width = pa.strokeWidth;
 
@@ -1097,7 +1098,7 @@ void importPathData(
             if ( cmd.type == SvgPathCommandType::ClosePath ||
                 (cmd.type == SvgPathCommandType::MoveTo && k == 0)) {
                 bool close = (cmd.type == SvgPathCommandType::ClosePath);
-                finishSubpath(vac, time, samples, nodes, cycles, pa, ctm, close);
+                finishSubpath(vac, time, samples, nodes, cycles, pa, ctm, params, close);
                 if (cmd.type == SvgPathCommandType::MoveTo) {
                     if (cmd.relative) {
                         samples[0].translate(args[0], args[1]);
@@ -1285,7 +1286,7 @@ void importPathData(
             previousCommandType = cmd.type;
         }
     }
-    finishSubpath(vac, time, samples, nodes, cycles, pa, ctm);
+    finishSubpath(vac, time, samples, nodes, cycles, pa, ctm, params);
 
     // Create face from cycles
     if (!cycles.empty()) {
@@ -1488,7 +1489,8 @@ SvgPaint parsePaint(QString s)
 }
 
 bool readPath(const QXmlStreamAttributes& attrs, VAC* vac, Time t,
-              SvgPresentationAttributes &pa, const Transform& ctm)
+              SvgPresentationAttributes &pa, const Transform& ctm,
+              const SvgImportParams& params)
 {
     // Don't render if no path data provided
     if(!attrs.hasAttribute("d")) return true;
@@ -1503,7 +1505,7 @@ bool readPath(const QXmlStreamAttributes& attrs, VAC* vac, Time t,
     }
 
     // Import path data (up to, but not including, first invalid command)
-    importPathData(cmds, vac, t, pa, ctm);
+    importPathData(cmds, vac, t, pa, ctm, params);
     return error.empty();
 }
 
@@ -1511,7 +1513,8 @@ bool readPath(const QXmlStreamAttributes& attrs, VAC* vac, Time t,
 // https://www.w3.org/TR/SVG11/shapes.html#RectElement
 // @return true on success, false on failure
 bool readRect(const QXmlStreamAttributes& attrs, VAC* vac, Time t,
-              SvgPresentationAttributes &pa, const Transform& ctm)
+              SvgPresentationAttributes &pa, const Transform& ctm,
+              const SvgImportParams& params)
 {
     bool okay = true;
 
@@ -1592,12 +1595,13 @@ bool readRect(const QXmlStreamAttributes& attrs, VAC* vac, Time t,
             {SvgPathCommandType::ClosePath, false, {}}
         };
     }
-    importPathData(cmds, vac, t, pa, ctm);
+    importPathData(cmds, vac, t, pa, ctm, params);
     return true;
 }
 
 bool readCircle(const QXmlStreamAttributes& attrs, VAC* vac, Time t,
-                SvgPresentationAttributes &pa, const Transform& ctm)
+                SvgPresentationAttributes &pa, const Transform& ctm,
+                const SvgImportParams& params)
 {
     bool okay = true;
 
@@ -1633,12 +1637,13 @@ bool readCircle(const QXmlStreamAttributes& attrs, VAC* vac, Time t,
         {SvgPathCommandType::ArcTo,     false, {r, r, 0, 0, 1, cx+r, cy}},
         {SvgPathCommandType::ClosePath, false, {}}
     };
-    importPathData(cmds, vac, t, pa, ctm);
+    importPathData(cmds, vac, t, pa, ctm, params);
     return true;
 }
 
 bool readEllipse(const QXmlStreamAttributes& attrs, VAC* vac, Time t,
-                 SvgPresentationAttributes &pa, const Transform& ctm)
+                 SvgPresentationAttributes &pa, const Transform& ctm,
+                 const SvgImportParams& params)
 {
     bool okay = true;
 
@@ -1679,12 +1684,13 @@ bool readEllipse(const QXmlStreamAttributes& attrs, VAC* vac, Time t,
         {SvgPathCommandType::ArcTo,     false, {rx, ry, 0, 0, 1, cx+rx, cy}},
         {SvgPathCommandType::ClosePath, false, {}}
     };
-    importPathData(cmds, vac, t, pa, ctm);
+    importPathData(cmds, vac, t, pa, ctm, params);
     return true;
 }
 
 bool readLine(const QXmlStreamAttributes& attrs, VAC* vac, Time t,
-              SvgPresentationAttributes &pa, const Transform& ctm)
+              SvgPresentationAttributes &pa, const Transform& ctm,
+              const SvgImportParams& params)
 {
     bool okay = true;
 
@@ -1709,13 +1715,14 @@ bool readLine(const QXmlStreamAttributes& attrs, VAC* vac, Time t,
         {SvgPathCommandType::MoveTo, false, {x1, y1}},
         {SvgPathCommandType::LineTo, false, {x2, y2}}
     };
-    importPathData(cmds, vac, t, pa, ctm);
+    importPathData(cmds, vac, t, pa, ctm, params);
     return true;
 }
 
 bool readPolylineOrPolygon(
         const QXmlStreamAttributes& attrs, VAC* vac, Time t,
         SvgPresentationAttributes &pa, const Transform& ctm,
+        const SvgImportParams& params,
         bool isPolygon)
 {
     // Don't render if no points provided
@@ -1769,24 +1776,26 @@ bool readPolylineOrPolygon(
         if (isPolygon) {
             cmds.push_back({SvgPathCommandType::ClosePath, false, {}});
         }
-        importPathData(cmds, vac, t, pa, ctm);
+        importPathData(cmds, vac, t, pa, ctm, params);
     }
     return 2 * numPoints == numCoords;
 }
 
 bool readPolyline(const QXmlStreamAttributes& attrs, VAC* vac, Time t,
-                  SvgPresentationAttributes &pa, const Transform& ctm)
+                  SvgPresentationAttributes &pa, const Transform& ctm,
+                  const SvgImportParams& params)
 {
     bool isPolygon = false;
-    return readPolylineOrPolygon(attrs, vac, t, pa, ctm, isPolygon);
+    return readPolylineOrPolygon(attrs, vac, t, pa, ctm, params, isPolygon);
 
 }
 
 bool readPolygon(const QXmlStreamAttributes& attrs, VAC* vac, Time t,
-                 SvgPresentationAttributes &pa, const Transform& ctm)
+                 SvgPresentationAttributes &pa, const Transform& ctm,
+                 const SvgImportParams& params)
 {
     bool isPolygon = true;
-    return readPolylineOrPolygon(attrs, vac, t, pa, ctm, isPolygon);
+    return readPolylineOrPolygon(attrs, vac, t, pa, ctm, params, isPolygon);
 }
 
 // Basic CSS style-attribute parsing. This is not fully compliant (e.g.,
@@ -1861,7 +1870,7 @@ QMap<QString, QString> parseStyleAttribute(const QString& style)
 // Of course, we should have a proper warning system to let users be aware of
 // errors, which we don't have in VPaint, but we will have in VGC.
 //
-void SvgParser::readSvg(XmlStreamReader & xml)
+void SvgParser::readSvg(XmlStreamReader & xml, const SvgImportParams& params)
 {
     // Ensure that this is a SVG file
     xml.readNextStartElement();
@@ -2031,25 +2040,25 @@ void SvgParser::readSvg(XmlStreamReader & xml)
             //  animation elements
             //
             else if(xml.name() == "path") {
-                if(!readPath(attrs, vac, t, pa, ctm)) return;
+                if(!readPath(attrs, vac, t, pa, ctm, params)) return;
             }
             else if(xml.name() == "rect") {
-                if(!readRect(attrs, vac, t, pa, ctm)) return;
+                if(!readRect(attrs, vac, t, pa, ctm, params)) return;
             }
             else if(xml.name() == "circle") {
-                if(!readCircle(attrs, vac, t, pa, ctm)) return;
+                if(!readCircle(attrs, vac, t, pa, ctm, params)) return;
             }
             else if(xml.name() == "ellipse") {
-                if(!readEllipse(attrs, vac, t, pa, ctm)) return;
+                if(!readEllipse(attrs, vac, t, pa, ctm, params)) return;
             }
             else if(xml.name() == "line") {
-                if(!readLine(attrs, vac, t, pa, ctm)) return;
+                if(!readLine(attrs, vac, t, pa, ctm, params)) return;
             }
             else if(xml.name() == "polyline") {
-                if(!readPolyline(attrs, vac, t, pa, ctm)) return;
+                if(!readPolyline(attrs, vac, t, pa, ctm, params)) return;
             }
             else if(xml.name() == "polygon") {
-                if(!readPolygon(attrs, vac, t, pa, ctm)) return;
+                if(!readPolygon(attrs, vac, t, pa, ctm, params)) return;
             }
 
             // TEXT-FONT ELEMENTS: text, font, font-face, altGlyphDef

@@ -14,25 +14,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SVGIMPORTDIALOG_H
-#define SVGIMPORTDIALOG_H
-
-#include <QDialog>
-
 #include "SvgImportParams.h"
-
-class SvgImportDialog : public QDialog
-{
-    Q_OBJECT
-
-public:
-    SvgImportDialog(QWidget * parent = nullptr);
-
-    static SvgImportParams params();
-
-private slots:
-    void vertexModeButtonToggled(int id, bool checked);
-
-};
-
-#endif // SVGIMPORTDIALOG_H

@@ -199,7 +199,8 @@ HEADERS += MainWindow.h \
     LayersWidget.h \
     Layer.h \
     SvgParser.h \
-    SvgImportDialog.h
+    SvgImportDialog.h \
+    SvgImportParams.h
 
 SOURCES += main.cpp \
     SaveAndLoad.cpp \
@@ -292,4 +293,5 @@ SOURCES += main.cpp \
     LayersWidget.cpp \
     Layer.cpp \
     SvgParser.cpp \
-    SvgImportDialog.cpp
+    SvgImportDialog.cpp \
+    SvgImportParams.cpp

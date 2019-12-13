@@ -16,9 +16,13 @@
 
 #include "SvgImportDialog.h"
 
+#include <QButtonGroup>
 #include <QDialogButtonBox>
 #include <QLabel>
+#include <QRadioButton>
 #include <QVBoxLayout>
+
+#include "Global.h"
 
 SvgImportDialog::SvgImportDialog(QWidget * parent) :
     QDialog(parent)
@@ -36,7 +40,7 @@ SvgImportDialog::SvgImportDialog(QWidget * parent) :
     // margin/padding (seems to work for font attributes, though)
     //
     QLabel * warning = new QLabel(tr(
-        "<p style=\"margin:0;padding:0\">Warning! This importer is BETA and does not support:</p>"
+        "<p style=\"margin:0;padding:0\"><b>Warning!</b> This importer is BETA and does not support:</p>"
         "<ul style=\"-qt-list-indent:0;margin:5px 0px 10px 15px;padding:0;\">"
           "<li>Gradients, patterns, markers, and dashes</li>"
           "<li>Stroke caps and joins other than 'round'</li>"
@@ -50,6 +54,21 @@ SvgImportDialog::SvgImportDialog(QWidget * parent) :
     warning->setWordWrap(true);
     warning->setTextFormat(Qt::RichText);
 
+    // Vertex Mode
+    QLabel * vertexModeLabel = new QLabel(tr("<b>Where to create vertices?</b>"));
+    std::vector<std::pair<SvgImportVertexMode, QString>> vertexModes = {
+        {SvgImportVertexMode::All,       tr("At all path nodes")},
+        //{SvgImportVertexMode::Corners,   tr("only at end points and sharp corners")},
+        {SvgImportVertexMode::Endpoints, tr("Only at end points")}
+    };
+    QButtonGroup * vertexModeButtons = new QButtonGroup(this);
+    for (auto& p : vertexModes) {
+        vertexModeButtons->addButton(new QRadioButton(p.second), static_cast<int>(p.first));
+    }
+    SvgImportVertexMode vertexMode = global()->settings().svgImportVertexMode();
+    vertexModeButtons->button(static_cast<int>(vertexMode))->setChecked(true);
+    connect(vertexModeButtons, SIGNAL(buttonToggled(int, bool)), this, SLOT(vertexModeButtonToggled(int, bool)));
+
     // Dialog button box
     QDialogButtonBox * buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok);
     connect(buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
@@ -58,7 +77,28 @@ SvgImportDialog::SvgImportDialog(QWidget * parent) :
     // Layout
     QVBoxLayout * layout = new QVBoxLayout();
     layout->addWidget(warning);
+    layout->addSpacing(15);
+    layout->addWidget(vertexModeLabel);
+    for (auto* button : vertexModeButtons->buttons()) {
+        layout->addWidget(button);
+    }
+    layout->addSpacing(15);
     layout->addStretch();
     layout->addWidget(buttonBox);
     setLayout(layout);
+}
+
+SvgImportParams SvgImportDialog::params()
+{
+    SvgImportParams res;
+    res.vertexMode = global()->settings().svgImportVertexMode();
+    return res;
+}
+
+void SvgImportDialog::vertexModeButtonToggled(int id, bool checked)
+{
+    if (checked) {
+        auto v = static_cast<SvgImportVertexMode>(id);
+        global()->settings().setSvgImportVertexMode(v);
+    }
 }

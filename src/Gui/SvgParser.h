@@ -13,6 +13,7 @@
 
 class QString;
 class QXmlStreamAttributes;
+class SvgImportParams;
 class XmlStreamReader;
 
 // https://www.w3.org/TR/SVG11/painting.html#SpecifyingPaint
@@ -61,7 +62,7 @@ private:
 class SvgParser
 {
 public:
-    static void readSvg(XmlStreamReader &xml);
+    static void readSvg(XmlStreamReader &xml, const SvgImportParams& params);
 };
 
 #endif // SVGPARSER_H

@@ -17,7 +17,7 @@
 #ifndef SETTINGS_H
 #define SETTINGS_H
 
-#include "UpdateCheckDialog.h"
+#include "SvgImportParams.h"
 #include "Version.h"
 
 class SettingsDialog;
@@ -51,12 +51,17 @@ public:
     Version checkVersion() const;
     void setCheckVersion(Version value);
 
+    // Import Preferences
+    SvgImportVertexMode svgImportVertexMode() const;
+    void setSvgImportVertexMode(SvgImportVertexMode value);
+
 private:
     double edgeWidth_;
     bool showAboutDialogAtStartup_;
     bool keepOldVersion_;
     bool dontNotifyConversion_;
     Version checkVersion_;
+    SvgImportVertexMode svgImportVertexMode_;
 };
 
 #endif
