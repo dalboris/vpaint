@@ -380,9 +380,10 @@ LinearSpline::LinearSpline(const std::vector<EdgeSample,Eigen::aligned_allocator
         isClosed_ = true;
         curve_.makeLoop();
     }
+    curve_.resample();
 }
 
-LinearSpline::LinearSpline(const QList<EdgeSample> & samples)
+LinearSpline::LinearSpline(const QList<EdgeSample> & samples, bool loop)
 {
     std::vector<EdgeSample,Eigen::aligned_allocator<EdgeSample> > stdvector;
     foreach (EdgeSample es, samples)
@@ -390,6 +391,12 @@ LinearSpline::LinearSpline(const QList<EdgeSample> & samples)
         stdvector.push_back(es);
     }
     curve_.setVertices(stdvector);
+    if(loop)
+    {
+        isClosed_ = true;
+        curve_.makeLoop();
+    }
+    curve_.resample();
 }
 
 LinearSpline::LinearSpline(const SculptCurve::Curve<EdgeSample> & other, bool loop) :
@@ -400,12 +407,11 @@ LinearSpline::LinearSpline(const SculptCurve::Curve<EdgeSample> & other, bool lo
         isClosed_ = true;
         curve_.makeLoop();
     }
+    curve_.resample();
 }
 
 
-LinearSpline::LinearSpline(EdgeGeometry & other) //:
-    //EdgeGeometry(ds),
-    //curve_(ds)
+LinearSpline::LinearSpline(EdgeGeometry & other)
 {
     // get vertices of other geometry
     QList<Eigen::Vector2d> & vertices = other.sampling();
@@ -417,10 +423,16 @@ LinearSpline::LinearSpline(EdgeGeometry & other) //:
 
     // set the curve to be this sampling
     curve_.setVertices(samples);
+    if(other.isClosed())
+    {
+        isClosed_ = true;
+        curve_.makeLoop();
+    }
+    curve_.resample();
 }
 
 
-LinearSpline::LinearSpline(const QList<Eigen::Vector2d> & vertices) //:
+LinearSpline::LinearSpline(const QList<Eigen::Vector2d> & vertices, bool loop) //:
     //EdgeGeometry(ds),
     //curve_(ds)
 {
@@ -431,6 +443,12 @@ LinearSpline::LinearSpline(const QList<Eigen::Vector2d> & vertices) //:
 
     // set the curve to be this sampling
     curve_.setVertices(samples);
+    if(loop)
+    {
+        isClosed_ = true;
+        curve_.makeLoop();
+    }
+    curve_.resample();
 }
 
 LinearSpline::~LinearSpline()

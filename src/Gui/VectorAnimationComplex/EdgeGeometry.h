@@ -148,12 +148,12 @@ class LinearSpline: public EdgeGeometry
 {
 public:
     LinearSpline(double ds = 5.0);
-    LinearSpline(const QList<EdgeSample> & samples);
+    LinearSpline(const QList<EdgeSample> & samples, bool loop = false);
     LinearSpline(const std::vector<EdgeSample,Eigen::aligned_allocator<EdgeSample> > & samples, bool loop = false);
     LinearSpline(const SculptCurve::Curve<EdgeSample> & other, bool loop = false);
     LinearSpline(EdgeGeometry & other); // non-const cause
                             // sampling computed
-    LinearSpline(const QList<Eigen::Vector2d> & vertices);
+    LinearSpline(const QList<Eigen::Vector2d> & vertices, bool loop = false);
     virtual ~LinearSpline();
 
     LinearSpline * clone();
