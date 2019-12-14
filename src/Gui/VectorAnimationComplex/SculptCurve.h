@@ -548,8 +548,12 @@ public:
                     if(d>ds()) // should subdivide
                     {
                         // compute new sample using 4-point subdivision scheme [Dyn 1987]
-                        typename SampleList::iterator it0 = it1; if(it0!=itFirst) --it0;
-                        typename SampleList::iterator it3 = it2; if(it3!=itLast) ++it3;
+                        typename SampleList::iterator it0 = it1;
+                        if (isClosed_ && it0 == itFirst) it0 = itLast;
+                        if(it0 != itFirst) --it0;
+                        typename SampleList::iterator it3 = it2;
+                        if (isClosed_ && it3 == itLast) it3 = itFirst;
+                        if(it3 != itLast) ++it3;
                         T sample0 = *it0;
                         T sample1 = *it1;
                         T sample2 = *it2;
