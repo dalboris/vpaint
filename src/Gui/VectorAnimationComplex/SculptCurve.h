@@ -140,7 +140,7 @@ public:
 
     double epsilon() const
     {
-        return 0.5;//1.0e-10;
+        return 1e-6;
     }
 
     // -------- Sketching and Fitting --------
