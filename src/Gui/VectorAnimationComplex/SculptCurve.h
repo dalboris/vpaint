@@ -40,6 +40,14 @@
  *
  *  Invariant: after calling resample(), the distance between two consecutive sample is
  *                0 < epsilon() < d(pi,pi+1) < ds()
+ *
+ * Note that for loops (= closed edges), the start/end point is duplicated,
+ * that is, the first and last samples are equal. This makes it easier for code
+ * who doesn't care about closedness, for example computing arclength
+ * distances, closest point, etc. This means that if you specify the vertices
+ * explicitly via setVertices, you are expected to provide this start/end point
+ * twice.
+ *
  */
 
 // if debug

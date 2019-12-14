@@ -973,7 +973,8 @@ void finishSubpath(
     EdgeSamples edgeSamples;
     if (nodes.empty()) {
         // Create closed edge
-        LinearSpline* geometry = new LinearSpline(samples);
+        samples.push_back(samples.front());
+        LinearSpline* geometry = new LinearSpline(samples, true);
         KeyEdge* edge = vac->newKeyEdge(time, geometry);
         edge->setColor(pa.stroke.color);
         halfedges.push_back(KeyHalfedge(edge, true));

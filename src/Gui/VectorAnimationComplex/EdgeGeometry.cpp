@@ -372,11 +372,14 @@ LinearSpline::LinearSpline(double ds) :
 {
 }
 
-LinearSpline::LinearSpline(const std::vector<EdgeSample,Eigen::aligned_allocator<EdgeSample> > & samples) //:
-    //EdgeGeometry(ds),
-    //curve_(ds)
+LinearSpline::LinearSpline(const std::vector<EdgeSample,Eigen::aligned_allocator<EdgeSample> > & samples, bool loop)
 {
     curve_.setVertices(samples);
+    if(loop)
+    {
+        isClosed_ = true;
+        curve_.makeLoop();
+    }
 }
 
 LinearSpline::LinearSpline(const QList<EdgeSample> & samples)
