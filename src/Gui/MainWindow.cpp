@@ -882,6 +882,7 @@ void MainWindow::doImportSvg(const QString & filePath)
     // Close file
     file.close();
 
+    updatePicking();
     scene_->emitChanged();
     scene_->emitCheckpoint();
 }
