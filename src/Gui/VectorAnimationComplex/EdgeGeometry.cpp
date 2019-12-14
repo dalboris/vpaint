@@ -444,60 +444,28 @@ LinearSpline * LinearSpline::clone()
 namespace // Anonymous namespace for helper methods
 {
 
-// do not repeat start and end sample if closed
-class EdgeSampling
-{
-private:
-    QList<EdgeSample> samples_;
-    bool isClosed_;
-    int inRange(int i) const
-    {
-        int n = samples_.size();
-        if(isClosed_)
-        {
-            i = i % n; // i in [-(n-1)..(n-1)]
-            if(i<0)
-                i += n; // i in [0..(n-1)]
-        }
-        else
-        {
-            if(i<0)
-                i = 0; // i in [0..infinity]
-            else if(i>=n)
-                i = n-1; // i in [0..(n-1)]
-        }
-        return i;
-    }
-
-public:
-    // building from scratch
-    EdgeSampling(bool isClosed) : samples_(), isClosed_(isClosed) {    }
-    void operator<< (const EdgeSample & sample) { samples_ << sample; }
-
-    // building with pre-allocated null samples
-    EdgeSampling(int n, bool isClosed) : samples_(), isClosed_(isClosed)
-    {
-        for(int i=0; i<n; ++i)
-            samples_ << EdgeSample();
-    }
-
-    // building from existing sampling (repeating last sample when closed)
-    EdgeSampling(const QList<EdgeSample> & samples, bool isClosed) :
-        samples_(samples),
-        isClosed_(isClosed)
-    {
-        if(isClosed)
-            samples_.removeLast();
-    }
-
-    // Getters
-    bool isClosed() const { return isClosed_; }
-    int size() const { return samples_.size(); }
-    EdgeSample & operator[] (int i) { return samples_[inRange(i)]; }
-    EdgeSample operator[] (int i) const { return samples_[inRange(i)]; }
-
-};
-
+// This function assumes that if close = true, then samples.front() ==
+// samples.back, that is, that the first/last sample is duplicated.
+//
+// Terminology:
+//
+//     * --- * --- *   ...   * --- *
+//     S0    S1    S2       Sn-2  Sn-1  : n samples
+//
+// --> * --> * --> *   ...   * --> * -->
+// d0    d1    d2              dn-1  dn  : n+1 left/right tangents
+//
+//    -->   -->   -->  ...  -->   -->
+//    u0    u1    u2        un-2  un-1   : n tangents (=average of left/right d)
+//
+//    v0    v1    v2              vn-1   : n normal vectors (=perp of u)
+//
+//     A0    A1    A2       An-2  An-1
+//     * --- * --- *   ...   * --- *
+//     |     |     |         |     |     = n-1 quads defined by n (A,B) pairs of points
+//     * --- * --- *   ...   * --- *
+//     B0    B1    B2       Bn-2  Bn-1
+//
 void triangulateHelper(const QList<EdgeSample> & samples, Triangles & triangles, bool closed = false)
 {
     // Initialization and basic case
@@ -545,23 +513,7 @@ void triangulateHelper(const QList<EdgeSample> & samples, Triangles & triangles,
     // Computing the Ai's and Bi's
     for(int i=0; i<n; i++)
     {
-        // Compute dotProduct, clamp to [-1.0,1.0] (could be outside due to numerical errors)
-        double dotProduct = - quads[i].d.dot(quads[i+1].d);
-        if(dotProduct < -1.0)
-            dotProduct = -1.0;
-        else if (dotProduct > 1.0)
-            dotProduct = 1.0;
-
-        // Compute angle. See http://en.cppreference.com/w/cpp/numeric/math/acos for specs of acos
-        double alpha = std::acos(dotProduct); // guaranteed to be in [0,pi] (well, unless dotProduct is NaN, which is assumed not to)
-        double sinAlphaOver2 = std::sin(0.5*alpha); // in [0,1]
-        if(sinAlphaOver2 < 0.3) // Bevel threshold
-            sinAlphaOver2 = 0.3; // Now, sinAlphaOver2 in [0.3,1]
-        double h = 0.5 * samples[i].width() / sinAlphaOver2;
-
-        // TODO: make this an preference option
-        // SIMPLE METHOD -- No bevel
-        h = 0.5 * samples[i].width();
+        double h = 0.5 * samples[i].width();
 
         // Compute bisection basis
         Eigen::Vector2d u = quads[i].d + quads[i+1].d;
@@ -643,32 +595,6 @@ void triangulateHelper(const QList<EdgeSample> & samples, Triangles & triangles,
             triangles.append(ax,ay,bx,by,cx,cy);
         }
     }
-
-    /*
-
-    glBegin(GL_POLYGON);
-    {
-        for(int i=0; i<n; ++i)
-        {
-            double theta = 2 * (double) i * 3.14159 / (double) n ;
-            glVertex2d(p.x() + r*std::cos(theta),p.y()+ r*std::sin(theta));
-        }
-    }
-    glEnd();
-
-    // End cap
-    p = Eigen::Vector2d( sketchedEdge_->rightPos().x(), sketchedEdge_->rightPos().y() );
-    r = 0.5 * sketchedEdge_->rightPos().width();
-    glBegin(GL_POLYGON);
-    {
-        for(int i=0; i<n; ++i)
-        {
-            double theta = 2 * (double) i * 3.14159 / (double) n ;
-            glVertex2d(p.x() + r*std::cos(theta),p.y()+ r*std::sin(theta));
-        }
-    }
-    glEnd();
-    */
 }
 } // End anonymous namespace for helper methods
 
