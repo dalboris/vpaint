@@ -555,6 +555,7 @@ void triangulateHelper(const QList<EdgeSample> & samples, Triangles & triangles,
     }
 
     // Start cap
+    if (!closed)
     {
         int m = 50;
         double cx = samples.front().x();
@@ -576,6 +577,7 @@ void triangulateHelper(const QList<EdgeSample> & samples, Triangles & triangles,
     }
 
     // End cap
+    if (!closed)
     {
         int m = 50;
         double cx = samples.back().x();
