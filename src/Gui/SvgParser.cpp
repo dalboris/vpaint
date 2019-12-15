@@ -844,6 +844,38 @@ std::vector<SvgPathCommand> parsePathData(
     return cmds;
 }
 
+// Populates the given `samples` with 12 new samples, tracing the line segment
+// [p, q]. The new samples are not spaced uniformly, but instead they follow a
+// geometric progression to avoid overshooting artifacts at the extremeties
+// (i.e., samples are closer from each other at the ends of the line segments,
+// so that corners stay sharp).
+//
+// WARNING: Be careful not to pass p or q as references to EdgeSamples within
+// the `samples` vector (e.g., DO NOT do something like:
+// addLineSamples(samples, samples.back(), q)), since the `samples` vector is
+// populated, which may invalidate previous references.
+//
+void addLineSamples(EdgeSamples& samples, const EdgeSample& p, const EdgeSample& q)
+{
+    // We double the space each time up to u = 0.5 (then use symmetric values):
+    //   u0 = 0
+    //   u1 = 0.01
+    //   u2 = u1 + 2*(u1-u0) = 0.03
+    //   u3 = u2 + 2*(u2-u1) = 0.07
+    //   ...
+    //
+    // Instead of using a factor 2, we may in theory even use a factor up to 8
+    // without overshooting, but the lowest the factor, the less artifact you
+    // get.
+    //
+    static const std::vector<double> u_ = {
+        0.01, 0.03, 0.07, 0.15, 0.31, 0.5, 0.69, 0.85, 0.93, 0.97, 0.99, 1.0 };
+
+    for (double u : u_) {
+        samples.push_back(p.lerp(u, q));
+    }
+}
+
 // This function populates the given VAC at the given time with new vertices
 // and edges based on samples, nodes, pa, ctm, and closed.
 //
@@ -905,8 +937,11 @@ void finishSubpath(
 
     // Implicit LineTo command
     if (closed && samples.back().distanceTo(samples.front()) > 1e-6) {
-        // TODO: add more than just one sample to avoid smoothing out corner.
-        samples.push_back(samples.front());
+        // Important: we need to create a copy of endpoints, since
+        // elements are added to samples which may invalidate references.
+        EdgeSample p = samples.back();
+        EdgeSample q = samples.front();
+        addLineSamples(samples, p, q);
         nodes.push_back(samples.size() - 1);
     }
 
@@ -1115,7 +1150,8 @@ void importPathData(
                      cmd.type == SvgPathCommandType::LineTo ||
                      cmd.type == SvgPathCommandType::HLineTo ||
                      cmd.type == SvgPathCommandType::VLineTo) {
-                EdgeSample q = samples.back();
+                EdgeSample p = samples.back();
+                EdgeSample q = p;
                 if (cmd.relative) {
                     if (cmd.type == SvgPathCommandType::HLineTo)      q.translate(args[0], 0.0);
                     else if (cmd.type == SvgPathCommandType::VLineTo) q.translate(0.0, args[0]);
@@ -1126,8 +1162,7 @@ void importPathData(
                     else if (cmd.type == SvgPathCommandType::VLineTo) q.setY(args[0]);
                     else /* LineTo, possibly implicit via MoveTo */   q.setPos(args[0], args[1]);
                 }
-                // TODO: add more than just one sample to avoid smoothing out corner.
-                samples.push_back(q);
+                addLineSamples(samples, p, q);
                 nodes.push_back(samples.size() - 1);
             }
 
@@ -1230,9 +1265,9 @@ void importPathData(
                     q += p;
                 }
                 if (rx < eps || ry < eps) {
-                    // Draw a line instead.
-                    // TODO: add more than just one sample to avoid smoothing out corner.
-                    samples.push_back(EdgeSample(q[0], q[1], width));
+                    EdgeSample p_ = samples.back();
+                    EdgeSample q_(q[0], q[1], width);
+                    addLineSamples(samples, p_, q_);
                 }
                 else {
                     // Correction of out-of-range radii
