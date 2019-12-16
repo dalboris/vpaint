@@ -39,6 +39,19 @@ Dependencies:
 - **Qt 5.12**: We recommend installing the latest Qt 5.12.x version using the [Qt installer](https://www.qt.io/download-qt-installer).
 - **GLU**: This is already installed on Windows, macOS, and many Linux distributions. However, on Ubuntu, you need to install it yourself via `sudo apt-get install libglu1-mesa-dev`.
 
+#### Windows 7/8/10, Visual Studio 2017 64bit, Qt 5.12.6
+
+```
+git clone https://github.com/dalboris/vpaint.git
+cd vpaint\src
+mkdir build && cd build
+"C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\Tools\VsDevCmd.bat" -arch=amd64
+C:\Qt\5.12.6\msvc2017_64\bin\qmake.exe ..
+nmake
+set PATH=%PATH%;C:\Qt\5.12.6\msvc2017_64\bin
+Gui\release\VPaint.exe
+```
+
 #### Ubuntu 18.04, GCC, Qt 5.12.6
 
 ```
