@@ -13,7 +13,7 @@
 
 class QString;
 class QXmlStreamAttributes;
-class SvgImportParams;
+struct SvgImportParams;
 class XmlStreamReader;
 
 // https://www.w3.org/TR/SVG11/painting.html#SpecifyingPaint
