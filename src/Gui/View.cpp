@@ -1585,10 +1585,18 @@ QImage View::drawToImage(Time t, double x, double y, double w, double h, int img
     {
         ViewSettings::DisplayMode oldDM = viewSettings_.displayMode();
         viewSettings_.setDisplayMode(ViewSettings::ILLUSTRATION);
-        // XXX Make it work with layers
-        //drawBackground_(scene_->background(), t.frame());
         viewSettings_.setMainDrawing(false);
         viewSettings_.setDrawCursor(false);
+
+        for (int j = 0; j < scene()->numLayers(); ++j)
+        {
+            Layer * layer = scene()->layer(j);
+            if (layer->isVisible()) {
+                drawBackground_(layer->background(), t.frame());
+                layer->vac()->draw(t, viewSettings_);
+            }
+        }
+
         scene_->draw(t, viewSettings_);
         viewSettings_.setDrawCursor(true);
         viewSettings_.setDisplayMode(oldDM);
