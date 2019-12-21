@@ -1597,7 +1597,6 @@ QImage View::drawToImage(Time t, double x, double y, double w, double h, int img
             }
         }
 
-        scene_->draw(t, viewSettings_);
         viewSettings_.setDrawCursor(true);
         viewSettings_.setDisplayMode(oldDM);
     }
