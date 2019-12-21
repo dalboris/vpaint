@@ -196,6 +196,9 @@ MainWindow::MainWindow() :
     // Remove context menu on rightclick
     setContextMenuPolicy(Qt::NoContextMenu);
 
+    // Set initial focus
+    multiView_->setFocus(Qt::OtherFocusReason);
+
     // Autosave
     autosaveBegin();
 }
