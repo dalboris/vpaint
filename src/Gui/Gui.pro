@@ -21,8 +21,7 @@ CONFIG += qt c++11
 QT += opengl openglextensions network
 
 # App version
-MYVAR = 1.6
-VERSION = $$MYVAR
+VERSION = 1.7
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"
 
 # App resources
