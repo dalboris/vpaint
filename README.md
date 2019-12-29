@@ -34,7 +34,7 @@ testing VPaint!
 
 ## Build Instructions
 
-Dependencies:
+Prerequisites:
 - **C++11**: We recommend Visual Studio 2017 on Windows, and any recent version of Clang/GCC on macOS/Linux.
 - **Qt 5.12**: We recommend installing the latest Qt 5.12.x version using the [Qt installer](https://www.qt.io/download-qt-installer).
 - **GLU**: This is already installed on Windows, macOS, and many Linux distributions. However, on Ubuntu, you need to install it yourself via `sudo apt-get install libglu1-mesa-dev`.
@@ -43,13 +43,22 @@ Dependencies:
 
 ```
 git clone https://github.com/dalboris/vpaint.git
-cd vpaint\src
 mkdir build && cd build
 "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\Tools\VsDevCmd.bat" -arch=amd64
-C:\Qt\5.12.6\msvc2017_64\bin\qmake.exe ..
+C:\Qt\5.12.6\msvc2017_64\bin\qmake.exe ..\vpaint\src
 nmake
 set PATH=%PATH%;C:\Qt\5.12.6\msvc2017_64\bin
 Gui\release\VPaint.exe
+```
+
+#### macOS 10.14.6, Xcode 10.3, Qt 5.12.6
+
+```
+git clone https://github.com/dalboris/vpaint.git
+mkdir build && cd build
+~/Qt/5.12.6/clang_64/bin/qmake ../vpaint/src
+make
+./Gui/VPaint.app/Contents/MacOS/VPaint
 ```
 
 #### Ubuntu 18.04, GCC, Qt 5.12.6
@@ -57,9 +66,8 @@ Gui\release\VPaint.exe
 ```
 sudo apt-get install build-essential libglu1-mesa-dev
 git clone https://github.com/dalboris/vpaint.git
-cd vpaint/src
 mkdir build && cd build
-~/Qt/5.12.6/gcc_64/bin/qmake ..
+~/Qt/5.12.6/gcc_64/bin/qmake ../vpaint/src
 make
 ./Gui/VPaint
 ```
