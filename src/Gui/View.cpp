@@ -1266,7 +1266,7 @@ bool View::updateHoveredObject(int x, int y)
 
     // Find object under the mouse
     Picking::Object old = hoveredObject_;
-    if(x<0 || (uint)x>=WINDOW_SIZE_X_ || y<0 || (uint)y>=WINDOW_SIZE_Y_)
+    if(x<0 || x>=pickingWidth_ || y<0 || y>=pickingHeight_)
     {
         hoveredObject_ = Picking::Object();
     }
@@ -1301,7 +1301,7 @@ bool View::updateHoveredObject(int x, int y)
 
 uchar * View::pickingImg(int x, int y)
 {
-    int k = 4*( (WINDOW_SIZE_Y_ - y - 1)*WINDOW_SIZE_X_ + x);
+    int k = 4*( (pickingHeight_ - y - 1)*pickingWidth_ + x);
     return &pickingImg_[k];
 }
 
@@ -1325,10 +1325,10 @@ Picking::Object View::getCloserObject(int x, int y)
             D = x;
         if(y<D)
             D = y;
-        int rightBorderDist = WINDOW_SIZE_X_-1-x;
+        int rightBorderDist = pickingWidth_-1-x;
         if(rightBorderDist<D)
             D = rightBorderDist;
-        int bottomBorderDist = WINDOW_SIZE_Y_-1-y;
+        int bottomBorderDist = pickingHeight_-1-y;
         if(bottomBorderDist<D)
             D = bottomBorderDist;
 
@@ -1384,13 +1384,17 @@ void View::deletePicking()
         hoveredObject_ = Picking::Object();
         delete[] pickingImg_;
         pickingImg_ = 0;
-        WINDOW_SIZE_X_ = 0;
-        WINDOW_SIZE_Y_ = 0;
+        pickingWidth_ = 0;
+        pickingHeight_ = 0;
     }
 }
 
 void View::newPicking()
 {
+    pickingWidth_ = width();
+    pickingHeight_ = height();
+    pickingImg_ = new uchar[4 * pickingWidth_ * pickingHeight_];
+
     //  code adapted from http://www.songho.ca/opengl/gl_fbo.html
 
     // create a texture object
@@ -1401,7 +1405,7 @@ void View::newPicking()
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE); // automatic mipmap
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, WINDOW_SIZE_X_, WINDOW_SIZE_Y_, 0,
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, pickingWidth_, pickingHeight_, 0,
                  GL_RGBA, GL_UNSIGNED_BYTE, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -1409,7 +1413,7 @@ void View::newPicking()
     gl_fbo_->glGenRenderbuffers(1, &rboId_);
     gl_fbo_->glBindRenderbuffer(GL_RENDERBUFFER, rboId_);
     gl_fbo_->glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT,
-                                   WINDOW_SIZE_X_, WINDOW_SIZE_Y_);
+                                   pickingWidth_, pickingHeight_);
     gl_fbo_->glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
     // create a framebuffer object
@@ -1435,9 +1439,6 @@ void View::newPicking()
 
     // switch back to window-system-provided framebuffer
     gl_fbo_->glBindFramebuffer(GL_FRAMEBUFFER, defaultFramebufferObject());
-
-    // allocate memory for picking
-    pickingImg_ = new uchar[4 * WINDOW_SIZE_X_ * WINDOW_SIZE_Y_];
 }
 
 #include <QElapsedTimer>
@@ -1469,12 +1470,8 @@ QImage View::drawToImage(double x, double y, double w, double h, int imgW, int i
     return drawToImage(activeTime(), x, y, w, h, imgW, imgH, useViewSettings);
 }
 
-QImage View::drawToImage(Time t, double x, double y, double w, double h, int imgW, int imgH, bool useViewSettings)
+QImage View::drawToImage(Time t, double x, double y, double w, double h, int IMG_SIZE_X, int IMG_SIZE_Y, bool useViewSettings)
 {
-    // Convenient alias
-    GLuint IMG_SIZE_X = imgW;
-    GLuint IMG_SIZE_Y = imgH;
-
     // Make this widget's rendering context the current OpenGL context
     makeCurrent();
 
@@ -1551,12 +1548,10 @@ QImage View::drawToImage(Time t, double x, double y, double w, double h, int img
     // Bind FBO
     gl_fbo_->glBindFramebuffer(GL_FRAMEBUFFER, ms_fboId);
 
-    // Set viewport size
-    double oldViewportWidth = viewportWidth_;
-    double oldViewportHeight = viewportHeight_;
-    viewportWidth_ = IMG_SIZE_X;
-    viewportHeight_ = IMG_SIZE_Y;
-    glViewport(0, 0, viewportWidth_, viewportHeight_);
+    // Set viewport
+    GLint oldViewport[4];
+    glGetIntegerv(GL_VIEWPORT, oldViewport);
+    glViewport(0, 0, IMG_SIZE_X, IMG_SIZE_Y);
 
     // Clear FBO to fully transparent
     glClearColor(0.0, 0.0, 0.0, 0.0);
@@ -1601,10 +1596,8 @@ QImage View::drawToImage(Time t, double x, double y, double w, double h, int img
         viewSettings_.setDisplayMode(oldDM);
     }
 
-    // Restore viewport size
-    viewportWidth_ = oldViewportWidth;
-    viewportHeight_ = oldViewportHeight;
-    glViewport(0, 0, viewportWidth_, viewportHeight_);
+    // Restore viewport
+    glViewport(oldViewport[0], oldViewport[1], oldViewport[2], oldViewport[3]);
 
     // Unbind FBO
     gl_fbo_->glBindFramebuffer(GL_FRAMEBUFFER, defaultFramebufferObject());
@@ -1658,7 +1651,7 @@ QImage View::drawToImage(Time t, double x, double y, double w, double h, int img
     // blending behaviour and simply have to un-premultiply the value obtained
     // in the frame buffer at the very end
 
-    for(uint k=0; k<IMG_SIZE_X*IMG_SIZE_Y; ++k)
+    for(int k=0; k<IMG_SIZE_X*IMG_SIZE_Y; ++k)
     {
         uchar * pixel = &(img[4*k]);
         double a = pixel[3];
@@ -1697,25 +1690,21 @@ void View::updatePicking()
     makeCurrent();
 
     // get the viewport size, allocate memory if necessary
-    GLint m_viewport[4];
-    glGetIntegerv( GL_VIEWPORT, m_viewport );
-    if( !(m_viewport[2]>0) || !(m_viewport[3]>0))
+    if( !(width()>0) || !(height()>0))
     {
         deletePicking();
         return;
     }
     else if(
         pickingImg_
-        && (WINDOW_SIZE_X_ == (uint)m_viewport[2])
-        && (WINDOW_SIZE_Y_ == (uint)m_viewport[3]))
+        && (pickingWidth_ == width())
+        && (pickingHeight_ == height()))
     {
         // necessary objects already created: do nothing
     }
     else
     {
         deletePicking();
-        WINDOW_SIZE_X_ = m_viewport[2];
-        WINDOW_SIZE_Y_ = m_viewport[3];
         newPicking();
     }
 
@@ -1729,11 +1718,19 @@ void View::updatePicking()
     // Should we setup other things? (e.g., disabling antialiasing)
     // Seems to work as is. If issues, check GLWidget::initilizeGL()
 
+    // Set viewport
+    GLint oldViewport[4];
+    glGetIntegerv(GL_VIEWPORT, oldViewport);
+    glViewport(0, 0, pickingWidth_, pickingHeight_);
+
     // Setup camera position and orientation
     setCameraPositionAndOrientation();
 
     // draw the picking
     drawPick();
+
+    // Restore viewport
+    glViewport(oldViewport[0], oldViewport[1], oldViewport[2], oldViewport[3]);
 
     // unbind FBO
     gl_fbo_->glBindFramebuffer(GL_FRAMEBUFFER, defaultFramebufferObject());

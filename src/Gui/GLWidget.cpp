@@ -55,9 +55,6 @@ GLWidget::GLWidget(QWidget *parent, bool isOnly2D) :
     mouse_tabletReleaseJustReceived_(false),
     mouse_HideCursor_(false),
 
-    viewportWidth_(0),
-    viewportHeight_(0),
-
     autoCenterScene_(true),
 
     isOrtho_(false),
@@ -125,16 +122,6 @@ void GLWidget::setCamera2D(const GLWidget_Camera2D &newCamera)
 void GLWidget::setOrthographic(bool isOrtho)
 {
     isOrtho_ = isOrtho; update();
-}
-
-double GLWidget::viewportHeight()
-{
-    return viewportHeight_;
-}
-
-double GLWidget::viewportWidth()
-{
-    return viewportWidth_;
 }
 
 void GLWidget::enableCameraMovement(bool value)
@@ -784,11 +771,7 @@ void GLWidget::initializeGL()
 
 void GLWidget::resizeGL(int width, int height)
 {
-      viewportWidth_ = width;
-      viewportHeight_ = height;
-      glViewport(0, 0, width, height);
-
-      emit viewResized();
+    emit viewResized();
 }
 
 
@@ -912,7 +895,7 @@ void GLWidget::setCameraPositionAndOrientation()
         // Set projection such that Camera/View coords = Device/Window coords
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
-        glOrtho(0, viewportWidth_, viewportHeight_, 0, 0, 1);
+        glOrtho(0, width(), height(), 0, 0, 1);
 
         // Set view
         glMatrixMode (GL_MODELVIEW);
@@ -924,11 +907,11 @@ void GLWidget::setCameraPositionAndOrientation()
         glLoadIdentity ();
         if(isOrtho_)
         {
-            double height = 2 * camera_.r() * tan(camera_.fovy()/2.0);
-            double ratio = height / viewportHeight_;
-            double width = viewportWidth_ * ratio;
+            double h = 2 * camera_.r() * tan(camera_.fovy()/2.0);
+            double ratio = h / height();
+            double w = width() * ratio;
 
-            glOrtho (-0.5*width, 0.5*width, -0.5*height, 0.5*height, 0, 100);
+            glOrtho (-0.5*w, 0.5*w, -0.5*h, 0.5*h, 0, 100);
         
         }
         else
@@ -937,7 +920,7 @@ void GLWidget::setCameraPositionAndOrientation()
             //TODO: recode this function without glu
               gluPerspective(
               camera_.fovy() * 180 / GLWIDGET_PI,
-              (double) viewportWidth_ / (double) viewportHeight_, 
+              (double) width() / (double) height(),
               0.1, 100);
             
         }

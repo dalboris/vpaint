@@ -167,8 +167,8 @@ private:
     void newPicking();
     void drawPick();
     uchar * pickingImg(int x, int y);
-    GLuint WINDOW_SIZE_X_;
-    GLuint WINDOW_SIZE_Y_;
+    GLsizei pickingWidth_;
+    GLsizei pickingHeight_;
     GLuint textureId_;
     GLuint rboId_;
     GLuint fboId_;

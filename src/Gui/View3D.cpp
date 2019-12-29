@@ -574,7 +574,7 @@ bool View3D::updateHighlightedObject(int x, int y)
         return false; // otherwise the scene will keep updating
 
     Picking::Object old = highlightedObject_;
-    if(x<0 || (uint)x>=WINDOW_SIZE_X_ || y<0 || (uint)y>=WINDOW_SIZE_Y_)
+    if(x<0 || x>=pickingWidth_ || y<0 || y>=pickingHeight_)
     {
         highlightedObject_ = Picking::Object();
     }
@@ -587,7 +587,7 @@ bool View3D::updateHighlightedObject(int x, int y)
 
 uchar * View3D::pickingImg(int x, int y)
 {
-    int k = 4*( (WINDOW_SIZE_Y_ - y - 1)*WINDOW_SIZE_X_ + x);
+    int k = 4*( (pickingHeight_ - y - 1)*pickingWidth_ + x);
     return &pickingImg_[k];
 }
 
@@ -600,9 +600,9 @@ Picking::Object View3D::getCloserObject(int x, int y)
         return noObject; 
 
     int leftBorderDist = x;
-    int rightBorderDist = WINDOW_SIZE_X_-1-x;
+    int rightBorderDist = pickingWidth_-1-x;
     int topBorderDist = y;
-    int bottomBorderDist = WINDOW_SIZE_Y_-1-y;
+    int bottomBorderDist = pickingHeight_-1-y;
 
     int borderDist = qMin(qMin(leftBorderDist, rightBorderDist), 
                     qMin(topBorderDist, bottomBorderDist));
@@ -675,13 +675,17 @@ void View3D::deletePicking()
         highlightedObject_ = Picking::Object();
         delete[] pickingImg_;
         pickingImg_ = 0;
-        WINDOW_SIZE_X_ = 0;
-        WINDOW_SIZE_Y_ = 0;
+        pickingWidth_ = 0;
+        pickingHeight_ = 0;
     }
 }
 
 void View3D::newPicking()
 {
+    pickingWidth_ = width();
+    pickingHeight_ = height();
+    pickingImg_ = new uchar[4 * pickingWidth_ * pickingHeight_];
+
     //  code adapted from http://www.songho.ca/opengl/gl_fbo.html
 
     // create a texture object
@@ -692,21 +696,21 @@ void View3D::newPicking()
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE); // automatic mipmap
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, WINDOW_SIZE_X_, WINDOW_SIZE_Y_, 0,
-             GL_RGBA, GL_UNSIGNED_BYTE, 0);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, pickingWidth_, pickingHeight_, 0,
+                 GL_RGBA, GL_UNSIGNED_BYTE, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
 
     // create a renderbuffer object to store depth info
     gl_fbo_->glGenRenderbuffers(1, &rboId_);
     gl_fbo_->glBindRenderbuffer(GL_RENDERBUFFER, rboId_);
     gl_fbo_->glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT,
-                                   WINDOW_SIZE_X_, WINDOW_SIZE_Y_);
+                                   pickingWidth_, pickingHeight_);
     gl_fbo_->glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
     // create a framebuffer object
     gl_fbo_->glGenFramebuffers(1, &fboId_);
     gl_fbo_->glBindFramebuffer(GL_FRAMEBUFFER, fboId_);
-    
+
     // attach the texture to FBO color attachment point
     gl_fbo_->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                                     GL_TEXTURE_2D, textureId_, 0);
@@ -719,53 +723,67 @@ void View3D::newPicking()
     GLenum status = gl_fbo_->glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if(status != GL_FRAMEBUFFER_COMPLETE)
     {
-        qDebug() << "ERROR void View3D::newPicking()"
+        qDebug() << "ERROR void View::newPicking()"
                << "FBO status != GL_FRAMEBUFFER_COMPLETE";
         return;
     }
 
     // switch back to window-system-provided framebuffer
     gl_fbo_->glBindFramebuffer(GL_FRAMEBUFFER, defaultFramebufferObject());
-
-    // allocate memory for picking
-    pickingImg_ = new uchar[4 * WINDOW_SIZE_X_ * WINDOW_SIZE_Y_];
 }
 
 
 void View3D::updatePicking()
 {
+    // Make this widget's rendering context the current OpenGL context
+    makeCurrent();
+
     // get the viewport size, allocate memory if necessary
-    GLint m_viewport[4];
-    glGetIntegerv( GL_VIEWPORT, m_viewport );
-    if( !(m_viewport[2]>0) || !(m_viewport[3]>0))
+    if( !(width()>0) || !(height()>0))
     {
         deletePicking();
         return;
     }
     else if(
         pickingImg_
-        && (WINDOW_SIZE_X_ == (uint)m_viewport[2])
-        && (WINDOW_SIZE_Y_ == (uint)m_viewport[3]))
+        && (pickingWidth_ == width())
+        && (pickingHeight_ == height()))
     {
         // necessary objects already created: do nothing
     }
     else
     {
         deletePicking();
-        WINDOW_SIZE_X_ = m_viewport[2];
-        WINDOW_SIZE_Y_ = m_viewport[3];
         newPicking();
     }
-    
+
     // set rendering destination to FBO
     gl_fbo_->glBindFramebuffer(GL_FRAMEBUFFER, fboId_);
 
     // clear buffers
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    // clear buffers
+    glClearColor(1.0, 1.0, 1.0, 1.0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // Should we setup other things? (e.g., disabling antialiasing)
+    // Seems to work as is. If issues, check GLWidget::initilizeGL()
+
+    // Set viewport
+    GLint oldViewport[4];
+    glGetIntegerv(GL_VIEWPORT, oldViewport);
+    glViewport(0, 0, pickingWidth_, pickingHeight_);
+
+    // Setup camera position and orientation
+    setCameraPositionAndOrientation();
+
     // draw the picking
     drawPick3D();
-    
+
+    // Restore viewport
+    glViewport(oldViewport[0], oldViewport[1], oldViewport[2], oldViewport[3]);
+
     // unbind FBO
     gl_fbo_->glBindFramebuffer(GL_FRAMEBUFFER, defaultFramebufferObject());
 

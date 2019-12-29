@@ -81,10 +81,6 @@ public:
     void setCamera2D(const GLWidget_Camera2D & newCamera);
     void setOrthographic(bool isOrtho);
 
-    // get current size of viewport
-    double viewportHeight();
-    double viewportWidth();
-
     // enable or disable camera control
     void enableCameraMovement(bool value);
 
@@ -235,10 +231,6 @@ protected:
     QElapsedTimer mouse_timerComputationTime_;
     // Print mouse/tablet info to the console
     bool mouse_debug_;
-
-    // Viewport size
-    double viewportWidth_;
-    double viewportHeight_;
 
     // Autocenter behaviour
     bool autoCenterScene_;
