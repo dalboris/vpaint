@@ -105,7 +105,7 @@ AboutDialog::AboutDialog(bool showAtStartup)
 
     // Window title
     setWindowTitle(tr("About"));
-    setMinimumSize(500, 500);
+    setMinimumSize(600, 800);
 
     // About widget
     QWidget * aboutWidget = new QWidget();
