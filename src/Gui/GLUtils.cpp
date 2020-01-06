@@ -53,9 +53,6 @@ QOpenGLTexture * GLUtils::textureTime = nullptr;
 
 void GLUtils::init()
 {
-    // Performance seems to be significantly impacted by format.setSamples().
-    // For now I keep setSamples(1). May change to 4 or 16 after investigation.
-
     QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
 
     QSurfaceFormat format;
@@ -67,7 +64,7 @@ void GLUtils::init()
     format.setBlueBufferSize(8);
     format.setAlphaBufferSize(0);
     format.setStencilBufferSize(8);
-    format.setSamples(1);
+    format.setSamples(16);
     format.setSwapBehavior(QSurfaceFormat::DefaultSwapBehavior);
     format.setSwapInterval(0);
     format.setColorSpace(QSurfaceFormat::DefaultColorSpace);
