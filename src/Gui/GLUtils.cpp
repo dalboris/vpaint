@@ -64,7 +64,7 @@ void GLUtils::init()
     format.setBlueBufferSize(8);
     format.setAlphaBufferSize(0);
     format.setStencilBufferSize(8);
-    format.setSamples(16);
+    format.setSamples(4);
     format.setSwapBehavior(QSurfaceFormat::DefaultSwapBehavior);
     format.setSwapInterval(0);
     format.setColorSpace(QSurfaceFormat::DefaultColorSpace);
