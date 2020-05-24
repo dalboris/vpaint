@@ -37,12 +37,6 @@ public:
     // Access linked scene
     Scene * scene() const;
 
-    // Access canvas settings
-    double left() const;
-    double top() const;
-    double width() const;
-    double height() const;
-
     // Access png settings
     int pngWidth() const;
     int pngHeight() const;
@@ -57,10 +51,8 @@ public slots:
 
     // Backend <-> Frontend conversions
     void updateDialogFromScene();
-    void updateSceneFromDialog();
 
 private slots:
-    void processCanvasSizeChanged_();
     void processPngWidthChanged_(int w);
     void processPngHeightChanged_(int h);
     void processPreserveAspectRatioChanged_(bool b);
@@ -68,26 +60,14 @@ private slots:
 private:
     Scene * scene_;
 
-    QDoubleSpinBox * topSpinBox_;
-    QDoubleSpinBox * leftSpinBox_;
-    QDoubleSpinBox * widthSpinBox_;
-    QDoubleSpinBox * heightSpinBox_;
-
     QSpinBox * pngWidthSpinBox_;
     QSpinBox * pngHeightSpinBox_;
     QCheckBox * preserveAspectRatioCheckBox_;
     QCheckBox * exportSequenceCheckBox_;
     QCheckBox * useViewSettings_;
 
-    double oldTop_;
-    double oldLeft_;
-    double oldWidth_;
-    double oldHeight_;
-
-    bool ignoreSceneChanged_;
     bool ignoreWidthHeightChanged_;
 
-    void backupCurrentCanvasSize_();
     void enforcePngAspectRatio_();
     void setPngWidthForHeight_();
     void setPngHeightForWidth_();
