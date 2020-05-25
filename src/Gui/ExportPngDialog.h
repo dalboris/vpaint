@@ -20,8 +20,9 @@
 #include <QDialog>
 
 class QCheckBox;
-class QSpinBox;
 class QDoubleSpinBox;
+class QFormLayout;
+class QSpinBox;
 class Scene;
 
 class ExportPngDialog: public QDialog
@@ -44,6 +45,10 @@ public:
     bool exportSequence() const;
     bool useViewSettings() const;
 
+    // Motion blur
+    bool motionBlur() const;
+    int motionBlurNumSamples() const;
+
 public slots:
     // Reimplements from QDialog
     void accept();
@@ -56,6 +61,7 @@ private slots:
     void processPngWidthChanged_(int w);
     void processPngHeightChanged_(int h);
     void processPreserveAspectRatioChanged_(bool b);
+    void processMotionBlurChanged_(bool b);
 
 private:
     Scene * scene_;
@@ -65,6 +71,10 @@ private:
     QCheckBox * preserveAspectRatioCheckBox_;
     QCheckBox * exportSequenceCheckBox_;
     QCheckBox * useViewSettings_;
+
+    QCheckBox * motionBlurCheckBox_;
+    QSpinBox * motionBlurNumSamplesSpinBox_;
+    QFormLayout * motionBlurOptionsLayout_;
 
     bool ignoreWidthHeightChanged_;
 

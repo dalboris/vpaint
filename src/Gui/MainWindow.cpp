@@ -1108,21 +1108,16 @@ bool MainWindow::doExportSVG(const QString & filename)
 
 bool MainWindow::doExportPNG(const QString & filename)
 {
+    QVector<Time> times;
+    QStringList filenames;
+
     if(!exportPngDialog_->exportSequence())
     {
-        // Export single frame
-
-        QImage img = multiView_->activeView()->drawToImage(
-                    scene()->left(), scene()->top(), scene()->width(), scene()->height(),
-                    exportPngDialog_->pngWidth(), exportPngDialog_->pngHeight(),
-                    exportPngDialog_->useViewSettings());
-
-        img.save(filename);
+        times.append(multiView_->activeView()->activeTime());
+        filenames.append(filename);
     }
     else
     {
-        // Export sequence of frames
-
         // Decompose filename into basename + suffix. Example:
         //     abc_1234_5678.de.png  ->   abc_1234  +  de.png
         QFileInfo info(filename);
@@ -1139,44 +1134,109 @@ bool MainWindow::doExportPNG(const QString & filename)
         // Get dir
         QDir dir = info.absoluteDir();
 
-        // Get and delete files from previous export
-        QString nameFilter = baseName + QString("_*.") +  suffix;
-        QStringList nameFilters = QStringList() << nameFilter;
-        QStringList prevFiles = dir.entryList(nameFilters, QDir::Files);
-        foreach(QString prevFile, prevFiles)
-            dir.remove(prevFile);
-
         // Get frame numbers to export
         int firstFrame = timeline()->firstFrame();
         int lastFrame = timeline()->lastFrame();
-
-        // Create Progress dialog for feedback
-        QProgressDialog progress("Export sequence as PNGs...", "Abort", 0, lastFrame-firstFrame+1, this);
-        progress.setWindowModality(Qt::WindowModal);
-
-        // Export all frames in the sequence
-        for(int i=firstFrame; i<=lastFrame; ++i)
+        for(int i = firstFrame; i <= lastFrame; ++i)
         {
-            progress.setValue(i-firstFrame);
-
-            if (progress.wasCanceled())
-                break;
-
             QString number = QString("%1").arg(i, 4, 10, QChar('0'));
             QString filePath = dir.absoluteFilePath(
                         baseName + QString("_") + number + QString(".") + suffix);
 
+            times.append(Time(i));
+            filenames.append(filePath);
+        }
+    }
+
+    // Create Progress dialog for feedback
+    bool motionBlur = exportPngDialog_->motionBlur();
+    int motionBlurNumSamples = exportPngDialog_->motionBlurNumSamples();
+    int numFrames = times.size();
+    int numSamples = 1 + (motionBlur ? motionBlurNumSamples : 0);
+    double numSamplesInv = 1.0 / numSamples;
+    int numRenders = numFrames * numSamples;
+    QProgressDialog progress("Exporting...", "Abort", 0, numRenders, this);
+    progress.setWindowModality(Qt::WindowModal);
+
+    // Create image buffer
+    int w = exportPngDialog_->pngWidth();
+    int h = exportPngDialog_->pngHeight();
+    double* buf = nullptr;
+    QImage res;
+    if (numSamples > 1) {
+        buf = new double[4*w*h];
+        for (int j = 0; j < 4*w*h; ++j) {
+            buf[j] = 0.0;
+        }
+        res = QImage(w, h, QImage::Format_RGBA8888);
+    }
+
+    // Iterate over all frames
+    for(int i = 0; i < numFrames; ++i)
+    {
+        if (progress.wasCanceled())
+            break;
+
+        if (numSamples > 1) {
+            for (int j = 0; j < 4*w*h; ++j) {
+                buf[j] = 0.0;
+            }
+        }
+
+        // Iterate over all samples
+        for (int k = 0; k < numSamples; ++k)
+        {
+            if (progress.wasCanceled())
+                break;
+
             QImage img = multiView_->activeView()->drawToImage(
-                        Time(i),
+                        Time(times[i] - k * numSamplesInv),
                         scene()->left(), scene()->top(), scene()->width(), scene()->height(),
                         exportPngDialog_->pngWidth(), exportPngDialog_->pngHeight(),
                         exportPngDialog_->useViewSettings());
 
-            img.save(filePath);
-        }
-        progress.setValue(lastFrame-firstFrame+1);
+            // Add contribution from this sample to the buffer
+            if (numSamples > 1) {
+                for (int y = 0; y < h; ++y) {
+                    for (int x = 0; x < w; ++x) {
+                        // Note: QColor stores colors as 16-bit integer
+                        // channels. We convert those to double-precision
+                        // floating points for better accuracy
+                        QColor c = img.pixelColor(x, y);
+                        buf[4*(y*w + x) + 0] += c.redF() * numSamplesInv;
+                        buf[4*(y*w + x) + 1] += c.greenF() * numSamplesInv;
+                        buf[4*(y*w + x) + 2] += c.blueF() * numSamplesInv;
+                        buf[4*(y*w + x) + 3] += c.alphaF() * numSamplesInv;
+                    }
+                }
+            }
+            else {
+                res = img;
+            }
 
+            progress.setValue(i * numSamples + k + 1);
+        }
+
+        // Convert double-precision buffer to QImage
+        if (numSamples > 1) {
+            for (int y = 0; y < h; ++y) {
+                for (int x = 0; x < w; ++x) {
+                    int r = std::round(buf[4*(y*w + x) + 0] * 255);
+                    int g = std::round(buf[4*(y*w + x) + 1] * 255);
+                    int b = std::round(buf[4*(y*w + x) + 2] * 255);
+                    int a = std::round(buf[4*(y*w + x) + 3] * 255);
+                    QColor c(r, g, b, a);
+                    res.setPixelColor(x, y, c);
+                }
+            }
+        }
+
+        // Save image to disk
+        res.save(filenames[i]);
     }
+
+    // Destroy image buffer
+    delete[] buf;
 
     return true;
 }
