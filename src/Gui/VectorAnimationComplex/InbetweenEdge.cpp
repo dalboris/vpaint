@@ -363,12 +363,15 @@ InbetweenEdge::InbetweenEdge(VAC * vac, XmlStreamReader & xml) :
     {
         surf_.clear();
         norm_.clear();
+        cacheSpaceScale_ = viewSettings.spaceScale();
+        cacheTimeScale_ = viewSettings.timeScale();
+        cacheK1_ = viewSettings.k1();
+        cacheK2_ = viewSettings.k2();
 
         double eps = 1e-5;
         double tMin = beforeTime().floatTime();
         double tMax = afterTime().floatTime();
-        int k = viewSettings.k1(); // number of samples per frame
-        double dt = 1 / (double)k;
+        double dt = 1 / (double)cacheK1_;
 
         // positions
         for(double t=tMin; t<tMax+eps; t+=dt)
@@ -419,8 +422,14 @@ InbetweenEdge::InbetweenEdge(VAC * vac, XmlStreamReader & xml) :
 
     void InbetweenEdge::drawRaw3D(View3DSettings & viewSettings)
     {
-        if(surf_.isEmpty())
+        if(surf_.isEmpty() ||
+           cacheSpaceScale_ != viewSettings.spaceScale() ||
+           cacheTimeScale_ != viewSettings.timeScale() ||
+           cacheK1_ != viewSettings.k1() ||
+           cacheK2_ != viewSettings.k2())
+        {
             computeInbetweenSurface(viewSettings);
+        }
 
         // drawn in  backward order  to improve the  likeliness the
         // polygon are  drawn from rear  to near, and  improve the
@@ -443,7 +452,7 @@ InbetweenEdge::InbetweenEdge(VAC * vac, XmlStreamReader & xml) :
                 }
                 else
                 {
-                    j += viewSettings.k2();
+                    j += cacheK2_;
                     if(j >= n)
                         j = n-1;
                 }

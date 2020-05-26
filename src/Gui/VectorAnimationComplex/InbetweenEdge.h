@@ -90,6 +90,10 @@ public:
 
 private:
     // Cached geometry
+    double cacheSpaceScale_;
+    double cacheTimeScale_;
+    int cacheK1_;
+    int cacheK2_;
     QList< QList<Eigen::Vector3d> > surf_;
     QList< QList<Eigen::Vector3d> > norm_;
     virtual void clearCachedGeometry_();
