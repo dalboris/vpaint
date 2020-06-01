@@ -205,8 +205,9 @@ void InbetweenVertex::updateBoundary_impl(KeyVertex * oldVertex, KeyVertex * new
 
 void InbetweenVertex::glColor3D_()
 {
-    glColor4d(0,0,0,1);
+
 }
+
 void InbetweenVertex::drawRaw3D(View3DSettings & viewSettings)
 {
     double eps = 1e-5;

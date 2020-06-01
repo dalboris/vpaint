@@ -19,19 +19,21 @@
 
 #include <cmath>
 #include <iostream>
-#include "Picking.h"
+#include <vector>
+
+#include <QList>
+#include <QPoint>
+#include <QPointF>
+
 #include "GLWidget.h"
 #include "GeometryUtils.h"
-#include <QList>
-#include <QPointF>
-#include <QPoint>
-
+#include "Picking.h"
 #include "View3DSettings.h"
 
 // pre-declarations
 
 class Scene;
-namespace VectorAnimationComplex { class VAC; }
+namespace VectorAnimationComplex { class Cell; class VAC;}
 class Background;
 class BackgroundRenderer;
 
@@ -107,7 +109,7 @@ struct MouseEvent
 
     // picking
     void newPicking();
-    void drawPick3D();
+    void drawPick();
     uchar * pickingImg(int x, int y);
     GLsizei pickingWidth_;
     GLsizei pickingHeight_;
@@ -131,6 +133,20 @@ struct MouseEvent
     void drawBackground_(Background * background, double t);
     QMap<Background *, BackgroundRenderer *> backgroundRenderers_;
 
+    // List of all items that must be drawn, in back to front order. This list
+    // is updated at each draw call (indeed, the required order may change if
+    // the animation is playing or if the camera position changed), and could
+    // in theory be a local variable. However, in practice, we want to reduce
+    // the number of allocations, therefore we make this list a member variable
+    // to reuse the container's capacity across draw calls.
+    enum class DrawMode { Draw, DrawTopology, DrawCanvas, Draw3D };
+    struct DrawItem {
+        VectorAnimationComplex::Cell * cell;
+        DrawMode mode;
+        Time t1;
+        Time t2;
+    };
+    std::vector<DrawItem> drawItems_;
 };
 
 #endif

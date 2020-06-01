@@ -81,11 +81,6 @@ public:
     // Drawing
     void draw(Time time, ViewSettings & viewSettings);
     void drawPick(Time time, ViewSettings & viewSettings);
-    void drawInbetweenCells3D(View3DSettings & viewSettings);
-    void drawOneFrame3D(Time time, View3DSettings & viewSettings, ViewSettings & view2DSettings, bool drawAsTopo = false);
-    void drawAllFrames3D(View3DSettings & viewSettings, ViewSettings & view2DSettings);
-    void drawKeyCells3D(View3DSettings & viewSettings, ViewSettings & view2DSettings);
-    void drawPick3D(View3DSettings & viewSettings);
 
     // Selecting and Highlighting
     void setHoveredObject(Time time, int id);

@@ -14,6 +14,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <algorithm>
+
 #include "View3D.h"
 #include "Scene.h"
 #include "Timeline.h"
@@ -25,6 +27,7 @@
 
 #include "VectorAnimationComplex/VAC.h"
 #include "VectorAnimationComplex/KeyCell.h"
+#include "VectorAnimationComplex/InbetweenCell.h"
 
 // define mouse actions
 
@@ -353,34 +356,114 @@ void View3D::drawScene()
         return;
     }
 
-    // Get t-position of camera eye to determine back-to front order
+    // Get t-position of camera eye to determine back-to-front order
     double zEye = camera_.position()[2];
     double tEye = - zEye / viewSettings_.timeScale();
     if(viewSettings_.cameraFollowActiveTime())
         tEye += activeTime().floatTime();
 
-    // Scale and translate view
-    glEnable(GL_NORMALIZE);
-    double s = viewSettings_.spaceScale();
-    glPushMatrix();
-    glScaled(s,s,s);
-    if(viewSettings_.cameraFollowActiveTime())
-        glTranslated(0,0,-viewSettings_.zFromT(global()->activeTime()));
+    // Collect all items to draw
+    bool drawAllFrames = viewSettings_.drawAllFrames();
+    bool drawKeyCells = drawAllFrames || viewSettings_.drawKeyCells();
+    bool drawInbetweenCells = viewSettings_.drawInbetweenCells();
+    bool drawCurrentFrame = viewSettings_.drawCurrentFrame();
+    bool drawCurrentFrameAsTopology = viewSettings_.drawCurrentFrameAsTopology();
+    bool drawOtherFramesAsTopology = viewSettings_.drawFramesAsTopology();
+    DrawMode currentFrameDrawMode = drawCurrentFrameAsTopology ? DrawMode::DrawTopology : DrawMode::Draw;
+    DrawMode otherFramesDrawMode = drawOtherFramesAsTopology ? DrawMode::DrawTopology : DrawMode::Draw;
+    Time activeTime = global()->activeTime();
+    drawItems_.clear();
+    if (viewSettings_.drawTimePlane()) {
+        drawItems_.push_back({nullptr, DrawMode::DrawCanvas, activeTime, activeTime});
+    }
+    const ZOrderedCells & cells = vac->zOrdering();
+    for(auto it = cells.cbegin(); it != cells.cend(); ++it)
+    {
+        if (KeyCell * kc = (*it)->toKeyCell()) {
+            if (drawCurrentFrame && kc->exists(activeTime)) {
+                drawItems_.push_back({kc, currentFrameDrawMode, activeTime, activeTime});
+            }
+            else if (drawKeyCells) {
+                drawItems_.push_back({kc, otherFramesDrawMode, kc->time(), kc->time()});
+            }
+        }
+        else if (InbetweenCell * ic = (*it)->toInbetweenCell()) {
+            Time t1 = ic->beforeTime();
+            Time t2 = ic->afterTime();
+            if (drawCurrentFrame && t1 < activeTime && activeTime < t2) {
+                // Note: (t1 < activeTime && activeTime < t2) is equivalent to
+                // ic->exists(activeTime), but avoid computing ic->beforeTime()
+                // and ic->afterTime() again.
+                drawItems_.push_back({ic, currentFrameDrawMode, activeTime, activeTime});
+            }
+            if (drawAllFrames) {
+                // Note: unlike for key cells, this block is not an "else if"
+                // because ic might exist both at activeTime and other frames.
+                int f1 = std::floor(t1.floatTime());
+                int f2 = std::ceil(t2.floatTime());
+                for (int f = f1 + 1; f < f2; ++f) {
+                    Time t = f;
+                    if (!drawCurrentFrame || t != activeTime) {
+                        drawItems_.push_back({ic, otherFramesDrawMode, t, t});
+                    }
+                }
+            }
+            if (drawInbetweenCells) {
+                double t1f = t1.floatTime();
+                double t2f = t2.floatTime();
+                int f1 = std::floor(t1f);
+                int f2 = std::ceil(t2f);
+                // Cut the inbetween cell into one-frame-long sections
+                for (int f = f1; f < f2; ++f) {
+                    Time t1_ = (f == f1)     ? t1 : f;
+                    Time t2_ = (f == f2 - 1) ? t2 : f + 1;
+                    if (drawCurrentFrame && t1_ < activeTime && activeTime < t2_) {
+                        // Cut at current frame
+                        drawItems_.push_back({ic, DrawMode::Draw3D, t1_, activeTime});
+                        t1_ = activeTime;
+                    }
+                    drawItems_.push_back({ic, DrawMode::Draw3D, t1_, t2_});
+                }
+            }
+        }
+    }
 
-
-    // ----- Draw opaque objects first, with depth test enabled -----
-
-    // Here, depth buffer writing is enabled by default
-
-    // Disable lighting
-    glDisable(GL_LIGHTING);
-
-    // Draw inbetween cells
-    if(viewSettings_.drawInbetweenCells())
-        vac->drawInbetweenCells3D(viewSettings_);
-
-
-    // ----- Then, draw transparent objects, back to front, with depth buffer writing disabled -----
+    // Sort back to front, using stable_sort to preserve z-ordering.
+    //
+    // time:  ---------------.------------------->
+    //                     tEye
+    //
+    // order: -------------->.<------------------
+    //             (1)      (3)        (2)
+    //
+    // We draw items in this order:
+    // - First, items completely before tEye        (orderCategory = 1)
+    // - Then, items completely after tEye          (orderCategory = 2)
+    // - Finally, items whose timespan include tEye (orderCategory = 3)
+    //
+    // For items belonging to the same order category then:
+    // - We define their average time u = (t1+t2)/2
+    // - If orderCategory = 1, we draw items in order of increasing u
+    // - Otherwise, we draw items in order of decreasing u
+    //
+    std::stable_sort(
+        drawItems_.begin(), drawItems_.end(),
+        [tEye](const DrawItem& i1, const DrawItem& i2) {
+            double t11 = i1.t1.floatTime();
+            double t12 = i1.t2.floatTime();
+            double t21 = i2.t1.floatTime();
+            double t22 = i2.t2.floatTime();
+            int orderCategory1 = (t12 < tEye) ? 1 : ((tEye < t11) ? 2 : 3);
+            int orderCategory2 = (t22 < tEye) ? 1 : ((tEye < t21) ? 2 : 3);
+            if (orderCategory1 == orderCategory2) {
+                double u1 = 0.5 * (t11 + t12);
+                double u2 = 0.5 * (t21 + t22);
+                return (orderCategory1 == 1) ? (u1 < u2) : (u2 < u1);
+            }
+            else {
+                return orderCategory1 < orderCategory2;
+            }
+    });
 
     // Set 2D settings from 3D settings
     ViewSettings view2DSettings = global()->activeView()->viewSettings();
@@ -389,168 +472,79 @@ void View3D::drawScene()
     view2DSettings.setEdgeTopologyWidth(viewSettings_.edgeTopologyWidth());
     view2DSettings.setDrawTopologyFaces(viewSettings_.drawTopologyFaces());
 
-    // Disable writing to depth buffer
+    // Disable lighting, depth testing and writing to depth buffer
+    glDisable(GL_LIGHTING);
+    glDisable(GL_DEPTH_TEST);
     glDepthMask(false);
 
-    // Get the list of all ordered cells
-    const ZOrderedCells & cells = vac->zOrdering();
-    typedef ZOrderedCells::ConstIterator Iter;
+    // Scale and translate view
+    double s = viewSettings_.spaceScale();
+    glPushMatrix();
+    glScaled(s,s,s);
+    if(viewSettings_.cameraFollowActiveTime())
+        glTranslated(0,0,-viewSettings_.zFromT(global()->activeTime()));
 
-    // Find what times to draw, and for each the following parameters:
-    //    1. Should we draw no cells (i.e., just the canvas), only key cells, or all cells?
-    //    2. Should we draw as topology or as illustration?
-    //    3. should we draw canvas (+ background)?
-
-    enum WhatCells { NoCells, KeyCells, AllCells };
-
-    struct Params {
-        WhatCells whatCellsToDraw;
-        bool drawAsTopology;
-        bool drawCanvas;
-    };
-
-    QMap<double, Params> timesToDraw;
-    typedef QMapIterator<double, Params> MapIter;
-
-    // Key cells
-    if(viewSettings_.drawKeyCells())
+    // Draw all items
+    bool drawAsMesh = viewSettings_.drawAsMesh();
+    double opacity =  viewSettings_.opacity();
+    for (const DrawItem& item: drawItems_)
     {
-        // Params for drawing key cells
-        Params params;
-        params.whatCellsToDraw = KeyCells;
-        params.drawAsTopology = viewSettings_.drawFramesAsTopology();
-        params.drawCanvas = false;
-
-        // Find times with key cells
-        for(Iter it = cells.cbegin(); it != cells.cend(); ++it)
+        if (item.mode == DrawMode::Draw3D)
         {
-            KeyCell * kc = (*it)->toKeyCell();
-            if(kc)
-                timesToDraw[kc->time().floatTime()] = params;
+            double t1 = item.t1.floatTime();
+            double t2 = item.t2.floatTime();
+            double z1 = viewSettings_.zFromT(t1);
+            double z2 = viewSettings_.zFromT(t2);
+            GLdouble clipEquation1[4] = { 0.0, 0.0, -1.0, z1};
+            GLdouble clipEquation2[4] = { 0.0, 0.0, 1.0, -z2};
+            glEnable(GL_CLIP_PLANE0);
+            glEnable(GL_CLIP_PLANE1);
+            glClipPlane(GL_CLIP_PLANE0, clipEquation1);
+            glClipPlane(GL_CLIP_PLANE1, clipEquation2);
+            if (item.cell->toInbetweenVertex()) {
+                glColor4d(0.0, 0.0, 0.0, opacity);
+                item.cell->draw3D(viewSettings_);
+            }
+            else if (item.cell->toInbetweenEdge()) {
+                glColor4d(1.0, 0.5, 0.5, opacity);
+                if(drawAsMesh) {
+                    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                    glLineWidth(2); // TODO: make this a view settings
+                }
+                item.cell->draw3D(viewSettings_);
+                if(drawAsMesh) {
+                    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                    glLineWidth(1);
+                }
+            }
+            glDisable(GL_CLIP_PLANE0);
+            glDisable(GL_CLIP_PLANE1);
         }
-    }
-
-    // All frames
-    if(viewSettings_.drawAllFrames())
-    {
-        // Params for drawing key cells
-        Params params;
-        params.whatCellsToDraw = AllCells;
-        params.drawAsTopology = viewSettings_.drawFramesAsTopology();
-        params.drawCanvas = false;
-
-        // Find times for all cells
-        Timeline * timeline = global()->timeline();
-        int firstFrame = timeline->firstFrame();
-        int lastFrame = timeline->lastFrame();
-        for(int i=firstFrame; i<=lastFrame; ++i)
-            timesToDraw[(double)i] = params;
-    }
-
-    // Current frame
-    if(viewSettings_.drawTimePlane() || viewSettings_.drawCurrentFrame())
-    {
-        // Params for drawing key cells
-        Params params;
-        params.whatCellsToDraw = viewSettings_.drawCurrentFrame() ? AllCells : NoCells;
-        params.drawAsTopology = viewSettings_.drawCurrentFrameAsTopology();
-        params.drawCanvas = viewSettings_.drawTimePlane();
-
-        // Add current time to list of times to draw
-        timesToDraw[global()->activeTime().floatTime()] = params;
-    }
-
-    // Then, now that we have all times, find out in which order to draw them
-    QList<double> timesBeforeEye;
-    QList<double> timesAfterEye;
-    QList<double> sortedTimes;
-    MapIter i(timesToDraw);
-    while (i.hasNext())
-    {
-        i.next();
-        double t = i.key();
-        if (t < tEye)
-            timesBeforeEye << t;
         else
-            timesAfterEye << t;
-    }
-    std::sort(timesBeforeEye.begin(), timesBeforeEye.end());
-    std::sort(timesAfterEye.begin(), timesAfterEye.end());
-    for (int i=0; i<timesBeforeEye.size(); ++i)
-        sortedTimes << timesBeforeEye[i];
-    for (int i=timesAfterEye.size()-1; i>=0; --i)
-        sortedTimes << timesAfterEye[i];
-
-    // Now, we "just" have to draw them!
-
-    // Disable lighting
-    glDisable(GL_LIGHTING);
-
-    // Iterate times
-    for (double t: sortedTimes)
-    {
-        // Get params for that time
-        Params params = timesToDraw[t];
-
-        // Translate to appropriate z value
-        glPushMatrix();
-        glScaled(1, -1, 1);
-        glTranslated(0,0,viewSettings_.zFromT(t));
-
-        // Draw canvas + background
-        if(params.drawCanvas)
         {
-            drawCanvas_();
-            // XXX Make it work with layers
-            //drawBackground_(scene_->background(), t);
-        }
-
-        // Draw cells
-        if (params.whatCellsToDraw != NoCells)
-        {
-            if (params.drawAsTopology)
-            {
-                if (params.whatCellsToDraw == KeyCells)
-                {
-                    for(Iter it = cells.cbegin(); it != cells.cend(); ++it)
-                    {
-                        if ((*it)->toKeyCell())
-                            (*it)->drawTopology(t, view2DSettings);
-                    }
-                }
-                else
-                {
-                    for(Iter it = cells.cbegin(); it != cells.cend(); ++it)
-                    {
-                        (*it)->drawTopology(t, view2DSettings);
-                    }
-                }
+            double t = item.t1.floatTime();
+            glPushMatrix();
+            glScaled(1.0, -1.0, 1.0);
+            glTranslated(0.0, 0.0, viewSettings_.zFromT(t));
+            if (item.mode == DrawMode::Draw) {
+                item.cell->draw(t, view2DSettings);
             }
-            else // params.drawAsTopology == false
-            {
-                if (params.whatCellsToDraw == KeyCells)
-                {
-                    for(Iter it = cells.cbegin(); it != cells.cend(); ++it)
-                    {
-                        if ((*it)->toKeyCell())
-                            (*it)->draw(t, view2DSettings);
-                    }
-                }
-                else
-                {
-                    for(Iter it = cells.cbegin(); it != cells.cend(); ++it)
-                    {
-                        (*it)->draw(t, view2DSettings);
-                    }
-                }
+            else if (item.mode == DrawMode::DrawTopology) {
+                item.cell->drawTopology(t, view2DSettings);
             }
+            else if (item.mode == DrawMode::DrawCanvas) {
+                drawCanvas_();
+                // TODO: layer background?
+            }
+            glPopMatrix();
         }
-
-        // Translate back
-        glPopMatrix();
     }
 
     // Restore state
+    //
+    // Note: should we also re-enable GL_DEPTH_TEST and/or GL_LIGHTING, or is
+    // enabling these the responsability of any drawing code that need it?
+    //
     glDepthMask(true);
     glPopMatrix();
 }
@@ -560,12 +554,9 @@ void View3D::drawScene()
  *              PICKING
  */
 
-void View3D::drawPick3D()
+void View3D::drawPick()
 {
-    if(scene_->activeVAC())
-    {
-        scene_->activeVAC()->drawPick3D(viewSettings_);
-    }
+    // TODO
 }
 
 bool View3D::updateHighlightedObject(int x, int y)
@@ -732,9 +723,12 @@ void View3D::newPicking()
     gl_fbo_->glBindFramebuffer(GL_FRAMEBUFFER, defaultFramebufferObject());
 }
 
-
 void View3D::updatePicking()
 {
+    /* Picking (and thus editing) in the 3D View isn't supported. This code is
+     * just an example on how this function would look like. We would have to
+     * implement View3D::drawPick().
+     *
     // Make this widget's rendering context the current OpenGL context
     makeCurrent();
 
@@ -791,4 +785,5 @@ void View3D::updatePicking()
     glBindTexture(GL_TEXTURE_2D, textureId_); 
     glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, pickingImg_);
     glBindTexture(GL_TEXTURE_2D, 0);
+    */
 }
