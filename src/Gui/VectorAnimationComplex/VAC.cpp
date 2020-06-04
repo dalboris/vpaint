@@ -2700,6 +2700,16 @@ void VAC::unglue_(KeyEdge * e)
 
 bool VAC::uncut_(KeyVertex * v)
 {
+    // Note: Uncut does not yet support incident inbetween cells. As a
+    // workaround, we do nothing, as if uncutting here isn't possible, even
+    // though maybe in theory it is. In the future, we should handle the cases
+    // where uncutting is actually possible despite the presence of incident
+    // inbetween cells.
+    CellSet inbetweenCells = v->temporalStar();
+    if (!inbetweenCells.isEmpty()) {
+        return false;
+    }
+
     // compute edge n usage, check it's not more than 2
     bool isSplittedLoop = false;
     KeyEdge * e1 = 0;
@@ -2974,6 +2984,16 @@ bool VAC::uncut_(KeyVertex * v)
 
 bool VAC::uncut_(KeyEdge * e)
 {
+    // Note: Uncut does not yet support incident inbetween cells. As a
+    // workaround, we do nothing, as if uncutting here isn't possible, even
+    // though maybe in theory it is. In the future, we should handle the cases
+    // where uncutting is actually possible despite the presence of incident
+    // inbetween cells.
+    CellSet inbetweenCells = e->temporalStar();
+    if (!inbetweenCells.isEmpty()) {
+        return false;
+    }
+
     // Compute number of uses
     int nUses = nUses_(e);
     if(nUses < 2)
