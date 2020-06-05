@@ -14,6 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <math.h>
 #include <algorithm>
 
 #include "View3D.h"
@@ -28,6 +29,14 @@
 #include "VectorAnimationComplex/VAC.h"
 #include "VectorAnimationComplex/KeyCell.h"
 #include "VectorAnimationComplex/InbetweenCell.h"
+
+// GLU was removed from Qt in version 4.8
+// TODO: remove this dependancy and code it myself
+#ifdef Q_OS_MAC
+# include <OpenGL/glu.h>
+#else
+# include <GL/glu.h>
+#endif
 
 // define mouse actions
 
@@ -348,6 +357,11 @@ void View3D::drawCanvas_()
 
 void View3D::drawScene()
 {
+    drawSceneDelegate_(global()->activeTime());
+}
+
+void View3D::drawSceneDelegate_(Time activeTime)
+{
     using namespace VectorAnimationComplex;
 
     // Get VAC
@@ -360,7 +374,7 @@ void View3D::drawScene()
     double zEye = camera_.position()[2];
     double tEye = - zEye / viewSettings_.timeScale();
     if(viewSettings_.cameraFollowActiveTime())
-        tEye += activeTime().floatTime();
+        tEye += activeTime.floatTime();
 
     // Collect all items to draw
     bool drawAllFrames = viewSettings_.drawAllFrames();
@@ -371,7 +385,6 @@ void View3D::drawScene()
     bool drawOtherFramesAsTopology = viewSettings_.drawFramesAsTopology();
     DrawMode currentFrameDrawMode = drawCurrentFrameAsTopology ? DrawMode::DrawTopology : DrawMode::Draw;
     DrawMode otherFramesDrawMode = drawOtherFramesAsTopology ? DrawMode::DrawTopology : DrawMode::Draw;
-    Time activeTime = global()->activeTime();
     drawItems_.clear();
     if (viewSettings_.drawTimePlane()) {
         drawItems_.push_back({nullptr, DrawMode::DrawCanvas, activeTime, activeTime});
@@ -786,4 +799,227 @@ void View3D::updatePicking()
     glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, pickingImg_);
     glBindTexture(GL_TEXTURE_2D, 0);
     */
+}
+
+QImage View3D::drawToImage(int imgW, int imgH)
+{
+    return drawToImage(activeTime(), imgW, imgH);
+}
+
+namespace
+{
+
+void imageCleanupHandler(void * info)
+{
+    uchar * img = reinterpret_cast<uchar*>(info);
+    delete[] img;
+}
+
+}
+
+QImage View3D::drawToImage(Time t, int IMG_SIZE_X, int IMG_SIZE_Y)
+{
+    // TODO: factorize this code with View::drawToImage
+
+    // Make this widget's rendering context the current OpenGL context
+    makeCurrent();
+
+    // ------------ Create multisample FBO --------------------
+
+    GLuint ms_fboId;
+    GLuint ms_ColorBufferId;
+    GLuint ms_DepthBufferId;
+    GLint  ms_samples;
+
+    // Maximum supported samples
+    glGetIntegerv(GL_MAX_SAMPLES, &ms_samples);
+    // Create FBO
+    gl_fbo_->glGenFramebuffers(1, &ms_fboId);
+    gl_fbo_->glBindFramebuffer(GL_FRAMEBUFFER, ms_fboId);
+    // Create multisample color buffer
+    gl_fbo_->glGenRenderbuffers(1, &ms_ColorBufferId);
+    gl_fbo_->glBindRenderbuffer(GL_RENDERBUFFER, ms_ColorBufferId);
+    gl_fbo_->glRenderbufferStorageMultisample(GL_RENDERBUFFER, ms_samples, GL_RGBA8, IMG_SIZE_X, IMG_SIZE_Y);
+    // Create multisample depth buffer
+    gl_fbo_->glGenRenderbuffers(1, &ms_DepthBufferId);
+    gl_fbo_->glBindRenderbuffer(GL_RENDERBUFFER, ms_DepthBufferId);
+    gl_fbo_->glRenderbufferStorageMultisample(GL_RENDERBUFFER, ms_samples, GL_DEPTH_COMPONENT24, IMG_SIZE_X, IMG_SIZE_Y);
+    // Attach render buffers to FBO
+    gl_fbo_->glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, ms_ColorBufferId);
+    gl_fbo_->glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, ms_DepthBufferId);
+    // Check FBO status
+    GLenum ms_status = gl_fbo_->glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if(ms_status != GL_FRAMEBUFFER_COMPLETE) {
+        qDebug() << "Error: FBO ms_status != GL_FRAMEBUFFER_COMPLETE";
+        return QImage();
+    }
+
+
+    // ------------ Create standard FBO --------------------
+
+    GLuint fboId;
+    GLuint textureId;
+    GLuint rboId;
+
+    // Create FBO
+    gl_fbo_->glGenFramebuffers(1, &fboId);
+    gl_fbo_->glBindFramebuffer(GL_FRAMEBUFFER, fboId);
+    // Create color texture
+    glGenTextures(1, &textureId);
+    glBindTexture(GL_TEXTURE_2D, textureId);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, IMG_SIZE_X, IMG_SIZE_Y, 0,
+                 GL_RGBA, GL_UNSIGNED_BYTE, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    // Create depth buffer
+    gl_fbo_->glGenRenderbuffers(1, &rboId);
+    gl_fbo_->glBindRenderbuffer(GL_RENDERBUFFER, rboId);
+    gl_fbo_->glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, IMG_SIZE_X, IMG_SIZE_Y);
+    gl_fbo_->glBindRenderbuffer(GL_RENDERBUFFER, 0);
+    // Attach render buffers / textures to FBO
+    gl_fbo_->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureId, 0);
+    gl_fbo_->glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboId);
+    // Check FBO status
+    GLenum status = gl_fbo_->glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if(status != GL_FRAMEBUFFER_COMPLETE) {
+        qDebug() << "Error: FBO status != GL_FRAMEBUFFER_COMPLETE";
+        return QImage();
+    }
+
+
+    // ------------ Render scene to multisample FBO --------------------
+
+    // Bind FBO
+    gl_fbo_->glBindFramebuffer(GL_FRAMEBUFFER, ms_fboId);
+
+    // Set viewport
+    GLint oldViewport[4];
+    glGetIntegerv(GL_VIEWPORT, oldViewport);
+    glViewport(0, 0, IMG_SIZE_X, IMG_SIZE_Y);
+
+    // XXX is this necessary? (copied from paintGL)
+    glDepthMask(GL_TRUE);
+
+    // Clear the window and buffers
+    glClearColor(1, 1, 1, 1);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // Initialize the view and lighting
+    // This is like setCameraPositionAndOrientation(), but with a slightly
+    // different gluPerspective to account for the new size
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    if(isOrtho_)
+    {
+        double h = 2 * camera_.r() * tan(camera_.fovy()/2.0);
+        double ratio = h / IMG_SIZE_Y;
+        double w = IMG_SIZE_X * ratio;
+        glOrtho (-0.5*w, 0.5*w, -0.5*h, 0.5*h, 0, 100);
+    }
+    else
+    {
+        gluPerspective(camera_.fovy() * 180 / M_PI,
+                       (double) IMG_SIZE_X / (double) IMG_SIZE_Y,
+                       0.1, 100);
+    }
+    glScaled(1, -1, 1); // Invert Y-axis for compatibility with QImage
+    Eigen::Vector3d pos = camera_.position();
+    Eigen::Vector3d focus = camera_.focusPoint();
+    Eigen::Vector3d up = camera_.upDirection();
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    gluLookAt(pos[0], pos[1], pos[2],
+              focus[0], focus[1], focus[2],
+              up[0], up[1], up[2]);
+    setLighting();
+    setMaterial(material_);
+    glEnable(GL_COLOR_MATERIAL);
+
+    // Draw scene
+    drawSceneDelegate_(t);
+
+    // Restore viewport
+    glViewport(oldViewport[0], oldViewport[1], oldViewport[2], oldViewport[3]);
+
+    // Unbind FBO
+    gl_fbo_->glBindFramebuffer(GL_FRAMEBUFFER, defaultFramebufferObject());
+
+
+    // ------ Blit multisample FBO to standard FBO ---------
+
+    // Bind multisample FBO for reading
+    gl_fbo_->glBindFramebuffer(GL_READ_FRAMEBUFFER, ms_fboId);
+    // Bind standard FBO for drawing
+    gl_fbo_->glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fboId);
+    // Blit
+    gl_fbo_->glBlitFramebuffer(0, 0, IMG_SIZE_X, IMG_SIZE_Y, 0, 0, IMG_SIZE_X, IMG_SIZE_Y, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+    // Unbind FBO
+    gl_fbo_->glBindFramebuffer(GL_FRAMEBUFFER, defaultFramebufferObject());
+
+
+    // ------ Read standard FBO to RAM data ---------
+
+    // Bind standard FBO for reading
+    glBindTexture(GL_TEXTURE_2D, textureId);
+    // Read
+    uchar * img = new uchar[4 * IMG_SIZE_X * IMG_SIZE_Y];
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE,  img);
+    // Unbind FBO
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+
+    // ------ Release allocated GPU memory  ---------
+
+    gl_fbo_->glDeleteFramebuffers(1, &ms_fboId);
+    gl_fbo_->glDeleteRenderbuffers(1, &ms_ColorBufferId);
+    gl_fbo_->glDeleteRenderbuffers(1, &ms_DepthBufferId);
+    gl_fbo_->glDeleteFramebuffers(1, &fboId);
+    gl_fbo_->glDeleteRenderbuffers(1, &rboId);
+    glDeleteTextures(1, &textureId);
+
+
+    // ------ un-premultiply alpha ---------
+
+    // Once can notice that glBlendFuncSeparate(alpha, 1-alpha, 1, 1-alpha)
+    // performs the correct blending function with input:
+    //    Frame buffer color as pre-multiplied alpha
+    //    Input fragment color as post-multiplied alpha
+    // and output:
+    //    New frame buffer color as pre-multiplied alpha
+    //
+    // So by starting with glClearColor(0.0, 0.0, 0.0, 0.0), which is the
+    // correct pre-multiplied representation for fully transparent, then
+    // by specifying glColor() in post-multiplied alpha, we get the correct
+    // blending behaviour and simply have to un-premultiply the value obtained
+    // in the frame buffer at the very end
+
+    for(int k=0; k<IMG_SIZE_X*IMG_SIZE_Y; ++k)
+    {
+        uchar * pixel = &(img[4*k]);
+        double a = pixel[3];
+        if( 0 < a && a < 255 )
+        {
+            double s = 255.0 / a;
+            pixel[0] = (uchar) (std::min(255.0,std::floor(0.5+s*pixel[0])));
+            pixel[1] = (uchar) (std::min(255.0,std::floor(0.5+s*pixel[1])));
+            pixel[2] = (uchar) (std::min(255.0,std::floor(0.5+s*pixel[2])));
+        }
+    }
+
+
+    // ------ Convert to Qimage ---------
+
+    // Create cleanup info to delete[] img when appropriate
+    QImageCleanupFunction cleanupFunction = &imageCleanupHandler;
+    void * cleanupInfo = reinterpret_cast<void*>(img);
+
+    // Create QImage
+    QImage res(img, IMG_SIZE_X, IMG_SIZE_Y, QImage::Format_RGBA8888, cleanupFunction, cleanupInfo);
+
+    // Return QImage
+    return res;
 }

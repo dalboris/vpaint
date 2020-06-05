@@ -75,6 +75,10 @@ public:
     int activeFrame() const;
     Time activeTime() const;
 
+    // Draw to image
+    QImage drawToImage(int imgW, int imgH);
+    QImage drawToImage(Time t, int imgW, int imgH);
+
 public slots:
     void updatePicking();
 
@@ -87,7 +91,8 @@ signals:
     void closed();
 
 private:
-    
+    void drawSceneDelegate_(Time t);
+
 struct MouseEvent 
 {
     // Mouse position

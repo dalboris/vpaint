@@ -95,6 +95,7 @@ private slots:
     bool saveAs();
     bool exportSVG();
     bool exportPNG();
+    bool exportPNG3D();
     bool acceptExportPNG();
     bool rejectExportPNG();
 
@@ -189,6 +190,7 @@ private:
     void doImportSvg(const QString & filename);
     bool doExportSVG(const QString & filename);
     bool doExportPNG(const QString & filename);
+    bool doExportPNG3D(const QString & filename);
     void read_DEPRECATED(QTextStream & in);
     void write_DEPRECATED(QTextStream & out);
     void read(XmlStreamReader & xml);

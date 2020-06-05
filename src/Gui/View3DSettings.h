@@ -17,8 +17,17 @@
 #ifndef VIEW3DSETTINGS_H
 #define VIEW3DSETTINGS_H
 
-#include "TimeDef.h"
+#include <QCheckBox>
+#include <QDoubleSpinBox>
+#include <QFormLayout>
+#include <QLineEdit>
+#include <QPushButton>
+#include <QSpinBox>
 #include <QWidget>
+
+#include "TimeDef.h"
+
+class View3D;
 
 class View3DSettings
 {
@@ -58,8 +67,8 @@ public:
     void setDrawKeyCells(bool newValue);
     bool drawInbetweenCells() const;
     void setDrawInbetweenCells(bool newValue);
-    bool drawKeyVerticesAsDots() const;
-    void setDrawKeyVerticesAsDots(bool newValue);
+    bool drawKeyVerticesAsDots() const; // XXX to delete
+    void setDrawKeyVerticesAsDots(bool newValue); // XXX to delete
     bool clipToSpaceTimeWindow() const;
     void setClipToSpaceTimeWindow(bool newValue);
 
@@ -80,6 +89,12 @@ public:
     void setK1(int newValue);
     int k2() const;
     void setK2(int newValue);
+
+    // Export
+    int pngWidth() const;
+    void setPngWidth(int newValue);
+    int pngHeight() const;
+    void setPngHeight(int newValue);
 
     // Convert 2D scene coordinate and time to 3D coordinates for View3D
     // XXX Refactor in one method:
@@ -131,14 +146,13 @@ private:
     int k1_;
     int k2_;
 
+    // Export
+    int pngWidth_;
+    int pngHeight_;
+
     // Scene settings
     double xSceneMin_, xSceneMax_, ySceneMin_, ySceneMax_;
 };
-
-#include <QFormLayout>
-#include <QCheckBox>
-#include <QSpinBox>
-#include <QDoubleSpinBox>
 
 class View3DSettingsWidget: public QWidget
 {
@@ -152,9 +166,13 @@ public:
     // The passed viewSettings must outlive this View3DSettingsWidget.
     void setViewSettings(View3DSettings * viewSettings);
 
+    // Filename where to export the current
+    QString exportFilename() const;
+
 signals:
     void changed();
     void closed();
+    void exportClicked();
 
 protected slots:
     void closeEvent(QCloseEvent * event);
@@ -162,6 +180,8 @@ protected slots:
 private slots:
     void updateWidgetFromSettings();
     void updateSettingsFromWidget();
+    void onExportBrowseButtonClicked();
+    void onExportButtonClicked();
 
 private:
     View3DSettings * viewSettings_;
@@ -191,6 +211,12 @@ private:
     QCheckBox * drawAsMesh_;
     QSpinBox * k1_;
     QSpinBox * k2_;
+
+    QSpinBox * pngWidth_;
+    QSpinBox * pngHeight_;
+    QLineEdit * exportFilename_;
+    QPushButton * exportBrowseButton_;
+    QPushButton * exportButton_;
 
     bool isUpdatingWidgetFromSettings_;
 };

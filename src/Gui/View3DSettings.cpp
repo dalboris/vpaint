@@ -17,11 +17,15 @@
 #include "View3DSettings.h"
 
 #include <QCloseEvent>
+#include <QFileDialog>
+#include <QGroupBox>
+
+#include "Global.h"
 
 View3DSettings::View3DSettings() :
     // Display
     spaceScale_(0.001),
-    timeScale_(0.011),
+    timeScale_(0.010),
     isTimeHorizontal_(true),
     freezeSpaceRect_(false),
     cameraFollowActiveTime_(false),
@@ -44,7 +48,10 @@ View3DSettings::View3DSettings() :
     opacity_(0.08),
     drawAsMesh_(true),
     k1_(1),
-    k2_(1)
+    k2_(1),
+
+    pngWidth_(1920),
+    pngHeight_(1080)
 {
 }
 
@@ -253,6 +260,26 @@ void View3DSettings::setK2(int newValue)
     k2_ = newValue;
 }
 
+int View3DSettings::pngWidth() const
+{
+    return pngWidth_;
+}
+
+void View3DSettings::setPngWidth(int newValue)
+{
+    pngWidth_ = newValue;
+}
+
+int View3DSettings::pngHeight() const
+{
+    return pngHeight_;
+}
+
+void View3DSettings::setPngHeight(int newValue)
+{
+    pngHeight_ = newValue;
+}
+
 
 double View3DSettings::xFromX2D(double xScene) const
 {
@@ -312,75 +339,131 @@ View3DSettingsWidget::View3DSettingsWidget() :
     isUpdatingWidgetFromSettings_(false)
 {
     setWindowTitle("3D View Settings [Beta]");
+    setMinimumWidth(400);
 
+    // Main layout, combining all groups
+    QVBoxLayout * mainLayout = new QVBoxLayout();
+    setLayout(mainLayout);
+
+    // Space-time scales
+    QGroupBox * scalesGroupBox = new QGroupBox(tr("Space-time scales"));
+    QFormLayout * scalesLayout = new QFormLayout();
+    scalesGroupBox->setLayout(scalesLayout);
     spaceScale_ = new QDoubleSpinBox();
     spaceScale_->setRange(-100,100);
     spaceScale_->setDecimals(5);
     spaceScale_->setSingleStep(0.0001);
-
+    spaceScale_->setMaximumWidth(80);
+    scalesLayout->addRow("Space scale:", spaceScale_);
     timeScale_ = new QDoubleSpinBox();
     timeScale_->setRange(-100,100);
     timeScale_->setDecimals(5);
     timeScale_->setSingleStep(0.001);
+    timeScale_->setMaximumWidth(80);
+    scalesLayout->addRow("Time scale:", timeScale_);
+    mainLayout->addWidget(scalesGroupBox);
 
-    isTimeHorizontal_ = new QCheckBox();
-    freezeSpaceRect_ = new QCheckBox();
-    cameraFollowActiveTime_ = new QCheckBox();
+    isTimeHorizontal_ = new QCheckBox(); // XXX to delete
+    freezeSpaceRect_ = new QCheckBox(); // XXX to delete
 
-    drawGrid_ = new QCheckBox();
-    drawTimePlane_ = new QCheckBox();
-    drawCurrentFrame_ = new QCheckBox();
-    drawAllFrames_ = new QCheckBox();
-    drawFramesAsTopology_ = new QCheckBox();
-    drawCurrentFrameAsTopology_ = new QCheckBox();
-    drawTopologyFaces_ = new QCheckBox();
-    drawKeyCells_ = new QCheckBox();
-    drawInbetweenCells_ = new QCheckBox();
-    drawKeyVerticesAsDots_ = new QCheckBox();
-    clipToSpaceTimeWindow_ = new QCheckBox();
+    // Camera behavior
+    QGroupBox * cameraGroupBox = new QGroupBox(tr("Camera"));
+    QVBoxLayout * cameraLayout = new QVBoxLayout();
+    cameraGroupBox->setLayout(cameraLayout);
+    cameraFollowActiveTime_ = new QCheckBox("Follow current frame");
+    cameraLayout->addWidget(cameraFollowActiveTime_);
+    mainLayout->addWidget(cameraGroupBox);
 
+    drawGrid_ = new QCheckBox(); // XXX to delete
+
+    // 2D frames
+    QGroupBox * frames2dGroupBox = new QGroupBox(tr("2D frames"));
+    QVBoxLayout * frames2dLayout = new QVBoxLayout();
+    frames2dGroupBox->setLayout(frames2dLayout);
+    drawCurrentFrame_ = new QCheckBox("Draw current frame");
+    frames2dLayout->addWidget(drawCurrentFrame_);
+    drawTimePlane_ = new QCheckBox("Draw current frame's canvas");
+    frames2dLayout->addWidget(drawTimePlane_);
+    drawKeyCells_ = new QCheckBox("Draw all key cells");
+    frames2dLayout->addWidget(drawKeyCells_);
+    drawAllFrames_ = new QCheckBox("Draw all frames");
+    frames2dLayout->addWidget(drawAllFrames_);
+    drawCurrentFrameAsTopology_ = new QCheckBox("Draw current frame as outline");
+    frames2dLayout->addWidget(drawCurrentFrameAsTopology_);
+    drawFramesAsTopology_ = new QCheckBox("Draw other frames as outline");
+    frames2dLayout->addWidget(drawFramesAsTopology_);
+    drawTopologyFaces_ = new QCheckBox("Draw faces even for frames drawn as outline");
+    frames2dLayout->addWidget(drawTopologyFaces_);
+    drawKeyVerticesAsDots_ = new QCheckBox(); // XXX to delete
+    clipToSpaceTimeWindow_ = new QCheckBox(); // XXX to delete
+    QFormLayout * outlineSizeLayout = new QFormLayout();
     vertexTopologySize_ = new QSpinBox();
     vertexTopologySize_->setRange(1,100);
-
+    vertexTopologySize_->setMaximumWidth(80);
+    outlineSizeLayout->addRow("Vertex outline size:", vertexTopologySize_);
     edgeTopologyWidth_ = new QSpinBox();
     edgeTopologyWidth_->setRange(1,100);
+    edgeTopologyWidth_->setMaximumWidth(80);
+    outlineSizeLayout->addRow("Edge outline width:", edgeTopologyWidth_);
+    frames2dLayout->addLayout(outlineSizeLayout);
+    mainLayout->addWidget(frames2dGroupBox);
 
-
+    // 3D space-time mesh
+    QGroupBox * frames3dGroupBox = new QGroupBox(tr("3D space-time mesh"));
+    QVBoxLayout * frames3dLayout = new QVBoxLayout();
+    frames3dGroupBox->setLayout(frames3dLayout);
+    drawInbetweenCells_ = new QCheckBox("Draw space-time mesh");
+    frames3dLayout->addWidget(drawInbetweenCells_);
+    drawAsMesh_ = new QCheckBox("Draw as lines");
+    frames3dLayout->addWidget(drawAsMesh_);
+    QFormLayout * meshLayout = new QFormLayout();
     opacity_ = new QDoubleSpinBox();
     opacity_->setRange(0,1);
     opacity_->setDecimals(3);
     opacity_->setSingleStep(0.05);
-    drawAsMesh_ = new QCheckBox();
+    opacity_->setMaximumWidth(80);
     k1_ = new QSpinBox();
     k1_->setRange(1,100);
+    k1_->setMaximumWidth(80);
     k2_ = new QSpinBox();
     k2_->setRange(1,100);
+    k2_->setMaximumWidth(80);
+    meshLayout->addRow("Opacity:", opacity_);
+    meshLayout->addRow("Temporal resolution:", k1_);
+    meshLayout->addRow("Inverse spatial resolution:", k2_);
+    frames3dLayout->addLayout(meshLayout);
+    mainLayout->addWidget(frames3dGroupBox);
 
-    QFormLayout * layout = new QFormLayout();
-    layout->addRow("Space scale:", spaceScale_);
-    layout->addRow("Time scale:", timeScale_);
-    //layout->addRow("Is time horizontal:", isTimeHorizontal_);
-    layout->addRow("Freeze space rect:", freezeSpaceRect_);
-    layout->addRow("Camera follow active time:", cameraFollowActiveTime_);
-    layout->addRow("Draw grid:", drawGrid_);
-    layout->addRow("Draw canvas:", drawTimePlane_);
-    layout->addRow("Draw current frame:", drawCurrentFrame_);
-    layout->addRow("Draw current frame as topology:", drawCurrentFrameAsTopology_);
-    layout->addRow("Draw faces:", drawTopologyFaces_);
-    layout->addRow("Draw all frames:", drawAllFrames_);
-    layout->addRow("Draw frames as topology:", drawFramesAsTopology_);
-    layout->addRow("Draw key cells:", drawKeyCells_);
-    layout->addRow("Draw inbetween cells:", drawInbetweenCells_);
-    //layout->addRow("Draw vertices as dots:", drawKeyVerticesAsDots_);
-    //layout->addRow("clip to space-time window:", clipToSpaceTimeWindow_);
-    layout->addRow("Vertex topology size:", vertexTopologySize_);
-    layout->addRow("Edge topology width:", edgeTopologyWidth_);
-    layout->addRow("Opacity:", opacity_);
-    layout->addRow("Draw inbetween faces as mesh:", drawAsMesh_);
-    layout->addRow("Mesh temporal res:", k1_);
-    layout->addRow("Mesh inverse spatial res:", k2_);
-    setLayout(layout);
+    // Export settings and button
+    QGroupBox * exportGroupBox = new QGroupBox(tr("Export as PNG (image or sequence)"));
+    QVBoxLayout * exportLayout = new QVBoxLayout();
+    exportGroupBox->setLayout(exportLayout);
+    QFormLayout * pngFormLayout = new QFormLayout();
+    pngWidth_ = new QSpinBox();
+    pngWidth_->setRange(1, 10000);
+    pngWidth_->setMaximumWidth(80);
+    pngFormLayout->addRow("Width:", pngWidth_);
+    pngHeight_ = new QSpinBox();
+    pngHeight_->setRange(1, 10000);
+    pngHeight_->setMaximumWidth(80);
+    pngFormLayout->addRow("Height:", pngHeight_);
+    QHBoxLayout * exportFilenameLayout = new QHBoxLayout();
+    exportFilename_ = new QLineEdit();
+    exportFilenameLayout->addWidget(exportFilename_);
+    exportBrowseButton_ = new QPushButton("Browse...");
+    exportFilenameLayout->addWidget(exportBrowseButton_);
+    pngFormLayout->addRow("Filename: ", exportFilenameLayout);
+    exportLayout->addLayout(pngFormLayout);
+    exportButton_ = new QPushButton("Export");
+    exportButton_->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    exportLayout->addWidget(exportButton_);
+    mainLayout->addWidget(exportGroupBox);
 
+    // Prevent group boxes from stretching vertically.
+    // Instead, we just add blank space at the bottom.
+    mainLayout->addStretch();
+
+    // Connections
     connect(spaceScale_, SIGNAL(valueChanged(double)), this, SLOT(updateSettingsFromWidget()));
     connect(timeScale_, SIGNAL(valueChanged(double)), this, SLOT(updateSettingsFromWidget()));
     connect(isTimeHorizontal_, SIGNAL(stateChanged(int)), this, SLOT(updateSettingsFromWidget()));
@@ -403,6 +486,11 @@ View3DSettingsWidget::View3DSettingsWidget() :
     connect(drawAsMesh_, SIGNAL(stateChanged(int)), this, SLOT(updateSettingsFromWidget()));
     connect(k1_, SIGNAL(valueChanged(int)), this, SLOT(updateSettingsFromWidget()));
     connect(k2_, SIGNAL(valueChanged(int)), this, SLOT(updateSettingsFromWidget()));
+    connect(pngWidth_, SIGNAL(valueChanged(int)), this, SLOT(updateSettingsFromWidget()));
+    connect(pngHeight_, SIGNAL(valueChanged(int)), this, SLOT(updateSettingsFromWidget()));
+
+    connect(exportBrowseButton_, SIGNAL(clicked()), this, SLOT(onExportBrowseButtonClicked()));
+    connect(exportButton_, SIGNAL(clicked()), this, SLOT(onExportButtonClicked()));
 }
 
 View3DSettingsWidget::~View3DSettingsWidget()
@@ -416,6 +504,11 @@ void View3DSettingsWidget::setViewSettings(View3DSettings * viewSettings)
 
     updateWidgetFromSettings(); // Might not be an exact match due to widget min/max values
     updateSettingsFromWidget(); // Make sure its an exact match
+}
+
+QString View3DSettingsWidget::exportFilename() const
+{
+    return exportFilename_->text();
 }
 
 void View3DSettingsWidget::closeEvent(QCloseEvent * event)
@@ -452,6 +545,8 @@ void View3DSettingsWidget::updateWidgetFromSettings()
         drawAsMesh_->setChecked(viewSettings_->drawAsMesh());
         k1_->setValue(viewSettings_->k1());
         k2_->setValue(viewSettings_->k2());
+        pngWidth_->setValue(viewSettings_->pngWidth());
+        pngHeight_->setValue(viewSettings_->pngHeight());
     }
 
     isUpdatingWidgetFromSettings_ = false;
@@ -483,7 +578,35 @@ void View3DSettingsWidget::updateSettingsFromWidget()
         viewSettings_->setDrawAsMesh(drawAsMesh_->isChecked());
         viewSettings_->setK1(k1_->value());
         viewSettings_->setK2(k2_->value());
+        viewSettings_->setPngWidth(pngWidth_->value());
+        viewSettings_->setPngHeight(pngHeight_->value());
 
         emit changed();
     }
+}
+
+void View3DSettingsWidget::onExportBrowseButtonClicked()
+{
+    QString initialDir;
+    if (exportFilename_->text().isEmpty()) {
+        initialDir = global()->documentDir().path();
+    }
+    else {
+        initialDir = QFileInfo(exportFilename_->text()).dir().path();
+    }
+
+    QString filename = QFileDialog::getSaveFileName(
+                this, tr("Export filename"), initialDir);
+
+    if (!filename.isEmpty()) {
+        if(!filename.endsWith(".png")) {
+            filename.append(".png");
+        }
+        exportFilename_->setText(filename);
+    }
+}
+
+void View3DSettingsWidget::onExportButtonClicked()
+{
+    emit exportClicked();
 }

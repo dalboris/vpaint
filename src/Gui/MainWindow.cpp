@@ -134,6 +134,7 @@ MainWindow::MainWindow() :
     view3DSettingsWidget_->setParent(this, Qt::Window);
     view3DSettingsWidget_->setViewSettings(view3D_->settings());
     connect(view3DSettingsWidget_, SIGNAL(changed()), view3D_, SLOT(update()));
+    connect(view3DSettingsWidget_, SIGNAL(exportClicked()), this, SLOT(exportPNG3D()));
 
     //view3D_->show();
     connect(view3D_, SIGNAL(allViewsNeedToUpdate()), this, SLOT(update()));
@@ -769,6 +770,17 @@ bool MainWindow::exportPNG()
     return true;
 }
 
+bool MainWindow::exportPNG3D()
+{
+    QString filename = view3DSettingsWidget_->exportFilename();
+    if (!filename.isEmpty()) {
+        return doExportPNG3D(filename);
+    }
+    else {
+        return false;
+    }
+}
+
 bool MainWindow::acceptExportPNG()
 {
     exportingPng_ = true; // This is necessary so that isEditCanvasSizeVisible() returns true
@@ -1237,6 +1249,26 @@ bool MainWindow::doExportPNG(const QString & filename)
 
     // Destroy image buffer
     delete[] buf;
+
+    return true;
+}
+
+bool MainWindow::doExportPNG3D(const QString & filename)
+{
+    QVector<Time> times;
+    QStringList filenames;
+    times.append(view3D_->activeTime());
+    filenames.append(filename);
+    int numFrames = times.size();
+
+    int pngWidth = view3D_->settings()->pngWidth();
+    int pngHeight = view3D_->settings()->pngHeight();
+
+    for(int i = 0; i < numFrames; ++i)
+    {
+        QImage img = view3D_->drawToImage(Time(times[i]), pngWidth, pngHeight);
+        img.save(filenames[i]);
+    }
 
     return true;
 }
