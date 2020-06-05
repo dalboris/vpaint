@@ -1282,34 +1282,56 @@ bool MainWindow::doExportPNG3D(const QString & filename)
         QDir dir = info.absoluteDir();
 
         // Get frame numbers to export
-        int firstFrame = timeline()->firstFrame();
-        int lastFrame = timeline()->lastFrame();
-        for(int i = firstFrame; i <= lastFrame; ++i)
-        {
-            QString number = QString("%1").arg(i, 4, 10, QChar('0'));
-            QString filePath = dir.absoluteFilePath(
-                        baseName + QString("_") + number + QString(".") + suffix);
+        int numSubframes = view3D_->settings()->exportSubframes();
+        if (numSubframes <= 1) {
+            int firstFrame = timeline()->firstFrame();
+            int lastFrame = timeline()->lastFrame();
+            for(int i = firstFrame; i <= lastFrame; ++i)
+            {
+                QString number = QString("%1").arg(i, 4, 10, QChar('0'));
+                QString filePath = dir.absoluteFilePath(
+                            baseName + QString("_") + number + QString(".") + suffix);
 
-            times.append(Time(i));
-            filenames.append(filePath);
+                times.append(Time(i));
+                filenames.append(filePath);
+            }
+        }
+        else {
+            double df = 1.0 / numSubframes;
+            int filenumber = 0;
+            int firstFrame = timeline()->firstFrame();
+            int lastFrame = timeline()->lastFrame();
+            for(int i = firstFrame; i <= lastFrame; ++i)
+            {
+                if (i == lastFrame)
+                {
+                    numSubframes = 1;
+                }
+                for (int j = 0; j < numSubframes; ++j)
+                {
+                    QString number = QString("%1").arg(++filenumber, 4, 10, QChar('0'));
+                    QString filePath = dir.absoluteFilePath(
+                                baseName + QString("_") + number + QString(".") + suffix);
+
+                    times.append(Time(i + j * df));
+                    filenames.append(filePath);
+                }
+            }
         }
     }
 
-    int numFrames = times.size();
-    int numSamples = 1;
-    int numRenders = numFrames * numSamples;
-    int numCurrentRender = 0;
+    int numRenders = times.size();
     QProgressDialog progress("Exporting...", "Abort", 0, numRenders, this);
     progress.setWindowModality(Qt::WindowModal);
 
     int pngWidth = view3D_->settings()->pngWidth();
     int pngHeight = view3D_->settings()->pngHeight();
 
-    for(int i = 0; i < numFrames; ++i)
+    for(int i = 0; i < numRenders; ++i)
     {
         QImage img = view3D_->drawToImage(Time(times[i]), pngWidth, pngHeight);
         img.save(filenames[i]);
-        progress.setValue(++numCurrentRender);
+        progress.setValue(i+1);
     }
 
     return true;

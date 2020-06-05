@@ -52,7 +52,8 @@ View3DSettings::View3DSettings() :
 
     pngWidth_(1920),
     pngHeight_(1080),
-    exportSequence_(false)
+    exportSequence_(false),
+    exportSubframes_(1)
 {
 }
 
@@ -291,6 +292,16 @@ void View3DSettings::setExportSequence(bool newValue)
     exportSequence_ = newValue;
 }
 
+int View3DSettings::exportSubframes() const
+{
+    return exportSubframes_;
+}
+
+void View3DSettings::setExportSubframes(int newValue)
+{
+    exportSubframes_ = newValue;
+}
+
 double View3DSettings::xFromX2D(double xScene) const
 {
     return xScene;
@@ -466,6 +477,12 @@ View3DSettingsWidget::View3DSettingsWidget() :
     exportLayout->addLayout(pngFormLayout);
     exportSequence_ = new QCheckBox("Export animation as image sequence");
     exportLayout->addWidget(exportSequence_);
+    QFormLayout * subframesLayout = new QFormLayout();
+    exportSubframes_ = new QSpinBox();
+    exportSubframes_->setRange(1, 10000);
+    exportSubframes_->setMaximumWidth(80);
+    subframesLayout->addRow("Number of subframes per frame:", exportSubframes_);
+    exportLayout->addLayout(subframesLayout);
     exportButton_ = new QPushButton("Export");
     exportButton_->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     exportLayout->addWidget(exportButton_);
@@ -501,6 +518,7 @@ View3DSettingsWidget::View3DSettingsWidget() :
     connect(pngWidth_, SIGNAL(valueChanged(int)), this, SLOT(updateSettingsFromWidget()));
     connect(pngHeight_, SIGNAL(valueChanged(int)), this, SLOT(updateSettingsFromWidget()));
     connect(exportSequence_, SIGNAL(stateChanged(int)), this, SLOT(updateSettingsFromWidget()));
+    connect(exportSubframes_, SIGNAL(valueChanged(int)), this, SLOT(updateSettingsFromWidget()));
 
     connect(exportBrowseButton_, SIGNAL(clicked()), this, SLOT(onExportBrowseButtonClicked()));
     connect(exportButton_, SIGNAL(clicked()), this, SLOT(onExportButtonClicked()));
@@ -561,6 +579,7 @@ void View3DSettingsWidget::updateWidgetFromSettings()
         pngWidth_->setValue(viewSettings_->pngWidth());
         pngHeight_->setValue(viewSettings_->pngHeight());
         exportSequence_->setChecked(viewSettings_->exportSequence());
+        exportSubframes_->setValue(viewSettings_->exportSubframes());
     }
 
     isUpdatingWidgetFromSettings_ = false;
@@ -595,6 +614,7 @@ void View3DSettingsWidget::updateSettingsFromWidget()
         viewSettings_->setPngWidth(pngWidth_->value());
         viewSettings_->setPngHeight(pngHeight_->value());
         viewSettings_->setExportSequence(exportSequence_->isChecked());
+        viewSettings_->setExportSubframes(exportSubframes_->value());
 
         emit changed();
     }
