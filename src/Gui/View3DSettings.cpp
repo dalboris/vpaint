@@ -51,7 +51,8 @@ View3DSettings::View3DSettings() :
     k2_(1),
 
     pngWidth_(1920),
-    pngHeight_(1080)
+    pngHeight_(1080),
+    exportSequence_(false)
 {
 }
 
@@ -280,6 +281,15 @@ void View3DSettings::setPngHeight(int newValue)
     pngHeight_ = newValue;
 }
 
+bool View3DSettings::exportSequence() const
+{
+    return exportSequence_;
+}
+
+void View3DSettings::setExportSequence(bool newValue)
+{
+    exportSequence_ = newValue;
+}
 
 double View3DSettings::xFromX2D(double xScene) const
 {
@@ -454,6 +464,8 @@ View3DSettingsWidget::View3DSettingsWidget() :
     exportFilenameLayout->addWidget(exportBrowseButton_);
     pngFormLayout->addRow("Filename: ", exportFilenameLayout);
     exportLayout->addLayout(pngFormLayout);
+    exportSequence_ = new QCheckBox("Export animation as image sequence");
+    exportLayout->addWidget(exportSequence_);
     exportButton_ = new QPushButton("Export");
     exportButton_->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     exportLayout->addWidget(exportButton_);
@@ -488,6 +500,7 @@ View3DSettingsWidget::View3DSettingsWidget() :
     connect(k2_, SIGNAL(valueChanged(int)), this, SLOT(updateSettingsFromWidget()));
     connect(pngWidth_, SIGNAL(valueChanged(int)), this, SLOT(updateSettingsFromWidget()));
     connect(pngHeight_, SIGNAL(valueChanged(int)), this, SLOT(updateSettingsFromWidget()));
+    connect(exportSequence_, SIGNAL(stateChanged(int)), this, SLOT(updateSettingsFromWidget()));
 
     connect(exportBrowseButton_, SIGNAL(clicked()), this, SLOT(onExportBrowseButtonClicked()));
     connect(exportButton_, SIGNAL(clicked()), this, SLOT(onExportButtonClicked()));
@@ -547,6 +560,7 @@ void View3DSettingsWidget::updateWidgetFromSettings()
         k2_->setValue(viewSettings_->k2());
         pngWidth_->setValue(viewSettings_->pngWidth());
         pngHeight_->setValue(viewSettings_->pngHeight());
+        exportSequence_->setChecked(viewSettings_->exportSequence());
     }
 
     isUpdatingWidgetFromSettings_ = false;
@@ -580,6 +594,7 @@ void View3DSettingsWidget::updateSettingsFromWidget()
         viewSettings_->setK2(k2_->value());
         viewSettings_->setPngWidth(pngWidth_->value());
         viewSettings_->setPngHeight(pngHeight_->value());
+        viewSettings_->setExportSequence(exportSequence_->isChecked());
 
         emit changed();
     }

@@ -1257,9 +1257,50 @@ bool MainWindow::doExportPNG3D(const QString & filename)
 {
     QVector<Time> times;
     QStringList filenames;
-    times.append(view3D_->activeTime());
-    filenames.append(filename);
+
+    if (!view3D_->settings()->exportSequence())
+    {
+        times.append(view3D_->activeTime());
+        filenames.append(filename);
+    }
+    else
+    {
+        // Decompose filename into basename + suffix. Example:
+        //     abc_1234_5678.de.png  ->   abc_1234  +  de.png
+        QFileInfo info(filename);
+        QString baseName = info.baseName();
+        QString suffix = info.suffix();
+        // Decompose basename into cleanedbasename + numbering. Examples:
+        //     abc_1234_5678  ->     abc_1234 + 5678
+        int iNumbering = baseName.indexOf(QRegExp("_[0-9]*$"));
+        if(iNumbering != -1)
+        {
+            baseName.chop(baseName.length() - iNumbering);
+        }
+
+        // Get dir
+        QDir dir = info.absoluteDir();
+
+        // Get frame numbers to export
+        int firstFrame = timeline()->firstFrame();
+        int lastFrame = timeline()->lastFrame();
+        for(int i = firstFrame; i <= lastFrame; ++i)
+        {
+            QString number = QString("%1").arg(i, 4, 10, QChar('0'));
+            QString filePath = dir.absoluteFilePath(
+                        baseName + QString("_") + number + QString(".") + suffix);
+
+            times.append(Time(i));
+            filenames.append(filePath);
+        }
+    }
+
     int numFrames = times.size();
+    int numSamples = 1;
+    int numRenders = numFrames * numSamples;
+    int numCurrentRender = 0;
+    QProgressDialog progress("Exporting...", "Abort", 0, numRenders, this);
+    progress.setWindowModality(Qt::WindowModal);
 
     int pngWidth = view3D_->settings()->pngWidth();
     int pngHeight = view3D_->settings()->pngHeight();
@@ -1268,6 +1309,7 @@ bool MainWindow::doExportPNG3D(const QString & filename)
     {
         QImage img = view3D_->drawToImage(Time(times[i]), pngWidth, pngHeight);
         img.save(filenames[i]);
+        progress.setValue(++numCurrentRender);
     }
 
     return true;

@@ -495,7 +495,7 @@ void View3D::drawSceneDelegate_(Time activeTime)
     glPushMatrix();
     glScaled(s,s,s);
     if(viewSettings_.cameraFollowActiveTime())
-        glTranslated(0,0,-viewSettings_.zFromT(global()->activeTime()));
+        glTranslated(0,0,-viewSettings_.zFromT(activeTime));
 
     // Draw all items
     bool drawAsMesh = viewSettings_.drawAsMesh();

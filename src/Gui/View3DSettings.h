@@ -95,6 +95,8 @@ public:
     void setPngWidth(int newValue);
     int pngHeight() const;
     void setPngHeight(int newValue);
+    bool exportSequence() const;
+    void setExportSequence(bool newValue);
 
     // Convert 2D scene coordinate and time to 3D coordinates for View3D
     // XXX Refactor in one method:
@@ -149,6 +151,7 @@ private:
     // Export
     int pngWidth_;
     int pngHeight_;
+    bool exportSequence_;
 
     // Scene settings
     double xSceneMin_, xSceneMax_, ySceneMin_, ySceneMax_;
@@ -216,6 +219,7 @@ private:
     QSpinBox * pngHeight_;
     QLineEdit * exportFilename_;
     QPushButton * exportBrowseButton_;
+    QCheckBox * exportSequence_;
     QPushButton * exportButton_;
 
     bool isUpdatingWidgetFromSettings_;
