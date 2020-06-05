@@ -64,7 +64,7 @@ ExportPngDialog::ExportPngDialog(Scene * scene) :
     QVBoxLayout * animationLayout = new QVBoxLayout();
     animationGroupBox->setLayout(animationLayout);
 
-    exportSequenceCheckBox_ = new QCheckBox(tr("Export animation as image sequences"));
+    exportSequenceCheckBox_ = new QCheckBox(tr("Export animation as image sequence"));
     exportSequenceCheckBox_->setChecked(false);
     animationLayout->addWidget(exportSequenceCheckBox_);
 
