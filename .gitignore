@@ -4,6 +4,7 @@ src/Makefile
 *.pro.user*
 src/qrc_resources.cpp
 build-*
+/build
 src/*.o
 src/moc_*
 src/VPaint

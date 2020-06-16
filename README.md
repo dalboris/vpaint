@@ -39,6 +39,8 @@ Prerequisites:
 - **Qt 5.12**: We recommend installing the latest Qt 5.12.x version using the [Qt installer](https://www.qt.io/download-qt-installer).
 - **GLU**: This is already installed on Windows, macOS, and many Linux distributions. However, on Ubuntu, you need to install it yourself via `sudo apt-get install libglu1-mesa-dev`.
 
+### Using qmake (application only)
+
 #### Windows 7/8/10, Visual Studio 2017 64bit, Qt 5.12.6
 
 ```
@@ -70,4 +72,15 @@ mkdir build && cd build
 ~/Qt/5.12.6/gcc_64/bin/qmake ../vpaint/src
 make
 ./Gui/VPaint
+```
+
+### Using CMake (application and library)
+
+```
+git clone https://github.com/dalboris/vpaint.git
+cd vpaint
+mkdir build && cd build
+cmake ..
+cmake --build . --config Release
+./src/Gui/Release/VPaint
 ```

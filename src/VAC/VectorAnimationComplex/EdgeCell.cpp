@@ -34,11 +34,18 @@ namespace VectorAnimationComplex
 EdgeCell::EdgeCell(VAC * vac) :
     Cell(vac)
 {
-    QColor edgeColor = global()->edgeColor();
-    color_[0] = edgeColor.redF();
-    color_[1] = edgeColor.greenF();
-    color_[2] = edgeColor.blueF();
-    color_[3] = edgeColor.alphaF();
+    if (global()) {
+        QColor edgeColor = global()->edgeColor();
+        color_[0] = edgeColor.redF();
+        color_[1] = edgeColor.greenF();
+        color_[2] = edgeColor.blueF();
+        color_[3] = edgeColor.alphaF();
+    } else {
+        color_[0] = 0;
+        color_[1] = 0;
+        color_[2] = 0;
+        color_[3] = 1;
+    }
 
     // highlighted/selected color
     colorSelected_[0] = 1;

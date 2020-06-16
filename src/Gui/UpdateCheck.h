@@ -17,9 +17,9 @@
 #ifndef UPDATECHECK_H
 #define UPDATECHECK_H
 
-#include <QObject>
+#include <VAC/Version.h>
 
-#include "Version.h"
+#include <QObject>
 
 class QNetworkAccessManager;
 class QNetworkReply;

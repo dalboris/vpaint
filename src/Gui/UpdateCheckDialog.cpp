@@ -16,13 +16,14 @@
 
 #include "UpdateCheckDialog.h"
 
+#include <VAC/Global.h>
+
 #include <QVBoxLayout>
 #include <QLabel>
 #include <QCheckBox>
 #include <QDialogButtonBox>
 
 #include "Application.h"
-#include "Global.h"
 
 UpdateCheckDialog::UpdateCheckDialog(QString newVersion, QWidget *parent, Qt::WindowFlags f)
 {
