@@ -520,6 +520,153 @@ void Scene::deselectFaces()
     }
 }
 
+void Scene::selectKeyCells()
+{
+    Layer * layer = activeLayer();
+    if(layer)
+    {
+        layer->vac()->selectKeyCells();
+    }
+}
+
+
+void Scene::selectInbetweenCells()
+{
+    Layer * layer = activeLayer();
+    if(layer)
+    {
+        layer->vac()->selectInbetweenCells();
+    }
+}
+
+
+void Scene::deselectKeyCells()
+{
+    Layer * layer = activeLayer();
+    if(layer)
+    {
+        layer->vac()->deselectKeyCells();
+    }
+}
+
+
+void Scene::deselectInbetweenCells()
+{
+    Layer * layer = activeLayer();
+    if(layer)
+    {
+        layer->vac()->deselectInbetweenCells();
+    }
+}
+
+void Scene::selectKeyVertices()
+{
+    Layer * layer = activeLayer();
+    if(layer)
+    {
+        layer->vac()->selectKeyVertices();
+    }
+}
+
+void Scene::selectKeyEdges()
+{
+    Layer * layer = activeLayer();
+    if(layer)
+    {
+        layer->vac()->selectKeyEdges();
+    }
+}
+
+void Scene::selectKeyFaces()
+{
+    Layer * layer = activeLayer();
+    if(layer)
+    {
+        layer->vac()->selectKeyFaces();
+    }
+}
+
+void Scene::deselectKeyVertices()
+{
+    Layer * layer = activeLayer();
+    if(layer)
+    {
+        layer->vac()->deselectKeyVertices();
+    }
+}
+
+void Scene::deselectKeyEdges()
+{
+    Layer * layer = activeLayer();
+    if(layer)
+    {
+        layer->vac()->deselectKeyEdges();
+    }
+}
+
+void Scene::deselectKeyFaces()
+{
+    Layer * layer = activeLayer();
+    if(layer)
+    {
+        layer->vac()->deselectKeyFaces();
+    }
+}
+
+void Scene::selectInbetweenVertices()
+{
+    Layer * layer = activeLayer();
+    if(layer)
+    {
+        layer->vac()->selectInbetweenVertices();
+    }
+}
+
+void Scene::selectInbetweenEdges()
+{
+    Layer * layer = activeLayer();
+    if(layer)
+    {
+        layer->vac()->selectInbetweenEdges();
+    }
+}
+
+void Scene::selectInbetweenFaces()
+{
+    Layer * layer = activeLayer();
+    if(layer)
+    {
+        layer->vac()->selectInbetweenFaces();
+    }
+}
+
+void Scene::deselectInbetweenVertices()
+{
+    Layer * layer = activeLayer();
+    if(layer)
+    {
+        layer->vac()->deselectInbetweenVertices();
+    }
+}
+
+void Scene::deselectInbetweenEdges()
+{
+    Layer * layer = activeLayer();
+    if(layer)
+    {
+        layer->vac()->deselectInbetweenEdges();
+    }
+}
+
+void Scene::deselectInbetweenFaces()
+{
+    Layer * layer = activeLayer();
+    if(layer)
+    {
+        layer->vac()->deselectInbetweenFaces();
+    }
+}
+
 void Scene::keyPressEvent(QKeyEvent *event)
 {
     event->ignore();

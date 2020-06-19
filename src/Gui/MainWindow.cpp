@@ -1817,6 +1817,94 @@ void MainWindow::createActions()
     actionDeselectFaces->setShortcutContext(Qt::ApplicationShortcut);
     connect(actionDeselectFaces, SIGNAL(triggered()), scene_, SLOT(deselectFaces()));
 
+    // Select Key Cells
+    actionSelectKeyCells = new QAction(tr("Select key cells"), this);
+    actionSelectKeyCells->setStatusTip(tr("Deselect all the objects in the current selection other than key cells."));
+    actionSelectKeyCells->setShortcut(QKeySequence(Qt::Key_S, Qt::Key_K));
+    actionSelectKeyCells->setShortcutContext(Qt::ApplicationShortcut);
+    connect(actionSelectKeyCells, SIGNAL(triggered()), scene_, SLOT(selectKeyCells()));
+
+    // Select Inbetween Cells
+    actionSelectInbetweenCells = new QAction(tr("Select inbetween cells"), this);
+    actionSelectInbetweenCells->setStatusTip(tr("Deselect all the objects in the current selection other than inbetween cells."));
+    actionSelectInbetweenCells->setShortcut(QKeySequence(Qt::Key_S, Qt::Key_I));
+    actionSelectInbetweenCells->setShortcutContext(Qt::ApplicationShortcut);
+    connect(actionSelectInbetweenCells, SIGNAL(triggered()), scene_, SLOT(selectInbetweenCells()));
+
+    // Deselect Key Cells
+    actionDeselectKeyCells = new QAction(tr("Deselect key cells"), this);
+    actionDeselectKeyCells->setStatusTip(tr("Deselect all key cells."));
+    actionDeselectKeyCells->setShortcut(QKeySequence(Qt::Key_S, Qt::SHIFT + Qt::Key_K));
+    actionDeselectKeyCells->setShortcutContext(Qt::ApplicationShortcut);
+    connect(actionDeselectKeyCells, SIGNAL(triggered()), scene_, SLOT(deselectKeyCells()));
+
+    // Deselect Inbetween Cells
+    actionDeselectInbetweenCells = new QAction(tr("Deselect inbetween cells"), this);
+    actionDeselectInbetweenCells->setStatusTip(tr("Deselect all inbetween cells."));
+    actionDeselectInbetweenCells->setShortcut(QKeySequence(Qt::Key_S, Qt::SHIFT + Qt::Key_I));
+    actionDeselectInbetweenCells->setShortcutContext(Qt::ApplicationShortcut);
+    connect(actionDeselectInbetweenCells, SIGNAL(triggered()), scene_, SLOT(deselectInbetweenCells()));
+
+    // Select Key Vertices
+    actionSelectKeyVertices = new QAction(tr("Select key vertices"), this);
+    actionSelectKeyVertices->setStatusTip(tr("Deselect all the objects in the current selection other than key vertices."));
+    connect(actionSelectKeyVertices, SIGNAL(triggered()), scene_, SLOT(selectKeyVertices()));
+
+    // Select Key Edges
+    actionSelectKeyEdges = new QAction(tr("Select key edges"), this);
+    actionSelectKeyEdges->setStatusTip(tr("Deselect all the objects in the current selection other than key edges."));
+    connect(actionSelectKeyEdges, SIGNAL(triggered()), scene_, SLOT(selectKeyEdges()));
+
+    // Select Key Faces
+    actionSelectKeyFaces = new QAction(tr("Select key faces"), this);
+    actionSelectKeyFaces->setStatusTip(tr("Deselect all the objects in the current selection other than key faces."));
+    connect(actionSelectKeyFaces, SIGNAL(triggered()), scene_, SLOT(selectKeyFaces()));
+
+    // Deselect Key Vertices
+    actionDeselectKeyVertices = new QAction(tr("Deselect key vertices"), this);
+    actionDeselectKeyVertices->setStatusTip(tr("Deselect all key vertices."));
+    connect(actionDeselectKeyVertices, SIGNAL(triggered()), scene_, SLOT(deselectKeyVertices()));
+
+    // Deselect Key Edges
+    actionDeselectKeyEdges = new QAction(tr("Deselect key edges"), this);
+    actionDeselectKeyEdges->setStatusTip(tr("Deselect all key edges."));
+    connect(actionDeselectKeyEdges, SIGNAL(triggered()), scene_, SLOT(deselectKeyEdges()));
+
+    // Deselect Key Faces
+    actionDeselectKeyFaces = new QAction(tr("Deselect key faces"), this);
+    actionDeselectKeyFaces->setStatusTip(tr("Deselect all key faces."));
+    connect(actionDeselectKeyFaces, SIGNAL(triggered()), scene_, SLOT(deselectKeyFaces()));
+
+    // Select Inbetween Vertices
+    actionSelectInbetweenVertices = new QAction(tr("Select inbetween vertices"), this);
+    actionSelectInbetweenVertices->setStatusTip(tr("Deselect all the objects in the current selection other than inbetween vertices."));
+    connect(actionSelectInbetweenVertices, SIGNAL(triggered()), scene_, SLOT(selectInbetweenVertices()));
+
+    // Select Inbetween Edges
+    actionSelectInbetweenEdges = new QAction(tr("Select inbetween edges"), this);
+    actionSelectInbetweenEdges->setStatusTip(tr("Deselect all the objects in the current selection other than inbetween edges."));
+    connect(actionSelectInbetweenEdges, SIGNAL(triggered()), scene_, SLOT(selectInbetweenEdges()));
+
+    // Select Inbetween Faces
+    actionSelectInbetweenFaces = new QAction(tr("Select inbetween faces"), this);
+    actionSelectInbetweenFaces->setStatusTip(tr("Deselect all the objects in the current selection other than inbetween faces."));
+    connect(actionSelectInbetweenFaces, SIGNAL(triggered()), scene_, SLOT(selectInbetweenFaces()));
+
+    // Deselect Inbetween Vertices
+    actionDeselectInbetweenVertices = new QAction(tr("Deselect inbetween vertices"), this);
+    actionDeselectInbetweenVertices->setStatusTip(tr("Deselect all inbetween vertices."));
+    connect(actionDeselectInbetweenVertices, SIGNAL(triggered()), scene_, SLOT(deselectInbetweenVertices()));
+
+    // Deselect Inbetween Edges
+    actionDeselectInbetweenEdges = new QAction(tr("Deselect inbetween edges"), this);
+    actionDeselectInbetweenEdges->setStatusTip(tr("Deselect all inbetween edges."));
+    connect(actionDeselectInbetweenEdges, SIGNAL(triggered()), scene_, SLOT(deselectInbetweenEdges()));
+
+    // Deselect Inbetween Faces
+    actionDeselectInbetweenFaces = new QAction(tr("Deselect inbetween faces"), this);
+    actionDeselectInbetweenFaces->setStatusTip(tr("Deselect all inbetween faces."));
+    connect(actionDeselectInbetweenFaces, SIGNAL(triggered()), scene_, SLOT(deselectInbetweenFaces()));
+
     ///////////////        DEPTH        ///////////////
 
     // Raise
@@ -2035,6 +2123,25 @@ void MainWindow::createMenus()
     menuSelection->addAction(actionDeselectVertices);
     menuSelection->addAction(actionDeselectEdges);
     menuSelection->addAction(actionDeselectFaces);
+    menuSelection->addSeparator();
+    menuSelection->addAction(actionSelectKeyCells);
+    menuSelection->addAction(actionSelectInbetweenCells);
+    menuSelection->addAction(actionDeselectKeyCells);
+    menuSelection->addAction(actionDeselectInbetweenCells);
+    menuSelection->addSeparator();
+    menuSelection->addAction(actionSelectKeyVertices);
+    menuSelection->addAction(actionSelectKeyEdges);
+    menuSelection->addAction(actionSelectKeyFaces);
+    menuSelection->addAction(actionDeselectKeyVertices);
+    menuSelection->addAction(actionDeselectKeyEdges);
+    menuSelection->addAction(actionDeselectKeyFaces);
+    menuSelection->addSeparator();
+    menuSelection->addAction(actionSelectInbetweenVertices);
+    menuSelection->addAction(actionSelectInbetweenEdges);
+    menuSelection->addAction(actionSelectInbetweenFaces);
+    menuSelection->addAction(actionDeselectInbetweenVertices);
+    menuSelection->addAction(actionDeselectInbetweenEdges);
+    menuSelection->addAction(actionDeselectInbetweenFaces);
     menuBar()->addMenu(menuSelection);
 
     /// ---- DEPTH ----

@@ -270,6 +270,22 @@ private:
       QAction * actionDeselectVertices;
       QAction * actionDeselectEdges;
       QAction * actionDeselectFaces;
+      QAction * actionSelectKeyCells;
+      QAction * actionSelectInbetweenCells;
+      QAction * actionDeselectKeyCells;
+      QAction * actionDeselectInbetweenCells;
+      QAction * actionSelectKeyVertices;
+      QAction * actionSelectKeyEdges;
+      QAction * actionSelectKeyFaces;
+      QAction * actionDeselectKeyVertices;
+      QAction * actionDeselectKeyEdges;
+      QAction * actionDeselectKeyFaces;
+      QAction * actionSelectInbetweenVertices;
+      QAction * actionSelectInbetweenEdges;
+      QAction * actionSelectInbetweenFaces;
+      QAction * actionDeselectInbetweenVertices;
+      QAction * actionDeselectInbetweenEdges;
+      QAction * actionDeselectInbetweenFaces;
     // DEPTH
     QMenu * menuDepth;
       QAction * actionRaise;

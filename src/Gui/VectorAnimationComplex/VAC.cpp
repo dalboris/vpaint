@@ -6031,7 +6031,7 @@ void VAC::selectVertices(bool emitSignal)
 {
     CellSet cellsToSelect;
     foreach(Cell * c, selectedCells())
-        if(c->toKeyVertex())
+        if(c->toVertexCell())
             cellsToSelect.insert(c);
 
     setSelectedCells(cellsToSelect,emitSignal);
@@ -6041,7 +6041,7 @@ void VAC::selectEdges(bool emitSignal)
 {
     CellSet cellsToSelect;
     foreach(Cell * c, selectedCells())
-        if(c->toKeyEdge())
+        if(c->toEdgeCell())
             cellsToSelect.insert(c);
 
     setSelectedCells(cellsToSelect,emitSignal);
@@ -6051,7 +6051,7 @@ void VAC::selectFaces(bool emitSignal)
 {
     CellSet cellsToSelect;
     foreach(Cell * c, selectedCells())
-        if(c->toKeyFace())
+        if(c->toFaceCell())
             cellsToSelect.insert(c);
 
     setSelectedCells(cellsToSelect,emitSignal);
@@ -6061,7 +6061,7 @@ void VAC::deselectVertices(bool emitSignal)
 {
     CellSet cellsToSelect;
     foreach(Cell * c, selectedCells())
-        if(!c->toKeyVertex())
+        if(!c->toVertexCell())
             cellsToSelect.insert(c);
 
     setSelectedCells(cellsToSelect,emitSignal);
@@ -6071,7 +6071,7 @@ void VAC::deselectEdges(bool emitSignal)
 {
     CellSet cellsToSelect;
     foreach(Cell * c, selectedCells())
-        if(!c->toKeyEdge())
+        if(!c->toEdgeCell())
             cellsToSelect.insert(c);
 
     setSelectedCells(cellsToSelect,emitSignal);
@@ -6081,7 +6081,167 @@ void VAC::deselectFaces(bool emitSignal)
 {
     CellSet cellsToSelect;
     foreach(Cell * c, selectedCells())
+        if(!c->toFaceCell())
+            cellsToSelect.insert(c);
+
+    setSelectedCells(cellsToSelect,emitSignal);
+}
+
+void VAC::selectKeyCells(bool emitSignal)
+{
+    CellSet cellsToSelect;
+    foreach(Cell * c, selectedCells())
+        if(c->toKeyCell())
+            cellsToSelect.insert(c);
+
+    setSelectedCells(cellsToSelect,emitSignal);
+}
+
+void VAC::selectInbetweenCells(bool emitSignal)
+{
+    CellSet cellsToSelect;
+    foreach(Cell * c, selectedCells())
+        if(c->toInbetweenCell())
+            cellsToSelect.insert(c);
+
+    setSelectedCells(cellsToSelect,emitSignal);
+}
+
+void VAC::deselectKeyCells(bool emitSignal)
+{
+    CellSet cellsToSelect;
+    foreach(Cell * c, selectedCells())
+        if(!c->toKeyCell())
+            cellsToSelect.insert(c);
+
+    setSelectedCells(cellsToSelect,emitSignal);
+}
+
+void VAC::deselectInbetweenCells(bool emitSignal)
+{
+    CellSet cellsToSelect;
+    foreach(Cell * c, selectedCells())
+        if(!c->toInbetweenCell())
+            cellsToSelect.insert(c);
+
+    setSelectedCells(cellsToSelect,emitSignal);
+}
+
+void VAC::selectKeyVertices(bool emitSignal)
+{
+    CellSet cellsToSelect;
+    foreach(Cell * c, selectedCells())
+        if(c->toKeyVertex())
+            cellsToSelect.insert(c);
+
+    setSelectedCells(cellsToSelect,emitSignal);
+}
+
+void VAC::selectKeyEdges(bool emitSignal)
+{
+    CellSet cellsToSelect;
+    foreach(Cell * c, selectedCells())
+        if(c->toKeyEdge())
+            cellsToSelect.insert(c);
+
+    setSelectedCells(cellsToSelect,emitSignal);
+}
+
+void VAC::selectKeyFaces(bool emitSignal)
+{
+    CellSet cellsToSelect;
+    foreach(Cell * c, selectedCells())
+        if(c->toKeyFace())
+            cellsToSelect.insert(c);
+
+    setSelectedCells(cellsToSelect,emitSignal);
+}
+
+void VAC::deselectKeyVertices(bool emitSignal)
+{
+    CellSet cellsToSelect;
+    foreach(Cell * c, selectedCells())
+        if(!c->toKeyVertex())
+            cellsToSelect.insert(c);
+
+    setSelectedCells(cellsToSelect,emitSignal);
+}
+
+void VAC::deselectKeyEdges(bool emitSignal)
+{
+    CellSet cellsToSelect;
+    foreach(Cell * c, selectedCells())
+        if(!c->toKeyEdge())
+            cellsToSelect.insert(c);
+
+    setSelectedCells(cellsToSelect,emitSignal);
+}
+
+void VAC::deselectKeyFaces(bool emitSignal)
+{
+    CellSet cellsToSelect;
+    foreach(Cell * c, selectedCells())
         if(!c->toKeyFace())
+            cellsToSelect.insert(c);
+
+    setSelectedCells(cellsToSelect,emitSignal);
+}
+
+void VAC::selectInbetweenVertices(bool emitSignal)
+{
+    CellSet cellsToSelect;
+    foreach(Cell * c, selectedCells())
+        if(c->toInbetweenVertex())
+            cellsToSelect.insert(c);
+
+    setSelectedCells(cellsToSelect,emitSignal);
+}
+
+void VAC::selectInbetweenEdges(bool emitSignal)
+{
+    CellSet cellsToSelect;
+    foreach(Cell * c, selectedCells())
+        if(c->toInbetweenEdge())
+            cellsToSelect.insert(c);
+
+    setSelectedCells(cellsToSelect,emitSignal);
+}
+
+void VAC::selectInbetweenFaces(bool emitSignal)
+{
+    CellSet cellsToSelect;
+    foreach(Cell * c, selectedCells())
+        if(c->toInbetweenFace())
+            cellsToSelect.insert(c);
+
+    setSelectedCells(cellsToSelect,emitSignal);
+}
+
+void VAC::deselectInbetweenVertices(bool emitSignal)
+{
+    CellSet cellsToSelect;
+    foreach(Cell * c, selectedCells())
+        if(!c->toInbetweenVertex())
+            cellsToSelect.insert(c);
+
+    setSelectedCells(cellsToSelect,emitSignal);
+}
+
+void VAC::deselectInbetweenEdges(bool emitSignal)
+{
+    CellSet cellsToSelect;
+    foreach(Cell * c, selectedCells())
+        if(!c->toInbetweenEdge())
+            cellsToSelect.insert(c);
+
+    setSelectedCells(cellsToSelect,emitSignal);
+}
+
+void VAC::deselectInbetweenFaces(bool emitSignal)
+{
+    CellSet cellsToSelect;
+    foreach(Cell * c, selectedCells())
+        if(!c->toInbetweenFace())
             cellsToSelect.insert(c);
 
     setSelectedCells(cellsToSelect,emitSignal);

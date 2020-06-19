@@ -183,6 +183,22 @@ public slots:
     void deselectVertices();
     void deselectEdges();
     void deselectFaces();
+    void selectKeyCells();
+    void selectInbetweenCells();
+    void deselectKeyCells();
+    void deselectInbetweenCells();
+    void selectKeyVertices();
+    void selectKeyEdges();
+    void selectKeyFaces();
+    void deselectKeyVertices();
+    void deselectKeyEdges();
+    void deselectKeyFaces();
+    void selectInbetweenVertices();
+    void selectInbetweenEdges();
+    void selectInbetweenFaces();
+    void deselectInbetweenVertices();
+    void deselectInbetweenEdges();
+    void deselectInbetweenFaces();
 
     
 signals:

@@ -220,6 +220,22 @@ public slots:
     void deselectVertices(bool emitSignal = true);
     void deselectEdges(bool emitSignal = true);
     void deselectFaces(bool emitSignal = true);
+    void selectKeyCells(bool emitSignal = true);
+    void selectInbetweenCells(bool emitSignal = true);
+    void deselectKeyCells(bool emitSignal = true);
+    void deselectInbetweenCells(bool emitSignal = true);
+    void selectKeyVertices(bool emitSignal = true);
+    void selectKeyEdges(bool emitSignal = true);
+    void selectKeyFaces(bool emitSignal = true);
+    void deselectKeyVertices(bool emitSignal = true);
+    void deselectKeyEdges(bool emitSignal = true);
+    void deselectKeyFaces(bool emitSignal = true);
+    void selectInbetweenVertices(bool emitSignal = true);
+    void selectInbetweenEdges(bool emitSignal = true);
+    void selectInbetweenFaces(bool emitSignal = true);
+    void deselectInbetweenVertices(bool emitSignal = true);
+    void deselectInbetweenEdges(bool emitSignal = true);
+    void deselectInbetweenFaces(bool emitSignal = true);
 
 
     /////////////////////////////////////////////////////////////////
