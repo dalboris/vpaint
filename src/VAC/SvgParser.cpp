@@ -2266,7 +2266,6 @@ SvgPresentationAttributes::SvgPresentationAttributes() :
 
 void SvgPresentationAttributes::applyChildStyle(const QXmlStreamAttributes& attrs)
 {
-    bool ok;
     double number;
 
     // Style attribute. Note: styling defined via the 'style' attribute
