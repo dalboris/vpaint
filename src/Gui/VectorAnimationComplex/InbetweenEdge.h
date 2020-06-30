@@ -88,6 +88,12 @@ public:
     QList<EdgeSample> getSampling(Time time) const; // Note: repeat start and end vertices even when closed.
     QList<Eigen::Vector2d> getGeometry(Time time); // Note: repeat start and end vertices even when closed.
 
+    // Appends quads to the given out parameters
+    void getMesh(View3DSettings & viewSettings,
+                 QList<Eigen::Vector3d> & positions,
+                 QList<Eigen::Vector3d> & normals,
+                 QList<int> & indices);
+
 private:
     // Cached geometry
     double cacheSpaceScale_;

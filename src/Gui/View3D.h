@@ -79,6 +79,9 @@ public:
     QImage drawToImage(int imgW, int imgH);
     QImage drawToImage(Time t, int imgW, int imgH);
 
+    // Export mesh
+    bool exportMesh(QString filename);
+
 public slots:
     void updatePicking();
 

@@ -95,6 +95,7 @@ private slots:
     bool saveAs();
     bool exportSVG();
     bool exportPNG();
+    bool exportMesh();
     bool exportPNG3D();
     bool acceptExportPNG();
     bool rejectExportPNG();

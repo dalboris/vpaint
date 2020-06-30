@@ -29,6 +29,7 @@
 #include "VectorAnimationComplex/VAC.h"
 #include "VectorAnimationComplex/KeyCell.h"
 #include "VectorAnimationComplex/InbetweenCell.h"
+#include "VectorAnimationComplex/InbetweenEdge.h"
 
 // GLU was removed from Qt in version 4.8
 // TODO: remove this dependancy and code it myself
@@ -1022,4 +1023,58 @@ QImage View3D::drawToImage(Time t, int IMG_SIZE_X, int IMG_SIZE_Y)
 
     // Return QImage
     return res;
+}
+
+bool View3D::exportMesh(QString filename)
+{
+    using namespace VectorAnimationComplex;
+
+    QFile file(filename);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
+        return false;
+
+    // Get VAC
+    VAC * vac = scene_->activeVAC();
+    if (!vac) {
+        return false;
+    }
+
+    // Get mesh geometry
+    QList<Eigen::Vector3d> positions;
+    QList<Eigen::Vector3d> normals;
+    QList<int> indices;
+    const ZOrderedCells & cells = vac->zOrdering();
+    for(auto it = cells.cbegin(); it != cells.cend(); ++it)
+    {
+        if (InbetweenEdge * ie = (*it)->toInbetweenEdge()) {
+            ie->getMesh(viewSettings_, positions, normals, indices);
+        }
+    }
+
+    // Write to file.
+    double s = viewSettings_.spaceScale();
+    QTextStream out(&file);
+    out.setLocale(QLocale::c());
+    out.setRealNumberNotation(QTextStream::FixedNotation);
+    out.setRealNumberPrecision(6);
+    for (Eigen::Vector3d& p : positions) {
+        out << "v " << s * p[0] << " " << s * p[1] << " " << s * p[2] << "\n";
+    }
+    for (Eigen::Vector3d p : normals) {
+        p.normalize();
+        out << "vn " << p[0] << " " << p[1] << " " << p[2] << "\n";
+    }
+    for (int i = 3; i < indices.size(); i += 4) {
+        int k1 = indices[i-3];
+        int k2 = indices[i-2];
+        int k3 = indices[i-1];
+        int k4 = indices[i];
+        out << "f "
+            << k1 << "//" << k1 << " "
+            << k2 << "//" << k2 << " "
+            << k3 << "//" << k3 << " "
+            << k4 << "//" << k4 << "\n";
+    }
+
+    return true;
 }

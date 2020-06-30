@@ -172,12 +172,16 @@ public:
     // The passed viewSettings must outlive this View3DSettingsWidget.
     void setViewSettings(View3DSettings * viewSettings);
 
-    // Filename where to export the current
+    // Filename where to export 3D Mesh
+    QString exportMeshFilename() const;
+
+    // Filename where to export 3D View renders
     QString exportFilename() const;
 
 signals:
     void changed();
     void closed();
+    void exportMeshClicked();
     void exportClicked();
 
 protected slots:
@@ -186,6 +190,7 @@ protected slots:
 private slots:
     void updateWidgetFromSettings();
     void updateSettingsFromWidget();
+    void onExportMeshButtonClicked();
     void onExportBrowseButtonClicked();
     void onExportButtonClicked();
 
@@ -217,6 +222,8 @@ private:
     QCheckBox * drawAsMesh_;
     QSpinBox * k1_;
     QSpinBox * k2_;
+    QString exportMeshFilename_;
+    QPushButton * exportMeshButton_;
 
     QSpinBox * pngWidth_;
     QSpinBox * pngHeight_;

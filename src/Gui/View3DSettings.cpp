@@ -453,6 +453,10 @@ View3DSettingsWidget::View3DSettingsWidget() :
     meshLayout->addRow("Temporal resolution:", k1_);
     meshLayout->addRow("Inverse spatial resolution:", k2_);
     frames3dLayout->addLayout(meshLayout);
+    exportMeshButton_ = new QPushButton("Export as OBJ...");
+    exportMeshButton_->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    exportMeshButton_->setMinimumWidth(110);
+    frames3dLayout->addWidget(exportMeshButton_);
     mainLayout->addWidget(frames3dGroupBox);
 
     // Export settings and button
@@ -520,6 +524,7 @@ View3DSettingsWidget::View3DSettingsWidget() :
     connect(exportSequence_, SIGNAL(stateChanged(int)), this, SLOT(updateSettingsFromWidget()));
     connect(exportSubframes_, SIGNAL(valueChanged(int)), this, SLOT(updateSettingsFromWidget()));
 
+    connect(exportMeshButton_, SIGNAL(clicked()), this, SLOT(onExportMeshButtonClicked()));
     connect(exportBrowseButton_, SIGNAL(clicked()), this, SLOT(onExportBrowseButtonClicked()));
     connect(exportButton_, SIGNAL(clicked()), this, SLOT(onExportButtonClicked()));
 }
@@ -535,6 +540,11 @@ void View3DSettingsWidget::setViewSettings(View3DSettings * viewSettings)
 
     updateWidgetFromSettings(); // Might not be an exact match due to widget min/max values
     updateSettingsFromWidget(); // Make sure its an exact match
+}
+
+QString View3DSettingsWidget::exportMeshFilename() const
+{
+    return exportMeshFilename_;
 }
 
 QString View3DSettingsWidget::exportFilename() const
@@ -617,6 +627,31 @@ void View3DSettingsWidget::updateSettingsFromWidget()
         viewSettings_->setExportSubframes(exportSubframes_->value());
 
         emit changed();
+    }
+}
+
+void View3DSettingsWidget::onExportMeshButtonClicked()
+{
+    QString initialDirOrFile;
+    if (exportMeshFilename_.isEmpty()) {
+        initialDirOrFile = global()->documentDir().path();
+    }
+    else {
+        initialDirOrFile = exportMeshFilename_;
+    }
+
+    QString selectedFilter = tr("Wavefront OBJ (*.obj)");
+    QString filters = tr("All files (*)") + ";;" + selectedFilter;
+    QString filename = QFileDialog::getSaveFileName(
+                this, tr("Export OBJ filename"), initialDirOrFile,
+                filters, &selectedFilter);
+
+    if (!filename.isEmpty()) {
+        if(!filename.endsWith(".obj")) {
+            filename.append(".obj");
+        }
+        exportMeshFilename_ = filename;
+        emit exportMeshClicked();
     }
 }
 

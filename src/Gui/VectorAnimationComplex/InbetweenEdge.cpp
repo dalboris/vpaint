@@ -361,6 +361,15 @@ InbetweenEdge::InbetweenEdge(VAC * vac, XmlStreamReader & xml) :
 
     void InbetweenEdge::computeInbetweenSurface(View3DSettings & viewSettings)
     {
+        if(!surf_.isEmpty() &&
+           cacheSpaceScale_ == viewSettings.spaceScale() &&
+           cacheTimeScale_ == viewSettings.timeScale() &&
+           cacheK1_ == viewSettings.k1() &&
+           cacheK2_ == viewSettings.k2())
+        {
+            return;
+        }
+
         surf_.clear();
         norm_.clear();
         cacheSpaceScale_ = viewSettings.spaceScale();
@@ -422,14 +431,7 @@ InbetweenEdge::InbetweenEdge(VAC * vac, XmlStreamReader & xml) :
 
     void InbetweenEdge::drawRaw3D(View3DSettings & viewSettings)
     {
-        if(surf_.isEmpty() ||
-           cacheSpaceScale_ != viewSettings.spaceScale() ||
-           cacheTimeScale_ != viewSettings.timeScale() ||
-           cacheK1_ != viewSettings.k1() ||
-           cacheK2_ != viewSettings.k2())
-        {
-            computeInbetweenSurface(viewSettings);
-        }
+        computeInbetweenSurface(viewSettings);
 
         // drawn in  backward order  to improve the  likeliness the
         // polygon are  drawn from rear  to near, and  improve the
@@ -624,6 +626,59 @@ InbetweenEdge::InbetweenEdge(VAC * vac, XmlStreamReader & xml) :
         }
 
         return sampling;
+    }
+
+    void InbetweenEdge::getMesh(
+            View3DSettings & viewSettings,
+            QList<Eigen::Vector3d>& positions,
+            QList<Eigen::Vector3d>& normals,
+            QList<int>& indices)
+    {
+        computeInbetweenSurface(viewSettings);
+
+        // Compute number of quads, early return if no quads
+        int m = surf_.size();
+        if (m < 2 || norm_.size() != m) {
+            return;
+        }
+        int n = surf_[0].size();
+        if (n < 2 || norm_[0].size() != n) {
+            return;
+        }
+
+        // Append positions and normals
+        int p0 = positions.size() + 1; // OBJ indices start at 1
+        for (int i = 0; i < m; ++i) {
+            for (int j = 0; j < n; ++j) {
+                positions.append(surf_[i][j]);
+                normals.append(norm_[i][j]);
+            }
+        }
+
+        // Append indices
+        for(int i = m-2; i >= 0; i--) {
+            int j_ = 0;
+            for(int j = 0; j < n;) {
+                if (j > 0) {
+                    indices.append( i    * n + j_ + p0);
+                    indices.append((i+1) * n + j_ + p0);
+                    indices.append((i+1) * n + j  + p0);
+                    indices.append( i    * n + j  + p0);
+                }
+                j_ = j;
+                if(j == n-1)
+                {
+                    break;
+                }
+                else
+                {
+                    j += cacheK2_;
+                    if(j >= n)
+                        j = n-1;
+                }
+            }
+            glEnd();
+        }
     }
 
     void InbetweenEdge::triangulate_(Time time, Triangles & out) const

@@ -134,6 +134,7 @@ MainWindow::MainWindow() :
     view3DSettingsWidget_->setParent(this, Qt::Window);
     view3DSettingsWidget_->setViewSettings(view3D_->settings());
     connect(view3DSettingsWidget_, SIGNAL(changed()), view3D_, SLOT(update()));
+    connect(view3DSettingsWidget_, SIGNAL(exportMeshClicked()), this, SLOT(exportMesh()));
     connect(view3DSettingsWidget_, SIGNAL(exportClicked()), this, SLOT(exportPNG3D()));
 
     //view3D_->show();
@@ -768,6 +769,17 @@ bool MainWindow::exportPNG()
     // The return value doesn't actually make sense here. Maybe this function
     // shouldn't return anything instead.
     return true;
+}
+
+bool MainWindow::exportMesh()
+{
+    QString filename = view3DSettingsWidget_->exportMeshFilename();
+    if (!filename.isEmpty()) {
+        return view3D_->exportMesh(filename);
+    }
+    else {
+        return false;
+    }
 }
 
 bool MainWindow::exportPNG3D()
