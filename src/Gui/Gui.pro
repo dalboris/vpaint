@@ -21,6 +21,20 @@ CONFIG += qt c++11
 QT += opengl openglextensions network
 
 # App version
+#
+# Note: if version.txt changes, you need to explicitly run the following
+# for the change to be taken into account:
+#
+# Linux/macOS:
+#   make qmake
+#   make clean
+#   make
+#
+# Windows:
+#   nmake qmake_all
+#   nmake clean
+#   nmake
+#
 VERSION = "$$cat(../version.txt)"
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"
 
