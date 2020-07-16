@@ -88,7 +88,7 @@ public:
     }
 
     // Access and modify content
-    inline int size() const {return triangles_.size();}
+    inline int size() const {return (int)triangles_.size();}
     inline Triangle & operator[] (int i) {return triangles_[i];}
 
     // Access raw data

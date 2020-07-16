@@ -14,10 +14,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "Application.h"
+
+#include <VAC/Global.h>
+
 #include <QFileOpenEvent>
 
-#include "Application.h"
-#include "Global.h"
 
 Application::Application(int& argc, char** argv) :
     QApplication(argc, argv)

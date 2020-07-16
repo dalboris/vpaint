@@ -4,20 +4,33 @@
 #
 # Usage:
 #
-# sudo apt-get install build-essential libglu1-mesa-dev
-# git clone https://github.com/dalboris/vpaint.git
-# mkdir build && cd build
-# ~/Qt/5.12.6/gcc_64/bin/qmake ../vpaint/src
-# make
-# chmod u+x ../vpaint/tools/linux/deploy.sh
-# ../vpaint/tools/linux/deploy.sh
+#   sudo apt-get install build-essential libglu1-mesa-dev
+#   git clone https://github.com/dalboris/vpaint.git
+#   mkdir build && cd build
+#   ~/Qt/5.12.6/gcc_64/bin/qmake ../vpaint/src
+#   make
+#   chmod u+x ../vpaint/tools/linux/deploy.sh
+#   ../vpaint/tools/linux/deploy.sh
+#
+# Note: If you are updating an existing build, you must re-run qmake and clean:
+#
+#   make qmake
+#   make clean
+#   make
+#   ../vpaint/tools/linux/deploy.sh
 #
 
 # Parse Makefile to get QMAKE location
 QMAKE=$(grep "QMAKE *=" Makefile | sed "s/QMAKE *= *//g")
 
+# Get VPaint src directory
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+TOOLS_DIR="$(dirname $SCRIPT_DIR)"
+ROOT_DIR="$(dirname $TOOLS_DIR)"
+SRC_DIR="$ROOT_DIR/src"
+
 # Get app version (linuxdeployqt uses this for naming the file)
-VPAINT_VERSION=$(grep "VERSION = " ../vpaint/src/Gui/Gui.pro | sed "s/VERSION *= *//g")
+VPAINT_VERSION="$(cat $SRC_DIR/version.txt)"
 export VERSION=${VPAINT_VERSION}
 
 # Create appdir structure
@@ -47,7 +60,7 @@ Categories=Graphics;" > appdir/usr/share/applications/VPaint.desktop
 # Copy icons
 for size in 16 32 48 256; do
     mkdir appdir/usr/share/icons/hicolor/${size}x${size}
-    cp ../vpaint/src/Gui/images/icon-${size}.png appdir/usr/share/icons/hicolor/${size}x${size}/VPaint.png
+    cp "$SRC_DIR"/Gui/images/icon-${size}.png appdir/usr/share/icons/hicolor/${size}x${size}/VPaint.png
 done
 
 # We need to manually download and compile OpenSLL 1.1.1, since Qt 5.12.4+

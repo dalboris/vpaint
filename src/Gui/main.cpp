@@ -14,11 +14,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <VAC/MainWindow.h>
+#include <VAC/Global.h>
+#include <VAC/GLUtils.h>
+
 #include "Application.h"
-#include "MainWindow.h"
-#include "Global.h"
 #include "UpdateCheck.h"
-#include "GLUtils.h"
 
 int main(int argc, char *argv[])
 {

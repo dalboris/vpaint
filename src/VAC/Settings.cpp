@@ -14,9 +14,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "Application.h"
 #include "Settings.h"
 
+#include <QApplication>
 #include <QSettings>
 
 Settings::Settings()

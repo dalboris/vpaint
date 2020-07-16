@@ -16,12 +16,13 @@
 
 #include "UpdateCheck.h"
 
+#include <VAC/Global.h>
+
 #include <QUrl>
 #include <QtNetwork>
 #include <QDebug>
 
 #include "Application.h"
-#include "Global.h"
 #include "UpdateCheckDialog.h"
 
 UpdateCheck::UpdateCheck(QWidget * parent) :

@@ -405,7 +405,9 @@ TransformTool::TransformTool(QObject * parent) :
     transforming_(false),
     rotating_(false)
 {
-    connect(global(), SIGNAL(keyboardModifiersChanged()), this, SLOT(onKeyboardModifiersChanged()));
+    if (global()) {
+      connect(global(), SIGNAL(keyboardModifiersChanged()), this, SLOT(onKeyboardModifiersChanged()));
+    }
 }
 
 void TransformTool::setCells(const CellSet & cells)

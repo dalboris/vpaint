@@ -3693,7 +3693,7 @@ void VAC::insertSketchedEdgeInVAC(double tolerance, bool useFaceToConsiderForCut
     } splitNodes;
 
     // Nodes created via selfIntersections
-    splitNodes.nSelf = selfSplitValues.size();
+    splitNodes.nSelf = static_cast<int>(selfSplitValues.size());
     splitNodes.self.reserve(splitNodes.nSelf);
     for(int i=0; i<splitNodes.nSelf; ++i)
         splitNodes.self.push_back(sketchedEdge_->curve()(selfSplitValues[i]));
@@ -3771,7 +3771,7 @@ void VAC::insertSketchedEdgeInVAC(double tolerance, bool useFaceToConsiderForCut
         // of its edges are deleted
         iedgesBefore.clear();
     }
-    splitNodes.nExisting = splitNodes.existing.size();
+    splitNodes.nExisting = static_cast<int>(splitNodes.existing.size());
 
 
 #if MYDEBUG
@@ -3821,7 +3821,7 @@ void VAC::insertSketchedEdgeInVAC(double tolerance, bool useFaceToConsiderForCut
         std::vector<int> indices;
 
         // member methods
-        int size() const { return indices.size(); }
+        int size() const { return (int)indices.size(); }
         Cluster & operator<<(int i) { indices << i; return *this; }
     };
 
@@ -3847,8 +3847,8 @@ void VAC::insertSketchedEdgeInVAC(double tolerance, bool useFaceToConsiderForCut
             {
                 int node = q.front();
                 q.pop();
-                int nNeighbours = neighbours[node].size();
-                for(int i=0; i<nNeighbours; ++i)
+                const std::size_t nNeighbours = neighbours[node].size();
+                for(std::size_t i = 0; i < nNeighbours; ++i)
                 {
                     int neighbour = neighbours[node][i];
                     if(!marked[neighbour])

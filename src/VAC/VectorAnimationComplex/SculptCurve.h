@@ -184,7 +184,7 @@ public:
         if(p_.size() < (unsigned int) N_)
         {
             // Compute fit
-            Fitter * fit = fitter(fitterType_, p_, 0, p_.size(), ds_);
+            Fitter * fit = fitter(fitterType_, p_, 0, static_cast<int>(p_.size()), ds_);
 
             T q = vertices_.back(); // = q_[0]
             double s = lastFinalS_;                 // = 0
@@ -207,7 +207,7 @@ public:
         else
         {
             // compute new fitting
-            Fitter * fit = fitter(fitterType_,p_,p_.size()-N_,N_,ds_);
+            Fitter * fit = fitter(fitterType_, p_,static_cast<int>(p_.size()) - N_, N_, ds_);
             fits_ << fit;
 
             T q = vertices_.back();
@@ -266,11 +266,11 @@ public:
 
     int size() const
     {
-        return vertices_.size() + qTemp_.size();
+        return static_cast<int>(vertices_.size() + qTemp_.size());
     }
     T operator[] (int i) const
     {
-        int k = i-vertices_.size();
+        int k = i - static_cast<int>(vertices_.size());
         if(k<0)
             return vertices_[i];
         else
@@ -625,7 +625,7 @@ public:
 
     T operator() (double s) const
     {
-        int n = vertices_.size();
+        std::size_t n = vertices_.size();
         assert(n>0);
         if(n == 1)
             return vertices_.front();
@@ -662,8 +662,8 @@ public:
     {
         // very fast, no need to recompute arclength :-)
 
-        int n = vertices_.size();
-        for(int i = 0; i<n; ++i)
+        std::size_t n = vertices_.size();
+        for(std::size_t i = 0; i<n; ++i)
         {
             vertices_[i].setX(vertices_[i].x() + dx);
             vertices_[i].setY(vertices_[i].y() + dy);
@@ -836,7 +836,7 @@ public:
             }
 
             // add vertices to sculpt temp after
-            int j = sculptTemp_.size(); // only retarget from here, if needed
+            const std::size_t j = sculptTemp_.size(); // only retarget from here, if needed
             i = sculptIndex_+1;
             while(i<size())
             {
@@ -855,7 +855,7 @@ public:
                 double oneMinusDw = 1 - dw;
                 if(oneMinusDw > 0)
                 {
-                    for(unsigned int i = j; i<sculptTemp_.size(); ++i)
+                    for(std::size_t i = j; i < sculptTemp_.size(); ++i)
                     {
                         sculptTemp_[i].w = (sculptTemp_[i].w - dw) / oneMinusDw;
                     }
@@ -1381,7 +1381,7 @@ public:
         //double epsilon = 1e-5;
 
         // get number of split required.
-        int nSplitValues = splitValues.size();
+        const std::size_t nSplitValues = splitValues.size();
 
         // trivial cases
         if(nSplitValues < 2)
@@ -1656,7 +1656,7 @@ private:
         precomputeArclengths_();
 
         int i = 0;
-        int j = vertices_.size()-1;
+        int j = static_cast<int>(vertices_.size()) - 1;
         double si = arclengths_[i];
         double sj = arclengths_[j];
 
@@ -1843,7 +1843,7 @@ private:
         }
         else
         {
-            int i = p_.size()-1;
+            int i = static_cast<int>(p_.size()) - 1;
             while(p_[i-1].s > s && i>1)
                 i--;
 
@@ -1967,7 +1967,7 @@ private:
             if(iQ<0)
                 iQ = 0;
             else if( (unsigned int) iQ >= sampling_.size())
-                iQ = sampling_.size()-1;
+                iQ = static_cast<int>(sampling_.size()) - 1;
 
 
             if( (unsigned int) iQ == sampling_.size()-1)
