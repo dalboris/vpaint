@@ -117,19 +117,19 @@ void GraphicsNodeItem::setPath_()
     EdgeCell * edge = node()->cell()->toEdgeCell();
     if(edge && edge->isClosed())
     {
-        path.moveTo(-0.5*width_-10,-0.5*height_); // A
-        path.lineTo(0.5*width_-10,-0.5*height_); // B
-        path.cubicTo(0.5*width_-5,-0.5*height_,0.5*width_,-0.5*height_+5,0.5*width_,-0.5*height_+10); // C
-        path.lineTo(0.5*width_,0.5*height_-10); // D
-        path.cubicTo(0.5*width_,0.5*height_-5,0.5*width_-5,0.5*height_,0.5*width_-10,0.5*height_); //E
-        path.lineTo(-0.5*width_-10,0.5*height_); // F
-        path.cubicTo(-0.5*width_-5,0.5*height_,-0.5*width_,0.5*height_-5,-0.5*width_,0.5*height_-10); // G
-        path.lineTo(-0.5*width_,-0.5*height_+10); // H
-        path.cubicTo(-0.5*width_,-0.5*height_+5,-0.5*width_-5,-0.5*height_,-0.5*width_-10,-0.5*height_); // I
+        path.moveTo(-0.5*width_-10+0.5,-0.5*height_+0.5); // A
+        path.lineTo(0.5*width_-10+0.5,-0.5*height_+0.5); // B
+        path.cubicTo(0.5*width_-5+0.5,-0.5*height_+0.5,0.5*width_+0.5,-0.5*height_+5+0.5,0.5*width_+0.5,-0.5*height_+10+0.5); // C
+        path.lineTo(0.5*width_+0.5,0.5*height_-10+0.5); // D
+        path.cubicTo(0.5*width_+0.5,0.5*height_-5+0.5,0.5*width_-5+0.5,0.5*height_+0.5,0.5*width_-10+0.5,0.5*height_+0.5); //E
+        path.lineTo(-0.5*width_-10+0.5,0.5*height_+0.5); // F
+        path.cubicTo(-0.5*width_-5+0.5,0.5*height_+0.5,-0.5*width_+0.5,0.5*height_-5+0.5,-0.5*width_+0.5,0.5*height_-10+0.5); // G
+        path.lineTo(-0.5*width_+0.5,-0.5*height_+10+0.5); // H
+        path.cubicTo(-0.5*width_+0.5,-0.5*height_+5+0.5,-0.5*width_-5+0.5,-0.5*height_+0.5,-0.5*width_-10+0.5,-0.5*height_+0.5); // I
     }
     else
     {
-        path.addRoundedRect(-0.5*width_,-0.5*height_,width_,height_,10,10);
+        path.addRoundedRect(-0.5*width_+0.5,-0.5*height_+0.5,width_,height_,10,10);
     }
     setPath(path);
 }
