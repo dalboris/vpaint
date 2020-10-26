@@ -190,7 +190,6 @@ private:
 
     bool isReadOnly_;
 
-    // Connection with ST-VGC
     InbetweenFace * inbetweenFace_;
     int indexCycle_;
 
