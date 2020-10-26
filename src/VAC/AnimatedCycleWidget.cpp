@@ -39,6 +39,10 @@
 namespace
 {
 const double ARROW_LENGTH = 30;
+const double NODE_BORDER_RADIUS = 13;
+const double NODE_SMALL_SIDE = 26;
+const double NODE_LARGE_SIDE = 60;
+const double SOCKET_RADIUS = 4;
 }
 
 GraphicsNodeItem::GraphicsNodeItem(AnimatedCycleNode * node, AnimatedCycleWidget * widget) :
@@ -46,39 +50,47 @@ GraphicsNodeItem::GraphicsNodeItem(AnimatedCycleNode * node, AnimatedCycleWidget
     widget_(widget),
     isMoved_(false)
 {
-    // Set path and color
+    // Set width, height, and color
     if(node_->cell()->toKeyVertex())
     {
         setBrush(QColor(255,170,170));
-        width_ =  20;
-        height_ = 20;
+        width_ =  NODE_SMALL_SIDE;
+        height_ = NODE_SMALL_SIDE;
     }
     else if(node_->cell()->toKeyEdge())
     {
         setBrush(QColor(170,204,255));
-        width_ =  60;
-        height_ = 20;
+        width_ =  NODE_LARGE_SIDE;
+        height_ = NODE_SMALL_SIDE;
     }
     else if(node_->cell()->toInbetweenVertex())
     {
         setBrush(QColor(255,218,218));
-        width_ =  20;
-        height_ = 60;
+        width_ =  NODE_SMALL_SIDE;
+        height_ = NODE_LARGE_SIDE;
     }
     else if(node_->cell()->toInbetweenEdge())
     {
         setBrush(QColor(235,243,255));
-        width_ =  60;
-        height_ = 60;
+        width_ =  NODE_LARGE_SIDE;
+        height_ = NODE_LARGE_SIDE;
     }
-    setPath_();
+
+    // Create sockets as child items
+    previousSocket_ = new GraphicsSocketItem(this, SocketType::Previous);
+    nextSocket_ = new GraphicsSocketItem(this, SocketType::Next);
+    beforeSocket_ = new GraphicsSocketItem(this, SocketType::Before);
+    afterSocket_ = new GraphicsSocketItem(this, SocketType::After);
 
     // Create text label as a child item
     text_ = new QGraphicsTextItem(QString(), this);
     text_->setFont(QFont("arial",7));
     updateText();
 
-    // Moake item movable
+    // Update path of this item and sockets
+    setPath_();
+
+    // Make item movable
     setFlag(ItemIsMovable, true);
 
     // Observe cell
@@ -115,23 +127,38 @@ void GraphicsNodeItem::setPath_()
 {
     QPainterPath path;
     EdgeCell * edge = node()->cell()->toEdgeCell();
+    QRectF r = rect();
+    double s = NODE_BORDER_RADIUS;
+    double hs = 0.5 * NODE_BORDER_RADIUS;
     if(edge && edge->isClosed())
     {
-        path.moveTo(-0.5*width_-10+0.5,-0.5*height_+0.5); // A
-        path.lineTo(0.5*width_-10+0.5,-0.5*height_+0.5); // B
-        path.cubicTo(0.5*width_-5+0.5,-0.5*height_+0.5,0.5*width_+0.5,-0.5*height_+5+0.5,0.5*width_+0.5,-0.5*height_+10+0.5); // C
-        path.lineTo(0.5*width_+0.5,0.5*height_-10+0.5); // D
-        path.cubicTo(0.5*width_+0.5,0.5*height_-5+0.5,0.5*width_-5+0.5,0.5*height_+0.5,0.5*width_-10+0.5,0.5*height_+0.5); //E
-        path.lineTo(-0.5*width_-10+0.5,0.5*height_+0.5); // F
-        path.cubicTo(-0.5*width_-5+0.5,0.5*height_+0.5,-0.5*width_+0.5,0.5*height_-5+0.5,-0.5*width_+0.5,0.5*height_-10+0.5); // G
-        path.lineTo(-0.5*width_+0.5,-0.5*height_+10+0.5); // H
-        path.cubicTo(-0.5*width_+0.5,-0.5*height_+5+0.5,-0.5*width_-5+0.5,-0.5*height_+0.5,-0.5*width_-10+0.5,-0.5*height_+0.5); // I
+        path.moveTo(r.topLeft() + QPointF(-s, 0));
+        path.lineTo(r.topRight() + QPointF(-s, 0));
+        path.cubicTo(r.topRight() + QPointF(-hs, 0),
+                     r.topRight() + QPointF(0, hs),
+                     r.topRight() + QPointF(0, s));
+        path.lineTo(r.bottomRight() + QPointF(0, -s));
+        path.cubicTo(r.bottomRight() + QPointF(0, -hs),
+                     r.bottomRight() + QPointF(-hs, 0),
+                     r.bottomRight() + QPointF(-s, 0));
+        path.lineTo(r.bottomLeft() + QPointF(-s, 0));
+        path.cubicTo(r.bottomLeft() + QPointF(-hs, 0),
+                     r.bottomLeft() + QPointF(0, -hs),
+                     r.bottomLeft() + QPointF(0, -s));
+        path.lineTo(r.topLeft() + QPointF(0, s));
+        path.cubicTo(r.topLeft() + QPointF(0, hs),
+                     r.topLeft() + QPointF(-hs, 0),
+                     r.topLeft() + QPointF(-s, 0));
     }
     else
     {
-        path.addRoundedRect(-0.5*width_+0.5,-0.5*height_+0.5,width_,height_,10,10);
+        path.addRoundedRect(r, s, s);
     }
     setPath(path);
+    previousSocket_->updatePosition();
+    nextSocket_->updatePosition();
+    beforeSocket_->updatePosition();
+    afterSocket_->updatePosition();
 }
 
 double GraphicsNodeItem::width() const
@@ -144,6 +171,14 @@ double GraphicsNodeItem::height() const
     return height_;
 }
 
+QRectF GraphicsNodeItem::rect() const
+{
+    double hinting = 0.5; // ensures pixel-perfect strokes
+    return QRectF(-0.5*width_ + hinting,
+                  -0.5*height_ + hinting,
+                  width_, height_);
+}
+
 void GraphicsNodeItem::setWidth(double w)
 {
     width_ = w;
@@ -152,7 +187,7 @@ void GraphicsNodeItem::setWidth(double w)
 
 void GraphicsNodeItem::setHeight(int i)
 {
-    height_ = i*60 + (i-1)*(20+2*ARROW_LENGTH);
+    height_ = i*NODE_LARGE_SIDE + (i-1)*(NODE_SMALL_SIDE+2*ARROW_LENGTH);
     setPath_();
 }
 
@@ -234,6 +269,51 @@ GraphicsNodeItem * GraphicsNodeItem::after()
 }
 
 
+GraphicsSocketItem::GraphicsSocketItem(GraphicsNodeItem* node, SocketType socketType) :
+    QGraphicsEllipseItem(0, 0, 2*SOCKET_RADIUS, 2*SOCKET_RADIUS, node),
+    node_(node),
+    socketType_(socketType)
+{
+    setPen(QPen(Qt::black, 1.0));
+    setBrush(QBrush(Qt::white));
+    updatePosition();
+}
+
+void GraphicsSocketItem::updatePosition()
+{
+    double radius = SOCKET_RADIUS;
+    QSizeF s(2*radius, 2*radius);
+    QPointF hs(radius, radius);
+    QRectF r = node_->rect();
+    setRect(-radius, -radius, 2*radius, 2*radius);
+    double offset = 20;
+    switch (socketType()) {
+    case SocketType::Previous:
+        if (offset + radius > 0.5 * r.height()) {
+            offset = 0.5 * r.height() - radius;
+        }
+        setPos(r.bottomLeft() + QPointF(0, -offset));
+        break;
+    case SocketType::Next:
+        if (offset + radius > 0.5 * r.height()) {
+            offset = 0.5 * r.height() - radius;
+        }
+        setPos(r.topRight() + QPointF(0, offset));
+        break;
+    case SocketType::Before:
+        if (offset + radius > 0.5 * r.width()) {
+            offset = 0.5 * r.width() - radius;
+        }
+        setPos(r.topRight() + QPointF(-offset, 0));
+        break;
+    case SocketType::After:
+        if (offset + radius > 0.5 * r.width()) {
+            offset = 0.5 * r.width() - radius;
+        }
+        setPos(r.bottomLeft() + QPointF(offset, 0));
+        break;
+    }
+}
 
 GraphicsArrowItem::GraphicsArrowItem() :
     QGraphicsPathItem()
@@ -252,15 +332,12 @@ void GraphicsArrowItem::setEndPoints(const QPointF & p1, const QPointF & p2)
     double arrowHeadHalfWidth = 2;
     double arrowHeadLength = 4;
 
-    // Half-pixel offset to align with pixel grid
-    QPointF offset(0.5, 0.5);
-
     QPainterPath path;
-    path.moveTo(p1 + offset);
-    path.lineTo(p2 + offset);
-    path.moveTo(p2 + offset);
-    path.lineTo(p2 + offset + (arrowHeadHalfWidth*v - arrowHeadLength*u).toPointF());
-    path.lineTo(p2 + offset + (-arrowHeadHalfWidth*v - arrowHeadLength*u).toPointF());
+    path.moveTo(p1);
+    path.lineTo(p2);
+    path.moveTo(p2);
+    path.lineTo(p2 + (arrowHeadHalfWidth*v - arrowHeadLength*u).toPointF());
+    path.lineTo(p2 + (-arrowHeadHalfWidth*v - arrowHeadLength*u).toPointF());
     path.closeSubpath();
     setPath(path);
 }
@@ -994,8 +1071,8 @@ void AnimatedCycleWidget::computeItemHeightAndY()
 
             item->setHeight(idAfter-idBefore);
 
-            double yBefore = idBefore * (80 + 2*ARROW_LENGTH);
-            double yAfter = idAfter * (80 + 2*ARROW_LENGTH);
+            double yBefore = idBefore * (NODE_LARGE_SIDE + NODE_SMALL_SIDE + 2*ARROW_LENGTH);
+            double yAfter = idAfter * (NODE_LARGE_SIDE + NODE_SMALL_SIDE + 2*ARROW_LENGTH);
 
             item->setFixedY(0.5 * (yAfter + yBefore));
         }
@@ -1010,7 +1087,7 @@ void AnimatedCycleWidget::computeItemHeightAndY()
                     id = i;
             }
 
-            item->setFixedY(id * (80 + 2*ARROW_LENGTH));
+            item->setFixedY(id * (NODE_LARGE_SIDE + NODE_SMALL_SIDE + 2*ARROW_LENGTH));
         }
     }
 }
@@ -1168,9 +1245,9 @@ void AnimatedCycleWidget::animate()
 
             // grow inbetween edge
             double widthBeforeAfter = std::max(widthBeforeItems,widthAfterItems);
-            if(60 /*item->width()*/ < widthBeforeAfter)
+            if(NODE_LARGE_SIDE < widthBeforeAfter)
             {
-                item->setWidth(/*0.999 **/ widthBeforeAfter);
+                item->setWidth(widthBeforeAfter);
             }
         }
     }
@@ -1264,26 +1341,17 @@ void AnimatedCycleWidget::animate()
         GraphicsNodeItem * nextItem = item->next();
         GraphicsArrowItem * nextArrow = it.value();
 
-        double y1 = item->pos().y();
-        if(!nextItem->node()->cell()->toInbetweenEdge())
-            y1 = nextItem->pos().y();
-        double y2 = y1;
-        double y1min = item->y() - 0.5*item->height()+10;
-        double y1max = item->y() + 0.5*item->height()-10;
-        double y2min = nextItem->y() - 0.5*nextItem->height()+10;
-        double y2max = nextItem->y() + 0.5*nextItem->height()-10;
-        if(y1 < y1min)
-            y1 = y1min;
-        if(y1 > y1max)
-            y1 = y1max;
+        QPointF socketPos = item->nextSocket()->scenePos();
+        double y2 = socketPos.y();
+        double y2min = nextItem->y() - 0.5*nextItem->height();
+        double y2max = nextItem->y() + 0.5*nextItem->height();
         if(y2 < y2min)
             y2 = y2min;
         if(y2 > y2max)
             y2 = y2max;
 
-        QPointF startVec(item->x()+0.5*item->width(),y1);
-        QPointF endVec(nextItem->x()-0.5*nextItem->width(),y2);
-
+        QPointF startVec(socketPos.x() + SOCKET_RADIUS, socketPos.y());
+        QPointF endVec(nextItem->x() - 0.5*nextItem->width(), y2);
         nextArrow->setEndPoints(startVec,endVec);
     }
     it = QMapIterator<GraphicsNodeItem*, GraphicsArrowItem*>(itemToPreviousArrow_);
@@ -1295,26 +1363,17 @@ void AnimatedCycleWidget::animate()
         GraphicsNodeItem * previousItem = item->previous();
         GraphicsArrowItem * previousArrow = it.value();
 
-        double y1 = item->pos().y();
-        if(!previousItem->node()->cell()->toInbetweenEdge())
-            y1 = previousItem->pos().y();
-        double y2 = y1;
-        double y1min = item->y() - 0.5*item->height()+10;
-        double y1max = item->y() + 0.5*item->height()-10;
-        double y2min = previousItem->y() - 0.5*previousItem->height()+10;
-        double y2max = previousItem->y() + 0.5*previousItem->height()-10;
-        if(y1 < y1min)
-            y1 = y1min;
-        if(y1 > y1max)
-            y1 = y1max;
+        QPointF socketPos = item->previousSocket()->scenePos();
+        double y2 = socketPos.y();
+        double y2min = previousItem->y() - 0.5*previousItem->height();
+        double y2max = previousItem->y() + 0.5*previousItem->height();
         if(y2 < y2min)
             y2 = y2min;
         if(y2 > y2max)
             y2 = y2max;
 
-        QPointF startVec(item->x()-0.5*item->width(),y1);
-        QPointF endVec(previousItem->x()+0.5*previousItem->width(),y2);
-
+        QPointF startVec(socketPos.x() - SOCKET_RADIUS, socketPos.y());
+        QPointF endVec(previousItem->x() + 0.5*previousItem->width(), y2);
         previousArrow->setEndPoints(startVec,endVec);
     }
     it = QMapIterator<GraphicsNodeItem*, GraphicsArrowItem*>(itemToNextArrowBorder_);
@@ -1326,26 +1385,17 @@ void AnimatedCycleWidget::animate()
         GraphicsNodeItem * nextItem = item->next();
         GraphicsArrowItem * nextArrow = it.value();
 
-        double y1 = item->pos().y();
-        if(!nextItem->node()->cell()->toInbetweenEdge())
-            y1 = nextItem->pos().y();
-        double y2 = y1;
-        double y1min = item->y() - 0.5*item->height()+10;
-        double y1max = item->y() + 0.5*item->height()-10;
-        double y2min = nextItem->y() - 0.5*nextItem->height()+10;
-        double y2max = nextItem->y() + 0.5*nextItem->height()-10;
-        if(y1 < y1min)
-            y1 = y1min;
-        if(y1 > y1max)
-            y1 = y1max;
+        QPointF socketPos = item->nextSocket()->scenePos();
+        double y2 = socketPos.y();
+        double y2min = nextItem->y() - 0.5*nextItem->height();
+        double y2max = nextItem->y() + 0.5*nextItem->height();
         if(y2 < y2min)
             y2 = y2min;
         if(y2 > y2max)
             y2 = y2max;
 
-        QPointF startVec(item->x()+0.5*item->width(),y1);
-        QPointF endVec(item->x()+0.5*item->width()+ARROW_LENGTH,y2);
-
+        QPointF startVec(socketPos.x() + SOCKET_RADIUS, socketPos.y());
+        QPointF endVec(socketPos.x() + ARROW_LENGTH, y2);
         nextArrow->setEndPoints(startVec,endVec);
     }
     it = QMapIterator<GraphicsNodeItem*, GraphicsArrowItem*>(itemToPreviousArrowBorder_);
@@ -1357,26 +1407,17 @@ void AnimatedCycleWidget::animate()
         GraphicsNodeItem * previousItem = item->previous();
         GraphicsArrowItem * previousArrow = it.value();
 
-        double y1 = item->pos().y();
-        if(!previousItem->node()->cell()->toInbetweenEdge())
-            y1 = previousItem->pos().y();
-        double y2 = y1;
-        double y1min = item->y() - 0.5*item->height()+10;
-        double y1max = item->y() + 0.5*item->height()-10;
-        double y2min = previousItem->y() - 0.5*previousItem->height()+10;
-        double y2max = previousItem->y() + 0.5*previousItem->height()-10;
-        if(y1 < y1min)
-            y1 = y1min;
-        if(y1 > y1max)
-            y1 = y1max;
+        QPointF socketPos = item->previousSocket()->scenePos();
+        double y2 = socketPos.y();
+        double y2min = previousItem->y() - 0.5*previousItem->height();
+        double y2max = previousItem->y() + 0.5*previousItem->height();
         if(y2 < y2min)
             y2 = y2min;
         if(y2 > y2max)
             y2 = y2max;
 
-        QPointF startVec(item->x()-0.5*item->width(),y1);
-        QPointF endVec(item->x()-0.5*item->width()-ARROW_LENGTH,y2);
-
+        QPointF startVec(socketPos.x() - SOCKET_RADIUS, socketPos.y());
+        QPointF endVec(socketPos.x() - ARROW_LENGTH, y2);
         previousArrow->setEndPoints(startVec,endVec);
     }
     it = QMapIterator<GraphicsNodeItem*, GraphicsArrowItem*>(itemToAfterArrow_);
@@ -1388,24 +1429,16 @@ void AnimatedCycleWidget::animate()
         GraphicsNodeItem * afterItem = item->after();
         GraphicsArrowItem * afterArrow = it.value();
 
-        double x1 = item->pos().x();
-        if(!afterItem->node()->cell()->toInbetweenEdge())
-            x1 = afterItem->pos().x();
-        double x2 = x1;
-        double x1min = item->x() - 0.5*item->width()+10;
-        double x1max = item->x() + 0.5*item->width()-10;
-        double x2min = afterItem->x() - 0.5*afterItem->width()+10;
-        double x2max = afterItem->x() + 0.5*afterItem->width()-10;
-        if(x1 < x1min)
-            x1 = x1min;
-        if(x1 > x1max)
-            x1 = x1max;
+        QPointF socketPos = item->afterSocket()->scenePos();
+        double x2 = socketPos.x();
+        double x2min = afterItem->x() - 0.5*afterItem->width();
+        double x2max = afterItem->x() + 0.5*afterItem->width();
         if(x2 < x2min)
             x2 = x2min;
         if(x2 > x2max)
             x2 = x2max;
 
-        QPointF startVec(x1,item->y()+0.5*item->height());
+        QPointF startVec(socketPos.x(), socketPos.y() + SOCKET_RADIUS);
         QPointF endVec(x2, afterItem->y() - 0.5*afterItem->height());
 
         afterArrow->setEndPoints(startVec,endVec);
@@ -1419,25 +1452,16 @@ void AnimatedCycleWidget::animate()
         GraphicsNodeItem * beforeItem = item->before();
         GraphicsArrowItem * beforeArrow = it.value();
 
-        double x1 = item->pos().x();
-        if(!beforeItem->node()->cell()->toInbetweenEdge())
-            x1 = beforeItem->pos().x();
-        double x2 = x1;
-        double x1min = item->x() - 0.5*item->width()+10;
-        double x1max = item->x() + 0.5*item->width()-10;
-        double x2min = beforeItem->x() - 0.5*beforeItem->width()+10;
-        double x2max = beforeItem->x() + 0.5*beforeItem->width()-10;
-        if(x1 < x1min)
-            x1 = x1min;
-        if(x1 > x1max)
-            x1 = x1max;
+        QPointF socketPos = item->beforeSocket()->scenePos();
+        double x2 = socketPos.x();
+        double x2min = beforeItem->x() - 0.5*beforeItem->width();
+        double x2max = beforeItem->x() + 0.5*beforeItem->width();
         if(x2 < x2min)
             x2 = x2min;
         if(x2 > x2max)
             x2 = x2max;
 
-
-        QPointF startVec(x1,item->y()-0.5*item->height());
+        QPointF startVec(socketPos.x(), socketPos.y() - SOCKET_RADIUS);
         QPointF endVec(x2, beforeItem->y() + 0.5*beforeItem->height());
 
         beforeArrow->setEndPoints(startVec,endVec);

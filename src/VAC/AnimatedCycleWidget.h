@@ -23,13 +23,14 @@
 
 #include <QGraphicsView>
 #include <QGraphicsScene>
+#include <QGraphicsEllipseItem>
 #include <QGraphicsPathItem>
-#include <QGraphicsPolygonItem>
 #include <QTimer>
 #include <QHBoxLayout>
 
 using namespace VectorAnimationComplex;
 
+class GraphicsSocketItem;
 class AnimatedCycleWidget;
 class GraphicsNodeItem: public QGraphicsPathItem, public CellObserver
 {
@@ -49,10 +50,16 @@ public:
     GraphicsNodeItem * before();
     GraphicsNodeItem * after();
 
+    GraphicsSocketItem* previousSocket() const { return previousSocket_; }
+    GraphicsSocketItem* nextSocket() const { return nextSocket_; }
+    GraphicsSocketItem* beforeSocket() const { return beforeSocket_; }
+    GraphicsSocketItem* afterSocket() const { return afterSocket_; }
+
     bool isMoved() const;
 
     double height() const;
     double width() const;
+    QRectF rect() const;
 
     void setHeight(int i);
     void setWidth(double w);
@@ -76,13 +83,44 @@ private:
     double width_;
     double height_;
     double y_;
+
+    GraphicsSocketItem* previousSocket_;
+    GraphicsSocketItem* nextSocket_;
+    GraphicsSocketItem* beforeSocket_;
+    GraphicsSocketItem* afterSocket_;
+};
+
+enum class SocketType {
+    Previous,
+    Next,
+    Before,
+    After
+};
+
+class GraphicsSocketItem: public QGraphicsEllipseItem
+{
+public:
+    // Enable the use of qgraphicsitem_cast<>
+    enum { Type = UserType + 2 };
+    int type() const { return Type; }
+
+    GraphicsSocketItem(GraphicsNodeItem* node, SocketType socketType);
+
+    GraphicsNodeItem* node() const { return node_ ; }
+    SocketType socketType() const { return socketType_; }
+
+    void updatePosition();
+
+private:
+    GraphicsNodeItem* node_;
+    SocketType socketType_;
 };
 
 class GraphicsArrowItem: public QGraphicsPathItem
 {
 public:
     // Enable the use of qgraphicsitem_cast<>
-    enum { Type = UserType + 2 };
+    enum { Type = UserType + 3 };
     int type() const { return Type; }
 
     GraphicsArrowItem();
