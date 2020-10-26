@@ -236,9 +236,9 @@ GraphicsNodeItem * GraphicsNodeItem::after()
 
 
 GraphicsArrowItem::GraphicsArrowItem() :
-    QGraphicsPolygonItem()
+    QGraphicsPathItem()
 {
-    setPen(QPen(Qt::black));
+    setPen(QPen(Qt::black, 1.0, Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin));
     setBrush(QBrush(Qt::black));
 }
 
@@ -249,19 +249,20 @@ void GraphicsArrowItem::setEndPoints(const QPointF & p1, const QPointF & p2)
     u.normalize();
     QVector2D v(-u.y(),u.x());
 
-    double lineHalfWidth = 1;
-    double arrowHalfWidth = 5;
-    double arrowLength = 5;
+    double arrowHeadHalfWidth = 2;
+    double arrowHeadLength = 4;
 
-    polygon << p1 + (lineHalfWidth*v).toPointF()
-            << p2 + (lineHalfWidth*v - arrowLength*u).toPointF()
-            << p2 + (arrowHalfWidth*v - arrowLength*u).toPointF()
-            << p2
-            << p2 + (-arrowHalfWidth*v - arrowLength*u).toPointF()
-            << p2 + (-lineHalfWidth*v - arrowLength*u).toPointF()
-            << p1 + (-lineHalfWidth*v).toPointF();
+    // Half-pixel offset to align with pixel grid
+    QPointF offset(0.5, 0.5);
 
-    setPolygon(polygon);
+    QPainterPath path;
+    path.moveTo(p1 + offset);
+    path.lineTo(p2 + offset);
+    path.moveTo(p2 + offset);
+    path.lineTo(p2 + offset + (arrowHeadHalfWidth*v - arrowHeadLength*u).toPointF());
+    path.lineTo(p2 + offset + (-arrowHeadHalfWidth*v - arrowHeadLength*u).toPointF());
+    path.closeSubpath();
+    setPath(path);
 }
 
 
@@ -472,7 +473,8 @@ AnimatedCycleWidget::AnimatedCycleWidget(QWidget *parent) :
 {
     scene_ = new QGraphicsScene();
     view_ = new AnimatedCycleGraphicsView(scene_, this);
-    view_->setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
+    //view_->setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
+    view_->setRenderHints(QPainter::Antialiasing);
 
     QPushButton * addSelectedCellsButton = new QPushButton("add selected cells");
     QPushButton * saveButton = new QPushButton("save");

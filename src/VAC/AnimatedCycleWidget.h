@@ -78,7 +78,7 @@ private:
     double y_;
 };
 
-class GraphicsArrowItem: public QGraphicsPolygonItem
+class GraphicsArrowItem: public QGraphicsPathItem
 {
 public:
     // Enable the use of qgraphicsitem_cast<>
