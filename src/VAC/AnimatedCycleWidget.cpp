@@ -34,8 +34,6 @@
 
 #include "Random.h"
 
-#include <QtDebug>
-
 namespace
 {
 const double ARROW_LENGTH = 30;
@@ -76,16 +74,16 @@ GraphicsNodeItem::GraphicsNodeItem(AnimatedCycleNode * node, AnimatedCycleWidget
         height_ = NODE_LARGE_SIDE;
     }
 
-    // Create sockets as child items
-    previousSocket_ = new GraphicsSocketItem(this, SocketType::Previous);
-    nextSocket_ = new GraphicsSocketItem(this, SocketType::Next);
-    beforeSocket_ = new GraphicsSocketItem(this, SocketType::Before);
-    afterSocket_ = new GraphicsSocketItem(this, SocketType::After);
-
-    // Create text label as a child item
+    // Create text label as a child item. Note: the text must be created before
+    // the sockets to ensure that the sockets are correctly hoverable.
     text_ = new QGraphicsTextItem(QString(), this);
     text_->setFont(QFont("arial",7));
     updateText();
+
+    // Create sockets as child items
+    for (SocketType type : {PreviousSocket, NextSocket, BeforeSocket, AfterSocket}) {
+        sockets[type] = new GraphicsSocketItem(type, this);
+    }
 
     // Update path of this item and sockets
     setPath_();
@@ -123,6 +121,15 @@ void GraphicsNodeItem::updateText()
     text_->setPos(-0.5*textWidth,-0.5*textHeight);
 }
 
+void GraphicsNodeItem::updateArrows()
+{
+    for (GraphicsSocketItem* socket : sockets) {
+        if (socket->arrowItem()) {
+            socket->arrowItem()->updatePath();
+        }
+    }
+}
+
 void GraphicsNodeItem::setPath_()
 {
     QPainterPath path;
@@ -155,10 +162,9 @@ void GraphicsNodeItem::setPath_()
         path.addRoundedRect(r, s, s);
     }
     setPath(path);
-    previousSocket_->updatePosition();
-    nextSocket_->updatePosition();
-    beforeSocket_->updatePosition();
-    afterSocket_->updatePosition();
+    for (GraphicsSocketItem* socket : sockets) {
+        socket->updatePosition();
+    }
 }
 
 double GraphicsNodeItem::width() const
@@ -202,16 +208,8 @@ void GraphicsNodeItem::mousePressEvent(QGraphicsSceneMouseEvent * event)
     if(event->button() == Qt::LeftButton)
     {
         isMoved_ = true;
-        QGraphicsPathItem::mousePressEvent(event);
     }
-    else if(event->button() == Qt::RightButton)
-    {
-        //qDebug() << "press" << node()->cell()->id();
-    }
-    else
-    {
-        QGraphicsPathItem::mousePressEvent(event);
-    }
+    QGraphicsPathItem::mousePressEvent(event);
 }
 
 void GraphicsNodeItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
@@ -228,17 +226,8 @@ void GraphicsNodeItem::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
     if(event->button() == Qt::LeftButton)
     {
         isMoved_ = false;
-        QGraphicsPathItem::mouseReleaseEvent(event);
     }
-    else if (event->button() == Qt::RightButton)
-    {
-        //QGraphicsItem * item = scene()->itemAt(event->pos(), view)
-        //qDebug() << "release" << node()->cell()->id();
-    }
-    else
-    {
-        QGraphicsPathItem::mouseReleaseEvent(event);
-    }
+    QGraphicsPathItem::mouseReleaseEvent(event);
 }
 
 bool GraphicsNodeItem::isMoved() const
@@ -253,30 +242,56 @@ AnimatedCycleNode * GraphicsNodeItem::node() const
 
 GraphicsNodeItem * GraphicsNodeItem::next()
 {
-    return widget_->next(this);
+    return nextSocket()->targetItem();
 }
 GraphicsNodeItem * GraphicsNodeItem::previous()
 {
-    return widget_->previous(this);
+    return previousSocket()->targetItem();
 }
 GraphicsNodeItem * GraphicsNodeItem::before()
 {
-    return widget_->before(this);
+    return beforeSocket()->targetItem();
 }
 GraphicsNodeItem * GraphicsNodeItem::after()
 {
-    return widget_->after(this);
+    return afterSocket()->targetItem();
 }
 
-
-GraphicsSocketItem::GraphicsSocketItem(GraphicsNodeItem* node, SocketType socketType) :
-    QGraphicsEllipseItem(0, 0, 2*SOCKET_RADIUS, 2*SOCKET_RADIUS, node),
-    node_(node),
-    socketType_(socketType)
+GraphicsSocketItem::GraphicsSocketItem(SocketType socketType, GraphicsNodeItem * sourceItem) :
+    QGraphicsEllipseItem(0, 0, 2*SOCKET_RADIUS, 2*SOCKET_RADIUS, sourceItem),
+    socketType_(socketType),
+    sourceItem_(sourceItem),
+    arrowItem_(nullptr)
 {
     setPen(QPen(Qt::black, 1.0));
     setBrush(QBrush(Qt::white));
     updatePosition();
+    setAcceptHoverEvents(true);
+}
+
+GraphicsSocketItem::~GraphicsSocketItem()
+{
+    // Delete the arrow (but don't change the model)
+    delete arrowItem_;
+}
+
+GraphicsNodeItem * GraphicsSocketItem::targetItem() const
+{
+    return arrowItem_ ? arrowItem_->targetItem() : nullptr;
+}
+
+void GraphicsSocketItem::setTargetItem(GraphicsNodeItem * target)
+{
+    if (arrowItem_) {
+        arrowItem_->setTargetItem(target);
+    }
+    else {
+        arrowItem_ = new GraphicsArrowItem(this);
+        arrowItem_->setTargetItem(target);
+        scene()->addItem(arrowItem_);
+    }
+    // TODO: what if target == nullptr?
+    // TODO: how to decide if the arrow should be a border arrow?
 }
 
 void GraphicsSocketItem::updatePosition()
@@ -284,29 +299,29 @@ void GraphicsSocketItem::updatePosition()
     double radius = SOCKET_RADIUS;
     QSizeF s(2*radius, 2*radius);
     QPointF hs(radius, radius);
-    QRectF r = node_->rect();
+    QRectF r = sourceItem_->rect();
     setRect(-radius, -radius, 2*radius, 2*radius);
     double offset = 20;
     switch (socketType()) {
-    case SocketType::Previous:
+    case PreviousSocket:
         if (offset + radius > 0.5 * r.height()) {
             offset = 0.5 * r.height() - radius;
         }
         setPos(r.bottomLeft() + QPointF(0, -offset));
         break;
-    case SocketType::Next:
+    case NextSocket:
         if (offset + radius > 0.5 * r.height()) {
             offset = 0.5 * r.height() - radius;
         }
         setPos(r.topRight() + QPointF(0, offset));
         break;
-    case SocketType::Before:
+    case BeforeSocket:
         if (offset + radius > 0.5 * r.width()) {
             offset = 0.5 * r.width() - radius;
         }
         setPos(r.topRight() + QPointF(-offset, 0));
         break;
-    case SocketType::After:
+    case AfterSocket:
         if (offset + radius > 0.5 * r.width()) {
             offset = 0.5 * r.width() - radius;
         }
@@ -315,37 +330,184 @@ void GraphicsSocketItem::updatePosition()
     }
 }
 
-GraphicsArrowItem::GraphicsArrowItem() :
-    QGraphicsPathItem()
+void GraphicsSocketItem::hoverEnterEvent(QGraphicsSceneHoverEvent *)
+{
+    setBrush(QBrush(Qt::red));
+    sourceItem()->setFlag(ItemIsMovable, false);
+}
+
+void GraphicsSocketItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *)
+{
+    setBrush(QBrush(Qt::white));
+    sourceItem()->setFlag(ItemIsMovable, true);
+}
+
+void GraphicsSocketItem::mousePressEvent(QGraphicsSceneMouseEvent * event)
+{
+    if (!arrowItem_) {
+        arrowItem_ = new GraphicsArrowItem(this);
+        scene()->addItem(arrowItem_);
+    }
+    arrowItem_->setTargetItem(nullptr);
+    arrowItem_->setEndPoint(event->scenePos());
+}
+
+void GraphicsSocketItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
+{
+    if (arrowItem_) {
+        arrowItem_->setEndPoint(event->scenePos());
+    }
+}
+
+void GraphicsSocketItem::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
+{
+    if (arrowItem_) {
+        QGraphicsItem * item = scene()->itemAt(event->scenePos(), QTransform());
+        GraphicsNodeItem * nodeItem = qgraphicsitem_cast<GraphicsNodeItem*>(item);
+        if (!nodeItem) {
+            QGraphicsTextItem * textItem = qgraphicsitem_cast<QGraphicsTextItem*>(item);
+            if(textItem) {
+                nodeItem = qgraphicsitem_cast<GraphicsNodeItem*>(textItem->parentItem());
+            }
+        }
+        if (nodeItem) {
+            arrowItem_->setTargetItem(nodeItem);
+        }
+        else {
+            delete arrowItem_;
+            arrowItem_ = nullptr;
+        }
+    }
+}
+
+GraphicsArrowItem::GraphicsArrowItem(GraphicsSocketItem * socketItem) :
+    QGraphicsPathItem(),
+    socketItem_(socketItem),
+    targetItem_(nullptr),
+    endPoint_(0.0, 0.0),
+    isBorderArrow_(false)
 {
     setPen(QPen(Qt::black, 1.0, Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin));
     setBrush(QBrush(Qt::black));
 }
 
-void GraphicsArrowItem::setEndPoints(const QPointF & p1, const QPointF & p2)
+void GraphicsArrowItem::setTargetItem(GraphicsNodeItem * target)
 {
-    QPolygonF polygon;
-    QVector2D u(p2-p1);
-    u.normalize();
-    QVector2D v(-u.y(),u.x());
-
-    double arrowHeadHalfWidth = 2;
-    double arrowHeadLength = 4;
-
-    QPainterPath path;
-    path.moveTo(p1);
-    path.lineTo(p2);
-    path.moveTo(p2);
-    path.lineTo(p2 + (arrowHeadHalfWidth*v - arrowHeadLength*u).toPointF());
-    path.lineTo(p2 + (-arrowHeadHalfWidth*v - arrowHeadLength*u).toPointF());
-    path.closeSubpath();
-    setPath(path);
+    targetItem_ = target;
+    AnimatedCycleNode * sourceNode = socketItem()->sourceItem()->node();
+    AnimatedCycleNode * targetNode = targetItem_ ? targetItem_->node() : nullptr;
+    switch (socketItem()->socketType()) {
+    case PreviousSocket:
+        sourceNode->setPrevious(targetNode);
+        break;
+    case NextSocket:
+        sourceNode->setNext(targetNode);
+        break;
+    case BeforeSocket:
+        sourceNode->setBefore(targetNode);
+        break;
+    case AfterSocket:
+        sourceNode->setAfter(targetNode);
+        break;
+    }
+    updatePath();
 }
 
+void GraphicsArrowItem::setEndPoint(const QPointF & p)
+{
+    endPoint_ = p;
+    updatePath();
+}
 
+void GraphicsArrowItem::setIsBorderArrow(bool b)
+{
+    isBorderArrow_ = b;
+    updatePath();
+}
 
+void GraphicsArrowItem::updatePath()
+{
+    // Get source point p1 (center of socket) and compute target point p2
+    QPointF p1 = socketItem()->scenePos();
+    SocketType socketType = socketItem()->socketType();
+    GraphicsNodeItem * targetNodeItem = targetItem();
+    GraphicsNodeItem * sourceNodeItem = socketItem()->sourceItem();
+    QPointF p2;
+    if (targetNodeItem) {
+        // Get source and target rect in scene coordinates. This implementation
+        // works because we don't use any scaling or rotation.
+        QRectF targetRect = targetNodeItem->rect();
+        targetRect.translate(targetNodeItem->pos());
+        QRectF sourceRect = sourceNodeItem->rect();
+        sourceRect.translate(sourceNodeItem->pos());
+        // Compute target point p2
+        double x1 = p1.x();
+        double y1 = p1.y();
+        double x2 = x1;
+        double y2 = y1;
+        double x2min = targetRect.left();
+        double x2max = targetRect.right();
+        double y2min = targetRect.top();
+        double y2max = targetRect.bottom();
+        if(x2 < x2min) x2 = x2min;
+        if(x2 > x2max) x2 = x2max;
+        if(y2 < y2min) y2 = y2min;
+        if(y2 > y2max) y2 = y2max;
 
+        if (socketType == NextSocket) {
+            if (isBorderArrow()) {
+                p2 = QPointF(x1 + ARROW_LENGTH, y2);
+            }
+            else {
+                p2 = QPointF(x2min, y2);
+            }
+        }
+        else if (socketType == PreviousSocket) {
+            if (isBorderArrow()) {
+                p2 = QPointF(x1 - ARROW_LENGTH, y2);
+            }
+            else {
+                p2 = QPointF(x2max, y2);
+            }
+        }
+        else if (socketType == BeforeSocket) {
+            p2 = QPointF(x2, y2max);
+        }
+        else if (socketType == AfterSocket) {
+            p2 = QPointF(x2, y2min);
+        }
+    }
+    else {
+        p2 = endPoint();
+    }
 
+    // Compute arrow geometry
+    QVector2D n(p2 - p1);
+    double length = n.length();
+    if (length < SOCKET_RADIUS) {
+        QPainterPath path;
+        setPath(path);
+    }
+    else {
+        QPointF u = (n / length).toPointF();
+        QPointF v(-u.y(), u.x());
+        double arrowHeadHalfWidth = 2;
+        double arrowHeadLength = 4;
+        double arrowEndMargin = 1.5;
+        QPointF arrowStart = p1 + SOCKET_RADIUS * u;
+        QPointF arrowEnd = p2 - arrowEndMargin * u;
+        QPointF arrowHeadBase = arrowEnd - arrowHeadLength * u;
+        QPointF arrowHeadOffset = arrowHeadHalfWidth * v;
+        QPainterPath path;
+        path.moveTo(arrowStart);
+        path.lineTo(arrowHeadBase);
+        path.moveTo(arrowEnd);
+        path.lineTo(arrowHeadBase + arrowHeadOffset);
+        path.lineTo(arrowHeadBase - arrowHeadOffset);
+        path.closeSubpath();
+        setPath(path);
+    }
+}
 
 AnimatedCycleGraphicsView::AnimatedCycleGraphicsView(QGraphicsScene * scene, AnimatedCycleWidget * animatedCycleWidget) :
     QGraphicsView(scene),
@@ -415,16 +577,11 @@ void AnimatedCycleGraphicsView::mousePressEvent(QMouseEvent * event)
         QMouseEvent fake(event->type(), event->pos(), Qt::LeftButton, Qt::LeftButton, event->modifiers());
         QGraphicsView::mousePressEvent(&fake);
     }
+    /*
     else if(event->button() == Qt::LeftButton && global()->keyboardModifiers().testFlag(Qt::AltModifier))
     {
-        GraphicsArrowItem * arrowItem = arrowItemAt(event->pos());
         GraphicsNodeItem * nodeItem = nodeItemAt(event->pos());
-        if(arrowItem)
-        {
-            animatedCycleWidget_->deleteArrow(arrowItem);
-            animatedCycleWidget_->save();
-        }
-        else if(nodeItem)
+        if(nodeItem)
         {
             animatedCycleWidget_->deleteItem(nodeItem);
             animatedCycleWidget_->save();
@@ -440,10 +597,7 @@ void AnimatedCycleGraphicsView::mousePressEvent(QMouseEvent * event)
             animatedCycleWidget_->save();
         }
     }
-    else if(event->button() == Qt::RightButton)
-    {
-        itemAtPress_ = nodeItemAt(event->pos());
-    }
+    */
     else
     {
         QGraphicsView::mousePressEvent(event);
@@ -464,79 +618,6 @@ void AnimatedCycleGraphicsView::mouseReleaseEvent(QMouseEvent * event)
         setDragMode(NoDrag);
         setInteractive(true);
     }
-    else if(event->button() == Qt::RightButton)
-    {
-        GraphicsNodeItem * item = nodeItemAt(event->pos());
-        if(item && itemAtPress_)
-        {
-            InbetweenCell * pressedInbetween = itemAtPress_->node()->cell()->toInbetweenCell();
-            InbetweenCell * releasedInbetween = item->node()->cell()->toInbetweenCell();
-
-            KeyCell * pressedKey = itemAtPress_->node()->cell()->toKeyCell();
-            KeyCell * releasedKey = item->node()->cell()->toKeyCell();
-
-            const int PREVIOUS = 0;
-            const int NEXT = 1;
-            const int BEFORE = 2;
-            const int AFTER = 3;
-            const int PREVIOUS_OR_NEXT = 4;
-            int arrowType = PREVIOUS;
-
-            // Determine arrow type
-            if( (pressedKey && releasedKey) || (pressedInbetween && releasedInbetween) )
-            {
-                arrowType = PREVIOUS_OR_NEXT;
-            }
-            else if (pressedKey && releasedInbetween)
-            {
-                int t = pressedKey->time().frame();
-                int t1 = releasedInbetween->beforeTime().frame();
-                int t2 = releasedInbetween->afterTime().frame();
-
-                if(t <= t1)
-                    arrowType = AFTER;
-                else if(t >= t2)
-                    arrowType = BEFORE;
-                else
-                    arrowType = PREVIOUS_OR_NEXT;
-            }
-            else
-            {
-                assert(pressedInbetween && releasedKey);
-
-                int t = releasedKey->time().frame();
-                int t1 = pressedInbetween->beforeTime().frame();
-                int t2 = pressedInbetween->afterTime().frame();
-
-                if(t <= t1)
-                    arrowType = BEFORE;
-                else if(t >= t2)
-                    arrowType = AFTER;
-                else
-                    arrowType = PREVIOUS_OR_NEXT;
-            }
-
-            // set pointer
-            if(arrowType == PREVIOUS_OR_NEXT)
-            {
-                if(global()->keyboardModifiers().testFlag(Qt::ControlModifier))
-                    arrowType = PREVIOUS;
-                else
-                    arrowType = NEXT;
-            }
-            if(arrowType == PREVIOUS)
-                animatedCycleWidget_->setPrevious(itemAtPress_,item);
-            else if(arrowType == NEXT)
-                animatedCycleWidget_->setNext(itemAtPress_,item);
-            else if(arrowType == BEFORE)
-                animatedCycleWidget_->setBefore(itemAtPress_,item);
-            else if(arrowType == AFTER)
-                animatedCycleWidget_->setAfter(itemAtPress_,item);
-
-
-            animatedCycleWidget_->save();
-        }
-    }
     else
     {
         QGraphicsView::mouseReleaseEvent(event);
@@ -550,7 +631,6 @@ AnimatedCycleWidget::AnimatedCycleWidget(QWidget *parent) :
 {
     scene_ = new QGraphicsScene();
     view_ = new AnimatedCycleGraphicsView(scene_, this);
-    //view_->setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
     view_->setRenderHints(QPainter::Antialiasing);
 
     QPushButton * addSelectedCellsButton = new QPushButton("add selected cells");
@@ -581,12 +661,7 @@ void AnimatedCycleWidget::createNodeAndItem(Cell * cell)
     if(!animatedCycle_.first())
     {
         animatedCycle_.setFirst(node);
-
-        // Caution: the line below would cause a crash, as node ownership is transfered
-        //          to the temp object AnimatedCycle(node) which is destroyed after the copy occured.
-        //animatedCycle_ = AnimatedCycle(node);
     }
-
     createItem(node);
 }
 
@@ -603,12 +678,9 @@ void AnimatedCycleWidget::addSelectedCells()
     if (vac)
     {
         CellSet selectedCells = vac->selectedCells();
-
         foreach(Cell * cell, selectedCells)
             createNodeAndItem(cell);
-
         computeItemHeightAndY();
-
         save();
     }
 }
@@ -656,12 +728,6 @@ void AnimatedCycleWidget::clearScene()
     // Clear maps and sets
     nodeToItem_.clear();
     nodeToItem_[0] = 0;
-    itemToNextArrow_.clear();
-    itemToPreviousArrow_.clear();
-    itemToNextArrowBorder_.clear();
-    itemToPreviousArrowBorder_.clear();
-    itemToAfterArrow_.clear();
-    itemToBeforeArrow_.clear();
 }
 
 void AnimatedCycleWidget::observedCellDeleted(Cell *)
@@ -741,136 +807,9 @@ AnimatedCycle AnimatedCycleWidget::getAnimatedCycle() const
     return animatedCycle_;
 }
 
-
-void AnimatedCycleWidget::setBefore(GraphicsNodeItem * item, GraphicsNodeItem * itemBefore)
-{
-    // Delete existing arrow
-    if(itemToBeforeArrow_.contains(item))
-    {
-        delete itemToBeforeArrow_[item];
-        itemToBeforeArrow_.remove(item);
-    }
-
-    // Set node pointer value
-    item->node()->setBefore(itemBefore->node());
-
-    // Create arrow
-    GraphicsArrowItem * arrow = new GraphicsArrowItem();
-    scene_->addItem(arrow);
-    itemToBeforeArrow_[item] = arrow;
-}
-
-void AnimatedCycleWidget::setAfter(GraphicsNodeItem * item, GraphicsNodeItem * itemAfter)
-{
-    // Delete existing arrow
-    if(itemToAfterArrow_.contains(item))
-    {
-        delete itemToAfterArrow_[item];
-        itemToAfterArrow_.remove(item);
-    }
-
-    // Set node pointer value
-    item->node()->setAfter(itemAfter->node());
-
-    // Create arrow
-    GraphicsArrowItem * arrow = new GraphicsArrowItem();
-    scene_->addItem(arrow);
-    itemToAfterArrow_[item] = arrow;
-}
-
-void AnimatedCycleWidget::setPrevious(GraphicsNodeItem * item, GraphicsNodeItem * itemPrevious)
-{
-    // Delete existing arrow
-    if(itemToPreviousArrow_.contains(item))
-    {
-        delete itemToPreviousArrow_[item];
-        itemToPreviousArrow_.remove(item);
-    }
-    if(itemToPreviousArrowBorder_.contains(item))
-    {
-        delete itemToPreviousArrowBorder_[item];
-        itemToPreviousArrowBorder_.remove(item);
-    }
-
-    // Set node pointer value
-    item->node()->setPrevious(itemPrevious->node());
-
-    // Create arrow
-    GraphicsArrowItem * arrow = new GraphicsArrowItem();
-    scene_->addItem(arrow);
-    Qt::KeyboardModifiers modifiers = global()->keyboardModifiers();
-    if(modifiers.testFlag(Qt::AltModifier))
-        itemToPreviousArrowBorder_[item] = arrow;
-    else
-        itemToPreviousArrow_[item] = arrow;
-}
-
-void AnimatedCycleWidget::setNext(GraphicsNodeItem * item, GraphicsNodeItem * itemNext)
-{
-    // Delete existing arrow
-    if(itemToNextArrow_.contains(item))
-    {
-        delete itemToNextArrow_[item];
-        itemToNextArrow_.remove(item);
-    }
-    if(itemToNextArrowBorder_.contains(item))
-    {
-        delete itemToNextArrowBorder_[item];
-        itemToNextArrowBorder_.remove(item);
-    }
-
-    // Set node pointer value
-    item->node()->setNext(itemNext->node());
-
-    // Create arrow
-    GraphicsArrowItem * arrow = new GraphicsArrowItem();
-    scene_->addItem(arrow);
-    Qt::KeyboardModifiers modifiers = global()->keyboardModifiers();
-    if(modifiers.testFlag(Qt::AltModifier))
-        itemToNextArrowBorder_[item] = arrow;
-    else
-        itemToNextArrow_[item] = arrow;
-}
-
-void AnimatedCycleWidget::deleteArrow(GraphicsArrowItem * arrowItem)
-{
-    typedef QMap<GraphicsNodeItem*, GraphicsArrowItem*> Map;
-    typedef Map::iterator Iterator;
-    typedef Map* MapPtr;
-
-    const int NUM_MAPS = 6;
-    MapPtr maps[NUM_MAPS] = { &itemToNextArrow_ ,
-                              &itemToPreviousArrow_ ,
-                              &itemToNextArrowBorder_ ,
-                              &itemToPreviousArrowBorder_ ,
-                              &itemToAfterArrow_ ,
-                              &itemToBeforeArrow_ };
-
-    for(int i=0; i<NUM_MAPS; ++i)
-    {
-        for(Iterator it=maps[i]->begin(); it!=maps[i]->end(); ++it)
-        {
-            if(it.value() == arrowItem)
-            {
-                if(i==0 || i==2)
-                    it.key()->node()->setNext(0);
-                else if(i==1 || i==3)
-                    it.key()->node()->setPrevious(0);
-                else if(i==4)
-                    it.key()->node()->setAfter(0);
-                else if(i==5)
-                    it.key()->node()->setBefore(0);
-
-                maps[i]->erase(it);
-                delete arrowItem;
-                return;
-            }
-        }
-    }
-}
-
 void AnimatedCycleWidget::deleteItem(GraphicsNodeItem * item)
 {
+    /*
     // Get node corresponding to item
     AnimatedCycleNode * node = item->node();
 
@@ -944,6 +883,7 @@ void AnimatedCycleWidget::deleteItem(GraphicsNodeItem * item)
             animatedCycle_.setFirst(first);
         }
     }
+    */
 }
 
 void AnimatedCycleWidget::computeSceneFromAnimatedCycle()
@@ -975,39 +915,31 @@ void AnimatedCycleWidget::computeSceneFromAnimatedCycle()
     foreach(AnimatedCycleNode * node, animatedCycle_.nodes())
     {
         GraphicsNodeItem * item = nodeToItem_[node];
-
         if(node->next()) // can be false if cycle is invalid
         {
-            GraphicsArrowItem * arrow = new GraphicsArrowItem();
-            scene_->addItem(arrow);
-            if(!startNodes.contains(node->next()))
-                itemToNextArrow_[item] = arrow;
-            else
-                itemToNextArrowBorder_[item] = arrow;
+            GraphicsNodeItem * target = nodeToItem_[node->next()];
+            item->nextSocket()->setTargetItem(target);
+            if(startNodes.contains(node->next())) {
+                item->nextSocket()->arrowItem()->setIsBorderArrow(true);
+            }
         }
-
         if(node->previous()) // can be false if cycle is invalid
         {
-            GraphicsArrowItem * arrow = new GraphicsArrowItem();
-            scene_->addItem(arrow);
-            if(!startNodes.contains(node))
-                itemToPreviousArrow_[item] = arrow;
-            else
-                itemToPreviousArrowBorder_[item] = arrow;
+            GraphicsNodeItem * target = nodeToItem_[node->previous()];
+            item->previousSocket()->setTargetItem(target);
+            if(startNodes.contains(node)) {
+                item->previousSocket()->arrowItem()->setIsBorderArrow(true);
+            }
         }
-
         if(node->after())
         {
-            GraphicsArrowItem * arrow = new GraphicsArrowItem();
-            scene_->addItem(arrow);
-            itemToAfterArrow_[item] = arrow;
+            GraphicsNodeItem * target = nodeToItem_[node->after()];
+            item->afterSocket()->setTargetItem(target);
         }
-
         if(node->before())
         {
-            GraphicsArrowItem * arrow = new GraphicsArrowItem();
-            scene_->addItem(arrow);
-            itemToBeforeArrow_[item] = arrow;
+            GraphicsNodeItem * target = nodeToItem_[node->before()];
+            item->beforeSocket()->setTargetItem(target);
         }
     }
 }
@@ -1092,23 +1024,6 @@ void AnimatedCycleWidget::computeItemHeightAndY()
     }
 }
 
-GraphicsNodeItem * AnimatedCycleWidget::next(GraphicsNodeItem * item)
-{
-    return nodeToItem_[item->node()->next()];
-}
-GraphicsNodeItem * AnimatedCycleWidget::previous(GraphicsNodeItem * item)
-{
-    return nodeToItem_[item->node()->previous()];
-}
-GraphicsNodeItem * AnimatedCycleWidget::before(GraphicsNodeItem * item)
-{
-    return nodeToItem_[item->node()->before()];
-}
-GraphicsNodeItem * AnimatedCycleWidget::after(GraphicsNodeItem * item)
-{
-    return nodeToItem_[item->node()->after()];
-}
-
 void AnimatedCycleWidget::mousePressEvent(QMouseEvent * event)
 {
     QWidget::mousePressEvent(event);
@@ -1141,57 +1056,38 @@ void AnimatedCycleWidget::animate()
     }
 
     // Next arrow contribution
-    QMapIterator<GraphicsNodeItem*, GraphicsArrowItem*> it(itemToNextArrow_);
-    while(it.hasNext())
+    foreach(GraphicsNodeItem * item, items)
     {
-        it.next();
+        if (item->next() && !item->nextSocket()->arrowItem()->isBorderArrow())
+        {
+            GraphicsNodeItem * nextItem = item->next();
 
-        GraphicsNodeItem * item = it.key();
-        GraphicsNodeItem * nextItem = item->next();
+            double start = item->pos().x() + 0.5*item->width();
+            double end = nextItem->pos().x() - 0.5*nextItem->width();
+            double vec = end - start;
+            double delta = ARROW_LENGTH - vec;
 
-        if(!item || !nextItem)
-            continue;
-
-        double start = item->pos().x() + 0.5*item->width();
-        double end = nextItem->pos().x() - 0.5*nextItem->width();
-        double vec = end - start;
-        double delta = ARROW_LENGTH - vec;
-
-        //deltaX[nextItem] += delta;
-        //deltaXNum[nextItem] += 1;
-        deltaMinX[nextItem] = std::max(delta,deltaMinX[nextItem]);
-
-        //deltaX[item] += -delta;
-        //deltaXNum[item] += 1;
-        deltaMaxX[item] = std::min(-delta,deltaMaxX[item]);
+            deltaMinX[nextItem] = std::max(delta,deltaMinX[nextItem]);
+            deltaMaxX[item] = std::min(-delta,deltaMaxX[item]);
+        }
     }
 
-    // Previous arrow contribution
-    it = QMapIterator<GraphicsNodeItem*, GraphicsArrowItem*>(itemToPreviousArrow_);
-    while(it.hasNext())
+    // Previous arrow contribution    
+    foreach(GraphicsNodeItem * nextItem, items)
     {
-        it.next();
+        if (nextItem->previous() && !nextItem->previousSocket()->arrowItem()->isBorderArrow())
+        {
+            GraphicsNodeItem * item = nextItem->previous();
 
-        GraphicsNodeItem * nextItem = it.key();
-        GraphicsNodeItem * item = nextItem->previous();
+            double start = item->pos().x() + 0.5*item->width();
+            double end = nextItem->pos().x() - 0.5*nextItem->width();
+            double vec = end - start;
+            double delta = ARROW_LENGTH - vec;
 
-        if(!item || !nextItem)
-            continue;
-
-        double start = item->pos().x() + 0.5*item->width();
-        double end = nextItem->pos().x() - 0.5*nextItem->width();
-        double vec = end - start;
-        double delta = ARROW_LENGTH - vec;
-
-        //deltaX[nextItem] += delta;
-        //deltaXNum[nextItem] += 1;
-        deltaMinX[nextItem] = std::max(delta,deltaMinX[nextItem]);
-
-        //deltaX[item] += -delta;
-        //deltaXNum[item] += 1;
-        deltaMaxX[item] = std::min(-delta,deltaMaxX[item]);
+            deltaMinX[nextItem] = std::max(delta,deltaMinX[nextItem]);
+            deltaMaxX[item] = std::min(-delta,deltaMaxX[item]);
+        }
     }
-
 
     // Increase width of inbetween edges
     foreach(GraphicsNodeItem * item, items)
@@ -1253,49 +1149,46 @@ void AnimatedCycleWidget::animate()
     }
 
     // After arrow contribution
-    it = QMapIterator<GraphicsNodeItem*, GraphicsArrowItem*>(itemToAfterArrow_);
-    while(it.hasNext())
+    foreach(GraphicsNodeItem * item, items)
     {
-        it.next();
-        GraphicsNodeItem * item = it.key();
-
-        // Idea: for inbetween cells, keep double arrows vertical
-        if(item->node()->cell()->toInbetweenCell())
+        if (item->after())
         {
-            GraphicsNodeItem * afterItem = item->after();
-            GraphicsNodeItem * beforeAfterItem = afterItem->before();
-
-            if(beforeAfterItem == item)
+            // Idea: for inbetween cells, keep double arrows vertical
+            if(item->node()->cell()->toInbetweenCell())
             {
-                double delta = afterItem->pos().x()-0.5*afterItem->width() - (item->pos().x()-0.5*item->width());
-                deltaX[item] += delta;
-                deltaXNum[item] += 1;
-                deltaX[afterItem] += -delta;
-                deltaXNum[afterItem] += 1;
+                GraphicsNodeItem * afterItem = item->after();
+                GraphicsNodeItem * beforeAfterItem = afterItem->before();
+
+                if(beforeAfterItem == item)
+                {
+                    double delta = afterItem->pos().x()-0.5*afterItem->width() - (item->pos().x()-0.5*item->width());
+                    deltaX[item] += delta;
+                    deltaXNum[item] += 1;
+                    deltaX[afterItem] += -delta;
+                    deltaXNum[afterItem] += 1;
+                }
             }
         }
     }
 
-
     // Before arrow contribution
-    it = QMapIterator<GraphicsNodeItem*, GraphicsArrowItem*>(itemToBeforeArrow_);
-    while(it.hasNext())
+    foreach(GraphicsNodeItem * item, items)
     {
-        it.next();
-        GraphicsNodeItem * item = it.key();
-
-        // Idea: for inbetween cells, keep double arrows vertical
-        if(item->node()->cell()->toInbetweenCell())
+        if (item->before())
         {
-            GraphicsNodeItem * beforeItem = item->before();
-            GraphicsNodeItem * afterBeforeItem = beforeItem->after();
-            if(afterBeforeItem == item)
+            // Idea: for inbetween cells, keep double arrows vertical
+            if(item->node()->cell()->toInbetweenCell())
             {
-                double delta = beforeItem->pos().x()+0.5*beforeItem->width() - (item->pos().x()+0.5*item->width());
-                deltaX[item] += delta;
-                deltaXNum[item] += 1;
-                deltaX[beforeItem] += -delta;
-                deltaXNum[beforeItem] += 1;
+                GraphicsNodeItem * beforeItem = item->before();
+                GraphicsNodeItem * afterBeforeItem = beforeItem->after();
+                if(afterBeforeItem == item)
+                {
+                    double delta = beforeItem->pos().x()+0.5*beforeItem->width() - (item->pos().x()+0.5*item->width());
+                    deltaX[item] += delta;
+                    deltaXNum[item] += 1;
+                    deltaX[beforeItem] += -delta;
+                    deltaXNum[beforeItem] += 1;
+                }
             }
         }
     }
@@ -1332,140 +1225,8 @@ void AnimatedCycleWidget::animate()
     }
 
     // update arrows
-    it = QMapIterator<GraphicsNodeItem*, GraphicsArrowItem*>(itemToNextArrow_);
-    while(it.hasNext())
+    foreach(GraphicsNodeItem * item, items)
     {
-        it.next();
-
-        GraphicsNodeItem * item = it.key();
-        GraphicsNodeItem * nextItem = item->next();
-        GraphicsArrowItem * nextArrow = it.value();
-
-        QPointF socketPos = item->nextSocket()->scenePos();
-        double y2 = socketPos.y();
-        double y2min = nextItem->y() - 0.5*nextItem->height();
-        double y2max = nextItem->y() + 0.5*nextItem->height();
-        if(y2 < y2min)
-            y2 = y2min;
-        if(y2 > y2max)
-            y2 = y2max;
-
-        QPointF startVec(socketPos.x() + SOCKET_RADIUS, socketPos.y());
-        QPointF endVec(nextItem->x() - 0.5*nextItem->width(), y2);
-        nextArrow->setEndPoints(startVec,endVec);
-    }
-    it = QMapIterator<GraphicsNodeItem*, GraphicsArrowItem*>(itemToPreviousArrow_);
-    while(it.hasNext())
-    {
-        it.next();
-
-        GraphicsNodeItem * item = it.key();
-        GraphicsNodeItem * previousItem = item->previous();
-        GraphicsArrowItem * previousArrow = it.value();
-
-        QPointF socketPos = item->previousSocket()->scenePos();
-        double y2 = socketPos.y();
-        double y2min = previousItem->y() - 0.5*previousItem->height();
-        double y2max = previousItem->y() + 0.5*previousItem->height();
-        if(y2 < y2min)
-            y2 = y2min;
-        if(y2 > y2max)
-            y2 = y2max;
-
-        QPointF startVec(socketPos.x() - SOCKET_RADIUS, socketPos.y());
-        QPointF endVec(previousItem->x() + 0.5*previousItem->width(), y2);
-        previousArrow->setEndPoints(startVec,endVec);
-    }
-    it = QMapIterator<GraphicsNodeItem*, GraphicsArrowItem*>(itemToNextArrowBorder_);
-    while(it.hasNext())
-    {
-        it.next();
-
-        GraphicsNodeItem * item = it.key();
-        GraphicsNodeItem * nextItem = item->next();
-        GraphicsArrowItem * nextArrow = it.value();
-
-        QPointF socketPos = item->nextSocket()->scenePos();
-        double y2 = socketPos.y();
-        double y2min = nextItem->y() - 0.5*nextItem->height();
-        double y2max = nextItem->y() + 0.5*nextItem->height();
-        if(y2 < y2min)
-            y2 = y2min;
-        if(y2 > y2max)
-            y2 = y2max;
-
-        QPointF startVec(socketPos.x() + SOCKET_RADIUS, socketPos.y());
-        QPointF endVec(socketPos.x() + ARROW_LENGTH, y2);
-        nextArrow->setEndPoints(startVec,endVec);
-    }
-    it = QMapIterator<GraphicsNodeItem*, GraphicsArrowItem*>(itemToPreviousArrowBorder_);
-    while(it.hasNext())
-    {
-        it.next();
-
-        GraphicsNodeItem * item = it.key();
-        GraphicsNodeItem * previousItem = item->previous();
-        GraphicsArrowItem * previousArrow = it.value();
-
-        QPointF socketPos = item->previousSocket()->scenePos();
-        double y2 = socketPos.y();
-        double y2min = previousItem->y() - 0.5*previousItem->height();
-        double y2max = previousItem->y() + 0.5*previousItem->height();
-        if(y2 < y2min)
-            y2 = y2min;
-        if(y2 > y2max)
-            y2 = y2max;
-
-        QPointF startVec(socketPos.x() - SOCKET_RADIUS, socketPos.y());
-        QPointF endVec(socketPos.x() - ARROW_LENGTH, y2);
-        previousArrow->setEndPoints(startVec,endVec);
-    }
-    it = QMapIterator<GraphicsNodeItem*, GraphicsArrowItem*>(itemToAfterArrow_);
-    while(it.hasNext())
-    {
-        it.next();
-
-        GraphicsNodeItem * item = it.key();
-        GraphicsNodeItem * afterItem = item->after();
-        GraphicsArrowItem * afterArrow = it.value();
-
-        QPointF socketPos = item->afterSocket()->scenePos();
-        double x2 = socketPos.x();
-        double x2min = afterItem->x() - 0.5*afterItem->width();
-        double x2max = afterItem->x() + 0.5*afterItem->width();
-        if(x2 < x2min)
-            x2 = x2min;
-        if(x2 > x2max)
-            x2 = x2max;
-
-        QPointF startVec(socketPos.x(), socketPos.y() + SOCKET_RADIUS);
-        QPointF endVec(x2, afterItem->y() - 0.5*afterItem->height());
-
-        afterArrow->setEndPoints(startVec,endVec);
-    }
-    it = QMapIterator<GraphicsNodeItem*, GraphicsArrowItem*>(itemToBeforeArrow_);
-    while(it.hasNext())
-    {
-        it.next();
-
-        GraphicsNodeItem * item = it.key();
-        GraphicsNodeItem * beforeItem = item->before();
-        GraphicsArrowItem * beforeArrow = it.value();
-
-        QPointF socketPos = item->beforeSocket()->scenePos();
-        double x2 = socketPos.x();
-        double x2min = beforeItem->x() - 0.5*beforeItem->width();
-        double x2max = beforeItem->x() + 0.5*beforeItem->width();
-        if(x2 < x2min)
-            x2 = x2min;
-        if(x2 > x2max)
-            x2 = x2max;
-
-        QPointF startVec(socketPos.x(), socketPos.y() - SOCKET_RADIUS);
-        QPointF endVec(x2, beforeItem->y() + 0.5*beforeItem->height());
-
-        beforeArrow->setEndPoints(startVec,endVec);
+        item->updateArrows();
     }
 }
-
-

@@ -30,6 +30,13 @@
 
 using namespace VectorAnimationComplex;
 
+enum SocketType {
+    PreviousSocket = 0,
+    NextSocket,
+    BeforeSocket,
+    AfterSocket
+};
+
 class GraphicsSocketItem;
 class AnimatedCycleWidget;
 class GraphicsNodeItem: public QGraphicsPathItem, public CellObserver
@@ -50,10 +57,10 @@ public:
     GraphicsNodeItem * before();
     GraphicsNodeItem * after();
 
-    GraphicsSocketItem* previousSocket() const { return previousSocket_; }
-    GraphicsSocketItem* nextSocket() const { return nextSocket_; }
-    GraphicsSocketItem* beforeSocket() const { return beforeSocket_; }
-    GraphicsSocketItem* afterSocket() const { return afterSocket_; }
+    GraphicsSocketItem * previousSocket() const { return sockets[PreviousSocket]; }
+    GraphicsSocketItem * nextSocket() const { return sockets[NextSocket]; }
+    GraphicsSocketItem * beforeSocket() const { return sockets[BeforeSocket]; }
+    GraphicsSocketItem * afterSocket() const { return sockets[AfterSocket]; }
 
     bool isMoved() const;
 
@@ -66,6 +73,7 @@ public:
     void setFixedY(double y);
 
     void updateText();
+    void updateArrows();
 
 protected:
     virtual void mousePressEvent(QGraphicsSceneMouseEvent * event);
@@ -84,36 +92,40 @@ private:
     double height_;
     double y_;
 
-    GraphicsSocketItem* previousSocket_;
-    GraphicsSocketItem* nextSocket_;
-    GraphicsSocketItem* beforeSocket_;
-    GraphicsSocketItem* afterSocket_;
+    GraphicsSocketItem* sockets[4];
 };
 
-enum class SocketType {
-    Previous,
-    Next,
-    Before,
-    After
-};
-
+class GraphicsArrowItem;
 class GraphicsSocketItem: public QGraphicsEllipseItem
 {
 public:
     // Enable the use of qgraphicsitem_cast<>
     enum { Type = UserType + 2 };
-    int type() const { return Type; }
+    int type() const override { return Type; }
 
-    GraphicsSocketItem(GraphicsNodeItem* node, SocketType socketType);
+    GraphicsSocketItem(SocketType socketType, GraphicsNodeItem * sourceItem);
+    ~GraphicsSocketItem();
 
-    GraphicsNodeItem* node() const { return node_ ; }
+    GraphicsNodeItem * sourceItem() const { return sourceItem_ ; }
+    GraphicsNodeItem * targetItem() const;
     SocketType socketType() const { return socketType_; }
+    GraphicsArrowItem * arrowItem() const { return arrowItem_ ; }
+
+    void setTargetItem(GraphicsNodeItem * target);
 
     void updatePosition();
 
+protected:
+    void hoverEnterEvent(QGraphicsSceneHoverEvent * event) override;
+    void hoverLeaveEvent(QGraphicsSceneHoverEvent * event) override;
+    void mousePressEvent(QGraphicsSceneMouseEvent * event) override;
+    void mouseMoveEvent(QGraphicsSceneMouseEvent * event) override;
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent * event) override;
+
 private:
-    GraphicsNodeItem* node_;
     SocketType socketType_;
+    GraphicsNodeItem* sourceItem_;
+    GraphicsArrowItem* arrowItem_;
 };
 
 class GraphicsArrowItem: public QGraphicsPathItem
@@ -123,8 +135,25 @@ public:
     enum { Type = UserType + 3 };
     int type() const { return Type; }
 
-    GraphicsArrowItem();
-    void setEndPoints(const QPointF & p1, const QPointF & p2);
+    GraphicsArrowItem(GraphicsSocketItem * socketItem);
+
+    void setTargetItem(GraphicsNodeItem * targetItem);
+    void setEndPoint(const QPointF & p);
+    void setIsBorderArrow(bool b);
+
+    GraphicsSocketItem * socketItem() const { return socketItem_; }
+    GraphicsNodeItem * targetItem() const { return targetItem_; }
+
+    QPointF endPoint() const { return endPoint_; }
+    bool isBorderArrow() const { return isBorderArrow_; }
+
+    void updatePath();
+
+private:
+    GraphicsSocketItem * socketItem_;
+    GraphicsNodeItem * targetItem_;
+    QPointF endPoint_;
+    bool isBorderArrow_;
 };
 
 class AnimatedCycleWidget;
@@ -145,7 +174,6 @@ protected:
 
 private:
     AnimatedCycleWidget * animatedCycleWidget_;
-
     GraphicsNodeItem * itemAtPress_;
 };
 
@@ -170,30 +198,17 @@ public:
     //        * The returned animated cycle might be in an invalid state
     AnimatedCycle getAnimatedCycle() const;
 
-    // Set current animated cycle
-
-    GraphicsNodeItem * next(GraphicsNodeItem * item);
-    GraphicsNodeItem * previous(GraphicsNodeItem * item);
-    GraphicsNodeItem * before(GraphicsNodeItem * item);
-    GraphicsNodeItem * after(GraphicsNodeItem * item);
-
     void start();
     void stop();
 
     void setReadOnly(bool b);
     bool isReadOnly() const;
 
-    void setPrevious(GraphicsNodeItem * item, GraphicsNodeItem * itemPrevious);
-    void setNext(GraphicsNodeItem * item, GraphicsNodeItem * itemNext);
-    void setBefore(GraphicsNodeItem * item, GraphicsNodeItem * itemBefore);
-    void setAfter(GraphicsNodeItem * item, GraphicsNodeItem * itemAfter);
     void deleteArrow(GraphicsArrowItem * arrowItem);
     void deleteItem(GraphicsNodeItem * item);
 
 protected:
     virtual void mousePressEvent(QMouseEvent * event);
-
-signals:
 
 public slots:
     void load();
@@ -201,38 +216,23 @@ public slots:
 
 private slots:
     void animate();
-
     void addSelectedCells();
-
 
 private:
     void createNodeAndItem(Cell * cell);
     void createItem(AnimatedCycleNode * node);
     void computeItemHeightAndY();
-
     void computeSceneFromAnimatedCycle();
 
     QGraphicsScene * scene_;
     AnimatedCycleGraphicsView * view_;
-
     AnimatedCycle animatedCycle_;
     QMap<AnimatedCycleNode*, GraphicsNodeItem*> nodeToItem_;
-    QMap<GraphicsNodeItem*, GraphicsArrowItem*> itemToNextArrow_;
-    QMap<GraphicsNodeItem*, GraphicsArrowItem*> itemToPreviousArrow_;
-    QMap<GraphicsNodeItem*, GraphicsArrowItem*> itemToNextArrowBorder_;
-    QMap<GraphicsNodeItem*, GraphicsArrowItem*> itemToPreviousArrowBorder_;
-    QMap<GraphicsNodeItem*, GraphicsArrowItem*> itemToAfterArrow_;
-    QMap<GraphicsNodeItem*, GraphicsArrowItem*> itemToBeforeArrow_;
-
     QTimer timer_;
-
     bool isReadOnly_;
-
     InbetweenFace * inbetweenFace_;
     int indexCycle_;
-
     QHBoxLayout * editorButtons_;
-
 };
 
 #endif // ANIMATEDCYCLEWIDGET_H
