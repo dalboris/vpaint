@@ -2250,6 +2250,7 @@ void MainWindow::createDocks()
 
     // Widget
     animatedCycleEditor = new AnimatedCycleWidget();
+    animatedCycleEditor->setReadOnly(false);
 
     // Dock
     dockAnimatedCycleEditor = new QDockWidget(tr("Animated Cycle Editor [Beta]"));

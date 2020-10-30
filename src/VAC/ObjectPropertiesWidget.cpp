@@ -82,6 +82,7 @@ ObjectPropertiesWidget::ObjectPropertiesWidget()
     animatedCycleDelete_ = new QPushButton("Delete");
     connect(animatedCycleDelete_, SIGNAL(clicked()), this, SLOT(animatedCycleDelete()));
     animatedCycleWidget_ = new AnimatedCycleWidget();
+    animatedCycleWidget_->setReadOnly(true);
     animatedCycleWidget_->hide();
 
     animatedCycleWidgets_ = new QWidget();

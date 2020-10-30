@@ -22,6 +22,7 @@
 #include "VectorAnimationComplex/KeyEdge.h"
 #include "VectorAnimationComplex/VAC.h"
 
+#include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QVector2D>
 #include <QGraphicsSceneMouseEvent>
@@ -332,50 +333,60 @@ void GraphicsSocketItem::updatePosition()
 
 void GraphicsSocketItem::hoverEnterEvent(QGraphicsSceneHoverEvent *)
 {
-    setBrush(QBrush(Qt::red));
-    sourceItem()->setFlag(ItemIsMovable, false);
+    if (!sourceItem()->widget()->isReadOnly()) {
+        setBrush(QBrush(Qt::red));
+        sourceItem()->setFlag(ItemIsMovable, false);
+    }
 }
 
 void GraphicsSocketItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *)
 {
-    setBrush(QBrush(Qt::white));
-    sourceItem()->setFlag(ItemIsMovable, true);
+    if (!sourceItem()->widget()->isReadOnly()) {
+        setBrush(QBrush(Qt::white));
+        sourceItem()->setFlag(ItemIsMovable, true);
+    }
 }
 
 void GraphicsSocketItem::mousePressEvent(QGraphicsSceneMouseEvent * event)
 {
-    if (!arrowItem_) {
-        arrowItem_ = new GraphicsArrowItem(this);
-        scene()->addItem(arrowItem_);
+    if (!sourceItem()->widget()->isReadOnly()) {
+        if (!arrowItem_) {
+            arrowItem_ = new GraphicsArrowItem(this);
+            scene()->addItem(arrowItem_);
+        }
+        arrowItem_->setTargetItem(nullptr);
+        arrowItem_->setEndPoint(event->scenePos());
     }
-    arrowItem_->setTargetItem(nullptr);
-    arrowItem_->setEndPoint(event->scenePos());
 }
 
 void GraphicsSocketItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 {
-    if (arrowItem_) {
-        arrowItem_->setEndPoint(event->scenePos());
+    if (!sourceItem()->widget()->isReadOnly()) {
+        if (arrowItem_) {
+            arrowItem_->setEndPoint(event->scenePos());
+        }
     }
 }
 
 void GraphicsSocketItem::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
 {
-    if (arrowItem_) {
-        QGraphicsItem * item = scene()->itemAt(event->scenePos(), QTransform());
-        GraphicsNodeItem * nodeItem = qgraphicsitem_cast<GraphicsNodeItem*>(item);
-        if (!nodeItem) {
-            QGraphicsTextItem * textItem = qgraphicsitem_cast<QGraphicsTextItem*>(item);
-            if(textItem) {
-                nodeItem = qgraphicsitem_cast<GraphicsNodeItem*>(textItem->parentItem());
+    if (!sourceItem()->widget()->isReadOnly()) {
+        if (arrowItem_) {
+            QGraphicsItem * item = scene()->itemAt(event->scenePos(), QTransform());
+            GraphicsNodeItem * nodeItem = qgraphicsitem_cast<GraphicsNodeItem*>(item);
+            if (!nodeItem) {
+                QGraphicsTextItem * textItem = qgraphicsitem_cast<QGraphicsTextItem*>(item);
+                if(textItem) {
+                    nodeItem = qgraphicsitem_cast<GraphicsNodeItem*>(textItem->parentItem());
+                }
             }
-        }
-        if (nodeItem) {
-            arrowItem_->setTargetItem(nodeItem);
-        }
-        else {
-            delete arrowItem_;
-            arrowItem_ = nullptr;
+            if (nodeItem) {
+                arrowItem_->setTargetItem(nodeItem);
+            }
+            else {
+                delete arrowItem_;
+                arrowItem_ = nullptr;
+            }
         }
     }
 }
@@ -633,21 +644,24 @@ AnimatedCycleWidget::AnimatedCycleWidget(QWidget *parent) :
     view_ = new AnimatedCycleGraphicsView(scene_, this);
     view_->setRenderHints(QPainter::Antialiasing);
 
-    QPushButton * addSelectedCellsButton = new QPushButton("add selected cells");
-    QPushButton * saveButton = new QPushButton("save");
-    QPushButton * loadButton = new QPushButton("load");
+    QPushButton * addSelectedCellsButton = new QPushButton("Add selected cells");
+    QPushButton * applyButton = new QPushButton("Apply");
+    QPushButton * reloadButton = new QPushButton("Reload");
     connect(addSelectedCellsButton, SIGNAL(clicked()), this, SLOT(addSelectedCells()));
-    connect(saveButton, SIGNAL(clicked()), this, SLOT(save()));
-    connect(loadButton, SIGNAL(clicked()), this, SLOT(load()));
-    editorButtons_ = new QHBoxLayout();
-    editorButtons_->addWidget(addSelectedCellsButton);
-    //editorButtons_->addWidget(saveButton);
-    editorButtons_->addWidget(loadButton);
+    connect(reloadButton, SIGNAL(clicked()), this, SLOT(reload()));
+    connect(applyButton, SIGNAL(clicked()), this, SLOT(apply()));
+
+    QHBoxLayout * editorButtonsLayout = new QHBoxLayout();
+    editorButtonsLayout->addWidget(addSelectedCellsButton);
+    editorButtonsLayout->addWidget(reloadButton);
+    editorButtonsLayout->addWidget(applyButton);
+    editorButtons_ = new QWidget();
+    editorButtons_->setLayout(editorButtonsLayout);
 
 
     QVBoxLayout * layout = new QVBoxLayout();
     layout->addWidget(view_);
-    layout->addLayout(editorButtons_);
+    layout->addWidget(editorButtons_);
     setLayout(layout);
 
     timer_.setInterval(16);
@@ -681,7 +695,7 @@ void AnimatedCycleWidget::addSelectedCells()
         foreach(Cell * cell, selectedCells)
             createNodeAndItem(cell);
         computeItemHeightAndY();
-        save();
+        apply();
     }
 }
 
@@ -705,6 +719,12 @@ AnimatedCycleWidget::~AnimatedCycleWidget()
 void AnimatedCycleWidget::setReadOnly(bool b)
 {
     isReadOnly_ = b;
+    if (isReadOnly_) {
+        editorButtons_->hide();
+    }
+    else {
+        editorButtons_->show();
+    }
 }
 
 bool AnimatedCycleWidget::isReadOnly() const
@@ -761,7 +781,7 @@ void AnimatedCycleWidget::setAnimatedCycle(InbetweenFace * inbetweenFace, int in
 
         observe(inbetweenFace_);
 
-        load();
+        reload();
     }
 }
 
@@ -777,7 +797,7 @@ void AnimatedCycleWidget::setAnimatedCycle(const AnimatedCycle & animatedCycle)
     computeSceneFromAnimatedCycle();
 }
 
-void AnimatedCycleWidget::load()
+void AnimatedCycleWidget::reload()
 {
     clearScene();
 
@@ -789,7 +809,7 @@ void AnimatedCycleWidget::load()
     }
 }
 
-void AnimatedCycleWidget::save()
+void AnimatedCycleWidget::apply()
 {
     if(inbetweenFace_ && indexCycle_ >= 0 && indexCycle_ < inbetweenFace_->numAnimatedCycles())
     {

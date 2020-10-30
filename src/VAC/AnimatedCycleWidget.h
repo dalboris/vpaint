@@ -26,7 +26,6 @@
 #include <QGraphicsEllipseItem>
 #include <QGraphicsPathItem>
 #include <QTimer>
-#include <QHBoxLayout>
 
 using namespace VectorAnimationComplex;
 
@@ -74,6 +73,8 @@ public:
 
     void updateText();
     void updateArrows();
+
+    AnimatedCycleWidget * widget() const { return widget_; }
 
 protected:
     virtual void mousePressEvent(QGraphicsSceneMouseEvent * event);
@@ -211,8 +212,8 @@ protected:
     virtual void mousePressEvent(QMouseEvent * event);
 
 public slots:
-    void load();
-    void save();
+    void reload();
+    void apply();
 
 private slots:
     void animate();
@@ -232,7 +233,7 @@ private:
     bool isReadOnly_;
     InbetweenFace * inbetweenFace_;
     int indexCycle_;
-    QHBoxLayout * editorButtons_;
+    QWidget * editorButtons_;
 };
 
 #endif // ANIMATEDCYCLEWIDGET_H
