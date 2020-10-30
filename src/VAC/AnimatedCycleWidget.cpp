@@ -212,9 +212,13 @@ void GraphicsNodeItem::setFixedY(double y)
 
 void GraphicsNodeItem::mousePressEvent(QGraphicsSceneMouseEvent * event)
 {
-    if(event->button() == Qt::LeftButton)
-    {
-        isMoved_ = true;
+    if (event->button() == Qt::LeftButton) {
+        if (!widget()->isReadOnly() && (event->modifiers() & Qt::CTRL)) {
+            setSide(!side());
+        }
+        else {
+            isMoved_ = true;
+        }
     }
     QGraphicsPathItem::mousePressEvent(event);
 }
@@ -273,7 +277,6 @@ GraphicsSocketItem::GraphicsSocketItem(SocketType socketType, GraphicsNodeItem *
 
 GraphicsSocketItem::~GraphicsSocketItem()
 {
-    // Delete the arrow (but don't change the model)
     delete arrowItem_;
 }
 
@@ -505,16 +508,10 @@ void GraphicsArrowItem::updatePath()
     }
 }
 
-AnimatedCycleGraphicsView::AnimatedCycleGraphicsView(QGraphicsScene * scene, AnimatedCycleWidget * animatedCycleWidget) :
-    QGraphicsView(scene),
-    animatedCycleWidget_(animatedCycleWidget)
+AnimatedCycleGraphicsView::AnimatedCycleGraphicsView(QGraphicsScene * scene) :
+    QGraphicsView(scene)
 {
     //setTransformationAnchor(AnchorUnderMouse);
-}
-
-void AnimatedCycleGraphicsView::paintEvent(QPaintEvent * event)
-{
-    QGraphicsView::paintEvent(event);
 }
 
 void AnimatedCycleGraphicsView::wheelEvent(QWheelEvent *event)
@@ -522,45 +519,6 @@ void AnimatedCycleGraphicsView::wheelEvent(QWheelEvent *event)
     setTransformationAnchor(AnchorUnderMouse);
     double ratio = 1.0 / pow( 0.8f, (double) event->delta() / (double) 120.0f);
     scale(ratio, ratio);
-}
-
-GraphicsNodeItem * AnimatedCycleGraphicsView::nodeItemAt(const QPoint & pos)
-{
-    GraphicsNodeItem * res = 0;
-
-    QGraphicsItem * item = itemAt(pos);
-    GraphicsNodeItem * nodeItem = qgraphicsitem_cast<GraphicsNodeItem*>(item);
-    GraphicsArrowItem * arrowItem = qgraphicsitem_cast<GraphicsArrowItem*>(item);
-    QGraphicsTextItem * textItem = qgraphicsitem_cast<QGraphicsTextItem*>(item);
-
-    if(nodeItem)
-    {
-        res = nodeItem;
-    }
-    else if(arrowItem)
-    {
-        res = 0;
-    }
-    else if(textItem)
-    {
-        item = item->parentItem();
-        nodeItem = qgraphicsitem_cast<GraphicsNodeItem*>(item);
-        if(nodeItem)
-        {
-            res = nodeItem;
-        }
-        else
-        {
-            res = 0;
-        }
-    }
-
-    return res;
-}
-
-GraphicsArrowItem * AnimatedCycleGraphicsView::arrowItemAt(const QPoint & pos)
-{
-    return qgraphicsitem_cast<GraphicsArrowItem*>(itemAt(pos));
 }
 
 void AnimatedCycleGraphicsView::mousePressEvent(QMouseEvent * event)
@@ -580,16 +538,6 @@ void AnimatedCycleGraphicsView::mousePressEvent(QMouseEvent * event)
         if(nodeItem)
         {
             animatedCycleWidget_->deleteItem(nodeItem);
-            animatedCycleWidget_->save();
-        }
-    }
-    else if(event->button() == Qt::LeftButton && global()->keyboardModifiers().testFlag(Qt::ControlModifier))
-    {
-        GraphicsNodeItem * nodeItem = nodeItemAt(event->pos());
-        if(nodeItem)
-        {
-            nodeItem->node()->setSide(!nodeItem->node()->side());
-            nodeItem->updateText();
             animatedCycleWidget_->save();
         }
     }
@@ -626,27 +574,33 @@ AnimatedCycleWidget::AnimatedCycleWidget(QWidget *parent) :
     inbetweenFace_(0)
 {
     scene_ = new QGraphicsScene();
-    view_ = new AnimatedCycleGraphicsView(scene_, this);
+    view_ = new AnimatedCycleGraphicsView(scene_);
     view_->setRenderHints(QPainter::Antialiasing);
 
     QPushButton * addSelectedCellsButton = new QPushButton("Add selected cells");
-    QPushButton * applyButton = new QPushButton("Apply");
     QPushButton * reloadButton = new QPushButton("Reload");
+    QPushButton * applyButton = new QPushButton("Apply");
     connect(addSelectedCellsButton, SIGNAL(clicked()), this, SLOT(addSelectedCells()));
     connect(reloadButton, SIGNAL(clicked()), this, SLOT(reload()));
     connect(applyButton, SIGNAL(clicked()), this, SLOT(apply()));
 
+    QWidget * editorButtons = new QWidget();
     QHBoxLayout * editorButtonsLayout = new QHBoxLayout();
     editorButtonsLayout->addWidget(addSelectedCellsButton);
     editorButtonsLayout->addWidget(reloadButton);
     editorButtonsLayout->addWidget(applyButton);
-    editorButtons_ = new QWidget();
-    editorButtons_->setLayout(editorButtonsLayout);
+    editorButtons->setLayout(editorButtonsLayout);
 
+    QString ctrl = QString(ACTION_MODIFIER_NAME_SHORT).toUpper();
+    editModeExtras_ = new QWidget();
+    QVBoxLayout * editModeExtrasLayout = new QVBoxLayout();
+    editModeExtrasLayout->addWidget(new QLabel(ctrl + " + Click: Toggle edge direction"));
+    editModeExtrasLayout->addWidget(editorButtons);
+    editModeExtras_->setLayout(editModeExtrasLayout);
 
     QVBoxLayout * layout = new QVBoxLayout();
     layout->addWidget(view_);
-    layout->addWidget(editorButtons_);
+    layout->addWidget(editModeExtras_);
     setLayout(layout);
 
     timer_.setInterval(16);
@@ -691,10 +645,10 @@ void AnimatedCycleWidget::setReadOnly(bool b)
 {
     isReadOnly_ = b;
     if (isReadOnly_) {
-        editorButtons_->hide();
+        editModeExtras_->hide();
     }
     else {
-        editorButtons_->show();
+        editModeExtras_->show();
     }
 }
 
@@ -982,8 +936,6 @@ void AnimatedCycleWidget::computeSceneFromAnimatedCycle(const AnimatedCycle & an
 
 void AnimatedCycleWidget::computeItemHeightAndY()
 {
-    typedef QMap<AnimatedCycleNode*, GraphicsNodeItem*>::iterator Iterator;
-
     // Get key times
     QSet<int> keyTimes;
     QList<GraphicsNodeItem*> items = nodeItems();
