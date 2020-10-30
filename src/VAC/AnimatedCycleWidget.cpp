@@ -216,6 +216,9 @@ void GraphicsNodeItem::mousePressEvent(QGraphicsSceneMouseEvent * event)
         if (!widget()->isReadOnly() && (event->modifiers() & Qt::CTRL)) {
             setSide(!side());
         }
+        else if (!widget()->isReadOnly() && (event->modifiers() & Qt::ALT)) {
+            destruct_();
+        }
         else {
             isMoved_ = true;
         }
@@ -263,6 +266,30 @@ GraphicsNodeItem * GraphicsNodeItem::after()
     return afterSocket()->targetItem();
 }
 
+void GraphicsNodeItem::destruct_()
+{
+    // Delete arrows pointing to this node item
+    QList<GraphicsNodeItem*> items = widget()->nodeItems();
+    foreach (GraphicsNodeItem * item, items) {
+        if (item->next() == this) {
+            item->nextSocket()->setTargetItem(nullptr);
+        }
+        if (item->previous() == this) {
+            item->previousSocket()->setTargetItem(nullptr);
+        }
+        if (item->before() == this) {
+            item->beforeSocket()->setTargetItem(nullptr);
+        }
+        if (item->after() == this) {
+            item->afterSocket()->setTargetItem(nullptr);
+        }
+    }
+
+    // Delete this item and all its chilren (socket+text).
+    // Note that deleting each socket also deletes its arrow if any.
+    delete this;
+}
+
 GraphicsSocketItem::GraphicsSocketItem(SocketType socketType, GraphicsNodeItem * sourceItem) :
     QGraphicsEllipseItem(0, 0, 2*SOCKET_RADIUS, 2*SOCKET_RADIUS, sourceItem),
     socketType_(socketType),
@@ -288,14 +315,20 @@ GraphicsNodeItem * GraphicsSocketItem::targetItem() const
 void GraphicsSocketItem::setTargetItem(GraphicsNodeItem * target)
 {
     if (arrowItem_) {
-        arrowItem_->setTargetItem(target);
+        if (target) {
+            arrowItem_->setTargetItem(target);
+        }
+        else {
+            scene()->removeItem(arrowItem_);
+            delete arrowItem_;
+            arrowItem_ = nullptr;
+        }
     }
-    else {
+    else if (target) {
         arrowItem_ = new GraphicsArrowItem(this);
         arrowItem_->setTargetItem(target);
         scene()->addItem(arrowItem_);
     }
-    // TODO: what if target == nullptr?
     // TODO: how to decide if the arrow should be a border arrow?
 }
 
@@ -594,7 +627,8 @@ AnimatedCycleWidget::AnimatedCycleWidget(QWidget *parent) :
     QString ctrl = QString(ACTION_MODIFIER_NAME_SHORT).toUpper();
     editModeExtras_ = new QWidget();
     QVBoxLayout * editModeExtrasLayout = new QVBoxLayout();
-    editModeExtrasLayout->addWidget(new QLabel(ctrl + " + Click: Toggle edge direction"));
+    editModeExtrasLayout->addWidget(new QLabel(ctrl + tr(" + Click: Toggle edge direction")));
+    editModeExtrasLayout->addWidget(new QLabel(tr("ALT + Click: Delete node")));
     editModeExtrasLayout->addWidget(editorButtons);
     editModeExtras_->setLayout(editModeExtrasLayout);
 
@@ -782,85 +816,6 @@ AnimatedCycle AnimatedCycleWidget::getAnimatedCycle() const
     }
 
     return res;
-}
-
-void AnimatedCycleWidget::deleteItem(GraphicsNodeItem * item)
-{
-    /*
-    // Get node corresponding to item
-    AnimatedCycleNode * node = item->node();
-
-    // Get arrows starting or ending at item
-    QSet<GraphicsArrowItem*> arrowItems;
-    typedef QMap<GraphicsNodeItem*, GraphicsArrowItem*> Map;
-    typedef Map::iterator Iterator;
-    typedef Map* MapPtr;
-    const int NUM_MAPS = 6;
-    MapPtr maps[NUM_MAPS] = { &itemToNextArrow_ ,
-                              &itemToPreviousArrow_ ,
-                              &itemToNextArrowBorder_ ,
-                              &itemToPreviousArrowBorder_ ,
-                              &itemToAfterArrow_ ,
-                              &itemToBeforeArrow_ };
-    for(int i=0; i<NUM_MAPS; ++i)
-    {
-        for(Iterator it=maps[i]->begin(); it!=maps[i]->end(); ++it)
-        {
-            // Get start-arrow-end
-            AnimatedCycleNode * startNode = it.key()->node();
-            GraphicsArrowItem * arrowItem = it.value();
-            AnimatedCycleNode * endNode = 0;
-            if(i==0 || i==2)
-                endNode = startNode->next();
-            else if(i==1 || i==3)
-                endNode = startNode->previous();
-            else if(i==4)
-                endNode = startNode->after();
-            else if(i==5)
-                endNode = startNode->before();
-
-            // Determine if arrow should be deleted
-            if(startNode == node || endNode == node)
-                arrowItems << arrowItem;
-        }
-    }
-
-    // Delete arrows starting or ending at item
-    foreach(GraphicsArrowItem * arrowItem, arrowItems)
-        deleteArrow(arrowItem);
-
-    // Delete node and item
-    scene_->removeItem(item);
-    nodeToItem_.remove(node);
-    delete item; // must be first, since it calls node->cell()
-    delete node;
-
-    // Update "first" node of animated cycle
-    if(animatedCycle_.first() == node)
-    {
-        QMap<AnimatedCycleNode*, GraphicsNodeItem*>::iterator it = nodeToItem_.begin();
-
-        if(it == nodeToItem_.end())
-        {
-            animatedCycle_.setFirst(0);
-        }
-        else
-        {
-            AnimatedCycleNode * first = it.key();
-            if(!first)
-            {
-                ++it;
-                if(it != nodeToItem_.end())
-                    first = it.key();
-            }
-
-            while(first && first->before())
-                first = first->before();
-
-            animatedCycle_.setFirst(first);
-        }
-    }
-    */
 }
 
 QList<GraphicsNodeItem*> AnimatedCycleWidget::nodeItems() const

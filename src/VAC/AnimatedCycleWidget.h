@@ -85,6 +85,7 @@ protected:
 
 private:
     void setPath_();
+    void destruct_();
 
     Cell * cell_;
     bool side_;
@@ -198,9 +199,6 @@ public:
 
     void setReadOnly(bool b);
     bool isReadOnly() const;
-
-    void deleteArrow(GraphicsArrowItem * arrowItem);
-    void deleteItem(GraphicsNodeItem * item);
 
     QList<GraphicsNodeItem*> nodeItems() const;
 
