@@ -45,11 +45,13 @@ public:
     enum { Type = UserType + 1 };
     int type() const { return Type; }
 
-    GraphicsNodeItem(AnimatedCycleNode * node, AnimatedCycleWidget * widget);
+    GraphicsNodeItem(AnimatedCycleWidget * widget, Cell * cell, bool side = true);
     ~GraphicsNodeItem();
     void observedCellDeleted(Cell *);
 
-    AnimatedCycleNode * node() const;
+    Cell * cell() const { return cell_; }
+    bool side() const { return side_; }
+    void setSide(bool b);
 
     GraphicsNodeItem * next();
     GraphicsNodeItem * previous();
@@ -84,7 +86,8 @@ protected:
 private:
     void setPath_();
 
-    AnimatedCycleNode * node_;
+    Cell * cell_;
+    bool side_;
     QGraphicsTextItem * text_;
     AnimatedCycleWidget * widget_;
 
@@ -190,11 +193,10 @@ public:
     void setAnimatedCycle(const AnimatedCycle & animatedCycle);
     void setAnimatedCycle(InbetweenFace * inbetweenFace, int indexCycle);
     void clearAnimatedCycle();
-    void clearScene();
 
     void observedCellDeleted(Cell *);
 
-    // Get current animated cycle
+    // Convert graphics scene to animated cycle.
     // Notes: * The returned animated cycle is only aware of the nodes connected to first.
     //        * The returned animated cycle might be in an invalid state
     AnimatedCycle getAnimatedCycle() const;
@@ -208,27 +210,24 @@ public:
     void deleteArrow(GraphicsArrowItem * arrowItem);
     void deleteItem(GraphicsNodeItem * item);
 
-protected:
-    virtual void mousePressEvent(QMouseEvent * event);
+    QList<GraphicsNodeItem*> nodeItems() const;
 
 public slots:
     void reload();
-    void apply();
 
-private slots:
+private slots:    
+    void apply();
     void animate();
     void addSelectedCells();
 
 private:
-    void createNodeAndItem(Cell * cell);
-    void createItem(AnimatedCycleNode * node);
+    void clearScene();
+    void createItem(Cell * cell);
     void computeItemHeightAndY();
-    void computeSceneFromAnimatedCycle();
+    void computeSceneFromAnimatedCycle(const AnimatedCycle & animatedCycle);
 
     QGraphicsScene * scene_;
     AnimatedCycleGraphicsView * view_;
-    AnimatedCycle animatedCycle_;
-    QMap<AnimatedCycleNode*, GraphicsNodeItem*> nodeToItem_;
     QTimer timer_;
     bool isReadOnly_;
     InbetweenFace * inbetweenFace_;

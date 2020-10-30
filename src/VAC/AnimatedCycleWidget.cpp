@@ -44,31 +44,32 @@ const double NODE_LARGE_SIDE = 60;
 const double SOCKET_RADIUS = 4;
 }
 
-GraphicsNodeItem::GraphicsNodeItem(AnimatedCycleNode * node, AnimatedCycleWidget * widget) :
-    node_(node),
+GraphicsNodeItem::GraphicsNodeItem(AnimatedCycleWidget * widget, Cell * cell, bool side) :
+    cell_(cell),
+    side_(side),
     widget_(widget),
     isMoved_(false)
 {
     // Set width, height, and color
-    if(node_->cell()->toKeyVertex())
+    if(cell->toKeyVertex())
     {
         setBrush(QColor(255,170,170));
         width_ =  NODE_SMALL_SIDE;
         height_ = NODE_SMALL_SIDE;
     }
-    else if(node_->cell()->toKeyEdge())
+    else if(cell->toKeyEdge())
     {
         setBrush(QColor(170,204,255));
         width_ =  NODE_LARGE_SIDE;
         height_ = NODE_SMALL_SIDE;
     }
-    else if(node_->cell()->toInbetweenVertex())
+    else if(cell->toInbetweenVertex())
     {
         setBrush(QColor(255,218,218));
         width_ =  NODE_SMALL_SIDE;
         height_ = NODE_LARGE_SIDE;
     }
-    else if(node_->cell()->toInbetweenEdge())
+    else if(cell->toInbetweenEdge())
     {
         setBrush(QColor(235,243,255));
         width_ =  NODE_LARGE_SIDE;
@@ -93,27 +94,32 @@ GraphicsNodeItem::GraphicsNodeItem(AnimatedCycleNode * node, AnimatedCycleWidget
     setFlag(ItemIsMovable, true);
 
     // Observe cell
-    observe(node_->cell());
+    observe(cell);
 }
 
 GraphicsNodeItem::~GraphicsNodeItem()
 {
-    // Unobserve cell
-    unobserve(node_->cell());
+    unobserve(cell_);
+}
+
+void GraphicsNodeItem::setSide(bool b)
+{
+    side_ = b;
+    updateText();
 }
 
 void GraphicsNodeItem::observedCellDeleted(Cell *)
 {
-    // Commit suicide properly
-    widget_->deleteItem(this);
+    widget()->reload();
 }
 
 void GraphicsNodeItem::updateText()
 {
     QString string;
-    string.setNum(node_->cell()->id());
-    if(node_->cell()->toEdgeCell())
-        (node_->side()) ? (string += "+") : (string += "-");
+    string.setNum(cell()->id());
+    if(cell()->toEdgeCell()) {
+        string += side() ? "+" : "-";
+    }
 
     text_->setPlainText(string);
 
@@ -134,7 +140,7 @@ void GraphicsNodeItem::updateArrows()
 void GraphicsNodeItem::setPath_()
 {
     QPainterPath path;
-    EdgeCell * edge = node()->cell()->toEdgeCell();
+    EdgeCell * edge = cell()->toEdgeCell();
     QRectF r = rect();
     double s = NODE_BORDER_RADIUS;
     double hs = 0.5 * NODE_BORDER_RADIUS;
@@ -234,11 +240,6 @@ void GraphicsNodeItem::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
 bool GraphicsNodeItem::isMoved() const
 {
     return isMoved_;
-}
-
-AnimatedCycleNode * GraphicsNodeItem::node() const
-{
-    return node_;
 }
 
 GraphicsNodeItem * GraphicsNodeItem::next()
@@ -405,22 +406,6 @@ GraphicsArrowItem::GraphicsArrowItem(GraphicsSocketItem * socketItem) :
 void GraphicsArrowItem::setTargetItem(GraphicsNodeItem * target)
 {
     targetItem_ = target;
-    AnimatedCycleNode * sourceNode = socketItem()->sourceItem()->node();
-    AnimatedCycleNode * targetNode = targetItem_ ? targetItem_->node() : nullptr;
-    switch (socketItem()->socketType()) {
-    case PreviousSocket:
-        sourceNode->setPrevious(targetNode);
-        break;
-    case NextSocket:
-        sourceNode->setNext(targetNode);
-        break;
-    case BeforeSocket:
-        sourceNode->setBefore(targetNode);
-        break;
-    case AfterSocket:
-        sourceNode->setAfter(targetNode);
-        break;
-    }
     updatePath();
 }
 
@@ -668,22 +653,10 @@ AnimatedCycleWidget::AnimatedCycleWidget(QWidget *parent) :
     connect(&timer_, SIGNAL(timeout()), this, SLOT(animate()));
 }
 
-
-void AnimatedCycleWidget::createNodeAndItem(Cell * cell)
+void AnimatedCycleWidget::createItem(Cell * cell)
 {
-    AnimatedCycleNode * node = new AnimatedCycleNode(cell);
-    if(!animatedCycle_.first())
-    {
-        animatedCycle_.setFirst(node);
-    }
-    createItem(node);
-}
-
-void AnimatedCycleWidget::createItem(AnimatedCycleNode * node)
-{
-    GraphicsNodeItem * item = new GraphicsNodeItem(node, this);
+    GraphicsNodeItem * item = new GraphicsNodeItem(this, cell);
     scene_->addItem(item);
-    nodeToItem_[node] = item;
 }
 
 void AnimatedCycleWidget::addSelectedCells()
@@ -693,12 +666,10 @@ void AnimatedCycleWidget::addSelectedCells()
     {
         CellSet selectedCells = vac->selectedCells();
         foreach(Cell * cell, selectedCells)
-            createNodeAndItem(cell);
+            createItem(cell);
         computeItemHeightAndY();
-        apply();
     }
 }
-
 
 void AnimatedCycleWidget::start()
 {
@@ -744,10 +715,6 @@ void AnimatedCycleWidget::clearScene()
     // Set scene properties
     view_->setTransformationAnchor(QGraphicsView::NoAnchor);
     view_->setScene(scene_);
-
-    // Clear maps and sets
-    nodeToItem_.clear();
-    nodeToItem_[0] = 0;
 }
 
 void AnimatedCycleWidget::observedCellDeleted(Cell *)
@@ -757,54 +724,40 @@ void AnimatedCycleWidget::observedCellDeleted(Cell *)
 
 void AnimatedCycleWidget::clearAnimatedCycle()
 {
-    // Break connection between widget and vac
     if(inbetweenFace_)
     {
         unobserve(inbetweenFace_);
         inbetweenFace_ = 0;
+        indexCycle_ = 0;
     }
-
-    // Clear scene
     clearScene();
 }
 
 void AnimatedCycleWidget::setAnimatedCycle(InbetweenFace * inbetweenFace, int indexCycle)
 {
-    // Clear
     clearAnimatedCycle();
-
-    // Set new animated cycle
     if(inbetweenFace && indexCycle >= 0 && indexCycle < inbetweenFace->numAnimatedCycles())
     {
         inbetweenFace_ = inbetweenFace;
         indexCycle_ = indexCycle;
-
         observe(inbetweenFace_);
-
         reload();
     }
 }
 
 void AnimatedCycleWidget::setAnimatedCycle(const AnimatedCycle & animatedCycle)
 {
-    // Clear scene
     clearAnimatedCycle();
-
-    // Set new animated cycle
-    animatedCycle_ = animatedCycle;
-
-    // Create items
-    computeSceneFromAnimatedCycle();
+    computeSceneFromAnimatedCycle(animatedCycle);
 }
 
 void AnimatedCycleWidget::reload()
 {
     clearScene();
-
     if(inbetweenFace_ && indexCycle_ >= 0 && indexCycle_ < inbetweenFace_->numAnimatedCycles())
     {
-        animatedCycle_ = inbetweenFace_->animatedCycle(indexCycle_);
-        computeSceneFromAnimatedCycle();
+        AnimatedCycle animatedCycle = inbetweenFace_->animatedCycle(indexCycle_);
+        computeSceneFromAnimatedCycle(animatedCycle);
         start();
     }
 }
@@ -813,7 +766,7 @@ void AnimatedCycleWidget::apply()
 {
     if(inbetweenFace_ && indexCycle_ >= 0 && indexCycle_ < inbetweenFace_->numAnimatedCycles())
     {
-        inbetweenFace_->setCycle(indexCycle_,animatedCycle_);
+        inbetweenFace_->setCycle(indexCycle_, getAnimatedCycle());
 
         VectorAnimationComplex::VAC * vac = inbetweenFace_->vac();
         emit vac->needUpdatePicking();
@@ -824,7 +777,57 @@ void AnimatedCycleWidget::apply()
 
 AnimatedCycle AnimatedCycleWidget::getAnimatedCycle() const
 {
-    return animatedCycle_;
+    // Create all nodes from items
+    QMap<GraphicsNodeItem*, AnimatedCycleNode*> itemToNode;
+    QList<GraphicsNodeItem*> items = nodeItems();
+    foreach (GraphicsNodeItem * item, items) {
+        AnimatedCycleNode * node = new AnimatedCycleNode(item->cell());
+        node->setSide(item->side());
+        itemToNode[item] = node;
+    }
+
+    // Set connections betweens nodes
+    foreach (GraphicsNodeItem * item, items) {
+        AnimatedCycleNode * node = itemToNode[item];
+        if (item->next()) {
+            node->setNext(itemToNode[item->next()]);
+        }
+        if (item->previous()) {
+            node->setPrevious(itemToNode[item->previous()]);
+        }
+        if (item->before()) {
+            node->setBefore(itemToNode[item->before()]);
+        }
+        if (item->after()) {
+            node->setAfter(itemToNode[item->after()]);
+        }
+    }
+
+    // Find first node
+    AnimatedCycleNode* first = nullptr;
+    if (!items.isEmpty()) {
+        GraphicsNodeItem* firstItem = items.first();
+        int n = items.size(); // avoid infinite loop in case of invalid cycle
+        int i = 0;
+        while (firstItem->before() && i < n) {
+            ++i;
+            firstItem = firstItem->before();
+        }
+        first = itemToNode[firstItem];
+    }
+
+    // Create animated cycle
+    AnimatedCycle res(first);
+
+    // Delete unreachable nodes that would otherwise be leaked
+    QSet<AnimatedCycleNode*> nodes = res.nodes();
+    foreach (AnimatedCycleNode* node, itemToNode) {
+        if (!nodes.contains(node)) {
+            delete node;
+        }
+    }
+
+    return res;
 }
 
 void AnimatedCycleWidget::deleteItem(GraphicsNodeItem * item)
@@ -906,14 +909,26 @@ void AnimatedCycleWidget::deleteItem(GraphicsNodeItem * item)
     */
 }
 
-void AnimatedCycleWidget::computeSceneFromAnimatedCycle()
+QList<GraphicsNodeItem*> AnimatedCycleWidget::nodeItems() const
+{
+    QList<GraphicsNodeItem*> res;
+    foreach(QGraphicsItem * i, scene_->items())
+    {
+        GraphicsNodeItem * item = qgraphicsitem_cast<GraphicsNodeItem *>(i);
+        if(item)
+            res << item;
+    }
+    return res;
+}
+
+void AnimatedCycleWidget::computeSceneFromAnimatedCycle(const AnimatedCycle & animatedCycle)
 {
     // Clear scene
     clearScene();
 
     // Get start nodes
     QSet<AnimatedCycleNode*> startNodes;
-    AnimatedCycleNode * startNode = animatedCycle_.first();
+    AnimatedCycleNode * startNode = animatedCycle.first();
     while(startNode)
     {
         startNodes << startNode;
@@ -921,23 +936,24 @@ void AnimatedCycleWidget::computeSceneFromAnimatedCycle()
     }
 
     // Create items
-    foreach(AnimatedCycleNode * node, animatedCycle_.nodes())
+    QMap<AnimatedCycleNode*, GraphicsNodeItem*> nodeToItem;
+    foreach(AnimatedCycleNode * node, animatedCycle.nodes())
     {
-        GraphicsNodeItem * item = new GraphicsNodeItem(node, this);
+        GraphicsNodeItem * item = new GraphicsNodeItem(this, node->cell(), node->side());
         scene_->addItem(item);
-        nodeToItem_[node] = item;
+        nodeToItem[node] = item;
     }
 
     // Set item height and Y
     computeItemHeightAndY();
 
     // Create arrows
-    foreach(AnimatedCycleNode * node, animatedCycle_.nodes())
+    foreach(AnimatedCycleNode * node, animatedCycle.nodes())
     {
-        GraphicsNodeItem * item = nodeToItem_[node];
+        GraphicsNodeItem * item = nodeToItem[node];
         if(node->next()) // can be false if cycle is invalid
         {
-            GraphicsNodeItem * target = nodeToItem_[node->next()];
+            GraphicsNodeItem * target = nodeToItem[node->next()];
             item->nextSocket()->setTargetItem(target);
             if(startNodes.contains(node->next())) {
                 item->nextSocket()->arrowItem()->setIsBorderArrow(true);
@@ -945,7 +961,7 @@ void AnimatedCycleWidget::computeSceneFromAnimatedCycle()
         }
         if(node->previous()) // can be false if cycle is invalid
         {
-            GraphicsNodeItem * target = nodeToItem_[node->previous()];
+            GraphicsNodeItem * target = nodeToItem[node->previous()];
             item->previousSocket()->setTargetItem(target);
             if(startNodes.contains(node)) {
                 item->previousSocket()->arrowItem()->setIsBorderArrow(true);
@@ -953,12 +969,12 @@ void AnimatedCycleWidget::computeSceneFromAnimatedCycle()
         }
         if(node->after())
         {
-            GraphicsNodeItem * target = nodeToItem_[node->after()];
+            GraphicsNodeItem * target = nodeToItem[node->after()];
             item->afterSocket()->setTargetItem(target);
         }
         if(node->before())
         {
-            GraphicsNodeItem * target = nodeToItem_[node->before()];
+            GraphicsNodeItem * target = nodeToItem[node->before()];
             item->beforeSocket()->setTargetItem(target);
         }
     }
@@ -970,13 +986,10 @@ void AnimatedCycleWidget::computeItemHeightAndY()
 
     // Get key times
     QSet<int> keyTimes;
-    for(Iterator it = nodeToItem_.begin(); it != nodeToItem_.end(); ++it)
+    QList<GraphicsNodeItem*> items = nodeItems();
+    foreach(GraphicsNodeItem * item, items)
     {
-        AnimatedCycleNode * node = it.key();
-        if(!node)
-            continue;
-
-        Cell * cell = node->cell();
+        Cell * cell = item->cell();
         InbetweenCell * inbetweenCell = cell->toInbetweenCell();
 
         if(inbetweenCell)
@@ -995,14 +1008,9 @@ void AnimatedCycleWidget::computeItemHeightAndY()
     // Sort key times and compute height and Y of items
     QList<int> keyTimesSorted = keyTimes.toList();
     qSort(keyTimesSorted);
-    for(Iterator it = nodeToItem_.begin(); it != nodeToItem_.end(); ++it)
+    foreach(GraphicsNodeItem * item, items)
     {
-        AnimatedCycleNode * node = it.key();
-        if(!node)
-            continue;
-
-        GraphicsNodeItem * item = it.value();
-        Cell * cell = node->cell();
+        Cell * cell = item->cell();
         InbetweenCell * inbetweenCell = cell->toInbetweenCell();
 
         if(inbetweenCell)
@@ -1044,11 +1052,6 @@ void AnimatedCycleWidget::computeItemHeightAndY()
     }
 }
 
-void AnimatedCycleWidget::mousePressEvent(QMouseEvent * event)
-{
-    QWidget::mousePressEvent(event);
-}
-
 void AnimatedCycleWidget::animate()
 {
     // Compute delta between current and target
@@ -1057,16 +1060,8 @@ void AnimatedCycleWidget::animate()
     QMap<GraphicsNodeItem*, double> deltaMinX;
     QMap<GraphicsNodeItem*, double> deltaMaxX;
 
-    // Get all items
-    QSet<GraphicsNodeItem*> items;
-    foreach(QGraphicsItem * i, scene_->items())
-    {
-        GraphicsNodeItem * item = qgraphicsitem_cast<GraphicsNodeItem *>(i);
-        if(item)
-            items << item;
-    }
-
     // Initialize values
+    QList<GraphicsNodeItem*> items = nodeItems();
     foreach(GraphicsNodeItem * item, items)
     {
         deltaX[item] = 0;
@@ -1112,7 +1107,7 @@ void AnimatedCycleWidget::animate()
     // Increase width of inbetween edges
     foreach(GraphicsNodeItem * item, items)
     {
-        InbetweenEdge * inbetweenEdge = item->node()->cell()->toInbetweenEdge();
+        InbetweenEdge * inbetweenEdge = item->cell()->toInbetweenEdge();
         if(inbetweenEdge)
         {
             // get after items
@@ -1174,7 +1169,7 @@ void AnimatedCycleWidget::animate()
         if (item->after())
         {
             // Idea: for inbetween cells, keep double arrows vertical
-            if(item->node()->cell()->toInbetweenCell())
+            if(item->cell()->toInbetweenCell())
             {
                 GraphicsNodeItem * afterItem = item->after();
                 GraphicsNodeItem * beforeAfterItem = afterItem->before();
@@ -1197,7 +1192,7 @@ void AnimatedCycleWidget::animate()
         if (item->before())
         {
             // Idea: for inbetween cells, keep double arrows vertical
-            if(item->node()->cell()->toInbetweenCell())
+            if(item->cell()->toInbetweenCell())
             {
                 GraphicsNodeItem * beforeItem = item->before();
                 GraphicsNodeItem * afterBeforeItem = beforeItem->after();
