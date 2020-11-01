@@ -36,6 +36,7 @@ enum SocketType {
     AfterSocket
 };
 
+class GraphicsArrowItem;
 class GraphicsSocketItem;
 class AnimatedCycleWidget;
 class GraphicsNodeItem: public QGraphicsPathItem, public CellObserver
@@ -63,15 +64,19 @@ public:
     GraphicsSocketItem * beforeSocket() const { return sockets[BeforeSocket]; }
     GraphicsSocketItem * afterSocket() const { return sockets[AfterSocket]; }
 
+    QSet<GraphicsArrowItem*> backPointers() const { return backPointers_; }
+
     bool isMoved() const;
 
-    double height() const;
-    double width() const;
+    int height() const;
+    int width() const;
+    int abstractWidth() const;
     QRectF rect() const;
 
     void setHeight(int i);
-    void setWidth(double w);
-    void setFixedY(double y);
+    void setWidth(int w);
+    void setAbstractWidth(int w);
+    void setFixedY(int y);
 
     void updateText();
     void updateArrows();
@@ -84,6 +89,7 @@ protected:
     virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent * event);
 
 private:
+    friend class GraphicsArrowItem;
     void setPath_();
     void destruct_();
 
@@ -92,12 +98,16 @@ private:
     QGraphicsTextItem * text_;
     AnimatedCycleWidget * widget_;
 
+    // We use integers to avoid floating point rounding errors
+    // when computing the width of elements
     bool isMoved_;
-    double width_;
-    double height_;
-    double y_;
+    int width_;
+    int awidth_; // abstract width
+    int height_;
+    int y_;
 
     GraphicsSocketItem* sockets[4];
+    QSet<GraphicsArrowItem*> backPointers_;
 };
 
 class GraphicsArrowItem;
@@ -141,12 +151,14 @@ public:
     int type() const { return Type; }
 
     GraphicsArrowItem(GraphicsSocketItem * socketItem);
+    ~GraphicsArrowItem();
 
     void setTargetItem(GraphicsNodeItem * targetItem);
     void setEndPoint(const QPointF & p);
     void setIsBorderArrow(bool b);
 
     GraphicsSocketItem * socketItem() const { return socketItem_; }
+    GraphicsNodeItem * sourceItem() const { return socketItem_->sourceItem(); }
     GraphicsNodeItem * targetItem() const { return targetItem_; }
 
     QPointF endPoint() const { return endPoint_; }
@@ -202,6 +214,8 @@ public:
 
     QList<GraphicsNodeItem*> nodeItems() const;
 
+    void computeItemsWidth();
+
 public slots:
     void reload();
 
@@ -213,7 +227,7 @@ private slots:
 private:
     void clearScene();
     void createItem(Cell * cell);
-    void computeItemHeightAndY();
+    void computeItemsHeightAndY();
     void computeSceneFromAnimatedCycle(const AnimatedCycle & animatedCycle);
 
     QGraphicsScene * scene_;

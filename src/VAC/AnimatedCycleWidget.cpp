@@ -22,6 +22,7 @@
 #include "VectorAnimationComplex/KeyEdge.h"
 #include "VectorAnimationComplex/VAC.h"
 
+#include <QStack>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QVector2D>
@@ -37,11 +38,13 @@
 
 namespace
 {
-const double ARROW_LENGTH = 30;
-const double NODE_BORDER_RADIUS = 13;
-const double NODE_SMALL_SIDE = 26;
-const double NODE_LARGE_SIDE = 60;
-const double SOCKET_RADIUS = 4;
+// We use integers to avoid floating point rounding errors
+// when computing the width of elements
+const int ARROW_LENGTH = 30;
+const int NODE_BORDER_RADIUS = 13;
+const int NODE_SMALL_SIDE = 26;
+const int NODE_LARGE_SIDE = 60;
+const int SOCKET_RADIUS = 4;
 }
 
 GraphicsNodeItem::GraphicsNodeItem(AnimatedCycleWidget * widget, Cell * cell, bool side) :
@@ -100,6 +103,11 @@ GraphicsNodeItem::GraphicsNodeItem(AnimatedCycleWidget * widget, Cell * cell, bo
 GraphicsNodeItem::~GraphicsNodeItem()
 {
     unobserve(cell_);
+    while (!backPointers_.isEmpty()) {
+        GraphicsArrowItem* arrow = *backPointers_.begin();
+        arrow->setTargetItem(nullptr);
+        // Note: the above line also removes the arrow from backPointers_
+    }
 }
 
 void GraphicsNodeItem::setSide(bool b)
@@ -174,12 +182,17 @@ void GraphicsNodeItem::setPath_()
     }
 }
 
-double GraphicsNodeItem::width() const
+int GraphicsNodeItem::width() const
 {
     return width_;
 }
 
-double GraphicsNodeItem::height() const
+int GraphicsNodeItem::abstractWidth() const
+{
+    return awidth_;
+}
+
+int GraphicsNodeItem::height() const
 {
     return height_;
 }
@@ -192,10 +205,19 @@ QRectF GraphicsNodeItem::rect() const
                   width_, height_);
 }
 
-void GraphicsNodeItem::setWidth(double w)
+void GraphicsNodeItem::setWidth(int w)
 {
     width_ = w;
     setPath_();
+}
+
+void GraphicsNodeItem::setAbstractWidth(int w)
+{
+    awidth_ = w;
+    if (cell()->toEdgeCell())
+    {
+        setWidth(awidth_);
+    }
 }
 
 void GraphicsNodeItem::setHeight(int i)
@@ -204,7 +226,7 @@ void GraphicsNodeItem::setHeight(int i)
     setPath_();
 }
 
-void GraphicsNodeItem::setFixedY(double y)
+void GraphicsNodeItem::setFixedY(int y)
 {
     y_ = y;
     setY(y_);
@@ -421,6 +443,7 @@ void GraphicsSocketItem::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
                 arrowItem_->setTargetItem(nodeItem);
             }
             else {
+                arrowItem_->setTargetItem(nullptr);
                 delete arrowItem_;
                 arrowItem_ = nullptr;
             }
@@ -439,9 +462,23 @@ GraphicsArrowItem::GraphicsArrowItem(GraphicsSocketItem * socketItem) :
     setBrush(QBrush(Qt::black));
 }
 
+GraphicsArrowItem::~GraphicsArrowItem()
+{
+    if (targetItem_) {
+        targetItem_->backPointers_.remove(this);
+    }
+}
+
 void GraphicsArrowItem::setTargetItem(GraphicsNodeItem * target)
 {
+    if (targetItem_) {
+        targetItem_->backPointers_.remove(this);
+    }
     targetItem_ = target;
+    if (targetItem_) {
+        targetItem_->backPointers_.insert(this);
+    }
+    sourceItem()->widget()->computeItemsWidth();
     updatePath();
 }
 
@@ -655,7 +692,8 @@ void AnimatedCycleWidget::addSelectedCells()
         CellSet selectedCells = vac->selectedCells();
         foreach(Cell * cell, selectedCells)
             createItem(cell);
-        computeItemHeightAndY();
+        computeItemsHeightAndY();
+        computeItemsWidth();
     }
 }
 
@@ -854,7 +892,7 @@ void AnimatedCycleWidget::computeSceneFromAnimatedCycle(const AnimatedCycle & an
     }
 
     // Set item height and Y
-    computeItemHeightAndY();
+    computeItemsHeightAndY();
 
     // Create arrows
     foreach(AnimatedCycleNode * node, animatedCycle.nodes())
@@ -887,9 +925,11 @@ void AnimatedCycleWidget::computeSceneFromAnimatedCycle(const AnimatedCycle & an
             item->beforeSocket()->setTargetItem(target);
         }
     }
+
+    computeItemsWidth();
 }
 
-void AnimatedCycleWidget::computeItemHeightAndY()
+void AnimatedCycleWidget::computeItemsHeightAndY()
 {
     // Get key times
     QSet<int> keyTimes;
@@ -959,8 +999,216 @@ void AnimatedCycleWidget::computeItemHeightAndY()
     }
 }
 
+namespace {
+
+// Abstract width computed by adding the abstract width of nodes
+// that points to the given node via the given socket type.
+int computeAdjustedAbstractWidth(GraphicsNodeItem * node, SocketType socketType)
+{
+    int adjustedAbstractWidth = - ARROW_LENGTH;
+    for (GraphicsArrowItem * arrow : node->backPointers()) {
+        GraphicsSocketItem * socket = arrow->socketItem();
+        if (socket->socketType() == socketType) {
+            GraphicsNodeItem * source = socket->sourceItem();
+            if (source->abstractWidth() != -1) {
+                InbetweenEdge * ie = node->cell()->toInbetweenEdge();
+                if (!ie || !ie->isClosed()) {
+                    adjustedAbstractWidth += ARROW_LENGTH + source->abstractWidth();
+                }
+            }
+        }
+    }
+    return adjustedAbstractWidth;
+}
+
+// Abstract width computed by adding the abstract width of nodes
+// that points to the given node via either the before or after socket type.
+int computeAdjustedAbstractWidth(GraphicsNodeItem * node)
+{
+    int wb = computeAdjustedAbstractWidth(node, AfterSocket);
+    int wa = computeAdjustedAbstractWidth(node, BeforeSocket);
+    return std::max(wb, wa);
+}
+
+// Compute the top or bottom abstract width of the given inbetween open edge.
+int computeAbstractWidth(GraphicsNodeItem * node, const Path& path, SocketType socketType)
+{
+    if (path.type() == Path::SingleVertex) {
+        return NODE_LARGE_SIDE;
+    }
+    else if (path.type() == Path::OpenHalfedgeList) {
+        int k = path.size();
+        int defaultAbstractWidth = NODE_LARGE_SIDE +
+                (k-1)*(NODE_SMALL_SIDE + NODE_LARGE_SIDE + 2*ARROW_LENGTH);
+        int adjustedAbstractWidth = computeAdjustedAbstractWidth(node, socketType);
+        return std::max(defaultAbstractWidth, adjustedAbstractWidth);
+    }
+    else { // Invalid
+        return NODE_LARGE_SIDE;
+    }
+}
+
+// Compute the top or bottom abstract width of the given inbetween closed edge.
+int computeAbstractWidth(GraphicsNodeItem * node, const Cycle& cycle, SocketType socketType)
+{
+    if (cycle.type() == Cycle::SingleVertex) {
+        return NODE_LARGE_SIDE;
+    }
+    else if (cycle.type() == Cycle::OpenHalfedgeList){
+        int k = cycle.size();
+        int defaultAbstractWidth = NODE_SMALL_SIDE + ARROW_LENGTH + NODE_LARGE_SIDE +
+                (k-1)*(NODE_SMALL_SIDE + NODE_LARGE_SIDE + 2*ARROW_LENGTH);
+        int adjustedAbstractWidth = computeAdjustedAbstractWidth(node, socketType);
+        return std::max(defaultAbstractWidth, adjustedAbstractWidth);
+    }
+    else if (cycle.type() == Cycle::ClosedHalfedge){
+        int k = cycle.size();
+        int defaultAbstractWidth = NODE_LARGE_SIDE +
+                (k-1)*(NODE_LARGE_SIDE + ARROW_LENGTH);
+        int adjustedAbstractWidth = computeAdjustedAbstractWidth(node, socketType);
+        return std::max(defaultAbstractWidth, adjustedAbstractWidth);
+    }
+    else { // Invalid
+        return NODE_LARGE_SIDE;
+    }
+}
+
+int computeAbstractWidth(GraphicsNodeItem * node)
+{
+    if (node->cell()->toKeyVertex()) {
+        int defaultAbstractWidth = NODE_SMALL_SIDE;
+        int adjustedAbstract = computeAdjustedAbstractWidth(node);
+        return std::max(defaultAbstractWidth, adjustedAbstract);
+    }
+    if (node->cell()->toInbetweenVertex()) {
+        int defaultAbstractWidth = NODE_SMALL_SIDE;
+        return defaultAbstractWidth;
+    }
+    else if (node->cell()->toKeyEdge()) {
+        int defaultAbstractWidth = NODE_LARGE_SIDE;
+        return defaultAbstractWidth;
+    }
+    else if (InbetweenEdge* ie = node->cell()->toInbetweenEdge()) {
+        if (ie->isClosed()) {
+            Cycle cb = ie->beforeCycle();
+            Cycle ca = ie->afterCycle();
+            int wb = computeAbstractWidth(node, cb, AfterSocket);
+            int wa = computeAbstractWidth(node, ca, BeforeSocket);
+            return std::max(wb, wa);
+        }
+        else {
+            Path pb = ie->beforePath();
+            Path pa = ie->afterPath();
+            int wb = computeAbstractWidth(node, pb, AfterSocket);
+            int wa = computeAbstractWidth(node, pa, BeforeSocket);
+            return std::max(wb, wa);
+        }
+    }
+    return -1; // normally unreachable
+}
+
+}
+
+void AnimatedCycleWidget::computeItemsWidth()
+{
+    // Get all node items
+    QList<GraphicsNodeItem*> items = nodeItems();
+    if (items.isEmpty()) {
+        return;
+    }
+
+    // Allocate once a multi-purpose stack
+    QStack<GraphicsNodeItem*> stack;
+    stack.reserve(items.size());
+
+    // Compute connected components
+    int numConnectedComponents = 0;
+    QMap<GraphicsNodeItem*, int> connectedComponents;
+    QList<int> connectedComponentSize;
+    foreach(GraphicsNodeItem * item, items) {
+        connectedComponents[item] = -1;
+    }
+    foreach(GraphicsNodeItem * item, items) {
+        if (connectedComponents[item] == -1) {
+            int i = numConnectedComponents;
+            int size = 0;
+            ++numConnectedComponents;
+            connectedComponents[item] = i;
+            ++size;
+            stack.clear();
+            stack.push(item);
+            while (!stack.isEmpty()) {
+                GraphicsNodeItem * n = stack.pop();
+                for (GraphicsNodeItem * m : {n->next(), n->previous(), n->before(), n->after()}) {
+                    if (m && connectedComponents[m] == -1) {
+                        connectedComponents[m] = i;
+                        ++size;
+                        stack.push(m);
+                    }
+                }
+                for (GraphicsArrowItem * arrow : n->backPointers()) {
+                    GraphicsNodeItem * m = arrow->sourceItem();
+                    if (m && connectedComponents[m] == -1) {
+                        connectedComponents[m] = i;
+                        ++size;
+                        stack.push(m);
+                    }
+                }
+            }
+            connectedComponentSize.push_back(size);
+        }
+    }
+
+    // Compute abstract width of all nodes.
+    //
+    // The "abstract width" is like its actual visible width, except for key/inbetween vertices, where
+    // their actual width is always set to NODE_SMALL_SIDE, but their abstract width could be wider
+    // in case an edge shrinks to a vertex, in which case the abstract width of the vertex is the same
+    // as the edge.
+    //
+    foreach(GraphicsNodeItem * item, items) {
+        item->setAbstractWidth(-1);
+    }
+    foreach(GraphicsNodeItem * item, items) {
+        if (item->abstractWidth() == -1) {
+            stack.clear();
+            stack.push(item);
+            int connectedComponent = connectedComponents[item];
+            int size = connectedComponentSize[connectedComponent];
+            int maxIter = size * size;
+            int numIter = 0;
+            while (!stack.isEmpty() && numIter < maxIter) {
+                ++numIter;
+                GraphicsNodeItem * node = stack.pop();
+                int oldAbstractWidth = node->abstractWidth();
+                int newAbstractWidth = std::max(oldAbstractWidth, computeAbstractWidth(node));
+                if (oldAbstractWidth != newAbstractWidth) {
+                    node->setAbstractWidth(newAbstractWidth);
+                    for (GraphicsNodeItem * m : {node->next(), node->previous(), node->before(), node->after()}) {
+                        if (m) {
+                            stack.push(m);
+                        }
+                    }
+                    for (GraphicsArrowItem * arrow : node->backPointers()) {
+                        GraphicsNodeItem * m = arrow->sourceItem();
+                        if (m) {
+                            stack.push(m);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 void AnimatedCycleWidget::animate()
 {
+    // Get all node items
+    QList<GraphicsNodeItem*> items = nodeItems();
+    if (items.isEmpty()) {
+        return;
+    }
+
     // Compute delta between current and target
     QMap<GraphicsNodeItem*, double> deltaX;
     QMap<GraphicsNodeItem*, int> deltaXNum;
@@ -968,7 +1216,6 @@ void AnimatedCycleWidget::animate()
     QMap<GraphicsNodeItem*, double> deltaMaxX;
 
     // Initialize values
-    QList<GraphicsNodeItem*> items = nodeItems();
     foreach(GraphicsNodeItem * item, items)
     {
         deltaX[item] = 0;
@@ -1008,65 +1255,6 @@ void AnimatedCycleWidget::animate()
 
             deltaMinX[nextItem] = std::max(delta,deltaMinX[nextItem]);
             deltaMaxX[item] = std::min(-delta,deltaMaxX[item]);
-        }
-    }
-
-    // Increase width of inbetween edges
-    foreach(GraphicsNodeItem * item, items)
-    {
-        InbetweenEdge * inbetweenEdge = item->cell()->toInbetweenEdge();
-        if(inbetweenEdge)
-        {
-            // get after items
-            double lastRight = 0;
-            double widthAfterItems = 0;
-            GraphicsNodeItem * firstAfterItem = item->after();
-            GraphicsNodeItem * afterItem = firstAfterItem;
-            if(afterItem)
-            {
-                lastRight = afterItem->x() + 0.5*afterItem->width();
-                widthAfterItems += afterItem->width();
-                afterItem = afterItem->next();
-            }
-            while(afterItem && afterItem != firstAfterItem && afterItem->before() == item)
-            {
-                double right = afterItem->x() + 0.5*afterItem->width();
-                if(right-lastRight < 0)
-                    widthAfterItems += afterItem->width();
-                else
-                    widthAfterItems += right-lastRight;
-                lastRight = right;
-                afterItem = afterItem->next();
-            }
-
-            // get before items
-            double lastLeft = 0;
-            double widthBeforeItems = 0;
-            GraphicsNodeItem * firstBeforeItem = item->before();
-            GraphicsNodeItem * beforeItem = firstBeforeItem;
-            if(beforeItem)
-            {
-                lastLeft = beforeItem->x() - 0.5*beforeItem->width();
-                widthBeforeItems += beforeItem->width();
-                beforeItem = beforeItem->previous();
-            }
-            while(beforeItem && beforeItem != firstBeforeItem && beforeItem->after() == item)
-            {
-                double left = beforeItem->x() - 0.5*beforeItem->width();
-                if(lastLeft-left < 0)
-                    widthBeforeItems += beforeItem->width();
-                else
-                    widthBeforeItems += lastLeft-left;
-                lastLeft = left;
-                beforeItem = beforeItem->previous();
-            }
-
-            // grow inbetween edge
-            double widthBeforeAfter = std::max(widthBeforeItems,widthAfterItems);
-            if(NODE_LARGE_SIDE < widthBeforeAfter)
-            {
-                item->setWidth(widthBeforeAfter);
-            }
         }
     }
 
