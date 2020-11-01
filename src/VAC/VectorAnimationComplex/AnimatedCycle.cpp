@@ -1095,16 +1095,32 @@ void AnimatedCycle::convertTempIdsToPointers(VAC * vac)
     // Second pass, link nodes together
     for(int i=0; i<n; ++i)
     {
-        nodes[i]->setPrevious(nodes[tempNodes_[i].previous]);
-        nodes[i]->setNext(nodes[tempNodes_[i].next]);
-        if(tempNodes_[i].before == -1)
+        if(tempNodes_[i].previous == -1) {
+            qWarning() << "AnimatedCycle: previous node shouldn't be null";
+            nodes[i]->setPrevious(0);
+        }
+        else {
+             nodes[i]->setPrevious(nodes[tempNodes_[i].previous]);
+        }
+        if(tempNodes_[i].next == -1) {
+            qWarning() << "AnimatedCycle: next node shouldn't be null";
+            nodes[i]->setNext(0);
+        }
+        else {
+            nodes[i]->setNext(nodes[tempNodes_[i].next]);
+        }
+        if(tempNodes_[i].before == -1) {
             nodes[i]->setBefore(0);
-        else
+        }
+        else {
             nodes[i]->setBefore(nodes[tempNodes_[i].before]);
-        if(tempNodes_[i].after == -1)
+        }
+        if(tempNodes_[i].after == -1) {
             nodes[i]->setAfter(0);
-        else
+        }
+        else {
             nodes[i]->setAfter(nodes[tempNodes_[i].after]);
+        }
     }
 
     // Find first
