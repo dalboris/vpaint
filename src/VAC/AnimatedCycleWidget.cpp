@@ -873,13 +873,25 @@ void AnimatedCycleWidget::computeSceneFromAnimatedCycle(const AnimatedCycle & an
     // Clear scene
     clearScene();
 
-    // Get start nodes
+    // Get start nodes: these are the left-most nodes used to determine
+    // when arrows should wrap.
     QSet<AnimatedCycleNode*> startNodes;
-    AnimatedCycleNode * startNode = animatedCycle.first();
-    while(startNode)
+    AnimatedCycleNode * root = animatedCycle.root();
+    if (root)
     {
-        startNodes << startNode;
-        startNode = startNode->after();
+        startNodes << root;
+        AnimatedCycleNode * startNode = root->before();
+        while(startNode)
+        {
+            startNodes << startNode;
+            startNode = startNode->before();
+        }
+        startNode = root->after();
+        while(startNode)
+        {
+            startNodes << startNode;
+            startNode = startNode->after();
+        }
     }
 
     // Create items
