@@ -53,6 +53,10 @@ public:
     Cell * cell() const { return cell_; }
     bool side() const { return side_; }
     void setSide(bool b);
+    bool isRoot() const { return isRoot_; } // whether this node is the root node
+    void setRoot(bool b);
+    bool isLeft() const { return isLeft_; } // whether this node is a "left node" (i.e., arrows wrap here)
+    void setLeft(bool b);
 
     GraphicsNodeItem * next();
     GraphicsNodeItem * previous();
@@ -90,11 +94,14 @@ protected:
 
 private:
     friend class GraphicsArrowItem;
+    void setPen_();
     void setPath_();
     void destruct_();
 
     Cell * cell_;
     bool side_;
+    bool isRoot_;
+    bool isLeft_;
     QGraphicsTextItem * text_;
     AnimatedCycleWidget * widget_;
 
@@ -155,22 +162,19 @@ public:
 
     void setTargetItem(GraphicsNodeItem * targetItem);
     void setEndPoint(const QPointF & p);
-    void setIsBorderArrow(bool b);
 
     GraphicsSocketItem * socketItem() const { return socketItem_; }
     GraphicsNodeItem * sourceItem() const { return socketItem_->sourceItem(); }
     GraphicsNodeItem * targetItem() const { return targetItem_; }
 
     QPointF endPoint() const { return endPoint_; }
-    bool isBorderArrow() const { return isBorderArrow_; }
-
+    bool isBorderArrow() const;
     void updatePath();
 
 private:
     GraphicsSocketItem * socketItem_;
     GraphicsNodeItem * targetItem_;
     QPointF endPoint_;
-    bool isBorderArrow_;
 };
 
 class AnimatedCycleWidget;
@@ -215,6 +219,8 @@ public:
     QList<GraphicsNodeItem*> nodeItems() const;
 
     void computeItemsWidth();
+    void setRoot(GraphicsNodeItem * node);
+    void updateLeftNodes(); // update the nodes where arrows should wrap
 
 public slots:
     void reload();
@@ -232,6 +238,7 @@ private:
 
     QGraphicsScene * scene_;
     AnimatedCycleGraphicsView * view_;
+    GraphicsNodeItem* root_;
     QTimer timer_;
     bool isReadOnly_;
     InbetweenFace * inbetweenFace_;

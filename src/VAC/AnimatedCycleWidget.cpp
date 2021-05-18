@@ -50,9 +50,14 @@ const int SOCKET_RADIUS = 4;
 GraphicsNodeItem::GraphicsNodeItem(AnimatedCycleWidget * widget, Cell * cell, bool side) :
     cell_(cell),
     side_(side),
+    isRoot_(false),
+    isLeft_(false),
     widget_(widget),
     isMoved_(false)
 {
+    // Set pen
+    setPen_();
+
     // Set width, height, and color
     if(cell->toKeyVertex())
     {
@@ -116,6 +121,17 @@ void GraphicsNodeItem::setSide(bool b)
     updateText();
 }
 
+void GraphicsNodeItem::setRoot(bool b)
+{
+    isRoot_ = b;
+    setPen_();
+}
+
+void GraphicsNodeItem::setLeft(bool b)
+{
+    isLeft_ = b;
+}
+
 void GraphicsNodeItem::observedCellDeleted(Cell *)
 {
     widget()->reload();
@@ -142,6 +158,16 @@ void GraphicsNodeItem::updateArrows()
         if (socket->arrowItem()) {
             socket->arrowItem()->updatePath();
         }
+    }
+}
+
+void GraphicsNodeItem::setPen_()
+{
+    if (isRoot_) {
+        setPen(QPen(Qt::black, 3.0));
+    }
+    else {
+        setPen(QPen(Qt::black, 1.0));
     }
 }
 
@@ -235,11 +261,14 @@ void GraphicsNodeItem::setFixedY(int y)
 void GraphicsNodeItem::mousePressEvent(QGraphicsSceneMouseEvent * event)
 {
     if (event->button() == Qt::LeftButton) {
-        if (!widget()->isReadOnly() && (event->modifiers() & Qt::CTRL)) {
+        if (!widget()->isReadOnly() && (event->modifiers() == Qt::CTRL)) {
             setSide(!side());
         }
-        else if (!widget()->isReadOnly() && (event->modifiers() & Qt::ALT)) {
+        else if (!widget()->isReadOnly() && (event->modifiers() == Qt::ALT)) {
             destruct_();
+        }
+        else if (!widget()->isReadOnly() && (event->modifiers() == Qt::SHIFT)) {
+            widget()->setRoot(this);
         }
         else {
             isMoved_ = true;
@@ -307,6 +336,10 @@ void GraphicsNodeItem::destruct_()
         }
     }
 
+    if (isRoot_) {
+        widget()->setRoot(nullptr);
+    }
+
     // Delete this item and all its chilren (socket+text).
     // Note that deleting each socket also deletes its arrow if any.
     delete this;
@@ -351,7 +384,7 @@ void GraphicsSocketItem::setTargetItem(GraphicsNodeItem * target)
         arrowItem_->setTargetItem(target);
         scene()->addItem(arrowItem_);
     }
-    // TODO: how to decide if the arrow should be a border arrow?
+    sourceItem()->widget()->updateLeftNodes();
 }
 
 void GraphicsSocketItem::updatePosition()
@@ -455,8 +488,7 @@ GraphicsArrowItem::GraphicsArrowItem(GraphicsSocketItem * socketItem) :
     QGraphicsPathItem(),
     socketItem_(socketItem),
     targetItem_(nullptr),
-    endPoint_(0.0, 0.0),
-    isBorderArrow_(false)
+    endPoint_(0.0, 0.0)
 {
     setPen(QPen(Qt::black, 1.0, Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin));
     setBrush(QBrush(Qt::black));
@@ -488,10 +520,12 @@ void GraphicsArrowItem::setEndPoint(const QPointF & p)
     updatePath();
 }
 
-void GraphicsArrowItem::setIsBorderArrow(bool b)
+bool GraphicsArrowItem::isBorderArrow() const
 {
-    isBorderArrow_ = b;
-    updatePath();
+    return targetItem() && (
+               (socketItem()->socketType() == NextSocket     && targetItem()->isLeft()) ||
+               (socketItem()->socketType() == PreviousSocket && sourceItem()->isLeft())
+           );
 }
 
 void GraphicsArrowItem::updatePath()
@@ -524,7 +558,7 @@ void GraphicsArrowItem::updatePath()
         if(y2 > y2max) y2 = y2max;
 
         if (socketType == NextSocket) {
-            if (isBorderArrow()) {
+            if (isBorderArrow() && x2min < x1) {
                 p2 = QPointF(x1 + ARROW_LENGTH, y2);
             }
             else {
@@ -532,7 +566,7 @@ void GraphicsArrowItem::updatePath()
             }
         }
         else if (socketType == PreviousSocket) {
-            if (isBorderArrow()) {
+            if (isBorderArrow() && x2max > x1) {
                 p2 = QPointF(x1 - ARROW_LENGTH, y2);
             }
             else {
@@ -601,17 +635,6 @@ void AnimatedCycleGraphicsView::mousePressEvent(QMouseEvent * event)
         QMouseEvent fake(event->type(), event->pos(), Qt::LeftButton, Qt::LeftButton, event->modifiers());
         QGraphicsView::mousePressEvent(&fake);
     }
-    /*
-    else if(event->button() == Qt::LeftButton && global()->keyboardModifiers().testFlag(Qt::AltModifier))
-    {
-        GraphicsNodeItem * nodeItem = nodeItemAt(event->pos());
-        if(nodeItem)
-        {
-            animatedCycleWidget_->deleteItem(nodeItem);
-            animatedCycleWidget_->save();
-        }
-    }
-    */
     else
     {
         QGraphicsView::mousePressEvent(event);
@@ -640,6 +663,7 @@ void AnimatedCycleGraphicsView::mouseReleaseEvent(QMouseEvent * event)
 
 AnimatedCycleWidget::AnimatedCycleWidget(QWidget *parent) :
     QWidget(parent),
+    root_(nullptr),
     isReadOnly_(true),
     inbetweenFace_(0)
 {
@@ -666,6 +690,7 @@ AnimatedCycleWidget::AnimatedCycleWidget(QWidget *parent) :
     QVBoxLayout * editModeExtrasLayout = new QVBoxLayout();
     editModeExtrasLayout->addWidget(new QLabel(ctrl + tr(" + Click: Toggle edge direction")));
     editModeExtrasLayout->addWidget(new QLabel(tr("ALT + Click: Delete node")));
+    editModeExtrasLayout->addWidget(new QLabel(tr("SHIFT + Click: Change root node")));
     editModeExtrasLayout->addWidget(editorButtons);
     editModeExtras_->setLayout(editModeExtrasLayout);
 
@@ -694,6 +719,10 @@ void AnimatedCycleWidget::addSelectedCells()
             createItem(cell);
         computeItemsHeightAndY();
         computeItemsWidth();
+        if (!root_) {
+            // Select a new root
+            setRoot(nullptr);
+        }
     }
 }
 
@@ -732,7 +761,8 @@ bool AnimatedCycleWidget::isReadOnly() const
 void AnimatedCycleWidget::clearScene()
 {
     // Delete all items
-    view_->setScene(0);
+    root_ = nullptr;
+    view_->setScene(nullptr);
     delete scene_;
 
     // Create new empty scene
@@ -753,7 +783,7 @@ void AnimatedCycleWidget::clearAnimatedCycle()
     if(inbetweenFace_)
     {
         unobserve(inbetweenFace_);
-        inbetweenFace_ = 0;
+        inbetweenFace_ = nullptr;
         indexCycle_ = 0;
     }
     clearScene();
@@ -829,21 +859,9 @@ AnimatedCycle AnimatedCycleWidget::getAnimatedCycle() const
         }
     }
 
-    // Find first node
-    AnimatedCycleNode* first = nullptr;
-    if (!items.isEmpty()) {
-        GraphicsNodeItem* firstItem = items.first();
-        int n = items.size(); // avoid infinite loop in case of invalid cycle
-        int i = 0;
-        while (firstItem->before() && i < n) {
-            ++i;
-            firstItem = firstItem->before();
-        }
-        first = itemToNode[firstItem];
-    }
-
     // Create animated cycle
-    AnimatedCycle res(first);
+    AnimatedCycleNode * root = root_ ? itemToNode[root_] : nullptr;
+    AnimatedCycle res(root);
 
     // Delete unreachable nodes that would otherwise be leaked
     QSet<AnimatedCycleNode*> nodes = res.nodes();
@@ -873,32 +891,17 @@ void AnimatedCycleWidget::computeSceneFromAnimatedCycle(const AnimatedCycle & an
     // Clear scene
     clearScene();
 
-    // Get start nodes: these are the left-most nodes used to determine
-    // when arrows should wrap.
-    QSet<AnimatedCycleNode*> startNodes;
-    AnimatedCycleNode * root = animatedCycle.root();
-    if (root)
-    {
-        startNodes << root;
-        AnimatedCycleNode * startNode = root->before();
-        while(startNode)
-        {
-            startNodes << startNode;
-            startNode = startNode->before();
-        }
-        startNode = root->after();
-        while(startNode)
-        {
-            startNodes << startNode;
-            startNode = startNode->after();
-        }
-    }
-
     // Create items
+    AnimatedCycleNode * root = animatedCycle.root();
+    QSet<AnimatedCycleNode*> nodes = animatedCycle.nodes();
     QMap<AnimatedCycleNode*, GraphicsNodeItem*> nodeToItem;
-    foreach(AnimatedCycleNode * node, animatedCycle.nodes())
+    foreach(AnimatedCycleNode * node, nodes)
     {
         GraphicsNodeItem * item = new GraphicsNodeItem(this, node->cell(), node->side());
+        if (node == root) {
+            item->setRoot(true);
+            root_ = item;
+        }
         scene_->addItem(item);
         nodeToItem[node] = item;
     }
@@ -907,24 +910,18 @@ void AnimatedCycleWidget::computeSceneFromAnimatedCycle(const AnimatedCycle & an
     computeItemsHeightAndY();
 
     // Create arrows
-    foreach(AnimatedCycleNode * node, animatedCycle.nodes())
+    foreach(AnimatedCycleNode * node, nodes)
     {
         GraphicsNodeItem * item = nodeToItem[node];
         if(node->next()) // can be false if cycle is invalid
         {
             GraphicsNodeItem * target = nodeToItem[node->next()];
             item->nextSocket()->setTargetItem(target);
-            if(startNodes.contains(node->next())) {
-                item->nextSocket()->arrowItem()->setIsBorderArrow(true);
-            }
         }
         if(node->previous()) // can be false if cycle is invalid
         {
             GraphicsNodeItem * target = nodeToItem[node->previous()];
             item->previousSocket()->setTargetItem(target);
-            if(startNodes.contains(node)) {
-                item->previousSocket()->arrowItem()->setIsBorderArrow(true);
-            }
         }
         if(node->after())
         {
@@ -938,6 +935,7 @@ void AnimatedCycleWidget::computeSceneFromAnimatedCycle(const AnimatedCycle & an
         }
     }
 
+    updateLeftNodes();
     computeItemsWidth();
 }
 
@@ -1209,6 +1207,87 @@ void AnimatedCycleWidget::computeItemsWidth()
                     }
                 }
             }
+        }
+    }
+}
+
+void AnimatedCycleWidget::setRoot(GraphicsNodeItem * node)
+{
+    // If the given node is nullptr, we arbitrarily find a root
+    if (!node) {
+        foreach(QGraphicsItem * i, scene_->items()) {
+            GraphicsNodeItem * item = qgraphicsitem_cast<GraphicsNodeItem *>(i);
+            if(item) {
+                node = item;
+                break;
+            }
+        }
+    }
+
+    // Perform the change of root
+    if (node != root_) {
+        // Unset current root
+        if (root_) {
+            root_->setRoot(false);
+            root_ = nullptr;
+        }
+        // Set current root
+        if (node) {
+            root_ = node;
+            root_->setRoot(true);
+        }
+
+        updateLeftNodes();
+    }
+}
+
+namespace {
+
+GraphicsNodeItem * leftMostBefore(GraphicsNodeItem * item)
+{
+    if (item)
+    {
+        GraphicsNodeItem * before = item->before();
+        if (before)
+        {
+            GraphicsNodeItem * leftMostBefore = before;
+            GraphicsNodeItem * leftMostBeforeCandidate = leftMostBefore->previous();
+            while (leftMostBeforeCandidate &&
+                   leftMostBeforeCandidate != before &&
+                   leftMostBeforeCandidate->after() == item)
+            {
+                leftMostBefore = leftMostBeforeCandidate;
+                leftMostBeforeCandidate = leftMostBefore->previous();
+            }
+            return leftMostBefore;
+        }
+    }
+    return nullptr;
+}
+
+} // namespace
+
+void AnimatedCycleWidget::updateLeftNodes()
+{
+    QList<GraphicsNodeItem*> items = nodeItems();
+    foreach(GraphicsNodeItem * item, items) {
+        item->setLeft(false);
+    }
+
+    if (root_)
+    {
+        root_->setLeft(true);
+        GraphicsNodeItem * item = leftMostBefore(root_);
+        while(item)
+        {
+            item->setLeft(true);
+            item = leftMostBefore(item);
+        }
+        item = root_->after();
+        while(item)
+        {
+            item->setLeft(true);
+            item = item->after();
         }
     }
 }
