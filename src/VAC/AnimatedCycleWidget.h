@@ -82,6 +82,7 @@ public:
     void setAbstractWidth(int w);
     void setFixedY(int y);
 
+    void updateStyle();
     void updateText();
     void updateArrows();
 
@@ -136,6 +137,7 @@ public:
     void setTargetItem(GraphicsNodeItem * target);
 
     void updatePosition();
+    void updateStyle();
 
 protected:
     void hoverEnterEvent(QGraphicsSceneHoverEvent * event) override;
@@ -148,6 +150,8 @@ private:
     SocketType socketType_;
     GraphicsNodeItem* sourceItem_;
     GraphicsArrowItem* arrowItem_;
+
+    bool isValid_();
 };
 
 class GraphicsArrowItem: public QGraphicsPathItem
@@ -222,6 +226,10 @@ public:
     void setRoot(GraphicsNodeItem * node);
     void updateLeftNodes(); // update the nodes where arrows should wrap
 
+    void computeTimespan();
+    Time beforeTime() const { return beforeTime_; }
+    Time afterTime() const { return afterTime_; }
+
 public slots:
     void reload();
 
@@ -244,6 +252,8 @@ private:
     InbetweenFace * inbetweenFace_;
     int indexCycle_;
     QWidget * editModeExtras_;
+    Time beforeTime_;
+    Time afterTime_;
 };
 
 #endif // ANIMATEDCYCLEWIDGET_H

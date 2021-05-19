@@ -161,6 +161,14 @@ void GraphicsNodeItem::updateArrows()
     }
 }
 
+void GraphicsNodeItem::updateStyle()
+{
+    setPen_();
+    for (SocketType type : {PreviousSocket, NextSocket, BeforeSocket, AfterSocket}) {
+        sockets[type]->updateStyle();
+    }
+}
+
 void GraphicsNodeItem::setPen_()
 {
     if (isRoot_) {
@@ -343,6 +351,8 @@ void GraphicsNodeItem::destruct_()
     // Delete this item and all its chilren (socket+text).
     // Note that deleting each socket also deletes its arrow if any.
     delete this;
+
+    widget()->computeTimespan();
 }
 
 GraphicsSocketItem::GraphicsSocketItem(SocketType socketType, GraphicsNodeItem * sourceItem) :
@@ -351,8 +361,7 @@ GraphicsSocketItem::GraphicsSocketItem(SocketType socketType, GraphicsNodeItem *
     sourceItem_(sourceItem),
     arrowItem_(nullptr)
 {
-    setPen(QPen(Qt::black, 1.0));
-    setBrush(QBrush(Qt::white));
+    updateStyle();
     updatePosition();
     setAcceptHoverEvents(true);
 }
@@ -385,6 +394,7 @@ void GraphicsSocketItem::setTargetItem(GraphicsNodeItem * target)
         scene()->addItem(arrowItem_);
     }
     sourceItem()->widget()->updateLeftNodes();
+    updateStyle();
 }
 
 void GraphicsSocketItem::updatePosition()
@@ -423,10 +433,55 @@ void GraphicsSocketItem::updatePosition()
     }
 }
 
+void GraphicsSocketItem::updateStyle()
+{
+    if (isValid_()) {
+        setPen(QPen(Qt::black, 1.0));
+        setBrush(QBrush(Qt::white));
+    }
+    else {
+        setPen(QPen(Qt::black, 1.0));
+        setBrush(QBrush(Qt::red));
+    }
+}
+
+bool GraphicsSocketItem::isValid_()
+{
+    if (targetItem()) {
+        return true;
+        // TODO: actually check validity
+    }
+    else {
+        // The only way for a socket to have no target and still be valid is to
+        // be a "before/after" socket at the boundary of the timespan
+        if (socketType() == BeforeSocket ||
+            socketType() == AfterSocket)
+        {
+            GraphicsNodeItem * item = sourceItem();
+            InbetweenCell * cell = item->cell()->toInbetweenCell();
+            if (cell) {
+                AnimatedCycleWidget * widget = item->widget();
+                if (socketType() == BeforeSocket) {
+                    return cell->beforeTime() == widget->beforeTime();
+                }
+                else { // socketType() == AfterSocket
+                    return cell->afterTime() == widget->afterTime();
+                }
+            }
+            else {
+                return false;
+            }
+        }
+        else {
+            return false;
+        }
+    }
+}
+
 void GraphicsSocketItem::hoverEnterEvent(QGraphicsSceneHoverEvent *)
 {
     if (!sourceItem()->widget()->isReadOnly()) {
-        setBrush(QBrush(Qt::red));
+        setBrush(QBrush(QColor(255, 178, 178))); // highlighted color
         sourceItem()->setFlag(ItemIsMovable, false);
     }
 }
@@ -434,7 +489,7 @@ void GraphicsSocketItem::hoverEnterEvent(QGraphicsSceneHoverEvent *)
 void GraphicsSocketItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *)
 {
     if (!sourceItem()->widget()->isReadOnly()) {
-        setBrush(QBrush(Qt::white));
+        updateStyle();
         sourceItem()->setFlag(ItemIsMovable, true);
     }
 }
@@ -717,6 +772,7 @@ void AnimatedCycleWidget::addSelectedCells()
         CellSet selectedCells = vac->selectedCells();
         foreach(Cell * cell, selectedCells)
             createItem(cell);
+        computeTimespan();
         computeItemsHeightAndY();
         computeItemsWidth();
         if (!root_) {
@@ -907,6 +963,7 @@ void AnimatedCycleWidget::computeSceneFromAnimatedCycle(const AnimatedCycle & an
     }
 
     // Set item height and Y
+    computeTimespan();
     computeItemsHeightAndY();
 
     // Create arrows
@@ -1289,6 +1346,25 @@ void AnimatedCycleWidget::updateLeftNodes()
             item->setLeft(true);
             item = item->after();
         }
+    }
+}
+
+void AnimatedCycleWidget::computeTimespan()
+{
+    beforeTime_ = Time(std::numeric_limits<int>::max());
+    afterTime_ = Time(std::numeric_limits<int>::min());
+    QList<GraphicsNodeItem*> items = nodeItems();
+    foreach (GraphicsNodeItem * item, items) {
+        InbetweenCell * cell = item->cell()->toInbetweenCell();
+        if (cell) {
+            beforeTime_ = std::min(beforeTime_, cell->beforeTime());
+            afterTime_ = std::max(afterTime_, cell->afterTime());
+        }
+    }
+
+    // Update style, since the validity of sockets depend on the timespan
+    foreach (GraphicsNodeItem * item, items) {
+        item->updateStyle();
     }
 }
 
