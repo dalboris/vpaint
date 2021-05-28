@@ -14,7 +14,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <math.h>
+#define _USE_MATH_DEFINES // M_PI
+#include <cmath>
 #include <algorithm>
 
 #include "View3D.h"
