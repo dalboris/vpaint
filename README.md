@@ -12,6 +12,20 @@ More Info:
 - **[www.vpaint.org](https://www.vpaint.org)**
 - **[www.vgc.io](https://www.vgc.io)**
 
+<img src="https://www.vgc.io/images/shared-edges-intro-01-24fps.gif" width="640px">
+<img src="https://www.vgc.io/images/shared-edges-others-01-24fps.gif" width="640px">
+<img src="https://www.vgc.io/images/topological-operators-01-24fps.gif" width="640px">
+<img src="https://www.vgc.io/images/glue-01-3-24fps.gif" width="640px">
+<img src="https://www.vgc.io/images/glue-02-24fps.gif" width="640px">
+<img src="https://www.vgc.io/images/sculpt-01-24fps.gif" width="640px">
+<img src="https://www.vgc.io/images/depth-ordering-02-24fps.gif" width="640px">
+<img src="https://www.vgc.io/images/depth-ordering-01-24fps.gif" width="640px">
+<img src="https://www.vgc.io/images/topological-operators-01-24fps.gif" width="640px">
+<img src="https://www.vgc.io/images/3D-pelican-360p-24fpss.gif" width="640px">
+<img src="https://www.vgc.io/images/star-split-360p-24fps.gif" width="640px">
+<img src="https://www.vgc.io/images/star-split-3D-360p-24fps.gif" width="640px">
+
+
 ## Disclaimer
 
 VPaint is considered BETA, and always will: it
