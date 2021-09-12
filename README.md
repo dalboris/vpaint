@@ -1,5 +1,3 @@
-<img src="https://github.com/dalboris/vpaint/blob/master/src/Gui/images/aboutlogo.png" width="660px">
-
 VPaint is an **experimental prototype** based on the Vector
 Graphics Complex (**VGC**), a technology developed by a
 collaboration of researchers at Inria and the University of
@@ -14,14 +12,11 @@ More Info:
 
 <img src="https://www.vgc.io/images/shared-edges-intro-01-24fps.gif" width="640px">
 <img src="https://www.vgc.io/images/shared-edges-others-01-24fps.gif" width="640px">
-<img src="https://www.vgc.io/images/topological-operators-01-24fps.gif" width="640px">
 <img src="https://www.vgc.io/images/glue-01-3-24fps.gif" width="640px">
 <img src="https://www.vgc.io/images/glue-02-24fps.gif" width="640px">
 <img src="https://www.vgc.io/images/sculpt-01-24fps.gif" width="640px">
 <img src="https://www.vgc.io/images/depth-ordering-02-24fps.gif" width="640px">
 <img src="https://www.vgc.io/images/depth-ordering-01-24fps.gif" width="640px">
-<img src="https://www.vgc.io/images/topological-operators-01-24fps.gif" width="640px">
-<img src="https://www.vgc.io/images/3D-pelican-360p-24fpss.gif" width="640px">
 <img src="https://www.vgc.io/images/star-split-360p-24fps.gif" width="640px">
 <img src="https://www.vgc.io/images/star-split-3D-360p-24fps.gif" width="640px">
 
