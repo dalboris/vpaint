@@ -38,7 +38,7 @@ improve performance compared to VPaint, and have more features.
 
 **If you would like to be notified if/when
 a new version of VPaint is released, or when VGC Illustration and VGC Animation are released**, you
-can sign up for a VGC account at **[vgc.io](https://www.vgc.io)**. Thanks for your interest, and have fun
+can subscribe to the newsletter at **[vgc.io](https://www.vgc.io/news)**. Thanks for your interest, and have fun
 testing VPaint!
 
 ## Build Instructions
