@@ -18,8 +18,9 @@
 #define XMLSTREAMREADER_H
 
 #include <QXmlStreamReader>
+#include "vpaint_global.h"
 
-class XmlStreamReader: public QXmlStreamReader
+class Q_VPAINT_EXPORT XmlStreamReader: public QXmlStreamReader
 {
 public:
     XmlStreamReader(QIODevice * device);

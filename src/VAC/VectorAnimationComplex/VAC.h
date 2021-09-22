@@ -32,6 +32,7 @@
 #include "EdgeSample.h"
 
 #include "../View3DSettings.h"
+#include "vpaint_global.h"
 
 class Scene;
 class XmlStreamWriter;
@@ -53,7 +54,7 @@ class KeyHalfedge;
 class PreviewKeyFace;
 class BoundingBox;
 
-class VAC: public SceneObject
+class Q_VPAINT_EXPORT VAC: public SceneObject
 {
     Q_OBJECT
 
