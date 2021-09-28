@@ -28,10 +28,12 @@
 #include <QList>
 #include <QPair>
 
+#include "vpaint_global.h"
+
 namespace VectorAnimationComplex
 {
 
-class InbetweenEdge: public InbetweenCell, public EdgeCell
+class Q_VPAINT_EXPORT InbetweenEdge: public InbetweenCell, public EdgeCell
 {
 public:
     // Construct a inbetween open edge

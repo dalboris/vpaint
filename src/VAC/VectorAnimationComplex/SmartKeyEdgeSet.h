@@ -22,12 +22,13 @@
 #include "ProperCycle.h"
 #include "CycleHelper.h"
 #include "CellList.h"
+#include "vpaint_global.h"
 
 namespace VectorAnimationComplex
 {
 
 // Assumes edgeSet is connected
-class SmartConnectedKeyEdgeSet
+class Q_VPAINT_EXPORT SmartConnectedKeyEdgeSet
 {
 public:
     SmartConnectedKeyEdgeSet(const KeyEdgeSet & edgeSet);
@@ -105,7 +106,7 @@ private:
     CycleHelper hole_;
 };
 
-class SmartKeyEdgeSet
+class Q_VPAINT_EXPORT SmartKeyEdgeSet
 {
 public:
     SmartKeyEdgeSet(const KeyEdgeSet & edgeSet);

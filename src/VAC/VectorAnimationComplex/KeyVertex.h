@@ -21,11 +21,12 @@
 #include "VertexCell.h"
 #include "Halfedge.h"
 #include "Eigen.h"
+#include "vpaint_global.h"
 
 namespace VectorAnimationComplex
 {
 
-class KeyVertex: public KeyCell, public VertexCell
+class Q_VPAINT_EXPORT KeyVertex: public KeyCell, public VertexCell
 {
 public:
     // Constructor

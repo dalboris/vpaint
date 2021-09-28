@@ -63,6 +63,7 @@
 #include <Eigen/Core>
 #include <Eigen/LU>
 #include <Eigen/StdVector>
+#include "vpaint_global.h"
 
 #ifndef DEFINE_STD_VECTOR_INSERTION_OPERATOR
 #define DEFINE_STD_VECTOR_INSERTION_OPERATOR
@@ -85,7 +86,7 @@ inline bool isnan(double x)
 #endif
 }
 
-struct Intersection
+struct Q_VPAINT_EXPORT Intersection
 {
     double s, t;
     Intersection(double s, double t): s(s), t(t) {}
@@ -98,7 +99,7 @@ struct Intersection
 
 
 template<class T>
-class Curve
+class Q_VPAINT_EXPORT Curve
 {
 public:
     // -------- Construction and Destruction --------
@@ -1713,7 +1714,7 @@ private:
     std::vector<Input,Eigen::aligned_allocator<Input> > p_;
 
     // fit a smooth curve to a subpart of the raw mouse input
-    class Fitter
+    class Q_VPAINT_EXPORT Fitter
     {
     public:
         // the fitting computation must be implemented in derived constructors.
@@ -1868,7 +1869,7 @@ private:
     // Different fitting algorithms that can be used
     // Note: only smooth the x and y coordinates. Could use higher dimensional
     //       bezier to also smooth other data, but not done by design
-    class CubicBezierFitter: public Fitter
+    class Q_VPAINT_EXPORT CubicBezierFitter: public Fitter
     {
     public:
         CubicBezierFitter(const std::vector<Input,Eigen::aligned_allocator<Input> > & p, int j, int N, double ds) :
@@ -1993,7 +1994,7 @@ private:
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     };
 
-    class QuarticBezierFitter: public Fitter
+    class Q_VPAINT_EXPORT QuarticBezierFitter: public Fitter
     {
     public:
         QuarticBezierFitter(const std::vector<Input,Eigen::aligned_allocator<Input> > & p, int j, int N, double ds) :

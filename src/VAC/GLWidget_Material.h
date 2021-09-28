@@ -17,7 +17,9 @@
 #ifndef GLWIDGET_MATERIAL_H
 #define GLWIDGET_MATERIAL_H
 
-class GLWidget_Material
+#include "vpaint_global.h"
+
+class Q_VPAINT_EXPORT GLWidget_Material
 {
 public:
     GLWidget_Material(QString s = QString("unnamed material")) :

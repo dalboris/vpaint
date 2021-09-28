@@ -18,6 +18,7 @@
 #define SVGPARSER_H
 
 #include <QColor>
+#include "vpaint_global.h"
 
 class QString;
 class QXmlStreamAttributes;
@@ -25,14 +26,14 @@ struct SvgImportParams;
 class XmlStreamReader;
 
 // https://www.w3.org/TR/SVG11/painting.html#SpecifyingPaint
-struct SvgPaint {
+struct Q_VPAINT_EXPORT SvgPaint {
     SvgPaint() : hasColor(false), color(Qt::black) {}
     SvgPaint(const QColor& color) : hasColor(true), color(color) {}
     bool hasColor;
     QColor color;
 };
 
-class SvgPresentationAttributes
+class Q_VPAINT_EXPORT SvgPresentationAttributes
 {
 public:
     SvgPresentationAttributes();
@@ -67,7 +68,7 @@ private:
     void update_();
 };
 
-class SvgParser
+class Q_VPAINT_EXPORT SvgParser
 {
 public:
     static void readSvg(XmlStreamReader &xml, const SvgImportParams& params);

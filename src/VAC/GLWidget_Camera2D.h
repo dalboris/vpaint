@@ -19,10 +19,11 @@
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
+#include "vpaint_global.h"
 
 // for now, no rotation
 
-class GLWidget_Camera2D
+class Q_VPAINT_EXPORT GLWidget_Camera2D
 {
 public:
     // initialization: correctly positionned to see a unit cube

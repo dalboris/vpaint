@@ -20,8 +20,9 @@
 #include "TimeDef.h"
 #include <QWidget>
 #include <QPushButton>
+#include "vpaint_global.h"
 
-class ViewSettings
+class Q_VPAINT_EXPORT ViewSettings
 {
 public:
     ViewSettings();
@@ -127,7 +128,7 @@ private:
 #include <QDoubleSpinBox>
 #include <QSlider>
 
-class ViewSettingsWidget: public QWidget
+class Q_VPAINT_EXPORT ViewSettingsWidget: public QWidget
 {
     Q_OBJECT
 

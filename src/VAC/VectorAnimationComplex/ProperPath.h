@@ -21,6 +21,7 @@
 
 #include <QList>
 #include "KeyHalfedge.h"
+#include "vpaint_global.h"
 
 ////////////// Forward declare global serialization operators /////////////////
 
@@ -37,7 +38,7 @@ namespace VectorAnimationComplex
 // A proper path is a list of n>1 consecutive open halfeges satisfying:
 //  * no repeated halfedge
 //  * startVertex() != endVertex()
-class ProperPath
+class Q_VPAINT_EXPORT ProperPath
 {
 public:
     // invalid path

@@ -22,10 +22,12 @@
 #include "VertexCell.h"
 #include <QList>
 
+#include "vpaint_global.h"
+
 namespace VectorAnimationComplex
 {
 
-class InbetweenVertex: public InbetweenCell, public VertexCell
+class Q_VPAINT_EXPORT InbetweenVertex: public InbetweenCell, public VertexCell
 {
 public:
     // Constructor

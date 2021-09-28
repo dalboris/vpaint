@@ -18,8 +18,9 @@
 #define BACKGROUND_URL_VALIDATOR_H
 
 #include <QValidator>
+#include "vpaint_global.h"
 
-class BackgroundUrlValidator: public QValidator
+class Q_VPAINT_EXPORT BackgroundUrlValidator: public QValidator
 {
 public:
     BackgroundUrlValidator(QObject * parent = 0);

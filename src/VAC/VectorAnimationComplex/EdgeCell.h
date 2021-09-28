@@ -23,10 +23,12 @@
 
 #include <QMap>
 
+#include "vpaint_global.h"
+
 namespace VectorAnimationComplex
 {
 
-class EdgeCell: virtual public Cell
+class Q_VPAINT_EXPORT EdgeCell: virtual public Cell
 {
 public:
     EdgeCell(VAC * vac);

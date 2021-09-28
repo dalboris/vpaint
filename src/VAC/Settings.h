@@ -19,11 +19,12 @@
 
 #include "SvgImportParams.h"
 #include "Version.h"
+#include "vpaint_global.h"
 
 class SettingsDialog;
 class QSettings;
 
-class Settings
+class Q_VPAINT_EXPORT Settings
 {
 public:
     Settings();

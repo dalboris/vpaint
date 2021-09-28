@@ -26,6 +26,7 @@
 #include <QImage>
 #include <QVector>
 #include <Eigen/Core>
+#include "vpaint_global.h"
 
 class XmlStreamWriter;
 class XmlStreamReader;
@@ -33,7 +34,7 @@ class XmlStreamReader;
 class QDir;
 class QTextStream;
 
-class Background: public QObject
+class Q_VPAINT_EXPORT Background: public QObject
 {
     Q_OBJECT
 

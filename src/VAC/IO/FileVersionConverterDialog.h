@@ -18,10 +18,11 @@
 #define FILEVERSIONCONVERTERDIALOG_H
 
 #include <QDialog>
+#include "vpaint_global.h"
 
 class QCheckBox;
 
-class FileVersionConverterDialog: public QDialog
+class Q_VPAINT_EXPORT FileVersionConverterDialog: public QDialog
 {
     Q_OBJECT
 

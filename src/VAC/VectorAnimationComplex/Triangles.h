@@ -21,6 +21,7 @@
 #include "Eigen.h"
 #include "BoundingBox.h"
 #include <vector>
+#include "vpaint_global.h"
 
 class View3DSettings;
 
@@ -34,7 +35,7 @@ inline double cross(const Eigen::Vector2d & p, const Eigen::Vector2d & q)
     return p[0]*q[1] - p[1]*q[0];
 }
 
-struct Triangle {
+struct Q_VPAINT_EXPORT Triangle {
     Triangle() {}
 
     Triangle(const Eigen::Vector2d & a_,
@@ -58,7 +59,7 @@ struct Triangle {
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
 
-class Triangles
+class Q_VPAINT_EXPORT Triangles
 {
 public:
     // Build an empty vector of triangles

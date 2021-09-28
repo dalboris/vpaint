@@ -23,6 +23,7 @@
 #include "TimeDef.h"
 #include "Picking.h"
 #include "ViewSettings.h"
+#include "vpaint_global.h"
 
 class Background;
 class View;
@@ -41,7 +42,7 @@ class InbetweenFace;
 class QDir;
 class Layer;
 
-class Scene: public QObject
+class Q_VPAINT_EXPORT Scene: public QObject
 {
     Q_OBJECT
     

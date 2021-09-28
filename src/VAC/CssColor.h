@@ -20,8 +20,9 @@
 #include "Color.h"
 
 #include <QString>
+#include "vpaint_global.h"
 
-class CssColor
+class Q_VPAINT_EXPORT CssColor
 {
 public:
     // Constructors

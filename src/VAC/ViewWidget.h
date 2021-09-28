@@ -30,6 +30,7 @@
 #define VIEWMACOSX_H
 
 #include <QWidget>
+#include "vpaint_global.h"
 
 class View;
 class ViewSettingsWidget;
@@ -37,7 +38,7 @@ class Scene;
 
 // A widget holding a View and a ViewSettingsWidget
 //
-class ViewWidget: public QWidget
+class Q_VPAINT_EXPORT ViewWidget: public QWidget
 {
     Q_OBJECT
 

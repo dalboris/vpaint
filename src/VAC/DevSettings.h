@@ -31,9 +31,9 @@
 #include <QGridLayout>
 #include <QString>
 #include <QMap>
+#include "vpaint_global.h"
 
-
-class DevSettings : public QWidget
+class Q_VPAINT_EXPORT DevSettings : public QWidget
 {
     Q_OBJECT
     

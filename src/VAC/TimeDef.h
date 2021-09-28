@@ -17,9 +17,11 @@
 #ifndef TIME_H
 #define TIME_H
 
+#include "vpaint_global.h"
+
 class QTextStream;
 
-class Time
+class Q_VPAINT_EXPORT Time
 {
 public:
 

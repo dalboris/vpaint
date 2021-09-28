@@ -22,11 +22,12 @@
 #include "TimeDef.h" 
 #include "Picking.h" 
 #include "ViewSettings.h"
+#include "vpaint_global.h"
 
 class QTextStream;
 class QToolBar;
 
-class SceneObject: public QObject
+class Q_VPAINT_EXPORT SceneObject: public QObject
 {
     Q_OBJECT
 

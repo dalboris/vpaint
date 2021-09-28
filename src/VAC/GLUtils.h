@@ -21,10 +21,11 @@
 #include <QRectF>
 
 #include <Eigen/Core>
+#include "vpaint_global.h"
 
 class QOpenGLTexture;
 
-class GLUtils
+class Q_VPAINT_EXPORT GLUtils
 {
 public:
     /// This function must be called before creating the first

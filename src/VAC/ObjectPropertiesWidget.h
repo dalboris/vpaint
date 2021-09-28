@@ -28,8 +28,9 @@
 
 #include "VectorAnimationComplex/CellList.h"
 #include "AnimatedCycleWidget.h"
+#include "vpaint_global.h"
 
-class ObjectPropertiesWidget: public QWidget
+class Q_VPAINT_EXPORT ObjectPropertiesWidget: public QWidget
 {
     Q_OBJECT
 

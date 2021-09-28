@@ -19,6 +19,7 @@
 
 #include <QObject>
 #include <QString>
+#include "vpaint_global.h"
 
 enum class SvgImportVertexMode {
     All,
@@ -44,7 +45,7 @@ inline QString toString(SvgImportVertexMode m) {
     return QString();
 }
 
-struct SvgImportParams {
+struct Q_VPAINT_EXPORT SvgImportParams {
     SvgImportVertexMode vertexMode;
 };
 

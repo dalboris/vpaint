@@ -18,12 +18,13 @@
 #define CELLLINKEDLIST_H
 
 #include <list>
+#include "vpaint_global.h"
 
 namespace VectorAnimationComplex
 {
 
 class Cell;
-class CellLinkedList
+class Q_VPAINT_EXPORT CellLinkedList
 {
 public:
     CellLinkedList();

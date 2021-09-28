@@ -29,6 +29,7 @@
 #include "GeometryUtils.h"
 #include "Picking.h"
 #include "View3DSettings.h"
+#include "vpaint_global.h"
 
 // pre-declarations
 
@@ -37,7 +38,7 @@ namespace VectorAnimationComplex { class Cell; class VAC;}
 class Background;
 class BackgroundRenderer;
 
-class View3D: public GLWidget
+class Q_VPAINT_EXPORT View3D: public GLWidget
 {
     Q_OBJECT
     

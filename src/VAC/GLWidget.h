@@ -48,10 +48,11 @@
 #include "OpenGL.h"
 #include <QMouseEvent>
 #include <QElapsedTimer>
+#include "vpaint_global.h"
 
 class GLUtils;
 
-class GLAction
+class Q_VPAINT_EXPORT GLAction
 {
 public:
     // No action

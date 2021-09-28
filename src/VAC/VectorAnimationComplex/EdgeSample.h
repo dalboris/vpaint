@@ -18,11 +18,12 @@
 #define EDGESAMPLE_H
 
 #include "Eigen.h"
+#include "vpaint_global.h"
 
 namespace VectorAnimationComplex
 {
 
-class EdgeSample
+class Q_VPAINT_EXPORT EdgeSample
 {
 public:
     // Access position

@@ -17,9 +17,11 @@
 #ifndef SCENEOBJECTVISITOR_H
 #define SCENEOBJECTVISITOR_H
 
+#include "vpaint_global.h"
+
 namespace VectorAnimationComplex { class VAC; }
 
-class SceneObjectVisitor
+class Q_VPAINT_EXPORT SceneObjectVisitor
 {
 public:
     SceneObjectVisitor();

@@ -25,6 +25,8 @@
 #include "SculptCurve.h"
 #include "Triangles.h"
 
+#include "vpaint_global.h"
+
 class QTextStream;
 class XmlStreamWriter;
 class XmlStreamReader;
@@ -32,7 +34,7 @@ class XmlStreamReader;
 namespace VectorAnimationComplex
 {
 
-class EdgeGeometry
+class Q_VPAINT_EXPORT EdgeGeometry
 {
 public:
     EdgeGeometry(double ds = 5.0);
@@ -144,7 +146,7 @@ private:
 
 };
 
-class LinearSpline: public EdgeGeometry
+class Q_VPAINT_EXPORT LinearSpline: public EdgeGeometry
 {
 public:
     LinearSpline(double ds = 5.0);

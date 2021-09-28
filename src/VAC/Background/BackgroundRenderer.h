@@ -19,12 +19,13 @@
 
 #include <QObject>
 #include <QMap>
+#include "vpaint_global.h"
 
 class Background;
 class QOpenGLContext;
 class QOpenGLTexture;
 
-class BackgroundRenderer: public QObject
+class Q_VPAINT_EXPORT BackgroundRenderer: public QObject
 {
     Q_OBJECT
 

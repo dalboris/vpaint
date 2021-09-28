@@ -23,8 +23,9 @@
 #include <Eigen/Core>
 #include <QString>
 #include <QImage>
+#include "vpaint_global.h"
 
-struct BackgroundData
+struct Q_VPAINT_EXPORT BackgroundData
 {
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

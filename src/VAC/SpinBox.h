@@ -19,8 +19,9 @@
 
 #include <QDoubleSpinBox>
 #include <QLabel>
+#include "vpaint_global.h"
 
-class SpinBox : public QWidget
+class Q_VPAINT_EXPORT SpinBox : public QWidget
 {
     Q_OBJECT
 

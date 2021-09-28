@@ -18,13 +18,14 @@
 #define LAYER_H
 
 #include "SceneObject.h"
+#include "vpaint_global.h"
 
 class Background;
 namespace VectorAnimationComplex { class VAC; }
 class XmlStreamReader;
 class XmlStreamWriter;
 
-class Layer : public SceneObject
+class Q_VPAINT_EXPORT Layer : public SceneObject
 {
     Q_OBJECT
     Q_DISABLE_COPY(Layer)

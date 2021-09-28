@@ -25,6 +25,7 @@
 #include <QSet>
 #include <QColor>
 #include "TimeDef.h"
+#include "vpaint_global.h"
 
 class QPushButton;
 class QSpinBox;
@@ -40,7 +41,7 @@ class QAction;
 // Paint the top timeline bar.
 // It's a friend of Timeline: can access all members of it
 class Timeline;
-class Timeline_HBar: public QWidget
+class Q_VPAINT_EXPORT Timeline_HBar: public QWidget
 {
 public:
     Timeline_HBar(Timeline * w);
@@ -102,7 +103,7 @@ private:
     bool subframeInbetweening_;
 };
 
-class PlaybackSettingsDialog: public QDialog
+class Q_VPAINT_EXPORT PlaybackSettingsDialog: public QDialog
 {
 public:
     PlaybackSettingsDialog(const PlaybackSettings & settings = PlaybackSettings());
@@ -119,7 +120,7 @@ private:
 };
 
 
-class Timeline : public QWidget
+class Q_VPAINT_EXPORT Timeline : public QWidget
 {
     Q_OBJECT
 

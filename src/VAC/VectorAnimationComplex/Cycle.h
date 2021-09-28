@@ -24,6 +24,7 @@
 #include "Eigen.h"
 #include "ProperCycle.h"
 #include "EdgeSample.h"
+#include "vpaint_global.h"
 
 ////////////// Forward declare global serialization operators /////////////////
 
@@ -36,7 +37,7 @@ QTextStream & operator>>(QTextStream &, VectorAnimationComplex::Cycle &);
 namespace VectorAnimationComplex
 {
 
-class Cycle
+class Q_VPAINT_EXPORT Cycle
 {
 public:
     // type of the cycle

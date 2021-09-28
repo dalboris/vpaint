@@ -27,11 +27,12 @@
 #include <QGraphicsPolygonItem>
 #include <QTimer>
 #include <QHBoxLayout>
+#include "vpaint_global.h"
 
 using namespace VectorAnimationComplex;
 
 class AnimatedCycleWidget;
-class GraphicsNodeItem: public QGraphicsPathItem, public CellObserver
+class Q_VPAINT_EXPORT GraphicsNodeItem: public QGraphicsPathItem, public CellObserver
 {
 public:
     // Enable the use of qgraphicsitem_cast<>
@@ -78,7 +79,7 @@ private:
     double y_;
 };
 
-class GraphicsArrowItem: public QGraphicsPolygonItem
+class Q_VPAINT_EXPORT GraphicsArrowItem: public QGraphicsPolygonItem
 {
 public:
     // Enable the use of qgraphicsitem_cast<>
@@ -111,7 +112,7 @@ private:
     GraphicsNodeItem * itemAtPress_;
 };
 
-class AnimatedCycleWidget : public QWidget, public CellObserver
+class Q_VPAINT_EXPORT AnimatedCycleWidget : public QWidget, public CellObserver
 {
     Q_OBJECT
 

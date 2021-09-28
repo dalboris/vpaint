@@ -17,10 +17,12 @@
 #ifndef PICKING_H
 #define PICKING_H
 
+#include "vpaint_global.h"
+
 typedef unsigned int uint;
 typedef unsigned char uchar;
 
-class Picking
+class Q_VPAINT_EXPORT Picking
 {
 public:
     // ---- Interface for scene objects ----
@@ -53,7 +55,7 @@ public:
     static void setIndex(uint index);// for scene
     
     // get
-    class Object 
+    class Q_VPAINT_EXPORT Object
     {
     public:
         // Constructor: the null object by default

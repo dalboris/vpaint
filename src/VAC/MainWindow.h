@@ -23,6 +23,7 @@
 #include <QTextBrowser>
 #include <QTimer>
 #include <QDir>
+#include "vpaint_global.h"
 
 class QScrollArea;
 class Scene;
@@ -52,7 +53,7 @@ class SelectionInfoWidget;
 class ObjectPropertiesWidget;
 class AnimatedCycleWidget;
 
-class MainWindow : public QMainWindow
+class Q_VPAINT_EXPORT MainWindow : public QMainWindow
 {
     Q_OBJECT
 

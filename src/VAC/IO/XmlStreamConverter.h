@@ -18,11 +18,12 @@
 #define XMLSTREAMCONVERTER_H
 
 #include "XmlStreamTraverser.h"
+#include "vpaint_global.h"
 
 class XmlStreamReader;
 class XmlStreamWriter;
 
-class XmlStreamConverter: public XmlStreamTraverser
+class Q_VPAINT_EXPORT XmlStreamConverter: public XmlStreamTraverser
 {
 public:
     XmlStreamConverter(XmlStreamReader & in, XmlStreamWriter & out);

@@ -18,11 +18,12 @@
 #define EDITCANVASSIZEDIALOG_H
 
 #include <QDialog>
+#include "vpaint_global.h"
 
 class QDoubleSpinBox;
 class Scene;
 
-class EditCanvasSizeDialog: public QDialog
+class Q_VPAINT_EXPORT EditCanvasSizeDialog: public QDialog
 {
     Q_OBJECT
 

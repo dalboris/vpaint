@@ -25,13 +25,14 @@
 #include "BoundingBox.h"
 
 #include "Eigen.h"
+#include "vpaint_global.h"
 
 class ViewSettings;
 
 namespace VectorAnimationComplex
 {
 
-class TransformTool: public QObject
+class Q_VPAINT_EXPORT TransformTool: public QObject
 {
     Q_OBJECT
 

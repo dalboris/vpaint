@@ -18,6 +18,7 @@
 #define EXPORTPNGDIALOG_H
 
 #include <QDialog>
+#include "vpaint_global.h"
 
 class QCheckBox;
 class QDoubleSpinBox;
@@ -25,7 +26,7 @@ class QFormLayout;
 class QSpinBox;
 class Scene;
 
-class ExportPngDialog: public QDialog
+class Q_VPAINT_EXPORT ExportPngDialog: public QDialog
 {
     Q_OBJECT
 

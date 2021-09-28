@@ -17,6 +17,8 @@
 #ifndef CELLVISITOR_H
 #define CELLVISITOR_H
 
+#include "vpaint_global.h"
+
 namespace VectorAnimationComplex
 {
 
@@ -27,7 +29,7 @@ class InbetweenVertex;
 class InbetweenEdge;
 class InbetweenFace;
 
-class CellVisitor
+class Q_VPAINT_EXPORT CellVisitor
 {
 public:
     CellVisitor();

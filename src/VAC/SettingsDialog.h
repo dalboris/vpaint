@@ -22,8 +22,9 @@
 
 #include <QDialogButtonBox>
 #include <QDoubleSpinBox>
+#include "vpaint_global.h"
 
-class SettingsDialog: public QDialog
+class Q_VPAINT_EXPORT SettingsDialog: public QDialog
 {
     Q_OBJECT
 
