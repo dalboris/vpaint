@@ -63,7 +63,7 @@
 #include <Eigen/Core>
 #include <Eigen/LU>
 #include <Eigen/StdVector>
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 #ifndef DEFINE_STD_VECTOR_INSERTION_OPERATOR
 #define DEFINE_STD_VECTOR_INSERTION_OPERATOR

@@ -107,7 +107,7 @@
 #include <QString>
 #include <QRect>
 #include <QColor>
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 class QTextStream;
 class XmlStreamWriter;

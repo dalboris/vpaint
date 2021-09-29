@@ -22,7 +22,7 @@
 #include "VertexCell.h"
 #include <QList>
 
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 namespace VectorAnimationComplex
 {

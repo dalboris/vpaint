@@ -18,7 +18,7 @@
 #define FILEVERSIONCONVERTERDIALOG_H
 
 #include <QDialog>
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 class QCheckBox;
 

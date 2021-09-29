@@ -21,7 +21,7 @@
 #include "Eigen.h"
 #include "../TimeDef.h"
 
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 ////////////// Forward declare global serialization operators /////////////////
 

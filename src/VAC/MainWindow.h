@@ -23,7 +23,7 @@
 #include <QTextBrowser>
 #include <QTimer>
 #include <QDir>
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 class QScrollArea;
 class Scene;

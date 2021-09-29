@@ -18,7 +18,7 @@
 #define XMLSTREAMREADER_H
 
 #include <QXmlStreamReader>
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 class Q_VPAINT_EXPORT XmlStreamReader: public QXmlStreamReader
 {

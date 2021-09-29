@@ -17,7 +17,7 @@
 #ifndef CELLVISITOR_H
 #define CELLVISITOR_H
 
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 namespace VectorAnimationComplex
 {

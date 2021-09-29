@@ -18,7 +18,7 @@
 #define LAYER_H
 
 #include "SceneObject.h"
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 class Background;
 namespace VectorAnimationComplex { class VAC; }

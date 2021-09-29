@@ -20,7 +20,7 @@
 // Note: a cell observer can observe several cells
 //       inheriting classes
 
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 namespace VectorAnimationComplex
 {

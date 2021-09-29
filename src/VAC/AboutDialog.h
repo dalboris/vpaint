@@ -18,7 +18,7 @@
 #define ABOUTDIALOG_H
 
 #include <QDialog>
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 class QLineEdit;
 class QCheckBox;

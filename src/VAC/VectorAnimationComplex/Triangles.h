@@ -21,7 +21,7 @@
 #include "Eigen.h"
 #include "BoundingBox.h"
 #include <vector>
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 class View3DSettings;
 

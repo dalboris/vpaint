@@ -17,7 +17,7 @@
 #ifndef SCENEOBJECTVISITOR_H
 #define SCENEOBJECTVISITOR_H
 
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 namespace VectorAnimationComplex { class VAC; }
 

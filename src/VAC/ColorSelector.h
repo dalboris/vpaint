@@ -20,7 +20,7 @@
 #include <QToolButton>
 
 #include "Color.h"
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 class Q_VPAINT_EXPORT ColorSelector : public QToolButton
 {

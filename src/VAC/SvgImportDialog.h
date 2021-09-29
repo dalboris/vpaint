@@ -20,7 +20,7 @@
 #include <QDialog>
 
 #include "SvgImportParams.h"
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 class Q_VPAINT_EXPORT SvgImportDialog : public QDialog
 {

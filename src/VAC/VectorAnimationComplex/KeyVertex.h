@@ -21,7 +21,7 @@
 #include "VertexCell.h"
 #include "Halfedge.h"
 #include "Eigen.h"
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 namespace VectorAnimationComplex
 {

@@ -29,7 +29,7 @@
 #include "GeometryUtils.h"
 #include "Picking.h"
 #include "View3DSettings.h"
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 // pre-declarations
 

@@ -30,7 +30,7 @@
 #define VIEWMACOSX_H
 
 #include <QWidget>
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 class View;
 class ViewSettingsWidget;

@@ -19,7 +19,7 @@
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 // for now, no rotation
 

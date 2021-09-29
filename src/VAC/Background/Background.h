@@ -26,7 +26,7 @@
 #include <QImage>
 #include <QVector>
 #include <Eigen/Core>
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 class XmlStreamWriter;
 class XmlStreamReader;

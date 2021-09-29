@@ -204,7 +204,7 @@
 ///   - the empty set {}, or
 ///   - [x1, x2] with x1 in \R, x2 in \R, and x1 <= x2
 
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 namespace VectorAnimationComplex
 {

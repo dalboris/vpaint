@@ -21,7 +21,7 @@
 #include "Cell.h"
 #include "Halfedge.h"
 #include <QPair>
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 namespace VectorAnimationComplex
 {

@@ -41,7 +41,7 @@
 
 #include "ForwardDeclaration.h"
 #include "EdgeCell.h"
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 namespace VectorAnimationComplex
 {

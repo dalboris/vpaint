@@ -70,7 +70,7 @@
 ///   * In the end() method, currentDepth == 0
 ///   * In the first call of pre(), currentDepth == 0, this corresponds to the XML root element
 ///   * In the last call of post(), currentDepth == 0, this corresponds to the XML root element
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 class XmlStreamReader;
 

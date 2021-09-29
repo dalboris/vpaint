@@ -17,7 +17,7 @@
 #ifndef RANDOM_H
 #define RANDOM_H
 
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 /*
  * Random.h
  *

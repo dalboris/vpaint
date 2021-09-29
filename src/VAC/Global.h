@@ -33,7 +33,7 @@
 #include <Eigen/Core>
 #include <QLabel>
 #include <QDir>
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 class QHBoxLayout;
 class DevSettings;

@@ -28,7 +28,7 @@
 #include <QList>
 #include <QPair>
 
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 namespace VectorAnimationComplex
 {

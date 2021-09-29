@@ -18,7 +18,7 @@
 #define XMLSTREAMWRITER_H
 
 #include <QXmlStreamWriter>
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 /// \class XmlStreamWriter
 /// Writes an XML document to a file.

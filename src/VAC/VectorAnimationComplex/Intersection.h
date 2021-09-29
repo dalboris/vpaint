@@ -20,7 +20,7 @@
 #include <QList>
 #include "Eigen.h"
 
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 namespace VectorAnimationComplex
 {

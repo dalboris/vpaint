@@ -20,7 +20,7 @@
 #include <vector>
 
 #include <QWidget>
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 class QCheckBox;
 class QLabel;

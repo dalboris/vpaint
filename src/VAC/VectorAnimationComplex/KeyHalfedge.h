@@ -21,7 +21,7 @@
 #include "KeyEdge.h"
 
 #include "EdgeSample.h"
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 namespace VectorAnimationComplex
 {

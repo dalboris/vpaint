@@ -48,7 +48,7 @@
 #include "OpenGL.h"
 #include <QMouseEvent>
 #include <QElapsedTimer>
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 class GLUtils;
 

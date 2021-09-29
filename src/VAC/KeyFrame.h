@@ -17,7 +17,7 @@
 #ifndef KEYFRAME_H
 #define KEYFRAME_H
 
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 // ----------- KeyFrame -----------------
     

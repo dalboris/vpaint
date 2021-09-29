@@ -20,7 +20,7 @@
 #include <QString>
 #include <QList>
 #include <QTextStream>
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 class Q_VPAINT_EXPORT Field
 {

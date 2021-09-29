@@ -25,7 +25,7 @@
 #include "BoundingBox.h"
 
 #include "Eigen.h"
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 class ViewSettings;
 

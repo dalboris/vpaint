@@ -18,7 +18,7 @@
 #define XMLSTREAMCONVERTER_H
 
 #include "XmlStreamTraverser.h"
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 class XmlStreamReader;
 class XmlStreamWriter;

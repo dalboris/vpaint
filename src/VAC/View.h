@@ -31,7 +31,7 @@
 #include <QMap>
 
 #include "ViewSettings.h"
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 class Scene;
 namespace VectorAnimationComplex

@@ -17,7 +17,7 @@
 #ifndef PICKING_H
 #define PICKING_H
 
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 typedef unsigned int uint;
 typedef unsigned char uchar;

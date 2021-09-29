@@ -20,7 +20,7 @@
 
 #include <cmath> // for sqrt
 #include <QString>
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 class Q_VPAINT_EXPORT GLWidget_Light
 {

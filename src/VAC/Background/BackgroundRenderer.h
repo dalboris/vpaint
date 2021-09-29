@@ -19,7 +19,7 @@
 
 #include <QObject>
 #include <QMap>
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 class Background;
 class QOpenGLContext;

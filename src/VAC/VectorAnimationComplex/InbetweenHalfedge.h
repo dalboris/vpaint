@@ -20,7 +20,7 @@
 #include "HalfedgeBase.h"
 #include "InbetweenEdge.h"
 
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 namespace VectorAnimationComplex
 {

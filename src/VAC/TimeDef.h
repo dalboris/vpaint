@@ -17,7 +17,7 @@
 #ifndef TIME_H
 #define TIME_H
 
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 class QTextStream;
 

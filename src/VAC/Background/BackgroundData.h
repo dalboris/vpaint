@@ -23,7 +23,7 @@
 #include <Eigen/Core>
 #include <QString>
 #include <QImage>
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 struct Q_VPAINT_EXPORT BackgroundData
 {

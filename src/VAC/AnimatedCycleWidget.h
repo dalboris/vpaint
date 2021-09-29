@@ -27,7 +27,7 @@
 #include <QGraphicsPolygonItem>
 #include <QTimer>
 #include <QHBoxLayout>
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 using namespace VectorAnimationComplex;
 

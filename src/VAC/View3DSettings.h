@@ -26,7 +26,7 @@
 #include <QWidget>
 
 #include "TimeDef.h"
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 class View3D;
 

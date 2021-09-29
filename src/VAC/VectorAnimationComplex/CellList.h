@@ -20,7 +20,6 @@
 #include <QList>
 #include <QSet>
 #include "ForwardDeclaration.h"
-#include "vpaint_global.h"
 
 // In this file, we define the following classes:
 //  - CellList (inheriting QList<Cell*>)

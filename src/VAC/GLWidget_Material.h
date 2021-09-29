@@ -17,7 +17,7 @@
 #ifndef GLWIDGET_MATERIAL_H
 #define GLWIDGET_MATERIAL_H
 
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 class Q_VPAINT_EXPORT GLWidget_Material
 {

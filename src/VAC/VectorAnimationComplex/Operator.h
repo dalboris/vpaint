@@ -18,7 +18,7 @@
 #define OPERATOR_H
 
 #include <QSet>
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 namespace VectorAnimationComplex
 {

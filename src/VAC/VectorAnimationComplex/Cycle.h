@@ -24,7 +24,7 @@
 #include "Eigen.h"
 #include "ProperCycle.h"
 #include "EdgeSample.h"
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 ////////////// Forward declare global serialization operators /////////////////
 

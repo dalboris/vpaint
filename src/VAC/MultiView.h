@@ -20,7 +20,7 @@
 #include <QWidget>
 #include <QList>
 #include <QGridLayout>
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 class Scene;
 class View;

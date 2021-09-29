@@ -18,7 +18,7 @@
 #define SVGPARSER_H
 
 #include <QColor>
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 class QString;
 class QXmlStreamAttributes;

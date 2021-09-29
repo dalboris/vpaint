@@ -21,7 +21,7 @@
 #include <QRectF>
 
 #include <Eigen/Core>
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 class QOpenGLTexture;
 

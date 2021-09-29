@@ -21,7 +21,7 @@
 
 #include "../Color.h"
 #include "BackgroundData.h"
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 class Background;
 class ColorSelector;

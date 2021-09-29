@@ -23,7 +23,7 @@
 #include "TimeDef.h"
 #include "Picking.h"
 #include "ViewSettings.h"
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 class Background;
 class View;

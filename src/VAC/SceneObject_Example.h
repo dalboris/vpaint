@@ -20,7 +20,7 @@
 #include "OpenGL.h"
 #include "SceneObject.h"
 #include <QSet>
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 class Q_VPAINT_EXPORT SceneObject_Example : public SceneObject
 {

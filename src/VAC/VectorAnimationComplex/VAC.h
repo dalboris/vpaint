@@ -32,7 +32,7 @@
 #include "EdgeSample.h"
 
 #include "../View3DSettings.h"
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 class Scene;
 class XmlStreamWriter;

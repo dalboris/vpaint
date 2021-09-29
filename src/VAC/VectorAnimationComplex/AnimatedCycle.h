@@ -23,7 +23,7 @@
 #include "Eigen.h"
 #include <QList>
 
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 ////////////// Forward declare global serialization operators /////////////////
 
 namespace VectorAnimationComplex { class AnimatedCycle; }

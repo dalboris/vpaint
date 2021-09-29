@@ -22,7 +22,7 @@
 #include "ProperCycle.h"
 #include "CycleHelper.h"
 #include "CellList.h"
-#include "vpaint_global.h"
+#include "VAC/vpaint_global.h"
 
 namespace VectorAnimationComplex
 {
