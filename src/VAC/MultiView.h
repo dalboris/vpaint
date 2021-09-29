@@ -20,6 +20,7 @@
 #include <QWidget>
 #include <QList>
 #include <QGridLayout>
+#include "VAC/vpaint_global.h"
 
 class Scene;
 class View;
@@ -29,7 +30,7 @@ class GLWidget;
 
 #include "ViewSettings.h"
 
-class MultiView: public QWidget
+class Q_VPAINT_EXPORT MultiView: public QWidget
 {
     Q_OBJECT
     

@@ -21,6 +21,7 @@
 
 #include "../Color.h"
 #include "BackgroundData.h"
+#include "VAC/vpaint_global.h"
 
 class Background;
 class ColorSelector;
@@ -42,7 +43,7 @@ class QComboBox;
 /// backgroundWidget->setBackground(background);
 /// \endcode
 
-class BackgroundWidget: public QWidget
+class Q_VPAINT_EXPORT BackgroundWidget: public QWidget
 {
     Q_OBJECT
 

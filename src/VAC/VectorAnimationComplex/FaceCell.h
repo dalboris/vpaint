@@ -20,10 +20,12 @@
 #include "Cell.h"
 #include "Triangles.h"
 
+#include "VAC/vpaint_global.h"
+
 namespace VectorAnimationComplex
 {
 
-class FaceCell: virtual public Cell
+class Q_VPAINT_EXPORT FaceCell: virtual public Cell
 {
 public:
     FaceCell(VAC * vac);

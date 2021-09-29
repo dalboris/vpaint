@@ -24,10 +24,12 @@
 #include "Cycle.h"
 #include "Triangles.h"
 
+#include "VAC/vpaint_global.h"
+
 namespace VectorAnimationComplex
 {
 
-class KeyFace: public KeyCell, public FaceCell
+class Q_VPAINT_EXPORT KeyFace: public KeyCell, public FaceCell
 {
 public:
     // Pre-conditions:
@@ -124,7 +126,7 @@ protected:
 
 };
 
-class PreviewKeyFace
+class Q_VPAINT_EXPORT PreviewKeyFace
 {
 public:
     PreviewKeyFace();

@@ -21,6 +21,7 @@
 #include "KeyCell.h"
 #include "Eigen.h"
 #include "Triangles.h"
+#include "VAC/vpaint_global.h"
 
 namespace VectorAnimationComplex
 {
@@ -28,7 +29,7 @@ class EdgeGeometry;
 class EdgeInter;
 class IntersectionList;
 
-class KeyEdge: public KeyCell, public EdgeCell
+class Q_VPAINT_EXPORT KeyEdge: public KeyCell, public EdgeCell
 {
 public:
 

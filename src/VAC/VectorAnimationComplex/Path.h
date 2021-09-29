@@ -23,7 +23,7 @@
 #include "KeyHalfedge.h"
 #include "ProperPath.h"
 #include "ProperCycle.h"
-
+#include "VAC/vpaint_global.h"
 ////////////// Forward declare global serialization operators /////////////////
 
 namespace VectorAnimationComplex { class Path; }
@@ -35,7 +35,7 @@ QTextStream & operator>>(QTextStream &, VectorAnimationComplex::Path &);
 namespace VectorAnimationComplex
 {
 
-class Path
+class Q_VPAINT_EXPORT Path
 {
 public:
     // type of the Path

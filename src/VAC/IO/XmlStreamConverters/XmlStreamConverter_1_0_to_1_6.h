@@ -18,8 +18,9 @@
 #define XMLSTREAMCONVERTER_1_0_TO_1_6_H
 
 #include "../XmlStreamConverter.h"
+#include "VAC/vpaint_global.h"
 
-class XmlStreamConverter_1_0_to_1_6: public XmlStreamConverter
+class Q_VPAINT_EXPORT XmlStreamConverter_1_0_to_1_6: public XmlStreamConverter
 {
 public:
     XmlStreamConverter_1_0_to_1_6(XmlStreamReader & in, XmlStreamWriter & out);

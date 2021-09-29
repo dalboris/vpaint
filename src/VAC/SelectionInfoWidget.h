@@ -20,10 +20,11 @@
 #include <QWidget>
 #include <QGridLayout>
 #include <QLabel>
+#include "VAC/vpaint_global.h"
 
 class Scene;
 
-class SelectionInfoWidget : public QWidget
+class Q_VPAINT_EXPORT SelectionInfoWidget : public QWidget
 {
     Q_OBJECT
 public:

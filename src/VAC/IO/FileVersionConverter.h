@@ -18,12 +18,13 @@
 #define FILE_VERSION_CONVERTER_H
 
 #include <QString>
+#include "VAC/vpaint_global.h"
 
 class QWidget;
 class XmlStreamReader;
 class XmlStreamWriter;
 
-class FileVersionConverter
+class Q_VPAINT_EXPORT FileVersionConverter
 {
 public:
     FileVersionConverter(const QString & filePath);

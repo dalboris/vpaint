@@ -26,10 +26,11 @@
 #include <QWidget>
 
 #include "TimeDef.h"
+#include "VAC/vpaint_global.h"
 
 class View3D;
 
-class View3DSettings
+class Q_VPAINT_EXPORT View3DSettings
 {
 public:
     View3DSettings();
@@ -160,7 +161,7 @@ private:
     double xSceneMin_, xSceneMax_, ySceneMin_, ySceneMax_;
 };
 
-class View3DSettingsWidget: public QWidget
+class Q_VPAINT_EXPORT View3DSettingsWidget: public QWidget
 {
     Q_OBJECT
 

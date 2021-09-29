@@ -20,8 +20,9 @@
 
 #include <cmath> // for sqrt
 #include <QString>
+#include "VAC/vpaint_global.h"
 
-class GLWidget_Light
+class Q_VPAINT_EXPORT GLWidget_Light
 {
 public:
     // default Light

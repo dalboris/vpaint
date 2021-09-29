@@ -18,11 +18,12 @@
 #define VAC_ANIMATED_CELL_H
 
 #include "Cell.h"
+#include "VAC/vpaint_global.h"
 
 namespace VectorAnimationComplex
 {
 
-class InbetweenCell: virtual public Cell
+class Q_VPAINT_EXPORT InbetweenCell: virtual public Cell
 {
 public:
     InbetweenCell(VAC * vac);

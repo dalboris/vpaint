@@ -20,8 +20,9 @@
 #include <QString>
 #include <QList>
 #include <QTextStream>
+#include "VAC/vpaint_global.h"
 
-class Field
+class Q_VPAINT_EXPORT Field
 {
 public:
     Field();
@@ -36,7 +37,7 @@ private:
     QString string_;
 };
 
-class Save
+class Q_VPAINT_EXPORT Save
 {
 public:
     static QString indent(int n);
@@ -54,7 +55,7 @@ private:
     static int indent_;
 };
 
-class Read
+class Q_VPAINT_EXPORT Read
 {
 public:
     static QString string(QTextStream & in);

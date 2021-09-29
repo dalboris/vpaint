@@ -18,6 +18,7 @@
 #define OPERATOR_H
 
 #include <QSet>
+#include "VAC/vpaint_global.h"
 
 namespace VectorAnimationComplex
 {
@@ -25,7 +26,7 @@ namespace VectorAnimationComplex
 class VAC;
 class Cell;
 
-class Operator
+class Q_VPAINT_EXPORT Operator
 {
 public:
     // Constructor and Destructor

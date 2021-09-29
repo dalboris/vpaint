@@ -204,10 +204,12 @@
 ///   - the empty set {}, or
 ///   - [x1, x2] with x1 in \R, x2 in \R, and x1 <= x2
 
+#include "VAC/vpaint_global.h"
+
 namespace VectorAnimationComplex
 {
     
-class BoundingBox
+class Q_VPAINT_EXPORT BoundingBox
 {      
 public:
     // Empty bounding box

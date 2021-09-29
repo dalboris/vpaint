@@ -22,10 +22,12 @@
 
 #include "AnimatedCycle.h"
 
+#include "VAC/vpaint_global.h"
+
 namespace VectorAnimationComplex
 {
 
-class InbetweenFace: public InbetweenCell, public FaceCell
+class Q_VPAINT_EXPORT InbetweenFace: public InbetweenCell, public FaceCell
 {
 public:
     InbetweenFace(VAC * vac);

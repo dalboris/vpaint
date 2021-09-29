@@ -107,6 +107,8 @@
 #include <QString>
 #include <QRect>
 #include <QColor>
+#include "VAC/vpaint_global.h"
+
 class QTextStream;
 class XmlStreamWriter;
 class XmlStreamReader;
@@ -118,7 +120,7 @@ class CellObserver;
 class KeyHalfedge;
 
 // The abstract base class Cell
-class Cell
+class Q_VPAINT_EXPORT Cell
 {
 
 //###################################################################

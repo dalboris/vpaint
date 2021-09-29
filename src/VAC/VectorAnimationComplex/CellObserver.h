@@ -20,12 +20,14 @@
 // Note: a cell observer can observe several cells
 //       inheriting classes
 
+#include "VAC/vpaint_global.h"
+
 namespace VectorAnimationComplex
 {
 
 class Cell;
 
-class CellObserver
+class Q_VPAINT_EXPORT CellObserver
 {
 public:
     CellObserver();

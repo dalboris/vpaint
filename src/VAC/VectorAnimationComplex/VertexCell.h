@@ -21,11 +21,12 @@
 #include "Cell.h"
 #include "Halfedge.h"
 #include <QPair>
+#include "VAC/vpaint_global.h"
 
 namespace VectorAnimationComplex
 {
 
-class VertexCell: virtual public Cell
+class Q_VPAINT_EXPORT VertexCell: virtual public Cell
 {
 public:
     VertexCell(VAC * vac);

@@ -18,6 +18,7 @@
 #define ABOUTDIALOG_H
 
 #include <QDialog>
+#include "VAC/vpaint_global.h"
 
 class QLineEdit;
 class QCheckBox;
@@ -29,7 +30,7 @@ class QPushButton;
 /// button is automatically clicked when the user presses Enter or Return from
 /// the QLineEdit.
 ///
-class PushLineEdit: public QWidget
+class Q_VPAINT_EXPORT PushLineEdit: public QWidget
 {
     Q_OBJECT
 
@@ -46,7 +47,7 @@ private:
     QLineEdit* lineEdit_;
 };
 
-class AboutDialog: public QDialog
+class Q_VPAINT_EXPORT AboutDialog: public QDialog
 {
     Q_OBJECT
 

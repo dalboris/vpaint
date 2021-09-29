@@ -20,8 +20,9 @@
 #include <QPointF>
 #include <cmath>
 #include <Eigen/Core>
+#include "VAC/vpaint_global.h"
 
-class GeometryUtils
+class Q_VPAINT_EXPORT GeometryUtils
 {
 public:
     static double length(QPointF p){return sqrt(p.x()*p.x()+p.y()*p.y());}

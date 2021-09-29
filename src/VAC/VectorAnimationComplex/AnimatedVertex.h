@@ -21,6 +21,8 @@
 #include "Eigen.h"
 #include "../TimeDef.h"
 
+#include "VAC/vpaint_global.h"
+
 ////////////// Forward declare global serialization operators /////////////////
 
 namespace VectorAnimationComplex { class AnimatedVertex; }
@@ -32,7 +34,7 @@ QTextStream & operator>>(QTextStream &, VectorAnimationComplex::AnimatedVertex &
 namespace VectorAnimationComplex
 {
 
-class AnimatedVertex
+class Q_VPAINT_EXPORT AnimatedVertex
 {
 public:
     // Construct an invalid animated vertex

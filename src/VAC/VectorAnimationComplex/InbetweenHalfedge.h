@@ -20,10 +20,12 @@
 #include "HalfedgeBase.h"
 #include "InbetweenEdge.h"
 
+#include "VAC/vpaint_global.h"
+
 namespace VectorAnimationComplex
 {
 
-class InbetweenHalfedge: public HalfedgeBase<InbetweenEdge>
+class Q_VPAINT_EXPORT InbetweenHalfedge: public HalfedgeBase<InbetweenEdge>
 {
 };
 

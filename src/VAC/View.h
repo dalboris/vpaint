@@ -31,6 +31,7 @@
 #include <QMap>
 
 #include "ViewSettings.h"
+#include "VAC/vpaint_global.h"
 
 class Scene;
 namespace VectorAnimationComplex
@@ -44,7 +45,7 @@ class Background;
 class BackgroundRenderer;
 
 // mouse event in scene coordinates
-struct MouseEvent 
+struct Q_VPAINT_EXPORT MouseEvent
 {
     // Mouse position
     double x, y;
@@ -54,7 +55,7 @@ struct MouseEvent
     bool alt, control, shift;
 };
 
-class View: public GLWidget
+class Q_VPAINT_EXPORT View: public GLWidget
 {
     Q_OBJECT
     

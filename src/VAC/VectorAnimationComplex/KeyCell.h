@@ -18,11 +18,12 @@
 #define VAC_INSTANT_CELL_H
 
 #include "Cell.h"
+#include "VAC/vpaint_global.h"
 
 namespace VectorAnimationComplex
 {
 
-class KeyCell: virtual public Cell
+class Q_VPAINT_EXPORT KeyCell: virtual public Cell
 {
 public:
     // -------------- Public standard interface -------------

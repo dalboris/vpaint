@@ -41,6 +41,7 @@
 
 #include "ForwardDeclaration.h"
 #include "EdgeCell.h"
+#include "VAC/vpaint_global.h"
 
 namespace VectorAnimationComplex
 {
@@ -74,7 +75,7 @@ EdgeSample endSample(EdgeCell * edge, bool side, Time t);
 // -------------------------------- HalfedgeBase ------------------------------
 
 template <class TEdge>
-class HalfedgeBase
+class Q_VPAINT_EXPORT HalfedgeBase
 {
 public:
     // Data members

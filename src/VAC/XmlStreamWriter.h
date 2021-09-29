@@ -18,6 +18,7 @@
 #define XMLSTREAMWRITER_H
 
 #include <QXmlStreamWriter>
+#include "VAC/vpaint_global.h"
 
 /// \class XmlStreamWriter
 /// Writes an XML document to a file.
@@ -56,7 +57,7 @@
 /// This is OK because in the specification of the VEC file formats, newlines in attributes
 /// are never significant, and consecutive whitespaces are equivalent to single whitespaces.
 
-class XmlStreamWriter : public QXmlStreamWriter
+class Q_VPAINT_EXPORT XmlStreamWriter : public QXmlStreamWriter
 {
 public:
     XmlStreamWriter(QIODevice * device);

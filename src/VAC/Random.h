@@ -17,6 +17,7 @@
 #ifndef RANDOM_H
 #define RANDOM_H
 
+#include "VAC/vpaint_global.h"
 /*
  * Random.h
  *
@@ -24,7 +25,7 @@
  *
  */
 
-class Random
+class Q_VPAINT_EXPORT Random
 {
 public:
     // Initiliaze with a seed. The second one use the current time as seed.

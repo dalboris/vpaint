@@ -21,13 +21,14 @@
 
 #include "CellList.h"
 #include "CellLinkedList.h"
+#include "VAC/vpaint_global.h"
 
 namespace VectorAnimationComplex
 {
 
 class Cell;
 
-class ZOrderedCells
+class Q_VPAINT_EXPORT ZOrderedCells
 {
 public:
     ZOrderedCells();

@@ -17,10 +17,11 @@
 #ifndef KEYFRAME_H
 #define KEYFRAME_H
 
+#include "VAC/vpaint_global.h"
 
 // ----------- KeyFrame -----------------
     
-class KeyFrame
+class Q_VPAINT_EXPORT KeyFrame
 {
 public:
     KeyFrame(int f=0) :
@@ -31,7 +32,7 @@ public:
     KeyFrame *next;
 };
 
-class KeyFrameDouble: public KeyFrame
+class Q_VPAINT_EXPORT KeyFrameDouble: public KeyFrame
 {
 public:
     KeyFrameDouble(int f=0, double d=0) :
@@ -45,7 +46,7 @@ public:
 
 // ----------- KeyFrame Line -----------------
 
-class AnimatedData
+class Q_VPAINT_EXPORT AnimatedData
 {
 public:
     AnimatedData();
@@ -60,7 +61,7 @@ public:
     void insertKeyFrame(KeyFrame *k);
 };
 
-class AnimatedDouble: public AnimatedData
+class Q_VPAINT_EXPORT AnimatedDouble: public AnimatedData
 {
 public:
     // idea:  should  I provide  a  method to  get  the  value at  a

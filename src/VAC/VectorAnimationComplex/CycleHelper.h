@@ -19,6 +19,7 @@
 
 #include "ProperPath.h"
 #include "ProperCycle.h"
+#include "VAC/vpaint_global.h"
 
 class QTextStream;
 
@@ -34,7 +35,7 @@ QTextStream & operator>>(QTextStream &, VectorAnimationComplex::CycleHelper &);
 namespace VectorAnimationComplex
 {
 
-class CycleHelper
+class Q_VPAINT_EXPORT CycleHelper
 {
 public:
     // Invalid hole

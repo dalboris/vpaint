@@ -18,8 +18,9 @@
 #define VERSION_H
 
 #include <QString>
+#include "VAC/vpaint_global.h"
 
-class Version
+class Q_VPAINT_EXPORT Version
 {
 public:
     Version(short major = 0, short minor = 0, short patch = 0): major_(major), minor_(minor), patch_(patch) {}

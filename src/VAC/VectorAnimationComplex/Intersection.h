@@ -20,6 +20,8 @@
 #include <QList>
 #include "Eigen.h"
 
+#include "VAC/vpaint_global.h"
+
 namespace VectorAnimationComplex
 {
 class KeyVertex;
@@ -38,7 +40,7 @@ bool segmentIntersection(
     double dsSquared, double &s, double &t);
 
 // convenient structure to store intersections between objects
-struct Intersection
+struct Q_VPAINT_EXPORT Intersection
 {
     Intersection(double s0, double t0, KeyVertex * n0 = 0) :
         type(SELF), s(s0), t(t0), vertex(n0), removed(false) {}
@@ -62,7 +64,7 @@ struct Intersection
 };
 
 // intersection between a stroke and an edge
-class EdgeInter: public Intersection
+class Q_VPAINT_EXPORT EdgeInter: public Intersection
 {
 public:
     EdgeInter(KeyEdge * e0, double s0, double t0) :
@@ -72,7 +74,7 @@ public:
 };
 
 // remove from a list all intersections marked "removed"
-class IntersectionList: public QList<Intersection*>
+class Q_VPAINT_EXPORT IntersectionList: public QList<Intersection*>
 {
 public:
 

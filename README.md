@@ -1,5 +1,3 @@
-<img src="https://github.com/dalboris/vpaint/blob/master/src/Gui/images/aboutlogo.png" width="660px">
-
 VPaint is an **experimental prototype** based on the Vector
 Graphics Complex (**VGC**), a technology developed by a
 collaboration of researchers at Inria and the University of
@@ -11,6 +9,17 @@ VPaint is licensed under the **[Apache 2.0 License](https://github.com/dalboris/
 More Info:
 - **[www.vpaint.org](https://www.vpaint.org)**
 - **[www.vgc.io](https://www.vgc.io)**
+
+<img src="https://www.vgc.io/images/shared-edges-intro-01-24fps.gif" width="640px">
+<img src="https://www.vgc.io/images/shared-edges-others-01-24fps.gif" width="640px">
+<img src="https://www.vgc.io/images/glue-01-3-24fps.gif" width="640px">
+<img src="https://www.vgc.io/images/glue-02-24fps.gif" width="640px">
+<img src="https://www.vgc.io/images/sculpt-01-24fps.gif" width="640px">
+<img src="https://www.vgc.io/images/depth-ordering-02-24fps.gif" width="640px">
+<img src="https://www.vgc.io/images/depth-ordering-01-24fps.gif" width="640px">
+<img src="https://www.vgc.io/images/star-split-360p-24fps.gif" width="640px">
+<img src="https://www.vgc.io/images/star-split-3D-360p-24fps.gif" width="640px">
+
 
 ## Disclaimer
 
@@ -29,7 +38,7 @@ improve performance compared to VPaint, and have more features.
 
 **If you would like to be notified if/when
 a new version of VPaint is released, or when VGC Illustration and VGC Animation are released**, you
-can sign up for a VGC account at **[vgc.io](https://www.vgc.io)**. Thanks for your interest, and have fun
+can subscribe to the newsletter at **[vgc.io](https://www.vgc.io/news)**. Thanks for your interest, and have fun
 testing VPaint!
 
 ## Build Instructions

@@ -21,6 +21,7 @@
 
 #include <QList>
 #include "KeyHalfedge.h"
+#include "VAC/vpaint_global.h"
 
 ////////////// Forward declare global serialization operators /////////////////
 
@@ -36,7 +37,7 @@ namespace VectorAnimationComplex
 //  * no repeated halfedge
 //  * startVertex() == endVertex()
 // Or a single closed halfedge
-class ProperCycle
+class Q_VPAINT_EXPORT ProperCycle
 {
 public:
     // invalid loop

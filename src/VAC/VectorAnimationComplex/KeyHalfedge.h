@@ -21,11 +21,12 @@
 #include "KeyEdge.h"
 
 #include "EdgeSample.h"
+#include "VAC/vpaint_global.h"
 
 namespace VectorAnimationComplex
 {
 
-class KeyHalfedge: public HalfedgeBase<KeyEdge>
+class Q_VPAINT_EXPORT KeyHalfedge: public HalfedgeBase<KeyEdge>
 {
 public:
     // Constructors
@@ -59,7 +60,7 @@ public:
     //KeyHalfEdge previous();
 };
 
-struct KeyAngleHalfEdge
+struct Q_VPAINT_EXPORT KeyAngleHalfEdge
 {
     KeyAngleHalfEdge(KeyHalfedge h, double a) : he(h), angle(a) {}
     KeyHalfedge he;

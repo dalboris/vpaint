@@ -19,6 +19,7 @@
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
+#include "VAC/vpaint_global.h"
 
 /* 
  * The Camera is defined by:
@@ -33,7 +34,7 @@
  *
  */
 
-class GLWidget_Camera
+class Q_VPAINT_EXPORT GLWidget_Camera
 {
 public:
     // initialization: correctly positionned to see a unit cube

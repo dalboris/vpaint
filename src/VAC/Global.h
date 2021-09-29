@@ -33,6 +33,7 @@
 #include <Eigen/Core>
 #include <QLabel>
 #include <QDir>
+#include "VAC/vpaint_global.h"
 
 class QHBoxLayout;
 class DevSettings;
@@ -52,7 +53,7 @@ namespace VectorAnimationComplex
 class VAC;
 }
 
-class Global: public QObject
+class Q_VPAINT_EXPORT Global: public QObject
 {
     Q_OBJECT
 
@@ -258,7 +259,7 @@ private:
     QLabel * statusBarHelp_;
 };
 
-class ToolModeAction: public QAction
+class Q_VPAINT_EXPORT ToolModeAction: public QAction
 {
     Q_OBJECT
 

@@ -20,6 +20,7 @@
 #include <vector>
 
 #include <QWidget>
+#include "VAC/vpaint_global.h"
 
 class QCheckBox;
 class QLabel;
@@ -33,7 +34,7 @@ namespace impl_
 
 /// One individual layer row in the Layers panel.
 ///
-class LayerWidget: public QWidget
+class Q_VPAINT_EXPORT LayerWidget: public QWidget
 {
     Q_OBJECT
 
@@ -102,7 +103,7 @@ private:
 
 /// The whole Layers panel.
 ///
-class LayersWidget: public QWidget
+class Q_VPAINT_EXPORT LayersWidget: public QWidget
 {
     Q_OBJECT
 

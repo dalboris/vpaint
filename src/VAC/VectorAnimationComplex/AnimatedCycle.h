@@ -23,6 +23,7 @@
 #include "Eigen.h"
 #include <QList>
 
+#include "VAC/vpaint_global.h"
 ////////////// Forward declare global serialization operators /////////////////
 
 namespace VectorAnimationComplex { class AnimatedCycle; }
@@ -36,7 +37,7 @@ namespace VectorAnimationComplex
 
 // A node of the animated cycle. Note: it is the AnimatedCycle responsibility
 // to ensure consistency.
-class AnimatedCycleNode
+class Q_VPAINT_EXPORT AnimatedCycleNode
 {
 public:
     AnimatedCycleNode(Cell * cell);
@@ -93,7 +94,7 @@ private:
     bool side_;
 };
 
-class AnimatedCycle
+class Q_VPAINT_EXPORT AnimatedCycle
 {
 public:
     AnimatedCycle();
