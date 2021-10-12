@@ -42,7 +42,7 @@ private:
                bool isVisible);
 
 public:
-    Layer(const QString & layerName = "Layer");
+    explicit Layer(const QString & layerName = QStringLiteral("Layer"));
     ~Layer() override;
 
     Layer * clone() override;
@@ -73,9 +73,11 @@ public:
     void setVisible(bool b);
 
 signals:
-    void changed();
-    void checkpoint();
-    void needUpdatePicking();
+    // defined in base class (Scene Object)
+    // void changed();
+    // void checkpoint();
+    // void needUpdatePicking();
+
     void selectionChanged();
     void layerAttributesChanged();
 

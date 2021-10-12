@@ -381,9 +381,9 @@ void LayersWidget::onSceneLayerAttributesChanged_()
 void LayersWidget::updateUiFromScene_()
 {
     // Show as many existing LayerWidgets as necessary
-    int numLayers = scene()->numLayers();
-    int numLayerWidgets = layerWidgets_.size();
-    int newNumVisibleLayerWidgets = std::min(numLayers, numLayerWidgets);
+    const auto numLayers = scene()->numLayers();
+    const auto numLayerWidgets = int(layerWidgets_.size());
+    const auto newNumVisibleLayerWidgets = std::min(numLayers, numLayerWidgets);
     for (int i = numVisibleLayerWidgets_; i < newNumVisibleLayerWidgets; ++i) {
         layerWidgets_[i]->show();
         ++numVisibleLayerWidgets_;
@@ -425,7 +425,7 @@ void LayersWidget::updateUiFromScene_()
 // Precondition: all LayerWidgets are visible
 void LayersWidget::createNewLayerWidget_()
 {
-    impl_::LayerWidget * layerWidget = new impl_::LayerWidget(layerWidgets_.size());
+    impl_::LayerWidget * layerWidget = new impl_::LayerWidget(int(layerWidgets_.size()));
     ++numVisibleLayerWidgets_;
     layerWidgets_.push_back(layerWidget);
     layerListLayout_->addWidget(layerWidget);
