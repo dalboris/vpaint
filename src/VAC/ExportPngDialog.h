@@ -24,20 +24,23 @@ class QCheckBox;
 class QDoubleSpinBox;
 class QFormLayout;
 class QSpinBox;
+namespace VPaint
+{
 class Scene;
+}
 
 class Q_VPAINT_EXPORT ExportPngDialog: public QDialog
 {
     Q_OBJECT
 
 public:
-    ExportPngDialog(Scene * scene);
+    ExportPngDialog(VPaint::Scene * scene);
 
     // Reimplements from QDialog
     void setVisible(bool visible);
 
     // Access linked scene
-    Scene * scene() const;
+    VPaint::Scene * scene() const;
 
     // Access png settings
     int pngWidth() const;
@@ -65,7 +68,7 @@ private slots:
     void processMotionBlurChanged_(bool b);
 
 private:
-    Scene * scene_;
+    VPaint::Scene * scene_;
 
     QSpinBox * pngWidthSpinBox_;
     QSpinBox * pngHeightSpinBox_;

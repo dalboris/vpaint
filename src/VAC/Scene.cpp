@@ -36,7 +36,7 @@
 #include <QToolBar>
 
 #include "Layer.h"
-
+namespace VPaint {
 Scene::Scene() :
     activeLayerIndex_(-1),
     left_(0),
@@ -1128,4 +1128,5 @@ void Scene::updateCellsToConsiderForCutting()
     {
         layer->vac()->updateCellsToConsiderForCutting();
     }
+}
 }

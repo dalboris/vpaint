@@ -48,7 +48,7 @@
 #define TOGGLESELECT_ACTION 23
 #define DESELECTALL_ACTION 24
 
-View3D::View3D(Scene *scene, QWidget *parent) :
+View3D::View3D(VPaint::Scene *scene, QWidget *parent) :
     GLWidget(parent, false), // Difference from View here
     scene_(scene),
     displayedTimes_(),

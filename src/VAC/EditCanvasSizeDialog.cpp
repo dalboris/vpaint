@@ -23,7 +23,7 @@
 #include <QDialogButtonBox>
 #include <QFormLayout>
 
-EditCanvasSizeDialog::EditCanvasSizeDialog(Scene * scene) :
+EditCanvasSizeDialog::EditCanvasSizeDialog(VPaint::Scene * scene) :
     scene_(scene),
     ignoreSceneChanged_(false)
 {
@@ -92,7 +92,7 @@ void EditCanvasSizeDialog::setVisible(bool visible)
     QDialog::setVisible(visible);
 }
 
-Scene * EditCanvasSizeDialog::scene() const
+VPaint::Scene * EditCanvasSizeDialog::scene() const
 {
     return scene_;
 }

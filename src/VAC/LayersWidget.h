@@ -26,9 +26,10 @@ class QCheckBox;
 class QLabel;
 class QLineEdit;
 class QVBoxLayout;
-
+namespace VPaint
+{
 class Scene;
-
+}
 namespace impl_
 {
 
@@ -108,10 +109,10 @@ class Q_VPAINT_EXPORT LayersWidget: public QWidget
     Q_OBJECT
 
 public:
-    LayersWidget(Scene * scene);
+    LayersWidget(VPaint::Scene * scene);
     ~LayersWidget() override;
 
-    Scene * scene() const;
+    VPaint::Scene * scene() const;
 
 private slots:
     void onLayerWidgetActivated_(int index);
@@ -128,7 +129,7 @@ private slots:
     void onSceneLayerAttributesChanged_();
 
 private:
-    Scene * scene_;
+    VPaint::Scene * scene_;
     void updateUiFromScene_();
 
     // Each LayerWidget is responsible for displaying info about a given layer.

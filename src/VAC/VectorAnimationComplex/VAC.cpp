@@ -6827,7 +6827,7 @@ void VAC::test()
 namespace VectorAnimationComplex
 {
 
-void VAC::populateToolBar(QToolBar * /*toolBar*/, Scene * /*scene*/)
+void VAC::populateToolBar(QToolBar * /*toolBar*/, VPaint::Scene * /*scene*/)
 {
 }
 

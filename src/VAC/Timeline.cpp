@@ -521,7 +521,7 @@ QPushButton * makeButton_(const QString & iconPath, QAction * action)
 
 }
 
-Timeline::Timeline(Scene *scene, QWidget *parent) :
+Timeline::Timeline(VPaint::Scene *scene, QWidget *parent) :
     QWidget(parent),
     scene_(scene)
 {

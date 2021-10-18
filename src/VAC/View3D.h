@@ -32,8 +32,10 @@
 #include "VAC/vpaint_global.h"
 
 // pre-declarations
-
+namespace VPaint
+{
 class Scene;
+}
 namespace VectorAnimationComplex { class Cell; class VAC;}
 class Background;
 class BackgroundRenderer;
@@ -43,7 +45,7 @@ class Q_VPAINT_EXPORT View3D: public GLWidget
     Q_OBJECT
     
 public:
-    View3D(Scene *scene, QWidget *parent);
+    View3D(VPaint::Scene *scene, QWidget *parent);
     virtual ~View3D();
 
     // Returns a non-owning pointer to the View3DSettings owned
@@ -107,7 +109,7 @@ struct MouseEvent
     bool alt, control, shift;
 };
 
-    Scene *scene_;
+    VPaint::Scene *scene_;
     QList<int> displayedTimes_;
     
     // Mouse event related members

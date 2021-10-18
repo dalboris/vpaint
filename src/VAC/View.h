@@ -32,8 +32,10 @@
 
 #include "ViewSettings.h"
 #include "VAC/vpaint_global.h"
-
+namespace VPaint
+{
 class Scene;
+}
 namespace VectorAnimationComplex
 {
 class VAC;
@@ -60,12 +62,12 @@ class Q_VPAINT_EXPORT View: public GLWidget
     Q_OBJECT
     
 public:
-    View(Scene *scene, QWidget *parent);
+    View(VPaint::Scene *scene, QWidget *parent);
     virtual ~View();
 
     void initCamera();
 
-    Scene * scene();
+    VPaint::Scene * scene();
 
     virtual void keyPressEvent(QKeyEvent *event);
     virtual void keyReleaseEvent(QKeyEvent *event);
@@ -153,7 +155,7 @@ private slots:
 private:
     // What scene to draw
     // Note: which frame to render is specified in viewSettings
-    Scene *scene_;
+    VPaint::Scene *scene_;
 
     // Different times might be drawn concurently, either because there are several
     // timeline or a timeline has several time. The method below gives the time to

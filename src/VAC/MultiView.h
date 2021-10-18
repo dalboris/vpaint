@@ -21,8 +21,10 @@
 #include <QList>
 #include <QGridLayout>
 #include "VAC/vpaint_global.h"
-
+namespace VPaint
+{
 class Scene;
+}
 class View;
 class ViewWidget;
 class QSplitter;
@@ -35,7 +37,7 @@ class Q_VPAINT_EXPORT MultiView: public QWidget
     Q_OBJECT
     
 public:
-    MultiView(Scene *scene, QWidget *parent);
+    MultiView(VPaint::Scene *scene, QWidget *parent);
     ~MultiView();
 
     void keyPressEvent(QKeyEvent *event);
@@ -88,7 +90,7 @@ private:
     QList<ViewWidget*> views_;
     View * activeView_;
     View * hoveredView_;
-    Scene * scene_;
+    VPaint::Scene * scene_;
 
     // helper methods
     View * createView_();
