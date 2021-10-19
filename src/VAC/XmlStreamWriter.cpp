@@ -48,9 +48,9 @@ void XmlStreamWriter::writeEndElement()
 
 void XmlStreamWriter::writeAttributes(const QXmlStreamAttributes & attributes)
 {
-    for (int i=0; i<attributes.size(); ++i)
+    for (auto attribute : attributes)
     {
-        writeAttribute(attributes[i]);
+        writeAttribute(attribute);
     }
 }
 
@@ -113,9 +113,8 @@ QString XmlStreamWriter::escaped(const QString & s)
 {
     QString res;
     res.reserve(s.size());
-    for ( int i = 0; i < s.size(); ++i )
+    for ( QChar c: s)
     {
-       QChar c = s.at(i);
        if (c.unicode() == '<' )
            res.append(QLatin1String("&lt;"));
        else if (c.unicode() == '>' )
@@ -143,9 +142,8 @@ QString XmlStreamWriter::escapedExceptNewlines(const QString & s)
 {
     QString res;
     res.reserve(s.size());
-    for ( int i = 0; i < s.size(); ++i )
+    for ( QChar c: s)
     {
-       QChar c = s.at(i);
        if (c.unicode() == '<' )
            res.append(QLatin1String("&lt;"));
        else if (c.unicode() == '>' )
