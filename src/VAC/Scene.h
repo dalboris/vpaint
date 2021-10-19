@@ -42,6 +42,7 @@ class InbetweenFace;
 class QDir;
 class Layer;
 
+namespace VPaint {
 class Q_VPAINT_EXPORT Scene: public QObject
 {
     Q_OBJECT
@@ -230,5 +231,6 @@ private:
     double width_;
     double height_;
 };
+}
     
 #endif

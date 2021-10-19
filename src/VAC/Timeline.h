@@ -33,7 +33,10 @@ class QTimer;
 class QHBoxLayout;
 class QCheckBox;
 class View;
+namespace VPaint
+{
 class Scene;
+}
 class XmlStreamWriter;
 class XmlStreamReader;
 class QAction;
@@ -125,7 +128,7 @@ class Q_VPAINT_EXPORT Timeline : public QWidget
     Q_OBJECT
 
 public:
-    Timeline(Scene * scene, QWidget *parent = 0);
+    Timeline(VPaint::Scene * scene, QWidget *parent = 0);
     ~Timeline();
 
     void read(XmlStreamReader & xml);
@@ -205,7 +208,7 @@ private:
     double t2_;
 
     // Linked scene
-    Scene * scene_;
+    VPaint::Scene * scene_;
 
     // The views whose times are controlled by this timeline
     QList<View*> views_;

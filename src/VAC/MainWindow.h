@@ -26,7 +26,10 @@
 #include "VAC/vpaint_global.h"
 
 class QScrollArea;
+namespace VPaint
+{
 class Scene;
+}
 class GLWidget;
 class MultiView;
 class View;
@@ -61,7 +64,7 @@ public:
     MainWindow();
     ~MainWindow();
 
-    Scene * scene() const;
+    VPaint::Scene * scene() const;
     View * activeView() const;
     View * hoveredView() const;
     Timeline * timeline() const;
@@ -159,7 +162,7 @@ private:
 
     // --------- Other properties and widgets --------
     // Scene and View
-    Scene * scene_;
+    VPaint::Scene * scene_;
     MultiView * multiView_;
     // Help
     AboutDialog * aboutDialog_;
@@ -170,7 +173,7 @@ private:
     void clearUndoStack_();
     void resetUndoStack_();
     void goToUndoIndex_(int undoIndex);
-    typedef QPair<QDir,Scene*> UndoItem;
+    typedef QPair<QDir,VPaint::Scene*> UndoItem;
     QList<UndoItem> undoStack_;
     int undoIndex_;
     int savedUndoIndex_;

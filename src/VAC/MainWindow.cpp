@@ -65,7 +65,6 @@
  *                             Constructor
  */
 
-
 MainWindow::MainWindow() :
     scene_(0),
     multiView_(0),
@@ -104,7 +103,7 @@ MainWindow::MainWindow() :
     new DevSettings();
 
     // Scene
-    scene_ = Scene::createDefaultScene();
+    scene_ = VPaint::Scene::createDefaultScene();
 
     // Timeline (must exist before multiview is created, so that newly created views can register to timeline)
     timeline_ = new Timeline(scene_, this);
@@ -351,7 +350,7 @@ MainWindow::~MainWindow()
     autosaveEnd();
 }
 
-Scene * MainWindow::scene() const
+VPaint::Scene * MainWindow::scene() const
 {
     return scene_;
 }
@@ -365,7 +364,7 @@ void MainWindow::addToUndoStack()
         delete undoStack_[j].second;
         undoStack_.removeLast();
     }
-    undoStack_ << qMakePair(global()->documentDir(), new Scene());
+    undoStack_ << qMakePair(global()->documentDir(), new VPaint::Scene());
     undoStack_[undoIndex_].second->copyFrom(scene_);
 
     // Update window title
@@ -634,7 +633,7 @@ void MainWindow::newDocument()
         setDocumentFilePath_("");
 
         // Set empty scene
-        Scene * newScene = Scene::createDefaultScene();
+        VPaint::Scene * newScene = VPaint::Scene::createDefaultScene();
         scene_->copyFrom(newScene);
         delete newScene;
 

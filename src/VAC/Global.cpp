@@ -808,7 +808,7 @@ void Global::updateStatusBarHelp()
 DevSettings * Global::devSettings() { return DevSettings::instance(); }
 MainWindow * Global::mainWindow() const { return mainWindow_; }
 Settings & Global::settings() { return preferences_; }
-Scene * Global::scene() const {return mainWindow()->scene();}
+VPaint::Scene * Global::scene() const {return mainWindow()->scene();}
 
 QColor Global::edgeColor()
 {

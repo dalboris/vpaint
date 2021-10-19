@@ -21,16 +21,19 @@
 #include "VAC/vpaint_global.h"
 
 class QDoubleSpinBox;
+namespace VPaint
+{
 class Scene;
+}
 
 class Q_VPAINT_EXPORT EditCanvasSizeDialog: public QDialog
 {
     Q_OBJECT
 
 public:
-    EditCanvasSizeDialog(Scene * scene);
+    EditCanvasSizeDialog(VPaint::Scene * scene);
 
-    Scene * scene() const;
+    VPaint::Scene * scene() const;
 
     // Reimplements from QDialog to set oldValues
     void setVisible(bool visible);
@@ -45,7 +48,7 @@ public slots:
     void reject();
 
 private:
-    Scene * scene_;
+    VPaint::Scene * scene_;
 
     QDoubleSpinBox * topSpinBox_;
     QDoubleSpinBox * leftSpinBox_;

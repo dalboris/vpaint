@@ -34,8 +34,10 @@
 
 class View;
 class ViewSettingsWidget;
+namespace VPaint
+{
 class Scene;
-
+}
 // A widget holding a View and a ViewSettingsWidget
 //
 class Q_VPAINT_EXPORT ViewWidget: public QWidget
@@ -43,7 +45,7 @@ class Q_VPAINT_EXPORT ViewWidget: public QWidget
     Q_OBJECT
 
 public:
-    ViewWidget(Scene * scene, QWidget *parent);
+    ViewWidget(VPaint::Scene * scene, QWidget *parent);
     View * view() const;
     ViewSettingsWidget * viewSettingsWidget() const;
 

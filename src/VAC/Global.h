@@ -46,7 +46,11 @@ class QColor;
 class SettingsDialog;
 class View;
 class Timeline;
+
+namespace VPaint
+{
 class Scene;
+}
 
 namespace VectorAnimationComplex
 {
@@ -131,7 +135,7 @@ public:
 
     // Other getters
     MainWindow * mainWindow() const;
-    Scene * scene() const;
+    VPaint::Scene * scene() const;
     Settings & settings();
     DevSettings * devSettings();
 

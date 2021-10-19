@@ -27,7 +27,7 @@
 #include <QLabel>
 #include <QVBoxLayout>
 
-ExportPngDialog::ExportPngDialog(Scene * scene) :
+ExportPngDialog::ExportPngDialog(VPaint::Scene * scene) :
     scene_(scene),
     ignoreWidthHeightChanged_(false)
 {
@@ -234,7 +234,7 @@ void ExportPngDialog::setVisible(bool visible)
     QDialog::setVisible(visible);
 }
 
-Scene * ExportPngDialog::scene() const
+VPaint::Scene * ExportPngDialog::scene() const
 {
     return scene_;
 }

@@ -20,7 +20,7 @@
 
 #include <QVBoxLayout>
 
-ViewWidget::ViewWidget(Scene *scene, QWidget *parent) :
+ViewWidget::ViewWidget(VPaint::Scene *scene, QWidget *parent) :
     QWidget(parent)
 {
     view_ = new View(scene, this);

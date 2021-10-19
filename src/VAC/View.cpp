@@ -55,7 +55,7 @@
 
 #define  PAINT_ACTION                                       400
 
-View::View(Scene * scene, QWidget * parent) :
+View::View(VPaint::Scene * scene, QWidget * parent) :
     GLWidget(parent, true),
     scene_(scene),
     pickingImg_(0),
@@ -101,7 +101,7 @@ void View::initCamera()
     setCamera2D(camera);
 }
 
-Scene * View::scene()
+VPaint::Scene * View::scene()
 {
     return scene_;
 }

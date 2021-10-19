@@ -216,7 +216,7 @@ void LayerWidget::updateBackground_()
 
 } // namespace impl_
 
-LayersWidget::LayersWidget(Scene * scene) :
+LayersWidget::LayersWidget(VPaint::Scene * scene) :
     scene_(scene),
     numVisibleLayerWidgets_(0),
     activeLayerWidget_(nullptr)
@@ -292,7 +292,7 @@ LayersWidget::~LayersWidget()
 
 }
 
-Scene * LayersWidget::scene() const
+VPaint::Scene * LayersWidget::scene() const
 {
     return scene_;
 }

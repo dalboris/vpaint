@@ -33,8 +33,10 @@
 
 #include "../View3DSettings.h"
 #include "VAC/vpaint_global.h"
-
+namespace VPaint
+{
 class Scene;
+}
 class XmlStreamWriter;
 class XmlStreamReader;
 
@@ -141,7 +143,7 @@ public:
     const ZOrderedCells & zOrdering() const;
 
     // Populate MainWindow toolbar (called once, when launching application)
-    static void populateToolBar(QToolBar * toolBar, Scene * scene);
+    static void populateToolBar(QToolBar * toolBar, VPaint::Scene * scene);
 
     /////////////////////////////////////////////////////////////////
     //                 MOUSE PMR ACTIONS                           //

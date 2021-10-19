@@ -63,7 +63,7 @@ QSplitter * getParentSplitter_(View * w)
 
 }
 
-MultiView::MultiView(Scene *scene, QWidget *parent) :
+MultiView::MultiView(VPaint::Scene *scene, QWidget *parent) :
     QWidget(parent),
     views_(),
     activeView_(0),
