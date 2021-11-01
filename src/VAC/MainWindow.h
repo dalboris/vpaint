@@ -61,13 +61,14 @@ class Q_VPAINT_EXPORT MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow();
+    MainWindow(QWidget* parent = nullptr);
     ~MainWindow();
 
     VPaint::Scene * scene() const;
     View * activeView() const;
     View * hoveredView() const;
     Timeline * timeline() const;
+    MultiView *multiView();
 
     bool isShowCanvasChecked() const;
     bool isEditCanvasSizeVisible() const;
