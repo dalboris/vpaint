@@ -37,6 +37,7 @@
 #include "Layer.h"
 #include "SvgParser.h"
 #include "SvgImportDialog.h"
+#include "GLUtils.h"
 
 #include "IO/FileVersionConverter.h"
 #include "XmlStreamWriter.h"
@@ -65,7 +66,7 @@
  *                             Constructor
  */
 
-MainWindow::MainWindow() :
+MainWindow::MainWindow(QWidget* parent) :
     scene_(0),
     multiView_(0),
 
@@ -95,6 +96,7 @@ MainWindow::MainWindow() :
     editCanvasSizeDialog_(0),
     exportingPng_(false)
 {
+    GLUtils::init();
     // Global object
     Global::initialize(this);
 
@@ -116,11 +118,17 @@ MainWindow::MainWindow() :
     connect(scene(),SIGNAL(selectionChanged()),timeline_,SLOT(update()));
 
     // 2D Views
-    multiView_ = new MultiView(scene_, this);
+    auto multiViewParent = parent != nullptr ? parent : this;
+    multiView_ = new MultiView(scene_, multiViewParent);
     connect(multiView_, SIGNAL(allViewsNeedToUpdate()), timeline_,SLOT(update()));
     connect(multiView_, SIGNAL(allViewsNeedToUpdate()), this, SLOT(update()));
     connect(multiView_, SIGNAL(allViewsNeedToUpdatePicking()), this, SLOT(updatePicking()));
-    setCentralWidget(multiView_); // views are drawn
+    if (parent == nullptr)
+    {
+        setCentralWidget(multiView_); // views are drawn
+        // Window icon
+        QGuiApplication::setWindowIcon(QIcon(":/images/icon-256.png"));
+    }
     connect(multiView_, SIGNAL(activeViewChanged()), this, SLOT(updateViewMenu()));
     connect(multiView_, SIGNAL(activeViewChanged()), timeline_, SLOT(update()));
 
@@ -178,9 +186,6 @@ MainWindow::MainWindow() :
     resetUndoStack_();
     connect(scene_, SIGNAL(checkpoint()), this, SLOT(addToUndoStack()));
 
-    // Window icon
-    QGuiApplication::setWindowIcon(QIcon(":/images/icon-256.png"));
-
     // Help
     gettingStarted_ = new QTextBrowser(this);
     gettingStarted_->setWindowFlags(Qt::Window);
@@ -228,6 +233,11 @@ View * MainWindow::hoveredView() const
 Timeline * MainWindow::timeline() const
 {
     return timeline_;
+}
+
+MultiView *MainWindow::multiView()
+{
+    return multiView_;
 }
 
 bool MainWindow::isShowCanvasChecked() const
