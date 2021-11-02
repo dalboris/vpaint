@@ -124,7 +124,11 @@ MainWindow::MainWindow(QWidget* parent) :
     connect(multiView_, SIGNAL(allViewsNeedToUpdate()), this, SLOT(update()));
     connect(multiView_, SIGNAL(allViewsNeedToUpdatePicking()), this, SLOT(updatePicking()));
     if (parent == nullptr)
+    {
         setCentralWidget(multiView_); // views are drawn
+        // Window icon
+        QGuiApplication::setWindowIcon(QIcon(":/images/icon-256.png"));
+    }
     connect(multiView_, SIGNAL(activeViewChanged()), this, SLOT(updateViewMenu()));
     connect(multiView_, SIGNAL(activeViewChanged()), timeline_, SLOT(update()));
 
@@ -181,9 +185,6 @@ MainWindow::MainWindow(QWidget* parent) :
     // handle undo/redo
     resetUndoStack_();
     connect(scene_, SIGNAL(checkpoint()), this, SLOT(addToUndoStack()));
-
-    // Window icon
-    //QGuiApplication::setWindowIcon(QIcon(":/images/icon-256.png"));
 
     // Help
     gettingStarted_ = new QTextBrowser(this);
