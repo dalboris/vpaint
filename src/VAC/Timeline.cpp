@@ -110,7 +110,7 @@ void Timeline_HBar::paintEvent (QPaintEvent * /*event*/)
     // current frames
     painter.setBrush(Qt::red);
     painter.setPen(Qt::NoPen);
-    foreach(View * view, w_->views_)
+    for(View * view: w_->views_)
     {
         painter.drawRect(10*(view->activeTime().floatTime()) - w_->totalPixelOffset_ + 1, 1, 9, height()-2);
     }
@@ -157,7 +157,7 @@ void Timeline_HBar::paintEvent (QPaintEvent * /*event*/)
     // Draw inbetween cells
     painter.setPen(QColor(0,0,0));
     painter.setBrush(QColor(0,0,0));
-    foreach(InbetweenCell * inbetweenCell, inbetweenCells)
+    for(InbetweenCell * inbetweenCell: inbetweenCells)
     {
         double t1 = inbetweenCell->beforeTime().floatTime();
         double t2 = inbetweenCell->afterTime().floatTime();
@@ -167,7 +167,7 @@ void Timeline_HBar::paintEvent (QPaintEvent * /*event*/)
         //                 10*t2 - w_->totalPixelOffset_ + 5, 5);
     }
     painter.setBrush(QColor(255,0,0));
-    foreach(InbetweenCell * inbetweenCell, selectedInbetweenCells)
+    for(InbetweenCell * inbetweenCell: selectedInbetweenCells)
     {
         double t1 = inbetweenCell->beforeTime().floatTime();
         double t2 = inbetweenCell->afterTime().floatTime();
@@ -180,13 +180,13 @@ void Timeline_HBar::paintEvent (QPaintEvent * /*event*/)
     // Draw key cells
     painter.setPen(QColor(0,0,0));
     painter.setBrush(QColor(0,0,0));
-    foreach(KeyCell * keyCell, keyCells)
+    for(KeyCell * keyCell: keyCells)
     {
         double t = keyCell->time().floatTime();
         painter.drawEllipse(10*t - w_->totalPixelOffset_ + 2, 2, 6, 6);
     }
     painter.setBrush(QColor(255,0,0));
-    foreach(KeyCell * keyCell, selectedKeyCells)
+    for(KeyCell * keyCell: selectedKeyCells)
     {
         double t = keyCell->time().floatTime();
         painter.drawEllipse(10*t - w_->totalPixelOffset_ + 2, 2, 6, 6);
@@ -753,7 +753,7 @@ void Timeline::play()
     if(view)
     {
         playedViews_ << global()->activeView();
-        foreach(View * view, playedViews())
+        for(View * view: playedViews())
             view->disablePicking();
         elapsedTimer_.start();
         timer_->start();
@@ -764,7 +764,7 @@ void Timeline::play()
 void Timeline::pause()
 {
     timer_->stop();
-    foreach(View * view, playedViews())
+    for(View * view: playedViews())
         view->enablePicking();
     roundPlayedViews();
     playPauseButton_->setIcon(QIcon(":/images/go-play.png"));
@@ -781,7 +781,7 @@ void Timeline::playPause()
 
 void Timeline::roundPlayedViews()
 {
-    foreach(View * view, playedViews())
+    for(View * view: playedViews())
     {
         Time t = view->activeTime();
         double floatFrame = t.floatTime();
@@ -879,7 +879,7 @@ void Timeline::timerTimeout()
 
     elapsedTimer_.restart();
 
-    foreach(View * view, playedViews())
+    for(View * view: playedViews())
     {
         if(isPlaying() && subframeInbetweening())
         {

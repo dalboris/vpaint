@@ -94,13 +94,13 @@ InbetweenEdge::InbetweenEdge(VAC * vac,
     assert(afterPath_.endVertex() == endAnimatedVertex_.afterVertex());
 
     // Cache star
-    foreach(VertexCell * vertex, startVertices())
+    for(VertexCell * vertex: startVertices())
         addMeToSpatialStarOf_(vertex);
-    foreach(VertexCell * vertex, endVertices())
+    for(VertexCell * vertex: endVertices())
         addMeToSpatialStarOf_(vertex);
-    foreach(KeyCell * kcell, beforeCells())
+    for(KeyCell * kcell: beforeCells())
         addMeToTemporalStarAfterOf_(kcell);
-    foreach(KeyCell * kcell, afterCells())
+    for(KeyCell * kcell: afterCells())
         addMeToTemporalStarBeforeOf_(kcell);
 }
 
@@ -120,9 +120,9 @@ InbetweenEdge::InbetweenEdge(VAC * vac,
     assert(beforeCycle_.time() < afterCycle_.time());
 
     // Cache star
-    foreach(KeyCell * kcell, beforeCells())
+    for(KeyCell * kcell: beforeCells())
         addMeToTemporalStarAfterOf_(kcell);
-    foreach(KeyCell * kcell, afterCells())
+    for(KeyCell * kcell: afterCells())
         addMeToTemporalStarBeforeOf_(kcell);
 }
 
@@ -307,7 +307,7 @@ InbetweenEdge::InbetweenEdge(VAC * vac, XmlStreamReader & xml) :
 
     VertexCell * InbetweenEdge::startVertex(Time time) const
     {
-        foreach(VertexCell * v, startVertices())
+        for(VertexCell * v: startVertices())
             if(v->exists(time))
                 return v;
         return 0;
@@ -315,7 +315,7 @@ InbetweenEdge::InbetweenEdge(VAC * vac, XmlStreamReader & xml) :
 
     VertexCell * InbetweenEdge::endVertex(Time time) const
     {
-        foreach(VertexCell * v, endVertices())
+        for(VertexCell * v: endVertices())
             if(v->exists(time))
                 return v;
         return 0;

@@ -55,7 +55,7 @@ template<class U, class UContainer, class T, class TContainer>
 void copyCellContainer(const UContainer & from, TContainer & to)
 {
     to.clear();
-    foreach(U * u, from)
+    for(U * u: from)
     {
         if(u)
         {

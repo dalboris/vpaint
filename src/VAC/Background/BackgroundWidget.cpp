@@ -224,7 +224,7 @@ void BackgroundWidget::setBackground(Background * background)
     // Disable all widgets if background_ == NULL
     bool areChildrenEnabled = background_ ? true : false;
     QList<QWidget*> children = findChildren<QWidget*>(QString(), Qt::FindDirectChildrenOnly);
-    foreach (QWidget * w, children)
+    for (QWidget * w: children)
         w->setEnabled(areChildrenEnabled);
 
     // Set widgets values from background values

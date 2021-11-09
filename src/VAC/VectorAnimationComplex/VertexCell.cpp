@@ -159,7 +159,7 @@ double VertexCell::size(Time time) const
 
     // valence > 0
     double res = 0; //std::numeric_limits<double>::max();
-    foreach(Halfedge h, incidentEdgesT)
+    for(Halfedge h: incidentEdgesT)
     {
         EdgeSample sample = h.startSample(time);
         if(sample.width() > res)
@@ -214,14 +214,14 @@ QList<Halfedge> VertexCell::incidentEdges(Time t) const
     // Orient them so that "start(h) = this"
     // Note: Possibly add them twice if start = end = this
     QList<Halfedge> res;
-    foreach(KeyEdge * keyEdge, keyEdges)
+    for(KeyEdge * keyEdge: keyEdges)
     {
         if(keyEdge->startVertex()->toVertexCell() == this)
             res << Halfedge(keyEdge, true);
         if(keyEdge->endVertex()->toVertexCell() == this)
             res << Halfedge(keyEdge, false);
     }
-    foreach(InbetweenEdge * inbetweenEdge, inbetweenEdges)
+    for(InbetweenEdge * inbetweenEdge: inbetweenEdges)
     {
         if(inbetweenEdge->startVertex(t)->toVertexCell()  == this)
             res << Halfedge(inbetweenEdge, true);

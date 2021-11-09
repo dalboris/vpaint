@@ -525,7 +525,7 @@ void AnimatedCycleWidget::addSelectedCells()
     {
         CellSet selectedCells = vac->selectedCells();
 
-        foreach(Cell * cell, selectedCells)
+        for(Cell * cell: selectedCells)
             createNodeAndItem(cell);
 
         computeItemHeightAndY();
@@ -831,7 +831,7 @@ void AnimatedCycleWidget::deleteItem(GraphicsNodeItem * item)
     }
 
     // Delete arrows starting or ending at item
-    foreach(GraphicsArrowItem * arrowItem, arrowItems)
+    for(GraphicsArrowItem * arrowItem: arrowItems)
         deleteArrow(arrowItem);
 
     // Delete node and item
@@ -882,7 +882,7 @@ void AnimatedCycleWidget::computeSceneFromAnimatedCycle()
     }
 
     // Create items
-    foreach(AnimatedCycleNode * node, animatedCycle_.nodes())
+    for(AnimatedCycleNode * node: animatedCycle_.nodes())
     {
         GraphicsNodeItem * item = new GraphicsNodeItem(node, this);
         scene_->addItem(item);
@@ -893,7 +893,7 @@ void AnimatedCycleWidget::computeSceneFromAnimatedCycle()
     computeItemHeightAndY();
 
     // Create arrows
-    foreach(AnimatedCycleNode * node, animatedCycle_.nodes())
+    for(AnimatedCycleNode * node: animatedCycle_.nodes())
     {
         GraphicsNodeItem * item = nodeToItem_[node];
 
@@ -1045,7 +1045,7 @@ void AnimatedCycleWidget::animate()
 
     // Get all items
     QSet<GraphicsNodeItem*> items;
-    foreach(QGraphicsItem * i, scene_->items())
+    for(QGraphicsItem * i: scene_->items())
     {
         GraphicsNodeItem * item = qgraphicsitem_cast<GraphicsNodeItem *>(i);
         if(item)
@@ -1053,7 +1053,7 @@ void AnimatedCycleWidget::animate()
     }
 
     // Initialize values
-    foreach(GraphicsNodeItem * item, items)
+    for(GraphicsNodeItem * item: items)
     {
         deltaX[item] = 0;
         deltaXNum[item] = 0;
@@ -1115,7 +1115,7 @@ void AnimatedCycleWidget::animate()
 
 
     // Increase width of inbetween edges
-    foreach(GraphicsNodeItem * item, items)
+    for(GraphicsNodeItem * item: items)
     {
         InbetweenEdge * inbetweenEdge = item->node()->cell()->toInbetweenEdge();
         if(inbetweenEdge)
@@ -1222,7 +1222,7 @@ void AnimatedCycleWidget::animate()
     }
 
     // Compute average of delta
-    foreach(GraphicsNodeItem * item, items)
+    for(GraphicsNodeItem * item: items)
     {
         if(deltaMinX[item] > deltaMaxX[item])
         {

@@ -117,7 +117,7 @@ Eigen::Vector2d AnimatedVertex::pos(Time time) const
 {
     VertexCellSet set = vertices();
     set << beforeVertex() << afterVertex();
-    foreach(VertexCell * v, set)
+    for(VertexCell * v: set)
     {
         if(v->exists(time))
             return v->pos(time);

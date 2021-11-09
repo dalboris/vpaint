@@ -193,7 +193,7 @@ void Background::computeCache_() const
         //   intWildcards[i]     = 15
         QStringList stringWildcards;
         QList<int> intWildcards;
-        foreach(QFileInfo i, files)
+        for(QFileInfo i: files)
         {
             // Get wildcard as string
             QString fileName = i.fileName();

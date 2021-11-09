@@ -116,8 +116,8 @@ CellSet EdgeCell::spatialBoundary() const
 EdgeCellSet EdgeCell::incidentEdges() const
 {
     CellSet incidentCells;
-    foreach(Cell * c, spatialBoundary())
-        foreach(Cell * d, c->spatialStar())
+    for(Cell * c: spatialBoundary())
+        for(Cell * d: c->spatialStar())
             if(d != this)
             incidentCells << d;
     return incidentCells;

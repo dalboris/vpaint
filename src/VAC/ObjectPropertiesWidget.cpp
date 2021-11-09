@@ -358,7 +358,7 @@ QString ObjectPropertiesWidget::getStringType(const VectorAnimationComplex::Cell
     int nsoe = 0;
     int nsce = 0;
     int nsf = 0;
-    foreach(VectorAnimationComplex::Cell * cell, cells)
+    for(VectorAnimationComplex::Cell * cell: cells)
     {
         if(cell->toKeyVertex())
             ++nkv;
@@ -445,7 +445,7 @@ void ObjectPropertiesWidget::setId(const VectorAnimationComplex::CellSet & cells
 
     int i = 0; // count cells
     int j = 0; // num on line
-    foreach(VectorAnimationComplex::Cell * cell, cells)
+    for(VectorAnimationComplex::Cell * cell: cells)
     {
         j = i % numIdPerLine;
         if(i==0)

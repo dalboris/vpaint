@@ -44,7 +44,7 @@ void SelectionInfoWidget::updateInfo()
     VAC * vac = global()->mainWindow()->scene()->activeVAC();
     if(vac)
     {
-        foreach(Cell * c, vac->selectedCells())
+        for(Cell * c: vac->selectedCells())
         {
             text += QString::number(c->id());
             text += " ";

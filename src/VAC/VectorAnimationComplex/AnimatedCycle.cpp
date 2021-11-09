@@ -251,7 +251,7 @@ AnimatedCycle::~AnimatedCycle()
 
 void AnimatedCycle::clear()
 {
-    foreach(AnimatedCycleNode * node, nodes())
+    for(AnimatedCycleNode * node: nodes())
         delete node;
 
     first_ = 0;
@@ -263,10 +263,10 @@ void AnimatedCycle::copyFrom(const AnimatedCycle & other)
 
     QMap<AnimatedCycleNode *, AnimatedCycleNode *> oldToNew;
     oldToNew[0] = 0;
-    foreach(AnimatedCycleNode * oldNode, other.nodes())
+    for(AnimatedCycleNode * oldNode: other.nodes())
         oldToNew[oldNode] = new AnimatedCycleNode(oldNode->cell());
 
-    foreach(AnimatedCycleNode * oldNode, other.nodes())
+    for(AnimatedCycleNode * oldNode: other.nodes())
     {
         AnimatedCycleNode * newNode = oldToNew[oldNode];
         newNode->setPrevious(oldToNew[oldNode->previous()]);
@@ -345,14 +345,14 @@ QSet<AnimatedCycleNode*> AnimatedCycle::nodes() const
 CellSet AnimatedCycle::cells() const
 {
     CellSet res;
-    foreach(AnimatedCycleNode * node, nodes())
+    for(AnimatedCycleNode * node: nodes())
         res << node->cell();
     return res;
 }
 KeyCellSet AnimatedCycle::beforeCells() const
 {
     KeyCellSet res;
-    foreach(AnimatedCycleNode * node, nodes())
+    for(AnimatedCycleNode * node: nodes())
     {
         if(!node->before())
             res.unite(node->cell()->beforeCells());
@@ -362,7 +362,7 @@ KeyCellSet AnimatedCycle::beforeCells() const
 KeyCellSet AnimatedCycle::afterCells() const
 {
     KeyCellSet res;
-    foreach(AnimatedCycleNode * node, nodes())
+    for(AnimatedCycleNode * node: nodes())
     {
         if(!node->after())
             res.unite(node->cell()->afterCells());
@@ -374,7 +374,7 @@ KeyCellSet AnimatedCycle::afterCells() const
 // Replace pointed vertex
 void AnimatedCycle::replaceVertex(KeyVertex * oldVertex, KeyVertex * newVertex)
 {
-    foreach(AnimatedCycleNode * node, nodes())
+    for(AnimatedCycleNode * node: nodes())
     {
         if(node->cell()->toKeyVertex() == oldVertex)
             node->setCell(newVertex);
@@ -382,7 +382,7 @@ void AnimatedCycle::replaceVertex(KeyVertex * oldVertex, KeyVertex * newVertex)
 }
 void AnimatedCycle::replaceHalfedge(const KeyHalfedge & oldHalfedge, const KeyHalfedge & newHalfedge)
 {
-    foreach(AnimatedCycleNode * node, nodes())
+    for(AnimatedCycleNode * node: nodes())
     {
         if(node->cell()->toKeyEdge() == oldHalfedge.edge)
         {
@@ -495,7 +495,7 @@ void AnimatedCycle::replaceEdges(KeyEdge * oldEdge, const KeyEdgeList & newEdges
     }
     else
     {
-        foreach(AnimatedCycleNode * oldEdgeNode, getNodes(oldEdge))
+        for(AnimatedCycleNode * oldEdgeNode: getNodes(oldEdge))
         {
             int n = newEdges.size();
             bool side = oldEdgeNode->side();
@@ -581,7 +581,7 @@ void AnimatedCycle::replaceEdges(KeyEdge * oldEdge, const KeyEdgeList & newEdges
 QSet<AnimatedCycleNode*>  AnimatedCycle::getNodes(Cell * cell)
 {
     QSet<AnimatedCycleNode*> res;
-    foreach(AnimatedCycleNode * node, nodes())
+    for(AnimatedCycleNode * node: nodes())
     {
         if(node->cell() == cell)
             res << node;
@@ -592,7 +592,7 @@ QSet<AnimatedCycleNode*>  AnimatedCycle::getNodes(Cell * cell)
 void AnimatedCycle::replaceInbetweenVertex(InbetweenVertex * sv,
                             InbetweenVertex * sv1, KeyVertex * kv, InbetweenVertex * sv2)
 {
-    foreach(AnimatedCycleNode * nsv, getNodes(sv))
+    for(AnimatedCycleNode * nsv: getNodes(sv))
     {
         // Create three new nodes
         AnimatedCycleNode * nsv1 = new AnimatedCycleNode(sv1);
@@ -775,7 +775,7 @@ void AnimatedCycle::replaceInbetweenEdge(InbetweenEdge * se,
     else
     {
         // Perform substitution
-        foreach(AnimatedCycleNode * nse, getNodes(se))
+        for(AnimatedCycleNode * nse: getNodes(se))
         {
             // Get boundary nodes
             AnimatedCycleNode * nkvprevious = nse->previous(t);
@@ -1072,7 +1072,7 @@ void AnimatedCycle::sample(Time time, QList<Eigen::Vector2d> & out)
 
 void AnimatedCycle::remapPointers(VAC * newVAC)
 {
-    foreach(AnimatedCycleNode * node, nodes())
+    for(AnimatedCycleNode * node: nodes())
     {
         node->setCell(newVAC->getCell(node->cell()->id()));
     }
@@ -1147,14 +1147,14 @@ QString AnimatedCycle::toString() const
     // Create correspondence between node pointers and [1..n] where n is the number of nodes
     QMap<AnimatedCycleNode*,int> nodeMap;
     int id = 1;
-    foreach(AnimatedCycleNode * node, nodes())
+    for(AnimatedCycleNode * node: nodes())
         nodeMap[node] = id++;
 
     // Write
     QString res;
     res += "[";
     bool first = true;
-    foreach(AnimatedCycleNode * node, nodes())
+    for(AnimatedCycleNode * node: nodes())
     {
         if(first)
             first = false;
@@ -1244,12 +1244,12 @@ QTextStream & operator<<(QTextStream & out, const VectorAnimationComplex::Animat
     // Create correspondence between node pointers and [0..n-1] where n is the number of nodes
     QMap<AnimatedCycleNode*,int> nodeMap;
     int id = 0;
-    foreach(AnimatedCycleNode * node, cycle.nodes())
+    for(AnimatedCycleNode * node: cycle.nodes())
         nodeMap[node] = id++;
 
     // Write to file
     out << "[";
-    foreach(AnimatedCycleNode * node, cycle.nodes())
+    for(AnimatedCycleNode * node: cycle.nodes())
     {
         if(nodeMap[node]!=0) out << " ,";
         out << " "

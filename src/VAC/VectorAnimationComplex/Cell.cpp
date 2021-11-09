@@ -481,7 +481,7 @@ CellSet Cell::spatialBoundary() const { return CellSet(); }
 CellSet Cell::spatialBoundary(Time t) const
 {
     CellSet res;
-    foreach(Cell * obj, this->spatialBoundary())
+    for(Cell * obj: this->spatialBoundary())
         if(obj->exists(t))
             res << obj;
     return res;
@@ -575,25 +575,25 @@ CellSet Cell::temporalNeighbourhoodAfter() const
 // -- Modifying star of boundary --
 void Cell::addMeToStarOfBoundary_()
 {
-    foreach(Cell * c, spatialBoundary())
+    for(Cell * c: spatialBoundary())
         addMeToSpatialStarOf_(c);
 
-    foreach(KeyCell * c, beforeCells())
+    for(KeyCell * c: beforeCells())
         addMeToTemporalStarAfterOf_(c);
 
-    foreach(KeyCell * c, afterCells())
+    for(KeyCell * c: afterCells())
         addMeToTemporalStarBeforeOf_(c);
 }
 
 void Cell::removeMeFromStarOfBoundary_()
 {
-    foreach(Cell * c, spatialBoundary())
+    for(Cell * c: spatialBoundary())
         removeMeFromSpatialStarOf_(c);
 
-    foreach(KeyCell * c, beforeCells())
+    for(KeyCell * c: beforeCells())
         removeMeFromTemporalStarAfterOf_(c);
 
-    foreach(KeyCell * c, afterCells())
+    for(KeyCell * c: afterCells())
         removeMeFromTemporalStarBeforeOf_(c);
 }
 
@@ -839,7 +839,7 @@ bool Cell::intersects(Time t, const BoundingBox & bb) const
 void Cell::processGeometryChanged_()
 {
     CellSet toClearCells = geometryDependentCells_();
-    foreach(Cell * cell, toClearCells)
+    for(Cell * cell: toClearCells)
         cell->clearCachedGeometry_();
 }
 

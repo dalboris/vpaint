@@ -370,7 +370,7 @@ void KeyEdge::prepareSculptPreserveTangents_()
         {
             KeyEdgeSet leftEdges =  startVertex_->spatialStar();
             leftEdges.remove(this);
-            foreach(KeyEdge * ie, leftEdges)
+            for(KeyEdge * ie: leftEdges)
             {
                 if(ie->endVertex_ == startVertex_)
                 {
@@ -392,7 +392,7 @@ void KeyEdge::prepareSculptPreserveTangents_()
         {
             KeyEdgeSet rightEdges =  endVertex_->spatialStar();
             rightEdges.remove(this);
-            foreach(KeyEdge * ie, rightEdges)
+            for(KeyEdge * ie: rightEdges)
             {
                 // For now, disabling tangent preservation for 0-edge loops
                 if(ie == this)
@@ -445,13 +445,13 @@ void KeyEdge::continueSculptPreserveTangents_()
     // preserve tangency
     Eigen::Vector2d continueLeftDer = geometry()->der(0);
     Eigen::Vector2d continueRightDer = geometry()->der(geometry()->length());
-    foreach(KeyEdge * ie, sculpt_keepRightAsLeft_)
+    for(KeyEdge * ie: sculpt_keepRightAsLeft_)
         ie->geometry()->setRightDer(continueLeftDer, remainingRadiusLeft_, true);
-    foreach(KeyEdge * ie, sculpt_keepLeftAsLeft_)
+    for(KeyEdge * ie: sculpt_keepLeftAsLeft_)
         ie->geometry()->setLeftDer(-continueLeftDer, remainingRadiusLeft_, true);
-    foreach(KeyEdge * ie, sculpt_keepLeftAsRight_)
+    for(KeyEdge * ie: sculpt_keepLeftAsRight_)
         ie->geometry()->setLeftDer(continueRightDer, remainingRadiusRight_, true);
-    foreach(KeyEdge * ie, sculpt_keepRightAsRight_)
+    for(KeyEdge * ie: sculpt_keepRightAsRight_)
         ie->geometry()->setRightDer(-continueRightDer, remainingRadiusRight_, true);
     if(sculpt_keepMyselfTangent_)
     {

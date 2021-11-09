@@ -116,7 +116,7 @@ QList<KeyHalfedge> KeyHalfedge::endIncidentHalfEdges()
     KeyVertex * v = endVertex();
     KeyEdgeSet edges = v->star();
     QList<KeyHalfedge> halfedges;
-    foreach(KeyEdge * e, edges)
+    for(KeyEdge * e: edges)
     {
         if(e->startVertex() == v)
             halfedges << KeyHalfedge(e,true);
@@ -160,7 +160,7 @@ QList<KeyHalfedge> KeyHalfedge::sorted(const QList<KeyHalfedge> & adj)
     // compute all the angles between this he to the others
     Eigen::Vector2d u = - rightDer();
     QList<KeyAngleHalfEdge> list;
-    foreach(KeyHalfedge he, adj)
+    for(KeyHalfedge he: adj)
     {
         double angle = GeometryUtils::angleLike(u, he.leftDer());
         list << KeyAngleHalfEdge(he, angle);
@@ -171,7 +171,7 @@ QList<KeyHalfedge> KeyHalfedge::sorted(const QList<KeyHalfedge> & adj)
 
     // return the he sorted
     QList<KeyHalfedge> res;
-    foreach(KeyAngleHalfEdge ahe, list)
+    for(KeyAngleHalfEdge ahe: list)
         res << ahe.he;
     return res;
 }

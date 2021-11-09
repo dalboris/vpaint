@@ -85,7 +85,7 @@ void Operator::modify(VAC * vac)
 // check the validity
 bool Operator::check()
 {
-    foreach(VAC * vac, /*root_->*/modifiedVAC_)
+    for(VAC * vac: /*root_->*/modifiedVAC_)
         if(!vac->check())
         {
             qDebug() << "A VAC modified by the operator is not valid anymore.";
@@ -93,7 +93,7 @@ bool Operator::check()
         }
     /*root_->*/modifiedVAC_.clear();
 
-    foreach(Cell * c, /*root_->*/modifiedCells_)
+    for(Cell * c: /*root_->*/modifiedCells_)
         if(!c->check())
         {
             qDebug() << "Cell(" << c->id() << ") modified by the operator is not valid anymore.";

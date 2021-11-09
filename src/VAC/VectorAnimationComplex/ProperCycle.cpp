@@ -38,7 +38,7 @@ ProperCycle::ProperCycle(const KeyEdgeSet & edgeSetConst)
     // if not all edges at same time, then invalid
     KeyEdge * first = *edgeSetConst.begin();
     Time t = first->time();
-    foreach(KeyEdge * iedge, edgeSetConst)
+    for(KeyEdge * iedge: edgeSetConst)
     {
         if(iedge->time() != t)
         {
@@ -123,7 +123,7 @@ ProperCycle::ProperCycle(const KeyEdgeSet & edgeSetConst)
 
         // Check that it's simple
         KeyVertexSet vertices;
-        foreach(KeyHalfedge he, halfedges_)
+        for(KeyHalfedge he: halfedges_)
         {
             KeyVertex * vertex = he.startVertex();
             if(vertices.contains(vertex))
@@ -180,7 +180,7 @@ void ProperCycle::replaceEdges(KeyEdge * oldEdge, const KeyEdgeList & newEdges)
 {
     QList<KeyHalfedge> newHalfedges;
 
-    foreach(KeyHalfedge he, halfedges_)
+    for(KeyHalfedge he: halfedges_)
     {
         if(he.edge == oldEdge)
         {

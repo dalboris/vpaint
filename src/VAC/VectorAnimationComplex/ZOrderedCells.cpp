@@ -149,7 +149,7 @@ namespace // local free function
 
 bool intersect(Cell * c, const CellSet & cells)
 {
-    foreach(Cell * c2, cells)
+    for(Cell * c2: cells)
         if(c->boundingBox().intersects(c2->boundingBox()))
             return true;
     return false;

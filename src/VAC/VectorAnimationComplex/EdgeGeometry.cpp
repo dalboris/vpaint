@@ -386,7 +386,7 @@ LinearSpline::LinearSpline(const std::vector<EdgeSample,Eigen::aligned_allocator
 LinearSpline::LinearSpline(const QList<EdgeSample> & samples, bool loop)
 {
     std::vector<EdgeSample,Eigen::aligned_allocator<EdgeSample> > stdvector;
-    foreach (EdgeSample es, samples)
+    for (EdgeSample es: samples)
     {
         stdvector.push_back(es);
     }

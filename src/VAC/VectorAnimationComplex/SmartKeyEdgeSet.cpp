@@ -122,7 +122,7 @@ SmartKeyEdgeSet::SmartKeyEdgeSet(const KeyEdgeSet & edgeSetConst) :
     // ===== First, each closed edge is its own connected component =====
 
     KeyEdgeSet remainingEdgesCopy = remainingEdges;
-    foreach(KeyEdge * iedge, remainingEdgesCopy)
+    for(KeyEdge * iedge: remainingEdgesCopy)
     {
         if(iedge->isClosed())
         {
@@ -172,7 +172,7 @@ SmartKeyEdgeSet::SmartKeyEdgeSet(const KeyEdgeSet & edgeSetConst) :
     QSet<SubVertex*> subVertices;
     QMap<Vertex*, SubVertex*> vertexToSubVertex;
     QMap<Edge*, SubEdge*> edgeToSubEdge;
-    foreach(Edge * edge, remainingEdges)
+    for(Edge * edge: remainingEdges)
     {
         // create new subcomplex edge
         SubEdge * subEdge = new SubEdge(edge);
@@ -236,9 +236,9 @@ SmartKeyEdgeSet::SmartKeyEdgeSet(const KeyEdgeSet & edgeSetConst) :
                 subEdge->marked = true;
 
                 // Insert neighbours in stack
-                foreach(SubEdge * neighbour, subEdge->leftSubVertex->subEdges)
+                for(SubEdge * neighbour: subEdge->leftSubVertex->subEdges)
                     toProcess.push(neighbour);
-                foreach(SubEdge * neighbour, subEdge->rightSubVertex->subEdges)
+                for(SubEdge * neighbour: subEdge->rightSubVertex->subEdges)
                     toProcess.push(neighbour);
             }
         }
@@ -251,9 +251,9 @@ SmartKeyEdgeSet::SmartKeyEdgeSet(const KeyEdgeSet & edgeSetConst) :
     // ===== Release memory =====
 
     // release memory
-    foreach(SubEdge * subEdge, subEdges)
+    for(SubEdge * subEdge: subEdges)
         delete subEdge;
-    foreach(SubVertex * subVertex, subVertices)
+    for(SubVertex * subVertex: subVertices)
         delete subVertex;
 }
 

@@ -540,12 +540,12 @@ void InbetweenFace::read2ndPass()
 
     // Before faces
     beforeFaces_.clear();
-    foreach(int id, tempBeforeFaces_)
+    for(int id: tempBeforeFaces_)
         beforeFaces_ << vac()->getCell(id)->toKeyFace();
 
     // After faces
     afterFaces_.clear();
-    foreach(int id, tempAfterFaces_)
+    for(int id: tempAfterFaces_)
         afterFaces_ << vac()->getCell(id)->toKeyFace();
 }
 
@@ -563,7 +563,7 @@ void InbetweenFace::save_(QTextStream & out)
     out << Save::newField("BeforeFaces");
     out << "[";
     bool first = true;
-    foreach(KeyFace * face, beforeFaces_)
+    for(KeyFace * face: beforeFaces_)
     {
         if(first)
             first = false;
@@ -577,7 +577,7 @@ void InbetweenFace::save_(QTextStream & out)
     out << Save::newField("AfterFaces");
     out << "[";
     first = true;
-    foreach(KeyFace * face, afterFaces_)
+    for(KeyFace * face: afterFaces_)
     {
         if(first)
             first = false;
@@ -613,7 +613,7 @@ void InbetweenFace::write_(XmlStreamWriter & xml) const
     // Before faces
     QString beforeFacesString;
     bool first = true;
-    foreach(KeyFace * face, beforeFaces_)
+    for(KeyFace * face: beforeFaces_)
     {
         if(first)
             first = false;
@@ -627,7 +627,7 @@ void InbetweenFace::write_(XmlStreamWriter & xml) const
     // After faces
     QString afterFacesString;
     first = true;
-    foreach(KeyFace * face, afterFaces_)
+    for(KeyFace * face: afterFaces_)
     {
         if(first)
             first = false;
@@ -698,13 +698,13 @@ void InbetweenFace::remapPointers(VAC * newVAC)
 
     // Before faces
     QSet<KeyFace*> newBeforeFaces;
-    foreach(KeyFace * face, beforeFaces_)
+    for(KeyFace * face: beforeFaces_)
         newBeforeFaces << vac()->getCell(face->id())->toKeyFace();
     beforeFaces_ = newBeforeFaces;
 
     // After faces
     QSet<KeyFace*> newAfterFaces;
-    foreach(KeyFace * face, afterFaces_)
+    for(KeyFace * face: afterFaces_)
         newAfterFaces << vac()->getCell(face->id())->toKeyFace();
     afterFaces_ = newAfterFaces;
 }

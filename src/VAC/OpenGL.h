@@ -31,7 +31,7 @@
 //   QList extensions = context()->extensions().toList();
 //   std::sort(extensions);
 //   qDebug() << "Supported extensions (" << extensions.count() << ")";
-//   foreach (const QByteArray &extension, extensions)
+//   for (const QByteArray &extension: extensions)
 //       qDebug() << "    " << extension;
 //
 //   // Check if extension is supported

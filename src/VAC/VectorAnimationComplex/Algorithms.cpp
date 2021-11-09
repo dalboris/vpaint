@@ -36,10 +36,10 @@ CellSet connected(const CellSet & cells)
     while(addedCells.size() != 0)
     {
         CellSet newAddedCells;
-        foreach(Cell * c, addedCells)
+        for(Cell * c: addedCells)
         {
             CellSet neighbourhood = c->neighbourhood();
-            foreach(Cell * d, neighbourhood)
+            for(Cell * d: neighbourhood)
             {
                 if(!res.contains(d))
                 {
@@ -59,7 +59,7 @@ CellSet closure(Cell * c)
 {
     CellSet res;
     res << c;
-    foreach(Cell * b, c->boundary())
+    for(Cell * b: c->boundary())
         res << b;
     return res;
 }
@@ -67,10 +67,10 @@ CellSet closure(Cell * c)
 CellSet closure(const CellSet & cells)
 {
     CellSet res;
-    foreach(Cell * c, cells)
+    for(Cell * c: cells)
     {
         res << c;
-        foreach(Cell * b, c->boundary())
+        for(Cell * b: c->boundary())
             res << b;
     }
     return res;
@@ -80,7 +80,7 @@ CellSet fullstar(Cell * c)
 {
     CellSet res;
     res << c;
-    foreach(Cell * b, c->star())
+    for(Cell * b: c->star())
         res << b;
     return res;
 }
@@ -88,10 +88,10 @@ CellSet fullstar(Cell * c)
 CellSet fullstar(const CellSet & cells)
 {
     CellSet res;
-    foreach(Cell * c, cells)
+    for(Cell * c: cells)
     {
         res << c;
-        foreach(Cell * b, c->star())
+        for(Cell * b: c->star())
             res << b;
     }
     return res;
@@ -105,11 +105,11 @@ QList<KeyEdgeSet> connectedComponents(const KeyEdgeSet & cells)
     // Initialize data structure for algorithm
 
     QMap<KeyEdge *, bool> isMarked;
-    foreach(KeyEdge * edge, cells)
+    for(KeyEdge * edge: cells)
         isMarked[edge] = false;
 
     QMap<KeyEdge *, int> component;
-    foreach(KeyEdge * edge, cells)
+    for(KeyEdge * edge: cells)
         component[edge] = -1;
 
     int numComponents = 0;
@@ -117,7 +117,7 @@ QList<KeyEdgeSet> connectedComponents(const KeyEdgeSet & cells)
 
     // Execute algorithm
 
-    foreach(KeyEdge * edge, cells)
+    for(KeyEdge * edge: cells)
     {
         // if has already been assigned a connected component, do nothing
         if(!isMarked[edge])
@@ -148,7 +148,7 @@ QList<KeyEdgeSet> connectedComponents(const KeyEdgeSet & cells)
                 component[edgeToVisit] = numComponents-1;
 
                 //  Find other edges to visit
-                foreach(KeyEdge * other, cells)
+                for(KeyEdge * other: cells)
                 {
                     if(!isMarked[other]) // note: this exlude other == edgeToVisit
                     {
@@ -171,7 +171,7 @@ QList<KeyEdgeSet> connectedComponents(const KeyEdgeSet & cells)
     for(int i=0; i<numComponents; ++i)
         res << KeyEdgeSet();
 
-    foreach(KeyEdge * edge, cells)
+    for(KeyEdge * edge: cells)
         res[component[edge]] << edge;
 
     return res;

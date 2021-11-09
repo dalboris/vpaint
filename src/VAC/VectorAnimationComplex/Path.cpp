@@ -92,7 +92,7 @@ Path::Path(const KeyEdgeSet & edgeSetConst) :
     // if not all edges at same time, then invalid
     KeyEdge * first = *edgeSetConst.begin();
     Time t = first->time();
-    foreach(KeyEdge * iedge, edgeSetConst)
+    for(KeyEdge * iedge: edgeSetConst)
     {
         if(iedge->time() != t)
         {
@@ -202,7 +202,7 @@ Path::Path(const KeyEdgeSet & edgeSetConst) :
 
         // Check that it's simple
         //KeyVertexSet vertices;
-        //foreach(KeyHalfEdge he, halfedges_)
+        //for(KeyHalfEdge he: halfedges_)
         //{
         //    KeyVertex * vertex = he.startVertex();
         //    if(vertices.contains(vertex))
@@ -442,7 +442,7 @@ void Path::replaceEdges(KeyEdge * oldEdge, const KeyEdgeList & newEdges)
 {
     QList<KeyHalfedge> newHalfedges;
 
-    foreach(KeyHalfedge he, halfedges_)
+    for(KeyHalfedge he: halfedges_)
     {
         if(he.edge == oldEdge)
         {
@@ -498,7 +498,7 @@ double Path::length() const
     else
     {
         double res = 0;
-        foreach(KeyHalfedge he, halfedges_)
+        for(KeyHalfedge he: halfedges_)
             res += he.edge->geometry()->length();
         return res;
     }

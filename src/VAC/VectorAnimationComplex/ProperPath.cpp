@@ -38,7 +38,7 @@ ProperPath::ProperPath(const KeyEdgeSet & edgeSetConst)
     // if not all edges at same time, then invalid
     KeyEdge * first = *edgeSetConst.begin();
     Time t = first->time();
-    foreach(KeyEdge * iedge, edgeSetConst)
+    for(KeyEdge * iedge: edgeSetConst)
     {
         if(iedge->time() != t)
         {
@@ -127,7 +127,7 @@ ProperPath::ProperPath(const KeyEdgeSet & edgeSetConst)
 
     // Check that it's simple
     KeyVertexSet vertices;
-    foreach(KeyHalfedge he, halfedges_)
+    for(KeyHalfedge he: halfedges_)
     {
         KeyVertex * vertex = he.startVertex();
         if(vertices.contains(vertex))
@@ -175,7 +175,7 @@ void ProperPath::remapPointers(VAC * newVAC)
 void ProperPath::save(QTextStream & out)
 {
     out << "[ ";
-    foreach(KeyHalfedge he, halfedges_)
+    for(KeyHalfedge he: halfedges_)
     {
         he.save(out);
         out << " ";
@@ -194,7 +194,7 @@ void ProperPath::replaceEdges(KeyEdge * oldEdge, const KeyEdgeList & newEdges)
 {
     QList<KeyHalfedge> newHalfedges;
 
-    foreach(KeyHalfedge he, halfedges_)
+    for(KeyHalfedge he: halfedges_)
     {
         if(he.edge == oldEdge)
         {

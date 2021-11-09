@@ -48,7 +48,7 @@ Time KeyCell::temporalDragMinTime() const
     Time res(-1000); // TODO
 
     InbetweenCellSet beforeStar = temporalStarBefore();
-    foreach(InbetweenCell * scell, beforeStar)
+    for(InbetweenCell * scell: beforeStar)
     {
         Time t = scell->beforeTime();
         if(res < t)
@@ -65,7 +65,7 @@ Time KeyCell::temporalDragMaxTime() const
 
 
     InbetweenCellSet afterStar = temporalStarAfter();
-    foreach(InbetweenCell * scell, afterStar)
+    for(InbetweenCell * scell: afterStar)
     {
         Time t = scell->afterTime();
         if(t < res)

@@ -55,7 +55,7 @@ CycleHelper::CycleHelper(const KeyEdgeSet & edgeSetConst) :
     // if not all edges at same time, then invalid
     KeyEdge * first = *edgeSetConst.begin();
     Time t = first->time();
-    foreach(KeyEdge * iedge, edgeSetConst)
+    for(KeyEdge * iedge: edgeSetConst)
     {
         if(iedge->time() != t)
         {
@@ -146,7 +146,7 @@ CycleHelper::CycleHelper(const KeyEdgeSet & edgeSetConst) :
         QMap<KeyVertex*, Vertex*> vertexToNode;
         // /!\ be careful of memory leaks from here
 
-        foreach(KeyEdge * iedge, edgeSet)
+        for(KeyEdge * iedge: edgeSet)
         {
             // detect pure loop here, and abort if any
             if(iedge->isClosed())
@@ -154,9 +154,9 @@ CycleHelper::CycleHelper(const KeyEdgeSet & edgeSetConst) :
                 //QMessageBox::information(0, QObject::tr("operation aborted"),
                 //                         QObject::tr("more than one edge and one of them is a pure loop"));
 
-                foreach(Edge * edge, subcomplexEdges)
+                for(Edge * edge: subcomplexEdges)
                     delete edge;
-                foreach(Vertex * node, subcomplexNodes)
+                for(Vertex * node: subcomplexNodes)
                     delete node;
 
                 return;
@@ -201,7 +201,7 @@ CycleHelper::CycleHelper(const KeyEdgeSet & edgeSetConst) :
             Edge * edge = toProcess.top();
             toProcess.pop();
 
-            foreach(Edge * neighbour, edge->leftNode->edges)
+            for(Edge * neighbour: edge->leftNode->edges)
             {
                 if(!neighbour->marked)
                 {
@@ -209,7 +209,7 @@ CycleHelper::CycleHelper(const KeyEdgeSet & edgeSetConst) :
                     toProcess.push(neighbour);
                 }
             }
-            foreach(Edge * neighbour, edge->rightNode->edges)
+            for(Edge * neighbour: edge->rightNode->edges)
             {
                 if(!neighbour->marked)
                 {
@@ -218,16 +218,16 @@ CycleHelper::CycleHelper(const KeyEdgeSet & edgeSetConst) :
                 }
             }
         }
-        foreach(Edge * edge, subcomplexEdges)
+        for(Edge * edge: subcomplexEdges)
         {
             if(!edge->marked)
             {
                 //QMessageBox::information(0, QObject::tr("operation aborted"),
                 //                         QObject::tr("the selected edges are not all connected together"));
 
-                foreach(Edge * edge, subcomplexEdges)
+                for(Edge * edge: subcomplexEdges)
                     delete edge;
-                foreach(Vertex * node, subcomplexNodes)
+                for(Vertex * node: subcomplexNodes)
                     delete node;
 
                 return;
@@ -242,7 +242,7 @@ CycleHelper::CycleHelper(const KeyEdgeSet & edgeSetConst) :
         while (!subcomplexEdges.isEmpty())
         {
             //  initialization
-            foreach(Vertex * node, subcomplexNodes)
+            for(Vertex * node: subcomplexNodes)
             {
                 node->parent = 0;
                 node->isRoot = false;
@@ -255,7 +255,7 @@ CycleHelper::CycleHelper(const KeyEdgeSet & edgeSetConst) :
             {
                 // find a node that has not been visited yet, if any
                 Vertex * notYetVisitedNode = 0;
-                foreach(Vertex * node, subcomplexNodes)
+                for(Vertex * node: subcomplexNodes)
                 {
                     if(!node->visited)
                     {
@@ -281,7 +281,7 @@ CycleHelper::CycleHelper(const KeyEdgeSet & edgeSetConst) :
                     node->visited = true;
 
                     // depth-first recursive call: check all children
-                    foreach(Edge * incidentEdge, node->edges)
+                    for(Edge * incidentEdge: node->edges)
                     {
                         if(incidentEdge != node->parent) // do not check parent
                         {
@@ -308,7 +308,7 @@ CycleHelper::CycleHelper(const KeyEdgeSet & edgeSetConst) :
                                 // remove them from the subcomplex and add them to the list
                                 // of instant edges in the loop
                                 KeyEdgeSet iedgesInLoop;
-                                foreach(Edge * edge, edgesInLoop)
+                                for(Edge * edge: edgesInLoop)
                                 {
                                     // disconnect edge from left and right vertices
                                     Vertex * leftNode = edge->leftNode;
@@ -375,7 +375,7 @@ CycleHelper::CycleHelper(const KeyEdgeSet & edgeSetConst) :
 
         // find paths
         // for now, very trivial method: each remaining edge becomes a path
-        foreach(Edge * edge, subcomplexEdges)
+        for(Edge * edge: subcomplexEdges)
         {
             KeyCellSet set;
             set << edge->edge;
@@ -384,9 +384,9 @@ CycleHelper::CycleHelper(const KeyEdgeSet & edgeSetConst) :
         }
 
         // release memory
-        foreach(Edge * edge, subcomplexEdges)
+        for(Edge * edge: subcomplexEdges)
             delete edge;
-        foreach(Vertex * node, subcomplexNodes)
+        for(Vertex * node: subcomplexNodes)
             delete node;
 
         // ---- Now, check that the hole is valid ----

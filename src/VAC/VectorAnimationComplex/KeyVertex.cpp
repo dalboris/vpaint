@@ -221,7 +221,7 @@ void KeyVertex::computePosFromEdges()
     Eigen::Vector2d res(0,0);
 
     int n = 0;
-    foreach(Cell * c, ss)
+    for(Cell * c: ss)
     {
         KeyEdge * iedge = c->toKeyEdge();
         if(iedge)
@@ -248,7 +248,7 @@ void KeyVertex::correctEdgesGeometry()
 {
     CellSet ss = spatialStar();
 
-    foreach(Cell * c, ss)
+    for(Cell * c: ss)
     {
         KeyEdge * iedge = c->toKeyEdge();
         if(iedge)
@@ -265,7 +265,7 @@ KeyVertexList KeyVertex::beforeVertices() const
 {
     InbetweenVertexSet beforeAN = temporalStarBefore();
     KeyVertexList res;
-    foreach(InbetweenVertex * node, beforeAN)
+    for(InbetweenVertex * node: beforeAN)
         res << node->beforeVertex();
     return res;
 }
@@ -274,7 +274,7 @@ KeyVertexList KeyVertex::afterVertices() const
 {
     InbetweenVertexSet afterAN = temporalStarAfter();
     KeyVertexList res;
-    foreach(InbetweenVertex * node, afterAN)
+    for(InbetweenVertex * node: afterAN)
         res << node->afterVertex();
     return res;
 }
@@ -285,13 +285,13 @@ Eigen::Vector2d KeyVertex::catmullRomTangent(bool slowInOut) const
 
     KeyVertexList B = beforeVertices();
     KeyVertexList A = afterVertices();
-    foreach(KeyVertex * node, B)
+    for(KeyVertex * node: B)
     {
         Eigen::Vector2d dp = pos() - node->pos();
         double dt = time().floatTime() - node->time().floatTime();
         u += Eigen::Vector3d(dp[0],dp[1],dt);
     }
-    foreach(KeyVertex * node, A)
+    for(KeyVertex * node: A)
     {
         Eigen::Vector2d dp = node->pos() - pos();
         double dt = node->time().floatTime() - time().floatTime();
@@ -316,13 +316,13 @@ Eigen::Vector2d KeyVertex::dividedDifferencesTangent(bool slowInOut) const
     KeyVertexList A = afterVertices();
     int m = A.size();
 
-    foreach(KeyVertex * node, B)
+    for(KeyVertex * node: B)
     {
         Eigen::Vector2d dp = pos() - node->pos();
         double dt = time().floatTime() - node->time().floatTime();
         u += dp/dt;
     }
-    foreach(KeyVertex * node, A)
+    for(KeyVertex * node: A)
     {
         Eigen::Vector2d dp = node->pos() - pos();
         double dt = node->time().floatTime() - time().floatTime();
