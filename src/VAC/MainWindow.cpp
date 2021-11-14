@@ -16,8 +16,6 @@
 
 #include "MainWindow.h"
 
-#include "Global.h"
-
 #include "Scene.h"
 #include "View3D.h"
 #include "View.h"
@@ -550,6 +548,11 @@ bool MainWindow::isEditCanvasSizeVisible() const
 void MainWindow::resetUndoStack()
 {
     resetUndoStack_();
+}
+
+void MainWindow::setToolMode(Global::ToolMode mode)
+{
+    global()->setToolMode(mode);
 }
 
 void MainWindow::editCanvasSize()

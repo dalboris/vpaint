@@ -17,6 +17,8 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "Global.h"
+
 #include <QMainWindow>
 #include <QList>
 #include <QString>
@@ -74,6 +76,7 @@ public:
     bool isEditCanvasSizeVisible() const;
 
     void resetUndoStack();
+    void setToolMode(Global::ToolMode mode);
 
 signals:
     void undoRedoPossibilityUpdated(bool isUndoPossible, bool isRedoPossible);
