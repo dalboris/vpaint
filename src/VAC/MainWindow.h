@@ -73,6 +73,11 @@ public:
     bool isShowCanvasChecked() const;
     bool isEditCanvasSizeVisible() const;
 
+    void resetUndoStack();
+
+signals:
+    void undoRedoPossibilityUpdated(bool isUndoPossible, bool isRedoPossible);
+
 protected:
     void closeEvent(QCloseEvent * event);
     void keyPressEvent(QKeyEvent *event);
@@ -90,6 +95,8 @@ public slots:
     void about();
     void open_(const QString & filePath); // XXX public because used in main.cpp. Should probably be refactored.
 
+    void undo();
+    void redo();
 private slots:
     // ---- File ----
     void newDocument();
@@ -107,8 +114,6 @@ private slots:
 
     // ---- Edit ----
     void addToUndoStack();
-    void undo();
-    void redo();
     void cut();
     void copy();
     void paste();
@@ -203,6 +208,7 @@ private:
     void write(XmlStreamWriter & xml);
     void autosaveBegin();
     void autosaveEnd();
+    void updateUndoRedoPossibility();
     // Copy-pasting
     VectorAnimationComplex::VAC * clipboard_;
     // 3D view

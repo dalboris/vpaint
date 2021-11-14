@@ -207,6 +207,8 @@ MainWindow::MainWindow(QWidget* parent) :
 
     // Autosave
     autosaveBegin();
+
+    global()->setEdgeColor(QColor(Qt::blue));
 }
 
 void MainWindow::updateObjectProperties()
@@ -354,6 +356,11 @@ void MainWindow::autosaveEnd()
     }
 }
 
+void MainWindow::updateUndoRedoPossibility()
+{
+    emit undoRedoPossibilityUpdated(undoIndex_ > 0, undoIndex_ < undoStack_.size()-1);
+}
+
 MainWindow::~MainWindow()
 {
     clearUndoStack_();
@@ -379,6 +386,7 @@ void MainWindow::addToUndoStack()
 
     // Update window title
     updateWindowTitle_();
+    updateUndoRedoPossibility();
 }
 
 void MainWindow::clearUndoStack_()
@@ -388,6 +396,7 @@ void MainWindow::clearUndoStack_()
 
     undoStack_.clear();
     undoIndex_ = -1;
+    updateUndoRedoPossibility();
 }
 
 void MainWindow::resetUndoStack_()
@@ -395,6 +404,7 @@ void MainWindow::resetUndoStack_()
     clearUndoStack_();
     addToUndoStack();
     setUnmodified_();
+    updateUndoRedoPossibility();
 }
 
 void MainWindow::goToUndoIndex_(int undoIndex)
@@ -416,6 +426,7 @@ void MainWindow::goToUndoIndex_(int undoIndex)
 
     // Update window title
     updateWindowTitle_();
+    updateUndoRedoPossibility();
 }
 
 void MainWindow::undo()
@@ -534,6 +545,11 @@ bool MainWindow::isEditCanvasSizeVisible() const
         res = true;
 
     return res;
+}
+
+void MainWindow::resetUndoStack()
+{
+    resetUndoStack_();
 }
 
 void MainWindow::editCanvasSize()

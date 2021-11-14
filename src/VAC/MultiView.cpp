@@ -400,14 +400,24 @@ void MultiView::updatePicking()
     }
 }
 
-void MultiView::zoomIn()
+void MultiView::zoomIn(const double zoomRatio)
 {
-    activeView()->zoomIn();
+    activeView()->zoomIn(zoomRatio);
 }
 
-void MultiView::zoomOut()
+void MultiView::zoomOut(const double zoomRatio)
 {
-    activeView()->zoomOut();
+    activeView()->zoomOut(zoomRatio);
+}
+
+void MultiView::zoomInCenter(const double zoomRatio)
+{
+    activeView()->zoomInCenter(zoomRatio);
+}
+
+void MultiView::zoomOutCenter(const double zoomRatio)
+{
+    activeView()->zoomOutCenter(zoomRatio);
 }
 
 void MultiView::fitAllInWindow()

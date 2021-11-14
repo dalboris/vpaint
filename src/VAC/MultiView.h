@@ -54,8 +54,11 @@ public slots:
     void update();        // update only the views in MultiView (not the 3D view)
     void updatePicking(); // update only the views in MultiView (not the 3D view)
 
-    void zoomIn();
-    void zoomOut();
+    void zoomIn(const double zoomRatio = 0.8);
+    void zoomOut(const double zoomRatio = 0.8);
+    void zoomInCenter(const double zoomRatio = 0.8);
+    void zoomOutCenter(const double zoomRatio = 0.8);
+
     void fitAllInWindow();
     void fitSelectionInWindow();
 
