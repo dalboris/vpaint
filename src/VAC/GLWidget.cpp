@@ -771,6 +771,9 @@ void GLWidget::initializeGL()
 
 void GLWidget::resizeGL(int width, int height)
 {
+    Q_UNUSED(width);
+    Q_UNUSED(height);
+
     emit viewResized();
 }
 
@@ -807,7 +810,7 @@ void GLWidget::setLighting()
         camera_.focus_x() + camera_.r() * cos_theta * sin_phi,
         camera_.focus_y() + camera_.r() * sin_theta,
         camera_.focus_z() + camera_.r()  * cos_theta * cos_phi,
-        0.4f, 0.4f, 0.4f, QString("Camera light"));
+        0.4f, 0.4f, 0.4f, QStringLiteral("Camera light"));
     cameraLight.lookAt(
          camera_.focus_x(),
          camera_.focus_y(),

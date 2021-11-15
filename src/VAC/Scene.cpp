@@ -172,6 +172,8 @@ Scene::~Scene()
 
 void Scene::save(QTextStream & out)
 {
+    Q_UNUSED(out);
+
     // XXX Deprecated
     /*
     out << Save::newField("SceneObjects");
@@ -201,6 +203,8 @@ void Scene::exportSVG(Time t, QTextStream & out)
 
 void Scene::read(QTextStream & in)
 {
+    Q_UNUSED(in);
+
     // XXX Deprecated
     /*
     clear(true);
