@@ -172,7 +172,7 @@ SmartKeyEdgeSet::SmartKeyEdgeSet(const KeyEdgeSet & edgeSetConst) :
     QSet<SubVertex*> subVertices;
     QMap<Vertex*, SubVertex*> vertexToSubVertex;
     QMap<Edge*, SubEdge*> edgeToSubEdge;
-    for(Edge * edge: remainingEdges)
+    for(Edge * edge: qAsConst(remainingEdges))
     {
         // create new subcomplex edge
         SubEdge * subEdge = new SubEdge(edge);
@@ -236,9 +236,9 @@ SmartKeyEdgeSet::SmartKeyEdgeSet(const KeyEdgeSet & edgeSetConst) :
                 subEdge->marked = true;
 
                 // Insert neighbours in stack
-                for(SubEdge * neighbour: subEdge->leftSubVertex->subEdges)
+                for(SubEdge * neighbour: qAsConst(subEdge->leftSubVertex->subEdges))
                     toProcess.push(neighbour);
-                for(SubEdge * neighbour: subEdge->rightSubVertex->subEdges)
+                for(SubEdge * neighbour: qAsConst(subEdge->rightSubVertex->subEdges))
                     toProcess.push(neighbour);
             }
         }
@@ -251,9 +251,9 @@ SmartKeyEdgeSet::SmartKeyEdgeSet(const KeyEdgeSet & edgeSetConst) :
     // ===== Release memory =====
 
     // release memory
-    for(SubEdge * subEdge: subEdges)
+    for(SubEdge * subEdge: qAsConst(subEdges))
         delete subEdge;
-    for(SubVertex * subVertex: subVertices)
+    for(SubVertex * subVertex: qAsConst(subVertices))
         delete subVertex;
 }
 

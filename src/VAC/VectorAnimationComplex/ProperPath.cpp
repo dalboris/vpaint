@@ -127,7 +127,7 @@ ProperPath::ProperPath(const KeyEdgeSet & edgeSetConst)
 
     // Check that it's simple
     KeyVertexSet vertices;
-    for(KeyHalfedge he: halfedges_)
+    for(KeyHalfedge he: qAsConst(halfedges_))
     {
         KeyVertex * vertex = he.startVertex();
         if(vertices.contains(vertex))
@@ -175,7 +175,7 @@ void ProperPath::remapPointers(VAC * newVAC)
 void ProperPath::save(QTextStream & out)
 {
     out << "[ ";
-    for(KeyHalfedge he: halfedges_)
+    for(KeyHalfedge he: qAsConst(halfedges_))
     {
         he.save(out);
         out << " ";
@@ -194,7 +194,7 @@ void ProperPath::replaceEdges(KeyEdge * oldEdge, const KeyEdgeList & newEdges)
 {
     QList<KeyHalfedge> newHalfedges;
 
-    for(KeyHalfedge he: halfedges_)
+    for(KeyHalfedge he: qAsConst(halfedges_))
     {
         if(he.edge == oldEdge)
         {

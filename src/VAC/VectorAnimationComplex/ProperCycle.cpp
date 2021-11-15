@@ -123,7 +123,7 @@ ProperCycle::ProperCycle(const KeyEdgeSet & edgeSetConst)
 
         // Check that it's simple
         KeyVertexSet vertices;
-        for(KeyHalfedge he: halfedges_)
+        for(KeyHalfedge he: qAsConst(halfedges_))
         {
             KeyVertex * vertex = he.startVertex();
             if(vertices.contains(vertex))
@@ -180,7 +180,7 @@ void ProperCycle::replaceEdges(KeyEdge * oldEdge, const KeyEdgeList & newEdges)
 {
     QList<KeyHalfedge> newHalfedges;
 
-    for(KeyHalfedge he: halfedges_)
+    for(KeyHalfedge he: qAsConst(halfedges_))
     {
         if(he.edge == oldEdge)
         {

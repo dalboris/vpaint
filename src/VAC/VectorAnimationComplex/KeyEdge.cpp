@@ -445,13 +445,13 @@ void KeyEdge::continueSculptPreserveTangents_()
     // preserve tangency
     Eigen::Vector2d continueLeftDer = geometry()->der(0);
     Eigen::Vector2d continueRightDer = geometry()->der(geometry()->length());
-    for(KeyEdge * ie: sculpt_keepRightAsLeft_)
+    for(KeyEdge * ie: qAsConst(sculpt_keepRightAsLeft_))
         ie->geometry()->setRightDer(continueLeftDer, remainingRadiusLeft_, true);
-    for(KeyEdge * ie: sculpt_keepLeftAsLeft_)
+    for(KeyEdge * ie: qAsConst(sculpt_keepLeftAsLeft_))
         ie->geometry()->setLeftDer(-continueLeftDer, remainingRadiusLeft_, true);
-    for(KeyEdge * ie: sculpt_keepLeftAsRight_)
+    for(KeyEdge * ie: qAsConst(sculpt_keepLeftAsRight_))
         ie->geometry()->setLeftDer(continueRightDer, remainingRadiusRight_, true);
-    for(KeyEdge * ie: sculpt_keepRightAsRight_)
+    for(KeyEdge * ie: qAsConst(sculpt_keepRightAsRight_))
         ie->geometry()->setRightDer(-continueRightDer, remainingRadiusRight_, true);
     if(sculpt_keepMyselfTangent_)
     {

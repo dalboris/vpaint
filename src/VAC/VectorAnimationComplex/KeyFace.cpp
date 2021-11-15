@@ -378,7 +378,8 @@ void KeyFace::initColor_()
 
 void KeyFace::clearCycles_()
 {
-    for(Cell * cell: spatialBoundary())
+    const auto& spatialBoundaryCells = spatialBoundary();
+    for(Cell * cell: spatialBoundaryCells)
         removeMeFromSpatialStarOf_(cell);
 
     cycles_.clear();
@@ -400,7 +401,8 @@ void KeyFace::addCycles(const QList<Cycle> & cycles)
 void KeyFace::addCycle(const Cycle & cycle)
 {
     cycles_ << cycle;
-    for(KeyCell * cell: cycle.cells())
+    const auto& keyCycleCells = cycle.cells();
+    for(KeyCell * cell: keyCycleCells)
         addMeToSpatialStarOf_(cell);
     processGeometryChanged_();
 }

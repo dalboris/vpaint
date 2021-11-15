@@ -59,7 +59,8 @@ CellSet closure(Cell * c)
 {
     CellSet res;
     res << c;
-    for(Cell * b: c->boundary())
+    const auto& boundary = c->boundary();
+    for(Cell * b: boundary)
         res << b;
     return res;
 }
@@ -70,7 +71,8 @@ CellSet closure(const CellSet & cells)
     for(Cell * c: cells)
     {
         res << c;
-        for(Cell * b: c->boundary())
+        const auto& boundary = c->boundary();
+        for(Cell * b: boundary)
             res << b;
     }
     return res;
@@ -80,7 +82,8 @@ CellSet fullstar(Cell * c)
 {
     CellSet res;
     res << c;
-    for(Cell * b: c->star())
+    const auto& star = c->star();
+    for(Cell * b: star)
         res << b;
     return res;
 }
@@ -88,10 +91,11 @@ CellSet fullstar(Cell * c)
 CellSet fullstar(const CellSet & cells)
 {
     CellSet res;
-    for(Cell * c: cells)
+    for(Cell * c: qAsConst(cells))
     {
         res << c;
-        for(Cell * b: c->star())
+        const auto& star = c->star();
+        for(Cell * b: star)
             res << b;
     }
     return res;

@@ -94,13 +94,17 @@ InbetweenEdge::InbetweenEdge(VAC * vac,
     assert(afterPath_.endVertex() == endAnimatedVertex_.afterVertex());
 
     // Cache star
-    for(VertexCell * vertex: startVertices())
+    const auto& startCellVertices = startVertices();
+    for(VertexCell * vertex: startCellVertices)
         addMeToSpatialStarOf_(vertex);
-    for(VertexCell * vertex: endVertices())
+    const auto& endCellVertices = endVertices();
+    for(VertexCell * vertex: endCellVertices)
         addMeToSpatialStarOf_(vertex);
-    for(KeyCell * kcell: beforeCells())
+    const auto& beforeKeyCells= beforeCells();
+    for(KeyCell * kcell: beforeKeyCells)
         addMeToTemporalStarAfterOf_(kcell);
-    for(KeyCell * kcell: afterCells())
+    const auto& afterKeyCells= afterCells();
+    for(KeyCell * kcell: afterKeyCells)
         addMeToTemporalStarBeforeOf_(kcell);
 }
 
@@ -120,9 +124,11 @@ InbetweenEdge::InbetweenEdge(VAC * vac,
     assert(beforeCycle_.time() < afterCycle_.time());
 
     // Cache star
-    for(KeyCell * kcell: beforeCells())
+    const auto& beforeKeyCells= beforeCells();
+    for(KeyCell * kcell: beforeKeyCells)
         addMeToTemporalStarAfterOf_(kcell);
-    for(KeyCell * kcell: afterCells())
+    const auto& afterKeyCells= afterCells();
+    for(KeyCell * kcell: afterKeyCells)
         addMeToTemporalStarBeforeOf_(kcell);
 }
 
@@ -307,7 +313,8 @@ InbetweenEdge::InbetweenEdge(VAC * vac, XmlStreamReader & xml) :
 
     VertexCell * InbetweenEdge::startVertex(Time time) const
     {
-        for(VertexCell * v: startVertices())
+        const auto& startCellVertices = startVertices();
+        for(VertexCell * v: startCellVertices)
             if(v->exists(time))
                 return v;
         return 0;
@@ -315,7 +322,8 @@ InbetweenEdge::InbetweenEdge(VAC * vac, XmlStreamReader & xml) :
 
     VertexCell * InbetweenEdge::endVertex(Time time) const
     {
-        for(VertexCell * v: endVertices())
+        const auto& endCellVertices = endVertices();
+        for(VertexCell * v: endCellVertices)
             if(v->exists(time))
                 return v;
         return 0;

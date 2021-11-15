@@ -171,7 +171,7 @@ QList<KeyHalfedge> KeyHalfedge::sorted(const QList<KeyHalfedge> & adj)
 
     // return the he sorted
     QList<KeyHalfedge> res;
-    for(KeyAngleHalfEdge ahe: list)
+    for(KeyAngleHalfEdge ahe: qAsConst(list))
         res << ahe.he;
     return res;
 }

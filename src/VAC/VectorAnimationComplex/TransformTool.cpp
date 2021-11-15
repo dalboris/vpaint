@@ -856,7 +856,7 @@ void TransformTool::beginTransform(double x0, double y0, Time time)
         // Keyframe inbetween cells
         CellSet cellsNotToKeyframe;
         CellSet cellsToKeyframe;
-        for(Cell * c: cells_)
+        for(Cell * c: qAsConst(cells_))
         {
             InbetweenCell * sc = c->toInbetweenCell();
             if(sc)
@@ -893,9 +893,9 @@ void TransformTool::beginTransform(double x0, double y0, Time time)
         draggedEdges_ = KeyEdgeSet(cellsToTransform);
 
         // prepare for affine transform
-        for(KeyEdge * e: draggedEdges_)
+        for(KeyEdge * e: qAsConst(draggedEdges_))
             e->prepareAffineTransform();
-        for(KeyVertex * v: draggedVertices_)
+        for(KeyVertex * v: qAsConst(draggedVertices_))
             v->prepareAffineTransform();
 
         // Cache initial mouse position
@@ -1052,13 +1052,13 @@ void TransformTool::continueTransform(double x, double y)
         xf = pivot * xf * pivot.inverse();
 
         // Apply affine transformation
-        for(KeyEdge * e: draggedEdges_)
+        for(KeyEdge * e: qAsConst(draggedEdges_))
             e->performAffineTransform(xf);
 
-        for(KeyVertex * v: draggedVertices_)
+        for(KeyVertex * v: qAsConst(draggedVertices_))
             v->performAffineTransform(xf);
 
-        for(KeyVertex * v: draggedVertices_)
+        for(KeyVertex * v: qAsConst(draggedVertices_))
             v->correctEdgesGeometry();
 
         // Apply transformation to manual pivot point

@@ -540,12 +540,12 @@ void InbetweenFace::read2ndPass()
 
     // Before faces
     beforeFaces_.clear();
-    for(int id: tempBeforeFaces_)
+    for(int id: qAsConst(tempBeforeFaces_))
         beforeFaces_ << vac()->getCell(id)->toKeyFace();
 
     // After faces
     afterFaces_.clear();
-    for(int id: tempAfterFaces_)
+    for(int id: qAsConst(tempAfterFaces_))
         afterFaces_ << vac()->getCell(id)->toKeyFace();
 }
 
@@ -563,7 +563,7 @@ void InbetweenFace::save_(QTextStream & out)
     out << Save::newField("BeforeFaces");
     out << "[";
     bool first = true;
-    for(KeyFace * face: beforeFaces_)
+    for(KeyFace * face: qAsConst(beforeFaces_))
     {
         if(first)
             first = false;
@@ -577,7 +577,7 @@ void InbetweenFace::save_(QTextStream & out)
     out << Save::newField("AfterFaces");
     out << "[";
     first = true;
-    for(KeyFace * face: afterFaces_)
+    for(KeyFace * face: qAsConst(afterFaces_))
     {
         if(first)
             first = false;
@@ -698,13 +698,13 @@ void InbetweenFace::remapPointers(VAC * newVAC)
 
     // Before faces
     QSet<KeyFace*> newBeforeFaces;
-    for(KeyFace * face: beforeFaces_)
+    for(KeyFace * face: qAsConst(beforeFaces_))
         newBeforeFaces << vac()->getCell(face->id())->toKeyFace();
     beforeFaces_ = newBeforeFaces;
 
     // After faces
     QSet<KeyFace*> newAfterFaces;
-    for(KeyFace * face: afterFaces_)
+    for(KeyFace * face: qAsConst(afterFaces_))
         newAfterFaces << vac()->getCell(face->id())->toKeyFace();
     afterFaces_ = newAfterFaces;
 }

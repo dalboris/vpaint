@@ -191,7 +191,7 @@ Cycle findClosestPlanarCycle(QSet<KeyEdge*> & potentialEdges,
             // If not found (maxIter reached or edge already rejected)
             if(!foundPotentialPlanarCycle)
             {
-                for(KeyHalfedge he: potentialPlanarCycle)
+                for(KeyHalfedge he: qAsConst(potentialPlanarCycle))
                 {
                     potentialEdges.remove(he.edge);
                 }
@@ -205,7 +205,7 @@ Cycle findClosestPlanarCycle(QSet<KeyEdge*> & potentialEdges,
                 }
                 else
                 {
-                    for(KeyHalfedge he: potentialPlanarCycle)
+                    for(KeyHalfedge he: qAsConst(potentialPlanarCycle))
                     {
                         potentialEdges.remove(he.edge);
                     }
@@ -315,14 +315,14 @@ VAC * VAC::clone()
     newVAC->ds_ = ds_;
 
     // Copy cells
-    for(Cell * cell: cells_)
+    for(Cell * cell: qAsConst(cells_))
     {
         Cell * newCell = cell->clone();
         newVAC->cells_[newCell->id()] = newCell;
         newCell->setSelected(false);
         newCell->setHovered(false);
     }
-    for(Cell * newCell: newVAC->cells_)
+    for(Cell * newCell: qAsConst(newVAC->cells_))
         newCell->remapPointers(newVAC);
     for(auto c: zOrdering_)
         newVAC->zOrdering_.insertLast(newVAC->getCell(c->id()));
@@ -347,7 +347,7 @@ QMap<int,int> VAC::import(VAC * other, bool selectImportedCells)
     }
 
     // Take ownership of all cells
-    for(Cell * c: ordering)
+    for(Cell * c: qAsConst(ordering))
     {
         int oldID = c->id();
         copyOfOther->removeCell_(c);
@@ -377,7 +377,7 @@ VAC * VAC::subcomplex(const CellSet & subcomplexCells)
     VAC * newVAC = clone();
 
     // Delete all cells but the one to keep
-    for (double id: idToDelete)
+    for (double id: qAsConst(idToDelete))
     {
         if(newVAC->cells_.contains(id))
             newVAC->deleteCell(newVAC->getCell(id));
@@ -933,11 +933,11 @@ void VAC::read(XmlStreamReader & xml)
 void VAC::read2ndPass_()
 {
     // Convert temp IDs (int) to pointers (Cell*)
-    for(Cell * cell: cells_)
+    for(Cell * cell: qAsConst(cells_))
         cell->read2ndPass();
 
     // Create star from boundary
-    for(Cell * cell: cells_)
+    for(Cell * cell: qAsConst(cells_))
     {
         CellSet spatialBoundary = cell->spatialBoundary();
         for(Cell * bcell: spatialBoundary)
@@ -953,7 +953,7 @@ void VAC::read2ndPass_()
     }
 
     // Clean geometry
-    for(Cell * cell: cells_)
+    for(Cell * cell: qAsConst(cells_))
     {
         KeyEdge * kedge = cell->toKeyEdge();
         if(kedge)
@@ -1073,7 +1073,7 @@ const ZOrderedCells & VAC::zOrdering() const
 CellSet VAC::cells()
 {
     CellSet res;
-    for(Cell * obj: cells_)
+    for(Cell * obj: qAsConst(cells_))
         res << obj;
     return res;
 }
@@ -1081,7 +1081,7 @@ CellSet VAC::cells()
 CellSet VAC::cells(Time time)
 {
     CellSet res;
-    for(Cell * c: cells_)
+    for(Cell * c: qAsConst(cells_))
     {
         if(c->exists(time))
             res << c;
@@ -1092,7 +1092,7 @@ CellSet VAC::cells(Time time)
 VertexCellList VAC::vertices()
 {
     VertexCellList res;
-    for(Cell * o: cells_)
+    for(Cell * o: qAsConst(cells_))
     {
         VertexCell *node = o->toVertexCell();
         if(node)
@@ -1103,7 +1103,7 @@ VertexCellList VAC::vertices()
 KeyVertexList VAC::instantVertices()
 {
     KeyVertexList res;
-    for(Cell * o: cells_)
+    for(Cell * o: qAsConst(cells_))
     {
         KeyVertex *node = o->toKeyVertex();
         if(node)
@@ -1115,7 +1115,7 @@ KeyVertexList VAC::instantVertices()
 EdgeCellList VAC::edges()
 {
     EdgeCellList res;
-    for(Cell * o: cells_)
+    for(Cell * o: qAsConst(cells_))
     {
         EdgeCell *edge = o->toEdgeCell();
         if(edge)
@@ -1127,7 +1127,7 @@ EdgeCellList VAC::edges()
 EdgeCellList VAC::edges(Time time)
 {
     EdgeCellList res;
-    for(Cell * o: cells_)
+    for(Cell * o: qAsConst(cells_))
     {
         EdgeCell *edge = o->toEdgeCell();
         if(edge && edge->exists(time))
@@ -1139,7 +1139,7 @@ EdgeCellList VAC::edges(Time time)
 FaceCellList VAC::faces()
 {
     FaceCellList res;
-    for(Cell * o: cells_)
+    for(Cell * o: qAsConst(cells_))
     {
         FaceCell *face = o->toFaceCell();
         if(face)
@@ -1152,7 +1152,7 @@ FaceCellList VAC::faces()
 KeyEdgeList VAC::instantEdges()
 {
     KeyEdgeList res;
-    for(Cell * o: cells_)
+    for(Cell * o: qAsConst(cells_))
     {
         KeyEdge * iedge = o->toKeyEdge();
         if(iedge)
@@ -1164,7 +1164,7 @@ KeyEdgeList VAC::instantEdges()
 KeyVertexList VAC::instantVertices(Time time)
 {
     KeyVertexList res;
-    for(Cell * o: cells_)
+    for(Cell * o: qAsConst(cells_))
     {
         KeyVertex *node = o->toKeyVertex();
         if(node && node->exists(time))
@@ -1176,7 +1176,7 @@ KeyVertexList VAC::instantVertices(Time time)
 KeyEdgeList VAC::instantEdges(Time time)
 {
     KeyEdgeList res;
-    for(Cell * o: cells_)
+    for(Cell * o: qAsConst(cells_))
     {
         KeyEdge * iedge = o->toKeyEdge();
         if(iedge && iedge->exists(time))
@@ -1294,7 +1294,8 @@ void VAC::smartDelete()
     // naive method for now, not efficient but works
     if(global()->deleteIsolatedVertices())
     {
-        for(KeyVertex * keyVertex: instantVertices())
+        const auto& instantKeyVertices = instantVertices();
+        for(KeyVertex * keyVertex: instantKeyVertices)
         {
             if(keyVertex->star().isEmpty())
                 deleteCell(keyVertex);
@@ -1321,7 +1322,8 @@ void VAC::deleteSelectedCells()
     // naive method for now, not efficient but works
     if(global()->deleteIsolatedVertices())
     {
-        for(KeyVertex * keyVertex: instantVertices())
+        const auto& instantKeyVertices = instantVertices();
+        for(KeyVertex * keyVertex: instantKeyVertices)
         {
             if(keyVertex->star().isEmpty())
                 deleteCell(keyVertex);
@@ -1362,7 +1364,7 @@ void VAC::deleteCell(Cell * cell)
     cell->destroyStar();
 
     // Inform observers of the upcoming deletion
-    for(CellObserver * observer: cell->observers_)
+    for(CellObserver * observer: qAsConst(cell->observers_))
         observer->observedCellDeleted(cell);
 
     // Remove the cell from the star of its boundary
@@ -3066,7 +3068,8 @@ bool VAC::uncut_(KeyEdge * e)
             // update f1
             f1->cycles_ = newCycles;
             f1->removeMeFromSpatialStarOf_(e);
-            for(Cell * c: f1->spatialBoundary())
+            const auto& spatialBoundaryObjects = f1->spatialBoundary();
+            for(Cell * c: spatialBoundaryObjects)
                 f1->addMeToSpatialStarOf_(c);
 
             // Recompute geometry
@@ -3349,7 +3352,8 @@ bool VAC::uncut_(KeyEdge * e)
         KeyFace * f = *incidentFaces.begin();
         f->cycles_ = newCycles;
         f->removeMeFromSpatialStarOf_(e);
-        for(Cell * c: f->spatialBoundary())
+        const auto& spatialBoundaryObjects = f->spatialBoundary();
+        for(Cell * c: spatialBoundaryObjects)
             f->addMeToSpatialStarOf_(c);
 
         // update z-ordering
@@ -3407,13 +3411,14 @@ void VAC::insertSketchedEdgeInVAC(double tolerance, bool useFaceToConsiderForCut
     if(intersectWithOthers)
     {
         InbetweenEdgeSet inbetweenEdges;
-        for(Cell * cell: cells())
+        const auto& animationComplexCells = cells();
+        for(Cell * cell: animationComplexCells)
         {
             InbetweenEdge * sedge = cell->toInbetweenEdge();
             if(sedge && sedge->exists(timeInteractivity_))
                 inbetweenEdges << sedge;
         }
-        for(InbetweenEdge * sedge: inbetweenEdges)
+        for(InbetweenEdge * sedge: qAsConst(inbetweenEdges))
         {
             // Get sampling as a QList of EdgeSamples
             QList<EdgeSample> sampling = sedge->getSampling(timeInteractivity_);
@@ -3446,7 +3451,7 @@ void VAC::insertSketchedEdgeInVAC(double tolerance, bool useFaceToConsiderForCut
         nEdges = iedgesBefore.size();
 
         // For each of them, compute intersections with sketched edge
-        for (KeyEdge * iedge: iedgesBefore)
+        for (KeyEdge * iedge: qAsConst(iedgesBefore))
         {
             // Convert geometry of instant edge to a SketchedEdge
             EdgeGeometry * geometry = iedge->geometry();
@@ -3557,7 +3562,7 @@ void VAC::insertSketchedEdgeInVAC(double tolerance, bool useFaceToConsiderForCut
     // For each of them, compute intersections with sketched edge
     {
         int i = 0;
-        for (KeyEdge * iedge: iedgesBefore)
+        for (KeyEdge * iedge: qAsConst(iedgesBefore))
         {
             // Avoid cleaning non-intersected existing edges
             if(othersSplitValues_dirty[i].size() > 0)
@@ -3701,7 +3706,7 @@ void VAC::insertSketchedEdgeInVAC(double tolerance, bool useFaceToConsiderForCut
     // Existing nodes, at the end of intersected other curves
     { // create scope so that i stays local
         int i=0;
-        for(KeyEdge * iedge: iedgesBefore) // TODO: generalize to Animated Nodes as well
+        for(KeyEdge * iedge: qAsConst(iedgesBefore)) // TODO: generalize to Animated Nodes as well
         {
             if(othersSplitValues[i].size() > 0 && !iedge->isClosed())
             {
@@ -3720,7 +3725,8 @@ void VAC::insertSketchedEdgeInVAC(double tolerance, bool useFaceToConsiderForCut
     {
         EdgeSample startVertex = sketchedEdge_->curve().start();
         EdgeSample endVertex = sketchedEdge_->curve().end();
-        for(KeyVertex * v: instantVertices(timeInteractivity_))
+        const auto& timeInteractivityVertices = instantVertices(timeInteractivity_);
+        for(KeyVertex * v: timeInteractivityVertices)
         {
             // todo: be careful!! Potentially add several times the same node here!!!
             EdgeSample sv = startVertex;
@@ -3750,7 +3756,7 @@ void VAC::insertSketchedEdgeInVAC(double tolerance, bool useFaceToConsiderForCut
     // them form
     {
         int i = 0;
-        for(KeyEdge * oldEdge: iedgesBefore)
+        for(KeyEdge * oldEdge: qAsConst(iedgesBefore))
         {
             if(othersSplitValues[i].size() > 2 || (oldEdge->isClosed() && othersSplitValues[i].size() > 1))
                 // avoid splitting if the cleaned split values are [0,l]
@@ -3758,7 +3764,7 @@ void VAC::insertSketchedEdgeInVAC(double tolerance, bool useFaceToConsiderForCut
             {
                 // Split the edge
                 SplitInfo info = cutEdgeAtVertices_(oldEdge, othersSplitValues[i]);
-                for(KeyVertex * ivertex: info.newVertices)
+                for(KeyVertex * ivertex: qAsConst(info.newVertices))
                 {
                     splitNodes.existing << EdgeSample(ivertex->pos()[0], ivertex->pos()[1]);
                     splitNodes.existingNodes << ivertex;
@@ -4104,9 +4110,9 @@ void VAC::insertSketchedEdgeInVAC(double tolerance, bool useFaceToConsiderForCut
                     cutFace_(face,iedge, &feedback);
                     if(useFaceToConsiderForCutting)
                     {
-                        for(KeyFace * face: feedback.deletedFaces)
+                        for(KeyFace * face: qAsConst(feedback.deletedFaces))
                             facesToConsiderForCutting_.remove(face);
-                        for(KeyFace * face: feedback.newFaces)
+                        for(KeyFace * face: qAsConst(feedback.newFaces))
                             facesToConsiderForCutting_.insert(face);
                     }
                 }
@@ -4365,7 +4371,7 @@ void VAC::inbetweenSelection()
     Time t1 = list[0]->time();
     Time t2;
     bool ok = false;
-    for(KeyCell * object: list)
+    for(KeyCell * object: qAsConst(list))
     {
         if(!ok) // didn't find t2 yet
         {
@@ -4397,7 +4403,7 @@ void VAC::inbetweenSelection()
     }
     KeyCellList list1;
     KeyCellList list2;
-    for(KeyCell * object: list)
+    for(KeyCell * object: qAsConst(list))
     {
         if(object->time() == t1)
             list1 << object;
@@ -4965,30 +4971,45 @@ KeyFace * VAC::keyframe_(InbetweenFace * sface, Time time)
 
         // Compute all nodes to delete
         QSet<AnimatedCycleNode*> beforeCycleNodesToDelete;
-        for(AnimatedCycleNode * node: beforeCycle.nodes())
+        std::for_each(std::begin(beforeCycle.nodes())
+                      , std::end(beforeCycle.nodes())
+                      , [&](AnimatedCycleNode * node)
+        {
             if(!node->cell()->isBefore(time))
                 beforeCycleNodesToDelete << node;
+        });
         QSet<AnimatedCycleNode*> afterCycleNodesToDelete;
-        for(AnimatedCycleNode * node: afterCycle.nodes())
+
+        std::for_each(std::begin(afterCycle.nodes())
+                      , std::end(afterCycle.nodes())
+                      , [&](AnimatedCycleNode * node)
+        {
             if(!node->cell()->isAfter(time))
                 afterCycleNodesToDelete << node;
-
+        });
         // Set pointers to deleted nodes to null instead
-        for(AnimatedCycleNode * node: beforeCycle.nodes())
+        std::for_each(std::begin(beforeCycle.nodes())
+                      , std::end(beforeCycle.nodes())
+                      , [&](AnimatedCycleNode * node)
+        {
             if(beforeCycleNodesToDelete.contains(node->after()))
                 node->setAfter(0);
-        for(AnimatedCycleNode * node: afterCycle.nodes())
+        });
+        std::for_each(std::begin(afterCycle.nodes())
+                      , std::end(afterCycle.nodes())
+                      , [&](AnimatedCycleNode * node)
+        {
             if(afterCycleNodesToDelete.contains(node->before()))
                 node->setBefore(0);
-
+        });
         // Set "first"
         beforeCycle.setFirst(beforeCycleFirst);
         afterCycle.setFirst(afterCycleFirst);
 
         // Delete nodes to delete
-        for(AnimatedCycleNode * node: beforeCycleNodesToDelete)
+        for(AnimatedCycleNode * node: qAsConst(beforeCycleNodesToDelete))
             delete node;
-        for(AnimatedCycleNode * node: afterCycleNodesToDelete)
+        for(AnimatedCycleNode * node: qAsConst(afterCycleNodesToDelete))
             delete node;
 
         // Add cycles to new inbetween faces
@@ -5288,7 +5309,8 @@ void VAC::removeCyclesFromFace()
         for(int i=0; i<face->cycles_.size(); ++i)
         {
             bool keepCycle = true;
-            for(KeyCell * cell: face->cycles_[i].cells())
+            const auto& faceCycleCells = face->cycles_[i].cells();
+            for(KeyCell * cell: faceCycleCells)
             {
                 if(cell->isSelected())
                 {
@@ -5820,7 +5842,7 @@ void VAC::informTimelineOfSelection()
     double t1 = 0;
     double t2 = 0;
 
-    for(Cell * cell: selectedCells_)
+    for(Cell * cell: qAsConst(selectedCells_))
     {
         KeyCell * keyCell = cell->toKeyCell();
         InbetweenCell * inbetweenCell = cell->toInbetweenCell();
@@ -5983,7 +6005,7 @@ void VAC::setSelectedCells(const CellSet & cells, bool emitSignal)
     // all old cells as unselected.
     // This works due to the previous step: any cell in selectedCells_
     // which is still selected is *not* in the new cells.
-    for(Cell * cell: selectedCells_)
+    for(Cell * cell: qAsConst(selectedCells_))
     {
         if (cell->isSelected())
         {
@@ -6273,7 +6295,7 @@ void VAC::prepareDragAndDrop(double x0, double y0, Time time)
     // Partition into three sets of cells
     CellSet cellsNotToKeyframe;
     CellSet cellsToKeyframe;
-    for(Cell * c: cellsToDrag)
+    for(Cell * c: qAsConst(cellsToDrag))
     {
         InbetweenCell * sc = c->toInbetweenCell();
         if(sc)
@@ -6307,9 +6329,9 @@ void VAC::prepareDragAndDrop(double x0, double y0, Time time)
     draggedEdges_ = KeyEdgeSet(cellsToDrag);
 
     // prepare drag and drop
-    for(KeyEdge * iedge: draggedEdges_)
+    for(KeyEdge * iedge: qAsConst(draggedEdges_))
         iedge->geometry()->prepareDragAndDrop();
-    for(KeyVertex * v: draggedVertices_)
+    for(KeyVertex * v: qAsConst(draggedVertices_))
         v->prepareDragAndDrop();
 
     x0_ = x0;
@@ -6337,17 +6359,17 @@ void VAC::performDragAndDrop(double x, double y)
         else if (std::abs(theta + 3*PI/4) <   PI/8) { dx = -d; dy = -d; }
     }
 
-    for(KeyEdge * iedge: draggedEdges_)
+    for(KeyEdge * iedge: qAsConst(draggedEdges_))
     {
         iedge->geometry()->performDragAndDrop(dx, dy);
         iedge->processGeometryChanged_();
     }
 
-    for(KeyVertex * v: draggedVertices_)
+    for(KeyVertex * v: qAsConst(draggedVertices_))
         v->performDragAndDrop(dx, dy);
 
 
-    for(KeyVertex * v: draggedVertices_)
+    for(KeyVertex * v: qAsConst(draggedVertices_))
         v->correctEdgesGeometry();
 
     transformTool_.performDragAndDrop(dx, dy);
@@ -6390,7 +6412,7 @@ void VAC::prepareTemporalDragAndDrop(Time t0)
     deltaTMin_ = Time(-1000);
     deltaTMax_ = Time(1000);
 
-    for(KeyCell * keyCell: draggedKeyCells_)
+    for(KeyCell * keyCell: qAsConst(draggedKeyCells_))
     {
         Time deltaTMin = keyCell->temporalDragMinTime() - keyCell->time();
         if(deltaTMin_ < deltaTMin)
@@ -6412,7 +6434,7 @@ void VAC::performTemporalDragAndDrop(Time t)
     if(deltaTime >= deltaTMax_)
         return;
 
-    for(KeyCell * keyCell: draggedKeyCells_)
+    for(KeyCell * keyCell: qAsConst(draggedKeyCells_))
         keyCell->setTime(draggedKeyCellTime_[keyCell] + deltaTime);
 
     emit changed();
@@ -6591,20 +6613,26 @@ void VAC::updateToBePaintedFace(double x, double y, Time time)
 
     // Compute distances to all edges
     QMap<KeyEdge*,EdgeGeometry::ClosestVertexInfo> distancesToEdges;
-    for(KeyEdge * e: instantEdges())
-        distancesToEdges[e] = e->geometry()->closestPoint(x,y);
 
+    std::for_each(std::begin(instantEdges())
+                  , std::end(instantEdges())
+                  , [&](KeyEdge * e)
+    {
+        distancesToEdges[e] = e->geometry()->closestPoint(x,y);
+    });
     // First, we try to create such a face assuming that the
     // VGC is actually planar (cells are not overlapping).
     bool foundPlanarFace = false;
     {
         // Find external boundary: the closest planar cycle containing mouse cursor
         QSet<KeyEdge*> potentialExternalBoundaryEdges;
-        for(KeyEdge* e: instantEdges())
+        std::for_each(std::begin(instantEdges())
+                      , std::end(instantEdges())
+                      , [&](KeyEdge * e)
         {
             if(e->exists(time))
                 potentialExternalBoundaryEdges.insert(e);
-        }
+        });
         PreviewKeyFace externalBoundary;
         bool foundExternalBoundary = false;
         while(!(foundExternalBoundary || potentialExternalBoundaryEdges.isEmpty()))
@@ -6691,7 +6719,7 @@ void VAC::updateToBePaintedFace(double x, double y, Time time)
                 // If not found (maxIter reached or edge already rejected)
                 if(!foundPotentialPlanarCycle)
                 {
-                    for(KeyHalfedge he: potentialPlanarCycle)
+                    for(KeyHalfedge he: qAsConst(potentialPlanarCycle))
                     {
                         potentialExternalBoundaryEdges.remove(he.edge);
                     }
@@ -6708,7 +6736,7 @@ void VAC::updateToBePaintedFace(double x, double y, Time time)
                         }
                         else
                         {
-                            for(KeyHalfedge he: potentialPlanarCycle)
+                            for(KeyHalfedge he: qAsConst(potentialPlanarCycle))
                             {
                                 potentialExternalBoundaryEdges.remove(he.edge);
                             }
@@ -6717,7 +6745,7 @@ void VAC::updateToBePaintedFace(double x, double y, Time time)
                     }
                     else
                     {
-                        for(KeyHalfedge he: potentialPlanarCycle)
+                        for(KeyHalfedge he: qAsConst(potentialPlanarCycle))
                         {
                             potentialExternalBoundaryEdges.remove(he.edge);
                         }
@@ -6737,11 +6765,13 @@ void VAC::updateToBePaintedFace(double x, double y, Time time)
 
             // Now, let's try to add holes to the external boundary
             QSet<KeyEdge*> potentialHoleEdges;
-            for(KeyEdge* e: instantEdges())
+            std::for_each(std::begin(instantEdges())
+                          , std::end(instantEdges())
+                          , [&](KeyEdge * e)
             {
                 if(e->exists(time))
                     potentialHoleEdges.insert(e);
-            }
+            });
             CellSet cellsInExternalBoundary = externalBoundary.cycles()[0].cells();
             KeyEdgeSet edgesInExternalBoundary = cellsInExternalBoundary;
             for(KeyEdge * e: edgesInExternalBoundary)

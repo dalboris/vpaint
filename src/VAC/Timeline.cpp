@@ -110,7 +110,7 @@ void Timeline_HBar::paintEvent (QPaintEvent * /*event*/)
     // current frames
     painter.setBrush(Qt::red);
     painter.setPen(Qt::NoPen);
-    for(View * view: w_->views_)
+    for(View * view: qAsConst(w_->views_))
     {
         painter.drawRect(10*(view->activeTime().floatTime()) - w_->totalPixelOffset_ + 1, 1, 9, height()-2);
     }
@@ -753,7 +753,7 @@ void Timeline::play()
     if(view)
     {
         playedViews_ << global()->activeView();
-        for(View * view: playedViews())
+        for(View * view: qAsConst(playedViews_))
             view->disablePicking();
         elapsedTimer_.start();
         timer_->start();
@@ -764,7 +764,7 @@ void Timeline::play()
 void Timeline::pause()
 {
     timer_->stop();
-    for(View * view: playedViews())
+    for(View * view: qAsConst(playedViews_))
         view->enablePicking();
     roundPlayedViews();
     playPauseButton_->setIcon(QIcon(":/images/go-play.png"));
@@ -781,7 +781,7 @@ void Timeline::playPause()
 
 void Timeline::roundPlayedViews()
 {
-    for(View * view: playedViews())
+    for(View * view: qAsConst(playedViews_))
     {
         Time t = view->activeTime();
         double floatFrame = t.floatTime();
@@ -879,7 +879,7 @@ void Timeline::timerTimeout()
 
     elapsedTimer_.restart();
 
-    for(View * view: playedViews())
+    for(View * view: qAsConst(playedViews_))
     {
         if(isPlaying() && subframeInbetweening())
         {

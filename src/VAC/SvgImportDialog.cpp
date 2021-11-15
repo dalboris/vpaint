@@ -79,7 +79,8 @@ SvgImportDialog::SvgImportDialog(QWidget * parent) :
     layout->addWidget(warning);
     layout->addSpacing(15);
     layout->addWidget(vertexModeLabel);
-    for (auto* button : vertexModeButtons->buttons()) {
+    const auto& buttons = vertexModeButtons->buttons();
+    for (auto* button : buttons) {
         layout->addWidget(button);
     }
     layout->addSpacing(15);

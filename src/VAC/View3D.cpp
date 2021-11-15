@@ -1060,7 +1060,7 @@ bool View3D::exportMesh(QString filename)
     for (Eigen::Vector3d& p : positions) {
         out << "v " << s * p[0] << " " << s * p[1] << " " << s * p[2] << "\n";
     }
-    for (Eigen::Vector3d p : normals) {
+    for (Eigen::Vector3d p : qAsConst(normals)) {
         p.normalize();
         out << "vn " << p[0] << " " << p[1] << " " << p[2] << "\n";
     }

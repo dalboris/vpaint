@@ -481,7 +481,8 @@ CellSet Cell::spatialBoundary() const { return CellSet(); }
 CellSet Cell::spatialBoundary(Time t) const
 {
     CellSet res;
-    for(Cell * obj: this->spatialBoundary())
+    const auto& spatialBoundaryCells = this->spatialBoundary();
+    for(Cell * obj: spatialBoundaryCells)
         if(obj->exists(t))
             res << obj;
     return res;
@@ -575,25 +576,31 @@ CellSet Cell::temporalNeighbourhoodAfter() const
 // -- Modifying star of boundary --
 void Cell::addMeToStarOfBoundary_()
 {
-    for(Cell * c: spatialBoundary())
+    const auto& spatialBoundaryCells = spatialBoundary();
+    for(Cell * c: spatialBoundaryCells)
         addMeToSpatialStarOf_(c);
 
-    for(KeyCell * c: beforeCells())
+    const auto& beforeKeyCells = beforeCells();
+    for(KeyCell * c: beforeKeyCells)
         addMeToTemporalStarAfterOf_(c);
 
-    for(KeyCell * c: afterCells())
+    const auto& afterKeyCells = afterCells();
+    for(KeyCell * c: afterKeyCells)
         addMeToTemporalStarBeforeOf_(c);
 }
 
 void Cell::removeMeFromStarOfBoundary_()
 {
-    for(Cell * c: spatialBoundary())
+    const auto& spatialBoundaryCells = spatialBoundary();
+    for(Cell * c: spatialBoundaryCells)
         removeMeFromSpatialStarOf_(c);
 
-    for(KeyCell * c: beforeCells())
+    const auto& beforeKeyCells = beforeCells();
+    for(KeyCell * c: beforeKeyCells)
         removeMeFromTemporalStarAfterOf_(c);
 
-    for(KeyCell * c: afterCells())
+    const auto& afterKeyCells = afterCells();
+    for(KeyCell * c: afterKeyCells)
         removeMeFromTemporalStarBeforeOf_(c);
 }
 

@@ -442,7 +442,7 @@ void Path::replaceEdges(KeyEdge * oldEdge, const KeyEdgeList & newEdges)
 {
     QList<KeyHalfedge> newHalfedges;
 
-    for(KeyHalfedge he: halfedges_)
+    for(KeyHalfedge he: qAsConst(halfedges_))
     {
         if(he.edge == oldEdge)
         {

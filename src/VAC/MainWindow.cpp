@@ -390,7 +390,7 @@ void MainWindow::addToUndoStack()
 
 void MainWindow::clearUndoStack_()
 {
-    for(UndoItem p: undoStack_)
+    for(UndoItem p: qAsConst(undoStack_))
         delete p.second;
 
     undoStack_.clear();

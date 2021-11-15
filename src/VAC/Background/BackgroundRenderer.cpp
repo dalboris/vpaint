@@ -35,7 +35,7 @@ BackgroundRenderer::BackgroundRenderer(
 void BackgroundRenderer::cleanup()
 {
     // Delete all textures allocated in GPU
-    for (QOpenGLTexture * texture: textures_)
+    for (QOpenGLTexture * texture: qAsConst(textures_))
     {
         // Note 1: Qt documentation doesn't specify whether QOpenGLTexture's
         // destructor destroys the underlying OpenGL texture object, so we
