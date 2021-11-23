@@ -820,6 +820,11 @@ QColor Global::faceColor()
     return currentColor_->color();
 }
 
+void Global::setEdgeColor(const QColor &newColor)
+{
+    currentColor_->setColor(newColor);
+}
+
 bool Global::useTabletPressure() const
 {
     return actionUseTabletPressure_->isChecked();

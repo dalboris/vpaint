@@ -16,8 +16,6 @@
 
 #include "MainWindow.h"
 
-#include "Global.h"
-
 #include "Scene.h"
 #include "View3D.h"
 #include "View.h"
@@ -66,8 +64,8 @@
  *                             Constructor
  */
 
-MainWindow::MainWindow(QWidget* parent) :
-    scene_(0),
+MainWindow::MainWindow(VPaint::Scene *_scene, QWidget* parent) :
+    scene_(_scene),
     multiView_(0),
 
     aboutDialog_(0),
@@ -105,7 +103,8 @@ MainWindow::MainWindow(QWidget* parent) :
     new DevSettings();
 
     // Scene
-    scene_ = VPaint::Scene::createDefaultScene();
+    if (!scene_)
+        scene_ = VPaint::Scene::createDefaultScene();
 
     // Timeline (must exist before multiview is created, so that newly created views can register to timeline)
     timeline_ = new Timeline(scene_, this);
@@ -207,6 +206,8 @@ MainWindow::MainWindow(QWidget* parent) :
 
     // Autosave
     autosaveBegin();
+
+    global()->setEdgeColor(QColor(Qt::blue));
 }
 
 void MainWindow::updateObjectProperties()
@@ -354,6 +355,11 @@ void MainWindow::autosaveEnd()
     }
 }
 
+void MainWindow::updateUndoRedoPossibility()
+{
+    emit undoRedoPossibilityUpdated(undoIndex_ > 0, undoIndex_ < undoStack_.size()-1);
+}
+
 MainWindow::~MainWindow()
 {
     clearUndoStack_();
@@ -379,6 +385,7 @@ void MainWindow::addToUndoStack()
 
     // Update window title
     updateWindowTitle_();
+    updateUndoRedoPossibility();
 }
 
 void MainWindow::clearUndoStack_()
@@ -388,6 +395,7 @@ void MainWindow::clearUndoStack_()
 
     undoStack_.clear();
     undoIndex_ = -1;
+    updateUndoRedoPossibility();
 }
 
 void MainWindow::resetUndoStack_()
@@ -395,6 +403,7 @@ void MainWindow::resetUndoStack_()
     clearUndoStack_();
     addToUndoStack();
     setUnmodified_();
+    updateUndoRedoPossibility();
 }
 
 void MainWindow::goToUndoIndex_(int undoIndex)
@@ -416,6 +425,7 @@ void MainWindow::goToUndoIndex_(int undoIndex)
 
     // Update window title
     updateWindowTitle_();
+    updateUndoRedoPossibility();
 }
 
 void MainWindow::undo()
@@ -534,6 +544,16 @@ bool MainWindow::isEditCanvasSizeVisible() const
         res = true;
 
     return res;
+}
+
+void MainWindow::resetUndoStack()
+{
+    resetUndoStack_();
+}
+
+void MainWindow::setToolMode(Global::ToolMode mode)
+{
+    global()->setToolMode(mode);
 }
 
 void MainWindow::editCanvasSize()

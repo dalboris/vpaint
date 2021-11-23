@@ -174,7 +174,7 @@ void GLWidget::rotateViewDown()
     }
 }
 
-void GLWidget::zoomIn()
+void GLWidget::zoomIn(const double zoomRatio)
 {
     if(isBusy())
       return;
@@ -182,7 +182,7 @@ void GLWidget::zoomIn()
     if(cameraZoomIsEnabled_)
     {
         // 3D
-        double ratio = 0.8;
+        double ratio = zoomRatio;
         camera_.setR( camera_.r() * ratio );
 
         // 2D
@@ -195,7 +195,7 @@ void GLWidget::zoomIn()
     }
 }
 
-void GLWidget::zoomOut()
+void GLWidget::zoomOut(const double zoomRatio)
 {
     if(isBusy())
       return;
@@ -203,7 +203,7 @@ void GLWidget::zoomOut()
     if(cameraZoomIsEnabled_)
     {
         // 3D
-        double ratio = 1/0.8;
+        double ratio = 1/zoomRatio;
         camera_.setR( camera_.r() * ratio );
 
         // 2D
@@ -216,8 +216,53 @@ void GLWidget::zoomOut()
     }
 }
 
+void GLWidget::zoomInCenter(const double zoomRatio)
+{
+    if(isBusy())
+      return;
 
+    if(cameraZoomIsEnabled_)
+    {
+        // 3D
+        double ratio = zoomRatio;
+        camera_.setR(camera_.r() * ratio);
 
+        // 2D
+        ratio = 1/ratio;
+        const int centerX = width() / 2;
+        const int centerY = height() / 2;
+
+        camera2D_.setZoom(camera2D_.zoom() * ratio);
+        camera2D_.setX(centerX + ratio * (camera2D_.x() - centerX));
+        camera2D_.setY(centerY + ratio * (camera2D_.y() - centerY));
+
+        emit viewChanged(centerX, centerY);
+    }
+}
+
+void GLWidget::zoomOutCenter(const double zoomRatio)
+{
+    if(isBusy())
+      return;
+
+    if(cameraZoomIsEnabled_)
+    {
+        // 3D
+        double ratio = 1/zoomRatio;
+        camera_.setR( camera_.r() * ratio );
+
+        // 2D
+        ratio = 1/ratio;
+        const int centerX = width() / 2;
+        const int centerY = height() / 2;
+
+        camera2D_.setZoom( camera2D_.zoom() * ratio );
+        camera2D_.setX( centerX + ratio * ( camera2D_.x() - centerX ) );
+        camera2D_.setY( centerY + ratio * ( camera2D_.y() - centerY ) );
+
+        emit viewChanged(centerX, centerY);
+    }
+}
 
 /*********************************************************
  *                     Events 

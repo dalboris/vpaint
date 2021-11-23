@@ -17,6 +17,8 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "Global.h"
+
 #include <QMainWindow>
 #include <QList>
 #include <QString>
@@ -61,7 +63,7 @@ class Q_VPAINT_EXPORT MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow(QWidget* parent = nullptr);
+    MainWindow(VPaint::Scene *_scene = nullptr, QWidget* parent = nullptr);
     ~MainWindow();
 
     VPaint::Scene * scene() const;
@@ -72,6 +74,12 @@ public:
 
     bool isShowCanvasChecked() const;
     bool isEditCanvasSizeVisible() const;
+
+    void resetUndoStack();
+    void setToolMode(Global::ToolMode mode);
+
+signals:
+    void undoRedoPossibilityUpdated(bool isUndoPossible, bool isRedoPossible);
 
 protected:
     void closeEvent(QCloseEvent * event);
@@ -90,6 +98,8 @@ public slots:
     void about();
     void open_(const QString & filePath); // XXX public because used in main.cpp. Should probably be refactored.
 
+    void undo();
+    void redo();
 private slots:
     // ---- File ----
     void newDocument();
@@ -107,8 +117,6 @@ private slots:
 
     // ---- Edit ----
     void addToUndoStack();
-    void undo();
-    void redo();
     void cut();
     void copy();
     void paste();
@@ -203,6 +211,7 @@ private:
     void write(XmlStreamWriter & xml);
     void autosaveBegin();
     void autosaveEnd();
+    void updateUndoRedoPossibility();
     // Copy-pasting
     VectorAnimationComplex::VAC * clipboard_;
     // 3D view

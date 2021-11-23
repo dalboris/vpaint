@@ -173,8 +173,11 @@ public:
     void rotateViewLeft();
     void rotateViewUp();
     void rotateViewDown();
-    void zoomIn();
-    void zoomOut();
+    void zoomIn(const double zoomRatio = 0.8);
+    void zoomOut(const double zoomRatio = 0.8);
+    void zoomInCenter(const double zoomRatio = 0.8);
+    void zoomOutCenter(const double zoomRatio = 0.8);
+
 
 protected slots:
     // OpenGL drawing

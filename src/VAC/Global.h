@@ -117,6 +117,8 @@ public:
     QColor edgeColor();
     QColor faceColor();
 
+    void setEdgeColor(const QColor& newColor);
+
     // Display modes
     enum DisplayMode {
         ILLUSTRATION,
