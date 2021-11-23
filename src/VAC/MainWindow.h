@@ -63,7 +63,7 @@ class Q_VPAINT_EXPORT MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow(QWidget* parent = nullptr);
+    MainWindow(VPaint::Scene *_scene = nullptr, QWidget* parent = nullptr);
     ~MainWindow();
 
     VPaint::Scene * scene() const;

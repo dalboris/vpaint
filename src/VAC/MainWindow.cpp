@@ -64,8 +64,8 @@
  *                             Constructor
  */
 
-MainWindow::MainWindow(QWidget* parent) :
-    scene_(0),
+MainWindow::MainWindow(VPaint::Scene *_scene, QWidget* parent) :
+    scene_(_scene),
     multiView_(0),
 
     aboutDialog_(0),
@@ -103,7 +103,8 @@ MainWindow::MainWindow(QWidget* parent) :
     new DevSettings();
 
     // Scene
-    scene_ = VPaint::Scene::createDefaultScene();
+    if (!scene_)
+        scene_ = VPaint::Scene::createDefaultScene();
 
     // Timeline (must exist before multiview is created, so that newly created views can register to timeline)
     timeline_ = new Timeline(scene_, this);
