@@ -49,6 +49,7 @@ public:
     int numViews() const;
 
     void setActiveView(View * view);
+    void showSettingsWidget(bool isShow);
 
 public slots:
     void update();        // update only the views in MultiView (not the 3D view)
