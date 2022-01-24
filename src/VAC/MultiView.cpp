@@ -150,6 +150,14 @@ void MultiView::setActiveView(View * view)
     }
 }
 
+void MultiView::showSettingsWidget(bool isShow)
+{
+    if(activeView_ != nullptr)
+    {
+        activeView_->viewSettingsWidget()->setVisible(isShow);
+    }
+}
+
 void MultiView::setActive(GLWidget * w)
 {
     View * view =  qobject_cast<View*>(w);

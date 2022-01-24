@@ -536,7 +536,7 @@ ViewSettingsWidget::~ViewSettingsWidget()
 
 void ViewSettingsWidget::setActive(bool isActive)
 {
-
+    Q_UNUSED(isActive);
 }
 
 void ViewSettingsWidget::processZoomValueChangedSignal(int n)
