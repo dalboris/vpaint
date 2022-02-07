@@ -206,8 +206,6 @@ MainWindow::MainWindow(VPaint::Scene *_scene, QWidget* parent) :
 
     // Autosave
     autosaveBegin();
-
-    global()->setEdgeColor(QColor(Qt::blue));
 }
 
 void MainWindow::updateObjectProperties()
@@ -554,6 +552,11 @@ void MainWindow::resetUndoStack()
 void MainWindow::setToolMode(Global::ToolMode mode)
 {
     global()->setToolMode(mode);
+}
+
+void MainWindow::setDrawColor(const QColor &newColor)
+{
+    global()->setEdgeColor(newColor);
 }
 
 void MainWindow::editCanvasSize()
