@@ -554,7 +554,7 @@ void MainWindow::setToolMode(Global::ToolMode mode)
     global()->setToolMode(mode);
 }
 
-void MainWindow::setDrawColor(const QColor &newColor)
+void MainWindow::setDrawColor(const QColor& newColor)
 {
     global()->setEdgeColor(newColor);
 }
