@@ -77,6 +77,7 @@ public:
 
     void resetUndoStack();
     void setToolMode(Global::ToolMode mode);
+    void setDrawColor(const QColor& newColor);
 
 signals:
     void undoRedoPossibilityUpdated(bool isUndoPossible, bool isRedoPossible);
