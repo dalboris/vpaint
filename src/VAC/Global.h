@@ -75,8 +75,11 @@ public:
         PAINT,
         SCULPT,
         //CUT,
+        EDIT_CANVAS_SIZE, // This one is below "Number of tools" as it's not a mode interface-wise
+        DRAW_LINE,
+        DRAW_RECTANGLE,
+        DRAW_CIRCLE,
         NUMBER_OF_TOOL_MODES, // Keep this one last
-        EDIT_CANVAS_SIZE // This one is below "Number of tools" as it's not a mode interface-wise
     };
     ToolMode toolMode() const;
 
