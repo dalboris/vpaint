@@ -645,32 +645,8 @@ void Global::setToolMode(Global::ToolMode mode)
         separatorSelect2_->setVisible(true);
         break;
     case SKETCH:
-        actionPlanarMapMode_->setVisible(true);
-        actionSnapMode_->setVisible(true);
-        actionUseTabletPressure_->setVisible(true);
-        actionSnapThreshold_->setVisible(true);
-        actionEdgeWidth_->setVisible(true);
-        separatorSketch1_->setVisible(true);
-        separatorSketch2_->setVisible(true);
-        break;
     case DRAW_LINE:
-        actionPlanarMapMode_->setVisible(true);
-        actionSnapMode_->setVisible(true);
-        actionUseTabletPressure_->setVisible(true);
-        actionSnapThreshold_->setVisible(true);
-        actionEdgeWidth_->setVisible(true);
-        separatorSketch1_->setVisible(true);
-        separatorSketch2_->setVisible(true);
-        break;
     case DRAW_RECTANGLE:
-        actionPlanarMapMode_->setVisible(true);
-        actionSnapMode_->setVisible(true);
-        actionUseTabletPressure_->setVisible(true);
-        actionSnapThreshold_->setVisible(true);
-        actionEdgeWidth_->setVisible(true);
-        separatorSketch1_->setVisible(true);
-        separatorSketch2_->setVisible(true);
-        break;
     case DRAW_CIRCLE:
         actionPlanarMapMode_->setVisible(true);
         actionSnapMode_->setVisible(true);

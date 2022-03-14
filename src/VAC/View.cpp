@@ -741,11 +741,6 @@ void View::PMRPressEvent(int action, double x, double y)
             w *= 2 * mouse_tabletPressure_; // 2 so that a half-pressure would get the default width
         }
         vac_->beginSketchEdge(xScene,yScene, w, interactiveTime());
-        //vac_->continueSketchEdge(xScene +100,yScene, w);
-        //vac_->endSketchEdge();
-
-        //emit allViewsNeedToUpdatePicking();
-        //updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
         emit allViewsNeedToUpdate();
     }
     else if(action==RECTANGLE_ACTION)
@@ -783,8 +778,6 @@ void View::PMRPressEvent(int action, double x, double y)
           if(mouse_isTablet_ &&  global()->useTabletPressure())
             w *= 2 * mouse_tabletPressure_; // 2 so that a half-pressure would get the default width
         }
-        //vac_->beginSketchEdge(shapeStartX, shapeStartY, w, interactiveTime());
-        //emit allViewsNeedToUpdate();
     }
     else
         GLWidget::PMRPressEvent(action, x, y);
@@ -1120,7 +1113,7 @@ void View::PMRReleaseEvent(int action, double x, double y)
       double startY = (yScene + shapeStartY) / 2;
       vac_->beginSketchEdge(startX, startY, w, interactiveTime());
 
-      for (double deg = 0; deg <= M_PI * 2; deg += 0.1)
+      for (double deg = 0; deg <= M_PI * 2; deg += 0.01)
       {
         double x = radius * cos(deg);
         double y = radius * sin(deg);
@@ -1857,11 +1850,6 @@ QImage View::drawToImage(Time t, double x, double y, double w, double h, int IMG
 
     // Return QImage
     return res;
-}
-
-void View::drawLine()
-{
-
 }
 
 void View::updatePicking()

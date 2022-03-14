@@ -124,8 +124,6 @@ public:
     QImage drawToImage(double x, double y, double w, double h, int imgW, int imgH, bool useViewSettings);
     QImage drawToImage(Time t, double x, double y, double w, double h, int imgW, int imgH, bool useViewSettings);
 
-    void drawLine();
-
 public slots:
     void update();        // update only this view (i.e., redraw the scene, leave other views unchanged)
     void updatePicking(); // update picking for this view only (i.e., redraw the picking image of this view)
