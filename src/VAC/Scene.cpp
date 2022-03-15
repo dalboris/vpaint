@@ -51,7 +51,11 @@ Scene * Scene::createDefaultScene()
 {
     Scene * res = new Scene();
     Layer * layer = res->createLayer(tr("Layer 1"));
+#ifdef CELLINK_VPAINT_STYLE
+    layer->background()->setColor(QColor::fromRgb(240, 241, 242));
+#else
     layer->background()->setColor(Qt::white);
+#endif
     return res;
 }
 
@@ -313,20 +317,24 @@ void Scene::drawCanvas(ViewSettings & /*viewSettings*/)
     if(global()->showCanvas())
     {
         // Out-of-canvas background color
+#ifdef CELLINK_VPAINT_STYLE
+        glClearColor(0.941f, 0.945f, 0.949f, 1.0f);
+#else
         glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
+#endif
         glClear(GL_COLOR_BUFFER_BIT);
 
         // Canvas border
-        glColor4d(0.0, 0.0, 0.0, 1.0);
-        glLineWidth(3.0);
-        glBegin(GL_LINE_LOOP);
-        {
-            glVertex2d(x,y);
-            glVertex2d(x+w,y);
-            glVertex2d(x+w,y+h);
-            glVertex2d(x,y+h);
-        }
-        glEnd();
+//        glColor4d(0.0, 0.0, 0.0, 1.0);
+//        glLineWidth(3.0);
+//        glBegin(GL_LINE_LOOP);
+//        {
+//            glVertex2d(x,y);
+//            glVertex2d(x+w,y);
+//            glVertex2d(x+w,y+h);
+//            glVertex2d(x,y+h);
+//        }
+//        glEnd();
 
         // Canvas color
         glColor4d(1.0, 1.0, 1.0, 1.0);

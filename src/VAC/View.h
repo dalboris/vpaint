@@ -188,6 +188,9 @@ private:
     double sculptStartX_;
     double sculptStartY_;
 
+    double shapeStartX;
+    double shapeStartY;
+
     // Dirty implementation:
     VectorAnimationComplex::VAC * vac_;
     VectorAnimationComplex::KeyVertex * ivertex_;

@@ -54,6 +54,9 @@
 #define  SCULPT_CHANGE_WIDTH_ACTION                         303
 
 #define  PAINT_ACTION                                       400
+#define  LINE_ACTION                                        401
+#define  RECTANGLE_ACTION                                   402
+#define  CIRCLE_ACTION                                      403
 
 View::View(VPaint::Scene * scene, QWidget * parent) :
     GLWidget(parent, true),
@@ -61,6 +64,8 @@ View::View(VPaint::Scene * scene, QWidget * parent) :
     pickingImg_(0),
     pickingIsEnabled_(true),
     currentAction_(0),
+    shapeStartX(0),
+    shapeStartY(0),
     vac_(0)
 {
     // View settings widget
@@ -359,6 +364,19 @@ int View::decidePMRAction()
                 return SCULPT_SMOOTH_ACTION;
             }
         }
+        else if(global()->toolMode() == Global::DRAW_LINE)
+        {
+          return LINE_ACTION;
+        }
+        else if(global()->toolMode() == Global::DRAW_RECTANGLE)
+        {
+          return RECTANGLE_ACTION;
+        }
+        else if(global()->toolMode() == Global::DRAW_CIRCLE)
+        {
+          return CIRCLE_ACTION;
+        }
+
     }
 
     return GLWidget::decidePMRAction();
@@ -706,6 +724,61 @@ void View::PMRPressEvent(int action, double x, double y)
         //updateHighlightedObject(mouse_Event_X_, mouse_Event_Y_);
         //emit allViewsNeedToUpdate();
     }
+    else if(action==LINE_ACTION)
+    {
+        lastMousePos_ = QPoint(mouse_Event_X_,mouse_Event_Y_);
+
+        // pos = viewToScene(x,y); <- by now: the identity
+        QPointF pos = QPointF(x,y);
+        double xScene = pos.rx();
+        double yScene = pos.ry();
+
+        double w = global()->settings().edgeWidth();
+        bool debug = false;
+        if(!debug)
+        {
+          if(mouse_isTablet_ &&  global()->useTabletPressure())
+            w *= 2 * mouse_tabletPressure_; // 2 so that a half-pressure would get the default width
+        }
+        vac_->beginSketchEdge(xScene,yScene, w, interactiveTime());
+        emit allViewsNeedToUpdate();
+    }
+    else if(action==RECTANGLE_ACTION)
+    {
+        lastMousePos_ = QPoint(mouse_Event_X_,mouse_Event_Y_);
+
+        // pos = viewToScene(x,y); <- by now: the identity
+        QPointF pos = QPointF(x,y);
+        shapeStartX = pos.rx();
+        shapeStartY = pos.ry();
+
+        double w = global()->settings().edgeWidth();
+        bool debug = false;
+        if(!debug)
+        {
+          if(mouse_isTablet_ &&  global()->useTabletPressure())
+            w *= 2 * mouse_tabletPressure_; // 2 so that a half-pressure would get the default width
+        }
+        vac_->beginSketchEdge(shapeStartX, shapeStartY, w, interactiveTime());
+        emit allViewsNeedToUpdate();
+    }
+    else if(action == CIRCLE_ACTION)
+    {
+        lastMousePos_ = QPoint(mouse_Event_X_,mouse_Event_Y_);
+
+        // pos = viewToScene(x,y); <- by now: the identity
+        QPointF pos = QPointF(x,y);
+        shapeStartX = pos.rx();
+        shapeStartY = pos.ry();
+
+        double w = global()->settings().edgeWidth();
+        bool debug = false;
+        if(!debug)
+        {
+          if(mouse_isTablet_ &&  global()->useTabletPressure())
+            w *= 2 * mouse_tabletPressure_; // 2 so that a half-pressure would get the default width
+        }
+    }
     else
         GLWidget::PMRPressEvent(action, x, y);
 }
@@ -955,6 +1028,106 @@ void View::PMRReleaseEvent(int action, double x, double y)
         updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
         emit allViewsNeedToUpdate();
     }
+    else if(action==LINE_ACTION)
+    {
+        lastMousePos_ = QPoint(mouse_Event_X_,mouse_Event_Y_);
+
+        // pos = viewToScene(x,y); <- by now: the identity
+        QPointF pos = QPointF(x,y);
+        double xScene = pos.rx();
+        double yScene = pos.ry();
+
+        double w = global()->settings().edgeWidth();
+        bool debug = false;
+        if(!debug)
+        {
+          if(mouse_isTablet_ &&  global()->useTabletPressure())
+            w *= 2 * mouse_tabletPressure_; // 2 so that a half-pressure would get the default width
+        }
+        vac_->continueSketchEdge(xScene,yScene, w);
+        vac_->endSketchEdge();
+
+        emit allViewsNeedToUpdatePicking();
+        updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
+        emit allViewsNeedToUpdate();
+    }
+    else if(action==RECTANGLE_ACTION)
+    {
+      global()->setSculptRadius(0);
+        lastMousePos_ = QPoint(mouse_Event_X_,mouse_Event_Y_);
+
+        // pos = viewToScene(x,y); <- by now: the identity
+        QPointF pos = QPointF(x,y);
+        double xScene = pos.rx();
+        double yScene = pos.ry();
+
+        double w = global()->settings().edgeWidth();
+        bool debug = false;
+        if(!debug)
+        {
+          if(mouse_isTablet_ &&  global()->useTabletPressure())
+            w *= 2 * mouse_tabletPressure_; // 2 so that a half-pressure would get the default width
+        }
+        vac_->continueSketchEdge(xScene, shapeStartY, w);
+        vac_->endSketchEdge();
+
+        vac_->beginSketchEdge(xScene, shapeStartY, w, interactiveTime());
+        vac_->continueSketchEdge(xScene, yScene, w);
+        vac_->endSketchEdge();
+
+        vac_->beginSketchEdge(xScene, yScene, w, interactiveTime());
+        vac_->continueSketchEdge(shapeStartX, yScene, w);
+        vac_->endSketchEdge();
+
+        vac_->beginSketchEdge(shapeStartX, yScene, w, interactiveTime());
+        vac_->continueSketchEdge(shapeStartX, shapeStartY, w);
+        vac_->endSketchEdge();
+
+        emit allViewsNeedToUpdatePicking();
+        updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
+        emit allViewsNeedToUpdate();
+    }
+    else if(action==CIRCLE_ACTION)
+    {
+      //global()->setSculptRadius(0);
+      lastMousePos_ = QPoint(mouse_Event_X_,mouse_Event_Y_);
+
+      // pos = viewToScene(x,y); <- by now: the identity
+      QPointF pos = QPointF(x,y);
+      double xScene = pos.rx();
+      double yScene = pos.ry();
+
+      double w = global()->settings().edgeWidth();
+      bool debug = false;
+      if(!debug)
+      {
+        if(mouse_isTablet_ &&  global()->useTabletPressure())
+          w *= 2 * mouse_tabletPressure_; // 2 so that a half-pressure would get the default width
+      }
+
+      double radius = sqrt((xScene - shapeStartX) * (xScene - shapeStartX) + (yScene - shapeStartY) * (yScene - shapeStartY)) / 2;
+      double centerX = (xScene + shapeStartX) / 2;
+      double centerY = (yScene + shapeStartY) / 2;
+
+      double startX = (xScene + shapeStartX) / 2 + radius;
+      double startY = (yScene + shapeStartY) / 2;
+      vac_->beginSketchEdge(startX, startY, w, interactiveTime());
+
+      for (double deg = 0; deg <= M_PI * 2; deg += 0.01)
+      {
+        double x = radius * cos(deg);
+        double y = radius * sin(deg);
+
+        double newX = centerX + x;
+        double newY = centerY + y;
+        vac_->continueSketchEdge(newX, newY, w);
+      }
+      vac_->endSketchEdge();
+
+      emit allViewsNeedToUpdatePicking();
+      updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
+      emit allViewsNeedToUpdate();
+    }
     else
         GLWidget::PMRReleaseEvent(action, x, y);
 
@@ -1026,6 +1199,7 @@ void View::drawScene()
             setCursor(Qt::ArrowCursor);
             break;
         case Global::SKETCH:
+        case Global::DRAW_LINE:
             setCursor(Qt::CrossCursor);
             break;
         case Global::PAINT:

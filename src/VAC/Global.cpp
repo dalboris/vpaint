@@ -645,6 +645,9 @@ void Global::setToolMode(Global::ToolMode mode)
         separatorSelect2_->setVisible(true);
         break;
     case SKETCH:
+    case DRAW_LINE:
+    case DRAW_RECTANGLE:
+    case DRAW_CIRCLE:
         actionPlanarMapMode_->setVisible(true);
         actionSnapMode_->setVisible(true);
         actionUseTabletPressure_->setVisible(true);
