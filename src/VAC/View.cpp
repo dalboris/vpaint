@@ -983,77 +983,67 @@ void View::PMRReleaseEvent(int action, double x, double y)
     auto getX = [&shapeWidth, &leftX, &deg2Rad](int angle) { return (cos(deg2Rad(angle + 90)) + 1) * shapeWidth / 2 + leftX; };
     auto getY = [&shapeHeight, &topY, &deg2Rad](int angle) { return (sin(deg2Rad(angle + 90)) + 1) * shapeHeight / 2 + topY; };
 
+    auto updateView = [this]()
+    {
+        emit allViewsNeedToUpdatePicking();
+        updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
+        emit allViewsNeedToUpdate();
+    };
+
     if(action==SKETCH_ACTION)
     {
         vac_->endSketchEdge();
 
-        emit allViewsNeedToUpdatePicking();
-        updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
-        emit allViewsNeedToUpdate();
+        updateView();
     }
     else if(action==DRAG_AND_DROP_ACTION)
     {
         vac_->completeDragAndDrop();
 
-        emit allViewsNeedToUpdatePicking();
-        updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
-        emit allViewsNeedToUpdate();
+        updateView();
     }
     else if(action==TRANSFORM_SELECTION_ACTION)
     {
         vac_->endTransformSelection();
-        emit allViewsNeedToUpdatePicking();
-        updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
-        emit allViewsNeedToUpdate();
+
+        updateView();
     }
     else if(action==RECTANGLE_OF_SELECTION_ACTION)
     {
         vac_->endRectangleOfSelection();
 
-        emit allViewsNeedToUpdatePicking();
-        updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
-        emit allViewsNeedToUpdate();
+        updateView();
     }
     else if(action==SCULPT_CHANGE_RADIUS_ACTION)
     {
         vac_->updateSculpt(x, y, interactiveTime());
 
-        emit allViewsNeedToUpdatePicking();
-        updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
-        emit allViewsNeedToUpdate();
+        updateView();
     }
     else if(action==SKETCH_CHANGE_PEN_WIDTH_AND_SNAP_THRESHOLD_ACTION)
     {
-        emit allViewsNeedToUpdatePicking();
-        updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
-        emit allViewsNeedToUpdate();
+        updateView();
     }
     else if(action==SCULPT_DEFORM_ACTION)
     {
         vac_->endSculptDeform();
         vac_->updateSculpt(x, y, interactiveTime());
 
-        emit allViewsNeedToUpdatePicking();
-        updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
-        emit allViewsNeedToUpdate();
+        updateView();
     }
     else if(action==SCULPT_CHANGE_WIDTH_ACTION)
     {
         vac_->endSculptEdgeWidth();
         vac_->updateSculpt(x, y, interactiveTime());
 
-        emit allViewsNeedToUpdatePicking();
-        updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
-        emit allViewsNeedToUpdate();
+        updateView();
     }
     else if(action==SCULPT_SMOOTH_ACTION)
     {
         vac_->endSculptSmooth();
         vac_->updateSculpt(x, y, interactiveTime());
 
-        emit allViewsNeedToUpdatePicking();
-        updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
-        emit allViewsNeedToUpdate();
+        updateView();
     }
     else if(action == LINE_ACTION)
     {
@@ -1064,9 +1054,7 @@ void View::PMRReleaseEvent(int action, double x, double y)
         vac_->continueSketchEdge(xScene,yScene, w);
         vac_->endSketchEdge();
 
-        emit allViewsNeedToUpdatePicking();
-        updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
-        emit allViewsNeedToUpdate();
+        updateView();
     }
     else if(action == RECTANGLE_ACTION)
     {
@@ -1089,9 +1077,7 @@ void View::PMRReleaseEvent(int action, double x, double y)
         vac_->continueSketchEdge(shapeStartX, shapeStartY, w);
         vac_->endSketchEdge();
 
-        emit allViewsNeedToUpdatePicking();
-        updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
-        emit allViewsNeedToUpdate();
+        updateView();
     }
     else if(action == CIRCLE_ACTION)
     {
@@ -1119,9 +1105,7 @@ void View::PMRReleaseEvent(int action, double x, double y)
         }
         vac_->endSketchEdge();
 
-        emit allViewsNeedToUpdatePicking();
-        updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
-        emit allViewsNeedToUpdate();
+        updateView();
     }
     else if(action == TRIANGLE_ACTION)
     {
@@ -1140,9 +1124,7 @@ void View::PMRReleaseEvent(int action, double x, double y)
         vac_->continueSketchEdge(leftX, bottomY, w);
         vac_->endSketchEdge();
 
-        emit allViewsNeedToUpdatePicking();
-        updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
-        emit allViewsNeedToUpdate();
+        updateView();
     }
     else if(action == RHOMBUS_ACTION)
     {
@@ -1165,9 +1147,7 @@ void View::PMRReleaseEvent(int action, double x, double y)
         vac_->continueSketchEdge(leftX, topY + shapeHeight / 2, w);
         vac_->endSketchEdge();
 
-        emit allViewsNeedToUpdatePicking();
-        updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
-        emit allViewsNeedToUpdate();
+        updateView();
     }
     else if(action == PENTAGON_ACTION)
     {
@@ -1194,9 +1174,7 @@ void View::PMRReleaseEvent(int action, double x, double y)
         vac_->continueSketchEdge(getX(36 + 72 * 5), getY(36 + 72 * 5), w);
         vac_->endSketchEdge();
 
-        emit allViewsNeedToUpdatePicking();
-        updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
-        emit allViewsNeedToUpdate();
+        updateView();
     }
     else if(action == HEXAGON_ACTION)
     {
@@ -1227,9 +1205,7 @@ void View::PMRReleaseEvent(int action, double x, double y)
         vac_->continueSketchEdge(getX(60 * 6), getY(60 * 6), w);
         vac_->endSketchEdge();
 
-        emit allViewsNeedToUpdatePicking();
-        updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
-        emit allViewsNeedToUpdate();
+        updateView();
     }
     else if(action == HEPTAGON_ACTION)
     {
@@ -1264,9 +1240,7 @@ void View::PMRReleaseEvent(int action, double x, double y)
         vac_->continueSketchEdge(getX((180 + 360 * 7) / 7), getY((180 + 360 * 7) / 7), w);
         vac_->endSketchEdge();
 
-        emit allViewsNeedToUpdatePicking();
-        updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
-        emit allViewsNeedToUpdate();
+        updateView();
     }
     else if(action == OCTAGON_ACTION)
     {
@@ -1305,9 +1279,7 @@ void View::PMRReleaseEvent(int action, double x, double y)
         vac_->continueSketchEdge(getX(45 * 8), getY(45 * 8), w);
         vac_->endSketchEdge();
 
-        emit allViewsNeedToUpdatePicking();
-        updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
-        emit allViewsNeedToUpdate();
+        updateView();
     }
     else
         GLWidget::PMRReleaseEvent(action, x, y);
