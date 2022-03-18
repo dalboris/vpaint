@@ -57,6 +57,13 @@
 #define  LINE_ACTION                                        401
 #define  RECTANGLE_ACTION                                   402
 #define  CIRCLE_ACTION                                      403
+#define  TRIANGLE_ACTION                                    404
+#define  RHOMBUS_ACTION                                     405
+#define  PENTAGON_ACTION                                    406
+#define  HEXAGON_ACTION                                     407
+#define  HEPTAGON_ACTION                                    408
+#define  OCTAGON_ACTION                                     409
+
 
 View::View(VPaint::Scene * scene, QWidget * parent) :
     GLWidget(parent, true),
@@ -366,17 +373,40 @@ int View::decidePMRAction()
         }
         else if(global()->toolMode() == Global::DRAW_LINE)
         {
-          return LINE_ACTION;
+            return LINE_ACTION;
         }
         else if(global()->toolMode() == Global::DRAW_RECTANGLE)
         {
-          return RECTANGLE_ACTION;
+            return RECTANGLE_ACTION;
         }
-        else if(global()->toolMode() == Global::DRAW_CIRCLE)
+            else if(global()->toolMode() == Global::DRAW_CIRCLE)
         {
-          return CIRCLE_ACTION;
+            return CIRCLE_ACTION;
         }
-
+        else if(global()->toolMode() == Global::DRAW_TRIANGLE)
+        {
+            return TRIANGLE_ACTION;
+        }
+        else if(global()->toolMode() == Global::DRAW_RHOMBUS)
+        {
+            return RHOMBUS_ACTION;
+        }
+        else if(global()->toolMode() == Global::DRAW_PENTAGON)
+        {
+            return PENTAGON_ACTION;
+        }
+        else if(global()->toolMode() == Global::DRAW_HEXAGON)
+        {
+            return HEXAGON_ACTION;
+        }
+        else if(global()->toolMode() == Global::DRAW_HEPTAGON)
+        {
+            return HEPTAGON_ACTION;
+        }
+        else if(global()->toolMode() == Global::DRAW_OCTAGON)
+        {
+            return OCTAGON_ACTION;
+        }
     }
 
     return GLWidget::decidePMRAction();
@@ -724,60 +754,23 @@ void View::PMRPressEvent(int action, double x, double y)
         //updateHighlightedObject(mouse_Event_X_, mouse_Event_Y_);
         //emit allViewsNeedToUpdate();
     }
-    else if(action==LINE_ACTION)
+    else if(action == LINE_ACTION ||
+            action == RECTANGLE_ACTION ||
+            action == CIRCLE_ACTION ||
+            action == TRIANGLE_ACTION ||
+            action == RHOMBUS_ACTION ||
+            action == PENTAGON_ACTION ||
+            action == HEXAGON_ACTION ||
+            action == HEPTAGON_ACTION ||
+            action == OCTAGON_ACTION)
     {
-        lastMousePos_ = QPoint(mouse_Event_X_,mouse_Event_Y_);
-
-        // pos = viewToScene(x,y); <- by now: the identity
-        QPointF pos = QPointF(x,y);
-        double xScene = pos.rx();
-        double yScene = pos.ry();
-
-        double w = global()->settings().edgeWidth();
-        bool debug = false;
-        if(!debug)
-        {
-          if(mouse_isTablet_ &&  global()->useTabletPressure())
-            w *= 2 * mouse_tabletPressure_; // 2 so that a half-pressure would get the default width
-        }
-        vac_->beginSketchEdge(xScene,yScene, w, interactiveTime());
-        emit allViewsNeedToUpdate();
-    }
-    else if(action==RECTANGLE_ACTION)
-    {
+        vac_->beginRectangleOfSelection(x,y,interactiveTime());
         lastMousePos_ = QPoint(mouse_Event_X_,mouse_Event_Y_);
 
         // pos = viewToScene(x,y); <- by now: the identity
         QPointF pos = QPointF(x,y);
         shapeStartX = pos.rx();
         shapeStartY = pos.ry();
-
-        double w = global()->settings().edgeWidth();
-        bool debug = false;
-        if(!debug)
-        {
-          if(mouse_isTablet_ &&  global()->useTabletPressure())
-            w *= 2 * mouse_tabletPressure_; // 2 so that a half-pressure would get the default width
-        }
-        vac_->beginSketchEdge(shapeStartX, shapeStartY, w, interactiveTime());
-        emit allViewsNeedToUpdate();
-    }
-    else if(action == CIRCLE_ACTION)
-    {
-        lastMousePos_ = QPoint(mouse_Event_X_,mouse_Event_Y_);
-
-        // pos = viewToScene(x,y); <- by now: the identity
-        QPointF pos = QPointF(x,y);
-        shapeStartX = pos.rx();
-        shapeStartY = pos.ry();
-
-        double w = global()->settings().edgeWidth();
-        bool debug = false;
-        if(!debug)
-        {
-          if(mouse_isTablet_ &&  global()->useTabletPressure())
-            w *= 2 * mouse_tabletPressure_; // 2 so that a half-pressure would get the default width
-        }
     }
     else
         GLWidget::PMRPressEvent(action, x, y);
@@ -823,7 +816,16 @@ void View::PMRMoveEvent(int action, double x, double y)
         vac_->continueTransformSelection(x, y);
         emit allViewsNeedToUpdate();
     }
-    else if(action==RECTANGLE_OF_SELECTION_ACTION)
+    else if(action == RECTANGLE_OF_SELECTION_ACTION ||
+            action == LINE_ACTION ||
+            action == RECTANGLE_ACTION ||
+            action == CIRCLE_ACTION ||
+            action == TRIANGLE_ACTION ||
+            action == RHOMBUS_ACTION ||
+            action == PENTAGON_ACTION ||
+            action == HEXAGON_ACTION ||
+            action == HEPTAGON_ACTION ||
+            action == OCTAGON_ACTION)
     {
         vac_->continueRectangleOfSelection(x,y);
 
@@ -956,118 +958,110 @@ void View::PMRReleaseEvent(int action, double x, double y)
 
     global()->setSceneCursorPos(Eigen::Vector2d(x,y));
 
+    QPointF pos = QPointF(x,y);
+    double xScene = pos.rx();
+    double yScene = pos.ry();
+
+    double w = global()->settings().edgeWidth();
+    bool debug = false;
+    if(!debug)
+    {
+        if(mouse_isTablet_ &&  global()->useTabletPressure())
+          w *= 2 * mouse_tabletPressure_; // 2 so that a half-pressure would get the default width
+    }
+
+    double leftX = xScene > shapeStartX ? shapeStartX : xScene;
+    double rightX = leftX == shapeStartX ? xScene : shapeStartX;
+    double topY = yScene > shapeStartY ? shapeStartY : yScene;
+    double bottomY = topY == shapeStartY ? yScene : shapeStartY;
+
+    double shapeWidth = rightX - leftX;
+    double shapeHeight = bottomY - topY;
+
+    auto deg2Rad = [](int degree) { return (degree * M_PI) / 180; };
+
+    auto getX = [&shapeWidth, &leftX, &deg2Rad](int angle) { return (cos(deg2Rad(angle + 90)) + 1) * shapeWidth / 2 + leftX; };
+    auto getY = [&shapeHeight, &topY, &deg2Rad](int angle) { return (sin(deg2Rad(angle + 90)) + 1) * shapeHeight / 2 + topY; };
+
+    auto updateView = [this]()
+    {
+        emit allViewsNeedToUpdatePicking();
+        updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
+        emit allViewsNeedToUpdate();
+    };
+
     if(action==SKETCH_ACTION)
     {
         vac_->endSketchEdge();
 
-        emit allViewsNeedToUpdatePicking();
-        updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
-        emit allViewsNeedToUpdate();
+        updateView();
     }
     else if(action==DRAG_AND_DROP_ACTION)
     {
         vac_->completeDragAndDrop();
 
-        emit allViewsNeedToUpdatePicking();
-        updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
-        emit allViewsNeedToUpdate();
+        updateView();
     }
     else if(action==TRANSFORM_SELECTION_ACTION)
     {
         vac_->endTransformSelection();
-        emit allViewsNeedToUpdatePicking();
-        updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
-        emit allViewsNeedToUpdate();
+
+        updateView();
     }
     else if(action==RECTANGLE_OF_SELECTION_ACTION)
     {
         vac_->endRectangleOfSelection();
 
-        emit allViewsNeedToUpdatePicking();
-        updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
-        emit allViewsNeedToUpdate();
+        updateView();
     }
     else if(action==SCULPT_CHANGE_RADIUS_ACTION)
     {
         vac_->updateSculpt(x, y, interactiveTime());
 
-        emit allViewsNeedToUpdatePicking();
-        updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
-        emit allViewsNeedToUpdate();
+        updateView();
     }
     else if(action==SKETCH_CHANGE_PEN_WIDTH_AND_SNAP_THRESHOLD_ACTION)
     {
-        emit allViewsNeedToUpdatePicking();
-        updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
-        emit allViewsNeedToUpdate();
+        updateView();
     }
     else if(action==SCULPT_DEFORM_ACTION)
     {
         vac_->endSculptDeform();
         vac_->updateSculpt(x, y, interactiveTime());
 
-        emit allViewsNeedToUpdatePicking();
-        updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
-        emit allViewsNeedToUpdate();
+        updateView();
     }
     else if(action==SCULPT_CHANGE_WIDTH_ACTION)
     {
         vac_->endSculptEdgeWidth();
         vac_->updateSculpt(x, y, interactiveTime());
 
-        emit allViewsNeedToUpdatePicking();
-        updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
-        emit allViewsNeedToUpdate();
+        updateView();
     }
     else if(action==SCULPT_SMOOTH_ACTION)
     {
         vac_->endSculptSmooth();
         vac_->updateSculpt(x, y, interactiveTime());
 
-        emit allViewsNeedToUpdatePicking();
-        updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
-        emit allViewsNeedToUpdate();
+        updateView();
     }
-    else if(action==LINE_ACTION)
+    else if(action == LINE_ACTION)
     {
+        vac_->endRectangleOfSelection();
         lastMousePos_ = QPoint(mouse_Event_X_,mouse_Event_Y_);
 
-        // pos = viewToScene(x,y); <- by now: the identity
-        QPointF pos = QPointF(x,y);
-        double xScene = pos.rx();
-        double yScene = pos.ry();
-
-        double w = global()->settings().edgeWidth();
-        bool debug = false;
-        if(!debug)
-        {
-          if(mouse_isTablet_ &&  global()->useTabletPressure())
-            w *= 2 * mouse_tabletPressure_; // 2 so that a half-pressure would get the default width
-        }
+        vac_->beginSketchEdge(shapeStartX, shapeStartY, w, interactiveTime());
         vac_->continueSketchEdge(xScene,yScene, w);
         vac_->endSketchEdge();
 
-        emit allViewsNeedToUpdatePicking();
-        updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
-        emit allViewsNeedToUpdate();
+        updateView();
     }
-    else if(action==RECTANGLE_ACTION)
+    else if(action == RECTANGLE_ACTION)
     {
-      global()->setSculptRadius(0);
+        vac_->endRectangleOfSelection();
         lastMousePos_ = QPoint(mouse_Event_X_,mouse_Event_Y_);
 
-        // pos = viewToScene(x,y); <- by now: the identity
-        QPointF pos = QPointF(x,y);
-        double xScene = pos.rx();
-        double yScene = pos.ry();
-
-        double w = global()->settings().edgeWidth();
-        bool debug = false;
-        if(!debug)
-        {
-          if(mouse_isTablet_ &&  global()->useTabletPressure())
-            w *= 2 * mouse_tabletPressure_; // 2 so that a half-pressure would get the default width
-        }
+        vac_->beginSketchEdge(shapeStartX, shapeStartY, w, interactiveTime());
         vac_->continueSketchEdge(xScene, shapeStartY, w);
         vac_->endSketchEdge();
 
@@ -1083,50 +1077,209 @@ void View::PMRReleaseEvent(int action, double x, double y)
         vac_->continueSketchEdge(shapeStartX, shapeStartY, w);
         vac_->endSketchEdge();
 
-        emit allViewsNeedToUpdatePicking();
-        updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
-        emit allViewsNeedToUpdate();
+        updateView();
     }
-    else if(action==CIRCLE_ACTION)
+    else if(action == CIRCLE_ACTION)
     {
-      //global()->setSculptRadius(0);
-      lastMousePos_ = QPoint(mouse_Event_X_,mouse_Event_Y_);
+        vac_->endRectangleOfSelection();
+        lastMousePos_ = QPoint(mouse_Event_X_,mouse_Event_Y_);
 
-      // pos = viewToScene(x,y); <- by now: the identity
-      QPointF pos = QPointF(x,y);
-      double xScene = pos.rx();
-      double yScene = pos.ry();
+        double radiusH = shapeHeight / 2;
+        double radiusW = shapeWidth / 2;
 
-      double w = global()->settings().edgeWidth();
-      bool debug = false;
-      if(!debug)
-      {
-        if(mouse_isTablet_ &&  global()->useTabletPressure())
-          w *= 2 * mouse_tabletPressure_; // 2 so that a half-pressure would get the default width
-      }
+        double centerX = (leftX + rightX) / 2;
+        double centerY = (topY + bottomY) / 2;
 
-      double radius = sqrt((xScene - shapeStartX) * (xScene - shapeStartX) + (yScene - shapeStartY) * (yScene - shapeStartY)) / 2;
-      double centerX = (xScene + shapeStartX) / 2;
-      double centerY = (yScene + shapeStartY) / 2;
+        double startX = centerX + radiusW;
+        double startY = centerY;
+        vac_->beginSketchEdge(startX, startY, w, interactiveTime());
 
-      double startX = (xScene + shapeStartX) / 2 + radius;
-      double startY = (yScene + shapeStartY) / 2;
-      vac_->beginSketchEdge(startX, startY, w, interactiveTime());
+        for (double deg = 0; deg < M_PI * 2; deg += 0.01)
+        {
+            double x = radiusW * cos(deg);
+            double y = radiusH * sin(deg);
 
-      for (double deg = 0; deg <= M_PI * 2; deg += 0.01)
-      {
-        double x = radius * cos(deg);
-        double y = radius * sin(deg);
+            double newX = centerX + x;
+            double newY = centerY + y;
+            vac_->continueSketchEdge(newX, newY, w);
+        }
+        vac_->endSketchEdge();
 
-        double newX = centerX + x;
-        double newY = centerY + y;
-        vac_->continueSketchEdge(newX, newY, w);
-      }
-      vac_->endSketchEdge();
+        updateView();
+    }
+    else if(action == TRIANGLE_ACTION)
+    {
+        vac_->endRectangleOfSelection();
+        lastMousePos_ = QPoint(mouse_Event_X_,mouse_Event_Y_);
 
-      emit allViewsNeedToUpdatePicking();
-      updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
-      emit allViewsNeedToUpdate();
+        vac_->beginSketchEdge(leftX, bottomY, w, interactiveTime());
+        vac_->continueSketchEdge(leftX + shapeWidth / 2, topY, w);
+        vac_->endSketchEdge();
+
+        vac_->beginSketchEdge(leftX + shapeWidth / 2, topY, w, interactiveTime());
+        vac_->continueSketchEdge(rightX, bottomY, w);
+        vac_->endSketchEdge();
+
+        vac_->beginSketchEdge(rightX, bottomY, w, interactiveTime());
+        vac_->continueSketchEdge(leftX, bottomY, w);
+        vac_->endSketchEdge();
+
+        updateView();
+    }
+    else if(action == RHOMBUS_ACTION)
+    {
+        vac_->endRectangleOfSelection();
+        lastMousePos_ = QPoint(mouse_Event_X_,mouse_Event_Y_);
+
+        vac_->beginSketchEdge(leftX, topY + shapeHeight / 2, w, interactiveTime());
+        vac_->continueSketchEdge(leftX + shapeWidth / 2, topY, w);
+        vac_->endSketchEdge();
+
+        vac_->beginSketchEdge(leftX + shapeWidth / 2, topY, w, interactiveTime());
+        vac_->continueSketchEdge(rightX, topY + shapeHeight / 2, w);
+        vac_->endSketchEdge();
+
+        vac_->beginSketchEdge(rightX, topY + shapeHeight / 2, w, interactiveTime());
+        vac_->continueSketchEdge(leftX + shapeWidth / 2, bottomY, w);
+        vac_->endSketchEdge();
+
+        vac_->beginSketchEdge(leftX + shapeWidth / 2, bottomY, w, interactiveTime());
+        vac_->continueSketchEdge(leftX, topY + shapeHeight / 2, w);
+        vac_->endSketchEdge();
+
+        updateView();
+    }
+    else if(action == PENTAGON_ACTION)
+    {
+        vac_->endRectangleOfSelection();
+        lastMousePos_ = QPoint(mouse_Event_X_,mouse_Event_Y_);
+
+        vac_->beginSketchEdge(getX(36), getY(36), w, interactiveTime());
+        vac_->continueSketchEdge(getX(36 + 72), getY(36 + 72), w);
+        vac_->endSketchEdge();
+
+        vac_->beginSketchEdge(getX(36 + 72), getY(36 + 72), w, interactiveTime());
+        vac_->continueSketchEdge(getX(36 + 72 * 2), getY(36 + 72 * 2), w);
+        vac_->endSketchEdge();
+
+        vac_->beginSketchEdge(getX(36 + 72 * 2), getY(36 + 72 * 2), w, interactiveTime());
+        vac_->continueSketchEdge(getX(36 + 72 * 3), getY(36 + 72 * 3), w);
+        vac_->endSketchEdge();
+
+        vac_->beginSketchEdge(getX(36 + 72 * 3), getY(36 + 72 * 3), w, interactiveTime());
+        vac_->continueSketchEdge(getX(36 + 72 * 4), getY(36 + 72 * 4), w);
+        vac_->endSketchEdge();
+
+        vac_->beginSketchEdge(getX(36 + 72 * 4), getY(36 + 72 * 4), w, interactiveTime());
+        vac_->continueSketchEdge(getX(36 + 72 * 5), getY(36 + 72 * 5), w);
+        vac_->endSketchEdge();
+
+        updateView();
+    }
+    else if(action == HEXAGON_ACTION)
+    {
+        vac_->endRectangleOfSelection();
+        lastMousePos_ = QPoint(mouse_Event_X_,mouse_Event_Y_);
+
+        vac_->beginSketchEdge(getX(0), getY(0), w, interactiveTime());
+        vac_->continueSketchEdge(getX(60), getY(60), w);
+        vac_->endSketchEdge();
+
+        vac_->beginSketchEdge(getX(60), getY(60), w, interactiveTime());
+        vac_->continueSketchEdge(getX(60 * 2), getY(60 * 2), w);
+        vac_->endSketchEdge();
+
+        vac_->beginSketchEdge(getX(60 * 2), getY(60 * 2), w, interactiveTime());
+        vac_->continueSketchEdge(getX(60 * 3), getY(60 * 3), w);
+        vac_->endSketchEdge();
+
+        vac_->beginSketchEdge(getX(60 * 3), getY(60 * 3), w, interactiveTime());
+        vac_->continueSketchEdge(getX(60 * 4), getY(60 * 4), w);
+        vac_->endSketchEdge();
+
+        vac_->beginSketchEdge(getX(60 * 4), getY(60 * 4), w, interactiveTime());
+        vac_->continueSketchEdge(getX(60 * 5), getY(60 * 5), w);
+        vac_->endSketchEdge();
+
+        vac_->beginSketchEdge(getX(60 * 5), getY(60 * 5), w, interactiveTime());
+        vac_->continueSketchEdge(getX(60 * 6), getY(60 * 6), w);
+        vac_->endSketchEdge();
+
+        updateView();
+    }
+    else if(action == HEPTAGON_ACTION)
+    {
+        vac_->endRectangleOfSelection();
+        lastMousePos_ = QPoint(mouse_Event_X_,mouse_Event_Y_);
+
+        vac_->beginSketchEdge(getX(180 / 7), getY(180 / 7), w, interactiveTime());
+        vac_->continueSketchEdge(getX((180 + 360) / 7), getY((180 + 360) / 7), w);
+        vac_->endSketchEdge();
+
+        vac_->beginSketchEdge(getX((180 + 360) / 7), getY((180 + 360) / 7), w, interactiveTime());
+        vac_->continueSketchEdge(getX((180 + 360 * 2) / 7), getY((180 + 360 * 2) / 7), w);
+        vac_->endSketchEdge();
+
+        vac_->beginSketchEdge(getX((180 + 360 * 2) / 7), getY((180 + 360 * 2) / 7), w, interactiveTime());
+        vac_->continueSketchEdge(getX((180 + 360 * 3) / 7), getY((180 + 360 * 3) / 7), w);
+        vac_->endSketchEdge();
+
+        vac_->beginSketchEdge(getX((180 + 360 * 3) / 7), getY((180 + 360 * 3) / 7), w, interactiveTime());
+        vac_->continueSketchEdge(getX((180 + 360 * 4) / 7), getY((180 + 360 * 4) / 7), w);
+        vac_->endSketchEdge();
+
+        vac_->beginSketchEdge(getX((180 + 360 * 4) / 7), getY((180 + 360 * 4) / 7), w, interactiveTime());
+        vac_->continueSketchEdge(getX((180 + 360 * 5) / 7), getY((180 + 360 * 5) / 7), w);
+        vac_->endSketchEdge();
+
+        vac_->beginSketchEdge(getX((180 + 360 * 5) / 7), getY((180 + 360 * 5) / 7), w, interactiveTime());
+        vac_->continueSketchEdge(getX((180 + 360 * 6) / 7), getY((180 + 360 * 6) / 7), w);
+        vac_->endSketchEdge();
+
+        vac_->beginSketchEdge(getX((180 + 360 * 6) / 7), getY((180 + 360 * 6) / 7), w, interactiveTime());
+        vac_->continueSketchEdge(getX((180 + 360 * 7) / 7), getY((180 + 360 * 7) / 7), w);
+        vac_->endSketchEdge();
+
+        updateView();
+    }
+    else if(action == OCTAGON_ACTION)
+    {
+        vac_->endRectangleOfSelection();
+        lastMousePos_ = QPoint(mouse_Event_X_,mouse_Event_Y_);
+
+        vac_->beginSketchEdge(getX(0), getY(0), w, interactiveTime());
+        vac_->continueSketchEdge(getX(45), getY(45), w);
+        vac_->endSketchEdge();
+
+        vac_->beginSketchEdge(getX(45), getY(45), w, interactiveTime());
+        vac_->continueSketchEdge(getX(45 * 2), getY(45 * 2), w);
+        vac_->endSketchEdge();
+
+        vac_->beginSketchEdge(getX(45 * 2), getY(45 * 2), w, interactiveTime());
+        vac_->continueSketchEdge(getX(45 * 3), getY(45 * 3), w);
+        vac_->endSketchEdge();
+
+        vac_->beginSketchEdge(getX(45 * 3), getY(45 * 3), w, interactiveTime());
+        vac_->continueSketchEdge(getX(45 * 4), getY(45 * 4), w);
+        vac_->endSketchEdge();
+
+        vac_->beginSketchEdge(getX(45 * 4), getY(45 * 4), w, interactiveTime());
+        vac_->continueSketchEdge(getX(45 * 5), getY(45 * 5), w);
+        vac_->endSketchEdge();
+
+        vac_->beginSketchEdge(getX(45 * 5), getY(45 * 5), w, interactiveTime());
+        vac_->continueSketchEdge(getX(45 * 6), getY(45 * 6), w);
+        vac_->endSketchEdge();
+
+        vac_->beginSketchEdge(getX(45 * 6), getY(45 * 6), w, interactiveTime());
+        vac_->continueSketchEdge(getX(45 * 7), getY(45 * 7), w);
+        vac_->endSketchEdge();
+
+        vac_->beginSketchEdge(getX(45 * 7), getY(45 * 7), w, interactiveTime());
+        vac_->continueSketchEdge(getX(45 * 8), getY(45 * 8), w);
+        vac_->endSketchEdge();
+
+        updateView();
     }
     else
         GLWidget::PMRReleaseEvent(action, x, y);

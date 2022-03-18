@@ -79,6 +79,12 @@ public:
         DRAW_LINE,
         DRAW_RECTANGLE,
         DRAW_CIRCLE,
+        DRAW_TRIANGLE,
+        DRAW_RHOMBUS,
+        DRAW_PENTAGON,
+        DRAW_HEXAGON,
+        DRAW_HEPTAGON,
+        DRAW_OCTAGON,
         NUMBER_OF_TOOL_MODES, // Keep this one last
     };
     ToolMode toolMode() const;

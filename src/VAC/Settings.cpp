@@ -25,7 +25,7 @@ Settings::Settings()
 
 void Settings::readFromDisk(QSettings & settings)
 {
-    edgeWidth_ = settings.value("tools-sketch-edgewidth", 5.0).toDouble();
+    edgeWidth_ = settings.value("tools-sketch-edgewidth", 2.0).toDouble();
     showAboutDialogAtStartup_ = settings.value("general-showaboutdialogatstartup", true).toBool();
     keepOldVersion_ = settings.value("general-keepoldversion", true).toBool();
     dontNotifyConversion_ = settings.value("general-dontnotifyconversion", false).toBool();
