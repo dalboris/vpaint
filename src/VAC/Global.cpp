@@ -645,9 +645,24 @@ void Global::setToolMode(Global::ToolMode mode)
         separatorSelect2_->setVisible(true);
         break;
     case SKETCH:
+        actionPlanarMapMode_->setVisible(true);
+        actionSnapMode_->setVisible(true);
+        actionUseTabletPressure_->setVisible(true);
+        actionSnapThreshold_->setVisible(true);
+        actionEdgeWidth_->setVisible(true);
+        separatorSketch1_->setVisible(true);
+        separatorSketch2_->setVisible(true);
+        break;
+    //Maybe in future we will need to change some properties for polygons
     case DRAW_LINE:
     case DRAW_RECTANGLE:
     case DRAW_CIRCLE:
+    case DRAW_TRIANGLE:
+    case DRAW_RHOMBUS:
+    case DRAW_PENTAGON:
+    case DRAW_HEXAGON:
+    case DRAW_HEPTAGON:
+    case DRAW_OCTAGON:
         actionPlanarMapMode_->setVisible(true);
         actionSnapMode_->setVisible(true);
         actionUseTabletPressure_->setVisible(true);

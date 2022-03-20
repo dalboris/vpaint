@@ -24,6 +24,8 @@
 #include "Background/BackgroundRenderer.h"
 #include "VectorAnimationComplex/VAC.h"
 #include "VectorAnimationComplex/Cell.h"
+#include "VectorAnimationComplex/KeyVertex.h"
+#include "VectorAnimationComplex/CellList.h"
 #include "Layer.h"
 
 #include <QtDebug>
@@ -1077,7 +1079,22 @@ void View::PMRReleaseEvent(int action, double x, double y)
         vac_->continueSketchEdge(shapeStartX, shapeStartY, w);
         vac_->endSketchEdge();
 
+        //The code bellow will be needed for we will able to select the whole polygon
+        //Currently for all polygons selection working only for each lines
+        //We need to remove all key vertices of polygon exclude intersection vertices
+        //In the next PR I will implement the universal algorithm for drawing polygons
+        //and remove only needed key vertices and we will be abble to select wholes polygons
+        //The investigation was successful about it, but I didn't have enough time for implementation
+
+//        auto keyVlist = vac_->instantVertices(interactiveTime());
+//        for (auto vert : keyVlist)
+//        {
+//            vac_->addToSelection(vert);
+//        }
+//        scene()->smartDelete() universal;
+
         updateView();
+
     }
     else if(action == CIRCLE_ACTION)
     {
@@ -1181,28 +1198,28 @@ void View::PMRReleaseEvent(int action, double x, double y)
         vac_->endRectangleOfSelection();
         lastMousePos_ = QPoint(mouse_Event_X_,mouse_Event_Y_);
 
-        vac_->beginSketchEdge(getX(0), getY(0), w, interactiveTime());
-        vac_->continueSketchEdge(getX(60), getY(60), w);
+        vac_->beginSketchEdge(getX(30), getY(30), w, interactiveTime());
+        vac_->continueSketchEdge(getX(30 + 60), getY(30 + 60), w);
         vac_->endSketchEdge();
 
-        vac_->beginSketchEdge(getX(60), getY(60), w, interactiveTime());
-        vac_->continueSketchEdge(getX(60 * 2), getY(60 * 2), w);
+        vac_->beginSketchEdge(getX(30 + 60), getY(30 + 60), w, interactiveTime());
+        vac_->continueSketchEdge(getX(30 + 60 * 2), getY(30 + 60 * 2), w);
         vac_->endSketchEdge();
 
-        vac_->beginSketchEdge(getX(60 * 2), getY(60 * 2), w, interactiveTime());
-        vac_->continueSketchEdge(getX(60 * 3), getY(60 * 3), w);
+        vac_->beginSketchEdge(getX(30 + 60 * 2), getY(30 + 60 * 2), w, interactiveTime());
+        vac_->continueSketchEdge(getX(30 + 60 * 3), getY(30 + 60 * 3), w);
         vac_->endSketchEdge();
 
-        vac_->beginSketchEdge(getX(60 * 3), getY(60 * 3), w, interactiveTime());
-        vac_->continueSketchEdge(getX(60 * 4), getY(60 * 4), w);
+        vac_->beginSketchEdge(getX(30 + 60 * 3), getY(30 + 60 * 3), w, interactiveTime());
+        vac_->continueSketchEdge(getX(30 + 60 * 4), getY(30 + 60 * 4), w);
         vac_->endSketchEdge();
 
-        vac_->beginSketchEdge(getX(60 * 4), getY(60 * 4), w, interactiveTime());
-        vac_->continueSketchEdge(getX(60 * 5), getY(60 * 5), w);
+        vac_->beginSketchEdge(getX(30 + 60 * 4), getY(30 + 60 * 4), w, interactiveTime());
+        vac_->continueSketchEdge(getX(30 + 60 * 5), getY(30 + 60 * 5), w);
         vac_->endSketchEdge();
 
-        vac_->beginSketchEdge(getX(60 * 5), getY(60 * 5), w, interactiveTime());
-        vac_->continueSketchEdge(getX(60 * 6), getY(60 * 6), w);
+        vac_->beginSketchEdge(getX(30 + 60 * 5), getY(30 + 60 * 5), w, interactiveTime());
+        vac_->continueSketchEdge(getX(30 + 60 * 6), getY(30 + 60 * 6), w);
         vac_->endSketchEdge();
 
         updateView();
@@ -1247,36 +1264,36 @@ void View::PMRReleaseEvent(int action, double x, double y)
         vac_->endRectangleOfSelection();
         lastMousePos_ = QPoint(mouse_Event_X_,mouse_Event_Y_);
 
-        vac_->beginSketchEdge(getX(0), getY(0), w, interactiveTime());
-        vac_->continueSketchEdge(getX(45), getY(45), w);
+        vac_->beginSketchEdge(getX(22.5), getY(22.5), w, interactiveTime());
+        vac_->continueSketchEdge(getX(45 * 1.5), getY(45 * 1.5), w);
         vac_->endSketchEdge();
 
-        vac_->beginSketchEdge(getX(45), getY(45), w, interactiveTime());
-        vac_->continueSketchEdge(getX(45 * 2), getY(45 * 2), w);
+        vac_->beginSketchEdge(getX(45 * 1.5), getY(45 * 1.5), w, interactiveTime());
+        vac_->continueSketchEdge(getX(45 * 2.5), getY(45 * 2.5), w);
         vac_->endSketchEdge();
 
-        vac_->beginSketchEdge(getX(45 * 2), getY(45 * 2), w, interactiveTime());
-        vac_->continueSketchEdge(getX(45 * 3), getY(45 * 3), w);
+        vac_->beginSketchEdge(getX(45 * 2.5), getY(45 * 2.5), w, interactiveTime());
+        vac_->continueSketchEdge(getX(45 * 3.5), getY(45 * 3.5), w);
         vac_->endSketchEdge();
 
-        vac_->beginSketchEdge(getX(45 * 3), getY(45 * 3), w, interactiveTime());
-        vac_->continueSketchEdge(getX(45 * 4), getY(45 * 4), w);
+        vac_->beginSketchEdge(getX(45 * 3.5), getY(45 * 3.5), w, interactiveTime());
+        vac_->continueSketchEdge(getX(45 * 4.5), getY(45 * 4.5), w);
         vac_->endSketchEdge();
 
-        vac_->beginSketchEdge(getX(45 * 4), getY(45 * 4), w, interactiveTime());
-        vac_->continueSketchEdge(getX(45 * 5), getY(45 * 5), w);
+        vac_->beginSketchEdge(getX(45 * 4.5), getY(45 * 4.5), w, interactiveTime());
+        vac_->continueSketchEdge(getX(45 * 5.5), getY(45 * 5.5), w);
         vac_->endSketchEdge();
 
-        vac_->beginSketchEdge(getX(45 * 5), getY(45 * 5), w, interactiveTime());
-        vac_->continueSketchEdge(getX(45 * 6), getY(45 * 6), w);
+        vac_->beginSketchEdge(getX(45 * 5.5), getY(45 * 5.5), w, interactiveTime());
+        vac_->continueSketchEdge(getX(45 * 6.5), getY(45 * 6.5), w);
         vac_->endSketchEdge();
 
-        vac_->beginSketchEdge(getX(45 * 6), getY(45 * 6), w, interactiveTime());
-        vac_->continueSketchEdge(getX(45 * 7), getY(45 * 7), w);
+        vac_->beginSketchEdge(getX(45 * 6.5), getY(45 * 6.5), w, interactiveTime());
+        vac_->continueSketchEdge(getX(45 * 7.5), getY(45 * 7.5), w);
         vac_->endSketchEdge();
 
-        vac_->beginSketchEdge(getX(45 * 7), getY(45 * 7), w, interactiveTime());
-        vac_->continueSketchEdge(getX(45 * 8), getY(45 * 8), w);
+        vac_->beginSketchEdge(getX(45 * 7.5), getY(45 * 7.5), w, interactiveTime());
+        vac_->continueSketchEdge(getX(45 * 8.5), getY(45 * 8.5), w);
         vac_->endSketchEdge();
 
         updateView();
