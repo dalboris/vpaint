@@ -1091,7 +1091,7 @@ void View::PMRReleaseEvent(int action, double x, double y)
 //        {
 //            vac_->addToSelection(vert);
 //        }
-//        scene()->smartDelete() universal;
+//        scene()->smartDelete();
 
         updateView();
 
