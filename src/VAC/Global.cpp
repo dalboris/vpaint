@@ -82,7 +82,6 @@ Global::Global(MainWindow * w) :
     statusBarHelp_->setText("Find help here.");
     w->statusBar()->addWidget(statusBarHelp_);
     connect(this, SIGNAL(keyboardModifiersChanged()), this, SLOT(updateStatusBarHelp()));
-
 }
 
 bool Global::deleteIsolatedVertices()
@@ -433,7 +432,7 @@ void Global::createToolBars()
     // Planar map mode
     actionPlanarMapMode_ = new QAction(this);
     actionPlanarMapMode_->setCheckable(true);
-    actionPlanarMapMode_->setChecked(true);
+    actionPlanarMapMode_->setChecked(false);
     toolModeToolBar_->addAction(actionPlanarMapMode_);
     toolModeToolBar_->widgetForAction(actionPlanarMapMode_)->setFixedSize(110,sideLength);
     actionPlanarMapMode_->setText(tr("Toggle intersections"));
@@ -450,7 +449,7 @@ void Global::createToolBars()
     // Snapping
     actionSnapMode_ = new QAction(this);
     actionSnapMode_->setCheckable(true);
-    actionSnapMode_->setChecked(true);
+    actionSnapMode_->setChecked(false);
     toolModeToolBar_->addAction(actionSnapMode_);
     toolModeToolBar_->widgetForAction(actionSnapMode_)->setFixedSize(110,sideLength);
     actionSnapMode_->setText(tr("Toggle snapping"));
