@@ -82,7 +82,6 @@ Global::Global(MainWindow * w) :
     statusBarHelp_->setText("Find help here.");
     w->statusBar()->addWidget(statusBarHelp_);
     connect(this, SIGNAL(keyboardModifiersChanged()), this, SLOT(updateStatusBarHelp()));
-
 }
 
 bool Global::deleteIsolatedVertices()
@@ -433,7 +432,7 @@ void Global::createToolBars()
     // Planar map mode
     actionPlanarMapMode_ = new QAction(this);
     actionPlanarMapMode_->setCheckable(true);
-    actionPlanarMapMode_->setChecked(true);
+    actionPlanarMapMode_->setChecked(false);
     toolModeToolBar_->addAction(actionPlanarMapMode_);
     toolModeToolBar_->widgetForAction(actionPlanarMapMode_)->setFixedSize(110,sideLength);
     actionPlanarMapMode_->setText(tr("Toggle intersections"));
@@ -450,7 +449,7 @@ void Global::createToolBars()
     // Snapping
     actionSnapMode_ = new QAction(this);
     actionSnapMode_->setCheckable(true);
-    actionSnapMode_->setChecked(true);
+    actionSnapMode_->setChecked(false);
     toolModeToolBar_->addAction(actionSnapMode_);
     toolModeToolBar_->widgetForAction(actionSnapMode_)->setFixedSize(110,sideLength);
     actionSnapMode_->setText(tr("Toggle snapping"));
@@ -645,9 +644,24 @@ void Global::setToolMode(Global::ToolMode mode)
         separatorSelect2_->setVisible(true);
         break;
     case SKETCH:
+        actionPlanarMapMode_->setVisible(true);
+        actionSnapMode_->setVisible(true);
+        actionUseTabletPressure_->setVisible(true);
+        actionSnapThreshold_->setVisible(true);
+        actionEdgeWidth_->setVisible(true);
+        separatorSketch1_->setVisible(true);
+        separatorSketch2_->setVisible(true);
+        break;
+    //Maybe in future we will need to change some properties for polygons
     case DRAW_LINE:
     case DRAW_RECTANGLE:
     case DRAW_CIRCLE:
+    case DRAW_TRIANGLE:
+    case DRAW_RHOMBUS:
+    case DRAW_PENTAGON:
+    case DRAW_HEXAGON:
+    case DRAW_HEPTAGON:
+    case DRAW_OCTAGON:
         actionPlanarMapMode_->setVisible(true);
         actionSnapMode_->setVisible(true);
         actionUseTabletPressure_->setVisible(true);

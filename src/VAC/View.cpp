@@ -24,6 +24,8 @@
 #include "Background/BackgroundRenderer.h"
 #include "VectorAnimationComplex/VAC.h"
 #include "VectorAnimationComplex/Cell.h"
+#include "VectorAnimationComplex/KeyVertex.h"
+#include "VectorAnimationComplex/CellList.h"
 #include "Layer.h"
 
 #include <QtDebug>
@@ -978,16 +980,25 @@ void View::PMRReleaseEvent(int action, double x, double y)
     double shapeWidth = rightX - leftX;
     double shapeHeight = bottomY - topY;
 
-    auto deg2Rad = [](int degree) { return (degree * M_PI) / 180; };
+    auto deg2Rad = [](double degree) { return (degree * M_PI) / 180; };
 
-    auto getX = [&shapeWidth, &leftX, &deg2Rad](int angle) { return (cos(deg2Rad(angle + 90)) + 1) * shapeWidth / 2 + leftX; };
-    auto getY = [&shapeHeight, &topY, &deg2Rad](int angle) { return (sin(deg2Rad(angle + 90)) + 1) * shapeHeight / 2 + topY; };
+    auto getX = [&shapeWidth, &leftX, &deg2Rad](double angle) { return (cos(deg2Rad(angle + 90)) + 1) * shapeWidth / 2 + leftX; };
+    auto getY = [&shapeHeight, &topY, &deg2Rad](double angle) { return (sin(deg2Rad(angle + 90)) + 1) * shapeHeight / 2 + topY; };
 
     auto updateView = [this]()
     {
         emit allViewsNeedToUpdatePicking();
         updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
         emit allViewsNeedToUpdate();
+    };
+
+    auto removeKeyVertices = [this]() {
+        auto keyVerticesList = vac_->instantVertices(interactiveTime());
+        for (auto vertice : keyVerticesList)
+        {
+            vac_->addToSelection(vertice);
+        }
+        scene()->smartDelete();
     };
 
     if(action==SKETCH_ACTION)
@@ -1061,22 +1072,23 @@ void View::PMRReleaseEvent(int action, double x, double y)
         vac_->endRectangleOfSelection();
         lastMousePos_ = QPoint(mouse_Event_X_,mouse_Event_Y_);
 
-        vac_->beginSketchEdge(shapeStartX, shapeStartY, w, interactiveTime());
-        vac_->continueSketchEdge(xScene, shapeStartY, w);
+        vac_->beginSketchEdge(leftX, topY, w, interactiveTime());
+        vac_->continueSketchEdge(rightX, topY, w);
         vac_->endSketchEdge();
 
-        vac_->beginSketchEdge(xScene, shapeStartY, w, interactiveTime());
-        vac_->continueSketchEdge(xScene, yScene, w);
+        vac_->beginSketchEdge(rightX, topY, w, interactiveTime());
+        vac_->continueSketchEdge(rightX, bottomY, w);
         vac_->endSketchEdge();
 
-        vac_->beginSketchEdge(xScene, yScene, w, interactiveTime());
-        vac_->continueSketchEdge(shapeStartX, yScene, w);
+        vac_->beginSketchEdge(rightX, bottomY, w, interactiveTime());
+        vac_->continueSketchEdge(leftX, bottomY, w);
         vac_->endSketchEdge();
 
-        vac_->beginSketchEdge(shapeStartX, yScene, w, interactiveTime());
-        vac_->continueSketchEdge(shapeStartX, shapeStartY, w);
+        vac_->beginSketchEdge(leftX, bottomY, w, interactiveTime());
+        vac_->continueSketchEdge(leftX, topY, w);
         vac_->endSketchEdge();
 
+        removeKeyVertices();
         updateView();
     }
     else if(action == CIRCLE_ACTION)
@@ -1124,6 +1136,7 @@ void View::PMRReleaseEvent(int action, double x, double y)
         vac_->continueSketchEdge(leftX, bottomY, w);
         vac_->endSketchEdge();
 
+        removeKeyVertices();
         updateView();
     }
     else if(action == RHOMBUS_ACTION)
@@ -1147,6 +1160,7 @@ void View::PMRReleaseEvent(int action, double x, double y)
         vac_->continueSketchEdge(leftX, topY + shapeHeight / 2, w);
         vac_->endSketchEdge();
 
+        removeKeyVertices();
         updateView();
     }
     else if(action == PENTAGON_ACTION)
@@ -1174,6 +1188,7 @@ void View::PMRReleaseEvent(int action, double x, double y)
         vac_->continueSketchEdge(getX(36 + 72 * 5), getY(36 + 72 * 5), w);
         vac_->endSketchEdge();
 
+        removeKeyVertices();
         updateView();
     }
     else if(action == HEXAGON_ACTION)
@@ -1181,30 +1196,31 @@ void View::PMRReleaseEvent(int action, double x, double y)
         vac_->endRectangleOfSelection();
         lastMousePos_ = QPoint(mouse_Event_X_,mouse_Event_Y_);
 
-        vac_->beginSketchEdge(getX(0), getY(0), w, interactiveTime());
-        vac_->continueSketchEdge(getX(60), getY(60), w);
+        vac_->beginSketchEdge(getX(30), getY(30), w, interactiveTime());
+        vac_->continueSketchEdge(getX(30 + 60), getY(30 + 60), w);
         vac_->endSketchEdge();
 
-        vac_->beginSketchEdge(getX(60), getY(60), w, interactiveTime());
-        vac_->continueSketchEdge(getX(60 * 2), getY(60 * 2), w);
+        vac_->beginSketchEdge(getX(30 + 60), getY(30 + 60), w, interactiveTime());
+        vac_->continueSketchEdge(getX(30 + 60 * 2), getY(30 + 60 * 2), w);
         vac_->endSketchEdge();
 
-        vac_->beginSketchEdge(getX(60 * 2), getY(60 * 2), w, interactiveTime());
-        vac_->continueSketchEdge(getX(60 * 3), getY(60 * 3), w);
+        vac_->beginSketchEdge(getX(30 + 60 * 2), getY(30 + 60 * 2), w, interactiveTime());
+        vac_->continueSketchEdge(getX(30 + 60 * 3), getY(30 + 60 * 3), w);
         vac_->endSketchEdge();
 
-        vac_->beginSketchEdge(getX(60 * 3), getY(60 * 3), w, interactiveTime());
-        vac_->continueSketchEdge(getX(60 * 4), getY(60 * 4), w);
+        vac_->beginSketchEdge(getX(30 + 60 * 3), getY(30 + 60 * 3), w, interactiveTime());
+        vac_->continueSketchEdge(getX(30 + 60 * 4), getY(30 + 60 * 4), w);
         vac_->endSketchEdge();
 
-        vac_->beginSketchEdge(getX(60 * 4), getY(60 * 4), w, interactiveTime());
-        vac_->continueSketchEdge(getX(60 * 5), getY(60 * 5), w);
+        vac_->beginSketchEdge(getX(30 + 60 * 4), getY(30 + 60 * 4), w, interactiveTime());
+        vac_->continueSketchEdge(getX(30 + 60 * 5), getY(30 + 60 * 5), w);
         vac_->endSketchEdge();
 
-        vac_->beginSketchEdge(getX(60 * 5), getY(60 * 5), w, interactiveTime());
-        vac_->continueSketchEdge(getX(60 * 6), getY(60 * 6), w);
+        vac_->beginSketchEdge(getX(30 + 60 * 5), getY(30 + 60 * 5), w, interactiveTime());
+        vac_->continueSketchEdge(getX(30 + 60 * 6), getY(30 + 60 * 6), w);
         vac_->endSketchEdge();
 
+        removeKeyVertices();
         updateView();
     }
     else if(action == HEPTAGON_ACTION)
@@ -1240,6 +1256,7 @@ void View::PMRReleaseEvent(int action, double x, double y)
         vac_->continueSketchEdge(getX((180 + 360 * 7) / 7), getY((180 + 360 * 7) / 7), w);
         vac_->endSketchEdge();
 
+        removeKeyVertices();
         updateView();
     }
     else if(action == OCTAGON_ACTION)
@@ -1247,38 +1264,39 @@ void View::PMRReleaseEvent(int action, double x, double y)
         vac_->endRectangleOfSelection();
         lastMousePos_ = QPoint(mouse_Event_X_,mouse_Event_Y_);
 
-        vac_->beginSketchEdge(getX(0), getY(0), w, interactiveTime());
-        vac_->continueSketchEdge(getX(45), getY(45), w);
+        vac_->beginSketchEdge(getX(22.5), getY(22.5), w, interactiveTime());
+        vac_->continueSketchEdge(getX(45 * 1.5), getY(45 * 1.5), w);
         vac_->endSketchEdge();
 
-        vac_->beginSketchEdge(getX(45), getY(45), w, interactiveTime());
-        vac_->continueSketchEdge(getX(45 * 2), getY(45 * 2), w);
+        vac_->beginSketchEdge(getX(45 * 1.5), getY(45 * 1.5), w, interactiveTime());
+        vac_->continueSketchEdge(getX(45 * 2.5), getY(45 * 2.5), w);
         vac_->endSketchEdge();
 
-        vac_->beginSketchEdge(getX(45 * 2), getY(45 * 2), w, interactiveTime());
-        vac_->continueSketchEdge(getX(45 * 3), getY(45 * 3), w);
+        vac_->beginSketchEdge(getX(45 * 2.5), getY(45 * 2.5), w, interactiveTime());
+        vac_->continueSketchEdge(getX(45 * 3.5), getY(45 * 3.5), w);
         vac_->endSketchEdge();
 
-        vac_->beginSketchEdge(getX(45 * 3), getY(45 * 3), w, interactiveTime());
-        vac_->continueSketchEdge(getX(45 * 4), getY(45 * 4), w);
+        vac_->beginSketchEdge(getX(45 * 3.5), getY(45 * 3.5), w, interactiveTime());
+        vac_->continueSketchEdge(getX(45 * 4.5), getY(45 * 4.5), w);
         vac_->endSketchEdge();
 
-        vac_->beginSketchEdge(getX(45 * 4), getY(45 * 4), w, interactiveTime());
-        vac_->continueSketchEdge(getX(45 * 5), getY(45 * 5), w);
+        vac_->beginSketchEdge(getX(45 * 4.5), getY(45 * 4.5), w, interactiveTime());
+        vac_->continueSketchEdge(getX(45 * 5.5), getY(45 * 5.5), w);
         vac_->endSketchEdge();
 
-        vac_->beginSketchEdge(getX(45 * 5), getY(45 * 5), w, interactiveTime());
-        vac_->continueSketchEdge(getX(45 * 6), getY(45 * 6), w);
+        vac_->beginSketchEdge(getX(45 * 5.5), getY(45 * 5.5), w, interactiveTime());
+        vac_->continueSketchEdge(getX(45 * 6.5), getY(45 * 6.5), w);
         vac_->endSketchEdge();
 
-        vac_->beginSketchEdge(getX(45 * 6), getY(45 * 6), w, interactiveTime());
-        vac_->continueSketchEdge(getX(45 * 7), getY(45 * 7), w);
+        vac_->beginSketchEdge(getX(45 * 6.5), getY(45 * 6.5), w, interactiveTime());
+        vac_->continueSketchEdge(getX(45 * 7.5), getY(45 * 7.5), w);
         vac_->endSketchEdge();
 
-        vac_->beginSketchEdge(getX(45 * 7), getY(45 * 7), w, interactiveTime());
-        vac_->continueSketchEdge(getX(45 * 8), getY(45 * 8), w);
+        vac_->beginSketchEdge(getX(45 * 7.5), getY(45 * 7.5), w, interactiveTime());
+        vac_->continueSketchEdge(getX(45 * 8.5), getY(45 * 8.5), w);
         vac_->endSketchEdge();
 
+        removeKeyVertices();
         updateView();
     }
     else
