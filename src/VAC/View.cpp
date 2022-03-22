@@ -75,7 +75,8 @@ View::View(VPaint::Scene * scene, QWidget * parent) :
     currentAction_(0),
     shapeStartX(0),
     shapeStartY(0),
-    vac_(0)
+    vac_(0),
+    polygonDrawMode(DrawShapeMode::REMOVE_VERTICES)
 {
     // View settings widget
     viewSettingsWidget_ = new ViewSettingsWidget(viewSettings_, this);
@@ -1150,20 +1151,20 @@ void View::drawBackground_(Background * background, int frame)
 
 void View::drawLine(double x, double y)
 {
-    drawShape(x, y, false, 2);
+    drawShape(x, y, ShapeType::LINE, 0, 0, DrawShapeMode::KEEP_VERTICES);
 }
 
 void View::drawCircle(double x, double y)
 {
-    drawShape(x, y, true);
+    drawShape(x, y, ShapeType::CIRCLE, 0, 0, DrawShapeMode::KEEP_VERTICES);
 }
 
-void View::drawPolygon(double x, double y, int countAngles, double rotation, bool isRemoveVertices)
+void View::drawPolygon(double x, double y, int countAngles, double rotation)
 {
-    drawShape(x, y, false, countAngles, rotation, isRemoveVertices);
+    drawShape(x, y, ShapeType::POLYGON, countAngles, rotation, polygonDrawMode);
 }
 
-void View::drawShape(double x, double y, bool isCircle, int countAngles, double rotation, bool isRemoveVertices)
+void View::drawShape(double x, double y, ShapeType shapeType, int countAngles, double rotation, DrawShapeMode drawShapeMode)
 {
     QPointF pos = QPointF(x,y);
     double xScene = pos.rx();
@@ -1185,7 +1186,8 @@ void View::drawShape(double x, double y, bool isCircle, int countAngles, double 
     double shapeWidth = rightX - leftX;
     double shapeHeight = bottomY - topY;
 
-    if (isCircle)
+    switch (shapeType) {
+    case ShapeType::CIRCLE:
     {
         double radiusH = shapeHeight / 2;
         double radiusW = shapeWidth / 2;
@@ -1207,39 +1209,48 @@ void View::drawShape(double x, double y, bool isCircle, int countAngles, double 
             vac_->continueSketchEdge(newX, newY, w);
         }
         vac_->endSketchEdge();
+        break;
     }
-    else
+    case ShapeType::LINE:
     {
-        if (countAngles == 2)
+        vac_->beginSketchEdge(shapeStartX, shapeStartY, w, interactiveTime());
+        vac_->continueSketchEdge(xScene, yScene, w);
+        vac_->endSketchEdge();
+        break;
+    }
+    case ShapeType::POLYGON:
+    {
+        auto deg2Rad = [](double degree) { return (degree * M_PI) / 180; };
+
+        auto getX = [&shapeWidth, &leftX, &deg2Rad](double angle) { return (cos(deg2Rad(angle + 90)) + 1) * shapeWidth / 2 + leftX; };
+        auto getY = [&shapeHeight, &topY, &deg2Rad](double angle) { return (sin(deg2Rad(angle + 90)) + 1) * shapeHeight / 2 + topY; };
+
+        for (auto i = 0; i < countAngles; i++)
         {
-            vac_->beginSketchEdge(shapeStartX, shapeStartY, w, interactiveTime());
-            vac_->continueSketchEdge(xScene, yScene, w);
+            vac_->beginSketchEdge(getX(360 * i / countAngles + rotation), getY(360 * i / countAngles + rotation), w, interactiveTime());
+            vac_->continueSketchEdge(getX(360 * (i + 1) / countAngles + rotation), getY(360 * (i + 1) / countAngles + rotation), w);
             vac_->endSketchEdge();
         }
-        else
+
+        switch (drawShapeMode) {
+        case DrawShapeMode::REMOVE_VERTICES:
         {
-            auto deg2Rad = [](double degree) { return (degree * M_PI) / 180; };
-
-            auto getX = [&shapeWidth, &leftX, &deg2Rad](double angle) { return (cos(deg2Rad(angle + 90)) + 1) * shapeWidth / 2 + leftX; };
-            auto getY = [&shapeHeight, &topY, &deg2Rad](double angle) { return (sin(deg2Rad(angle + 90)) + 1) * shapeHeight / 2 + topY; };
-
-            for (int i = 0; i < countAngles; i++)
+            auto keyVerticesList = vac_->instantVertices(interactiveTime());
+            for (auto i = keyVerticesList.count() - countAngles; i < keyVerticesList.count(); i++)
             {
-                vac_->beginSketchEdge(getX(360 * i / countAngles + rotation), getY(360 * i / countAngles + rotation), w, interactiveTime());
-                vac_->continueSketchEdge(getX(360 * (i + 1) / countAngles + rotation), getY(360 * (i + 1) / countAngles + rotation), w);
-                vac_->endSketchEdge();
+                vac_->addToSelection(keyVerticesList[i]);
             }
-
-            if (isRemoveVertices)
-            {
-                auto keyVerticesList = vac_->instantVertices(interactiveTime());
-                for (auto i = keyVerticesList.count() - countAngles; i < keyVerticesList.count(); i++)
-                {
-                    vac_->addToSelection(keyVerticesList[i]);
-                }
-                scene()->smartDelete();
-            }
+            scene()->smartDelete();
+            break;
         }
+        case DrawShapeMode::KEEP_VERTICES:
+            break;
+        default:
+            break;
+        }
+    }
+    default:
+        break;
     }
 }
 
