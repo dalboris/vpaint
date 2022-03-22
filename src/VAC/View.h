@@ -209,6 +209,12 @@ private:
     BackgroundRenderer * getOrCreateBackgroundRenderer_(Background * background);
     void drawBackground_(Background * background, int frame);
     QMap<Background *, BackgroundRenderer *> backgroundRenderers_;
+
+    void drawLine(double x, double y);
+    void drawCircle(double x, double y);
+    void drawPolygon(double x, double y, int countAngles, double rotation = 0, bool isRemoveVertices = true);
+    void drawShape(double x, double y, bool isCircle, int countAngles = 2, double rotation = 0, bool isRemoveVertices = true);
+    void updateView();
 };
 
 #endif
