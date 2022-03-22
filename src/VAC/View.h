@@ -153,6 +153,17 @@ private slots:
     void onBackgroundDestroyed_(Background * background);
 
 private:
+    enum class ShapeType {
+        CIRCLE,
+        LINE,
+        POLYGON
+    };
+
+    enum class DrawShapeMode {
+        REMOVE_VERTICES,
+        KEEP_VERTICES
+    };
+
     // What scene to draw
     // Note: which frame to render is specified in viewSettings
     VPaint::Scene *scene_;
@@ -209,6 +220,14 @@ private:
     BackgroundRenderer * getOrCreateBackgroundRenderer_(Background * background);
     void drawBackground_(Background * background, int frame);
     QMap<Background *, BackgroundRenderer *> backgroundRenderers_;
+
+    DrawShapeMode polygonDrawMode;
+
+    void drawLine(double x, double y);
+    void drawCircle(double x, double y);
+    void drawPolygon(double x, double y, int countAngles, double rotation);
+    void drawShape(double x, double y, ShapeType shapeType, int countAngles, double rotation, DrawShapeMode drawShapeMode);
+    void updateView();
 };
 
 #endif
