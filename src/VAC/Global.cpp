@@ -61,7 +61,13 @@ Global::Global(MainWindow * w) :
     preferences_(),
     preferencesDialog_(0),
     settings_(0),
-    documentDir_(QDir::home())
+    documentDir_(QDir::home()),
+    faceColor_(QColor::fromRgb(100, 100, 100, 10)),
+    isDrawShapeFaceEnabled(true),
+    highlightColorRatio_(1.3),
+    highlightAlphaRatio_(2.0),
+    selectColorRatio_(1.5),
+    selectAlphaRatio_(3.0)
 {
     // Color selectors
     currentColor_ = new ColorSelector();
@@ -834,12 +840,70 @@ QColor Global::edgeColor()
 
 QColor Global::faceColor()
 {
-    return currentColor_->color();
+    return faceColor_;
 }
 
 void Global::setEdgeColor(const QColor &newColor)
 {
     currentColor_->setColor(newColor);
+}
+
+void Global::setFaceColor(const QColor &newColor)
+{
+    if (newColor.isValid())
+    {
+        faceColor_ = newColor;
+    }
+}
+
+bool Global::drawShapeFaceEnabled() const
+{
+    return isDrawShapeFaceEnabled;
+}
+
+void Global::setDrawShapeFaceEnabled(bool isDrawShapeFaceEnabled)
+{
+    this->isDrawShapeFaceEnabled = isDrawShapeFaceEnabled;
+}
+
+double Global::highlightColorRatio() const
+{
+    return highlightColorRatio_;
+}
+
+void Global::setHighlightColorRatio(double ratio)
+{
+    highlightColorRatio_ = ratio;
+}
+
+double Global::highlightAlphaRatio() const
+{
+    return highlightAlphaRatio_;
+}
+
+void Global::setHighlightAlphaRatio(double ratio)
+{
+    highlightAlphaRatio_ = ratio;
+}
+
+double Global::selectColorRatio() const
+{
+    return selectColorRatio_;
+}
+
+void Global::setSelectColorRatio(double ratio)
+{
+    selectColorRatio_ = ratio;
+}
+
+double Global::selectAlphaRatio() const
+{
+    return selectAlphaRatio_;
+}
+
+void Global::setSelectAlphaRatio(double ratio)
+{
+    selectAlphaRatio_ = ratio;
 }
 
 bool Global::useTabletPressure() const

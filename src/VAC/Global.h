@@ -127,6 +127,23 @@ public:
     QColor faceColor();
 
     void setEdgeColor(const QColor& newColor);
+    void setFaceColor(const QColor& newColor);
+
+    bool drawShapeFaceEnabled() const;
+    void setDrawShapeFaceEnabled(bool isDrawShapeFaceEnabled);
+
+    double highlightColorRatio() const;
+    void setHighlightColorRatio(double ratio);
+
+    double highlightAlphaRatio() const;
+    void setHighlightAlphaRatio(double ratio);
+
+    double selectColorRatio() const;
+    void setSelectColorRatio(double ratio);
+
+    double selectAlphaRatio() const;
+    void setSelectAlphaRatio(double ratio);
+
 
     // Display modes
     enum DisplayMode {
@@ -272,6 +289,14 @@ private:
 
     // Status bar help
     QLabel * statusBarHelp_;
+    QColor faceColor_;
+
+    bool isDrawShapeFaceEnabled;
+
+    double highlightColorRatio_;
+    double highlightAlphaRatio_;
+    double selectColorRatio_;
+    double selectAlphaRatio_;
 };
 
 class Q_VPAINT_EXPORT ToolModeAction: public QAction

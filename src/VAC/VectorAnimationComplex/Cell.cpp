@@ -223,12 +223,54 @@ QColor Cell::color() const
     return res;
 }
 
-void Cell::setColor(const QColor & c)
+void Cell::setColor(const QColor& c)
 {
     color_[0] = c.redF();
     color_[1] = c.greenF();
     color_[2] = c.blueF();
     color_[3] = c.alphaF();
+}
+
+QColor Cell::highlightedColor() const
+{
+    return QColor::fromRgbF(colorHighlighted_[0], colorHighlighted_[1], colorHighlighted_[2], colorHighlighted_[3]);
+}
+
+void Cell::setHighlightedColor(const QColor& c)
+{
+    colorHighlighted_[0] = c.redF();
+    colorHighlighted_[1] = c.greenF();
+    colorHighlighted_[2] = c.blueF();
+    colorHighlighted_[3] = c.alphaF();
+}
+
+void Cell::adjustHighlightedColor(const double colorRatio, const double alphaRatio)
+{
+    colorHighlighted_[0] = color_[0] * colorRatio;
+    colorHighlighted_[1] = color_[1] * colorRatio;
+    colorHighlighted_[2] = color_[2] * colorRatio;
+    colorHighlighted_[3] = color_[3] * alphaRatio;
+}
+
+QColor Cell::selectedColor() const
+{
+    return QColor::fromRgbF(colorSelected_[0], colorSelected_[1], colorSelected_[2], colorSelected_[3]);
+}
+
+void Cell::setSelectedColor(const QColor& c)
+{
+    colorSelected_[0] = c.redF();
+    colorSelected_[1] = c.greenF();
+    colorSelected_[2] = c.blueF();
+    colorSelected_[3] = c.alphaF();
+}
+
+void Cell::adjustSelectedColor(const double colorRatio, const double alphaRatio)
+{
+    colorSelected_[0] = color_[0] * colorRatio;
+    colorSelected_[1] = color_[1] * colorRatio;
+    colorSelected_[2] = color_[2] * colorRatio;
+    colorSelected_[3] = color_[3] * alphaRatio;
 }
 
 bool Cell::isHighlighted() const

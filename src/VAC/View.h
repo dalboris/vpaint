@@ -32,6 +32,8 @@
 
 #include "ViewSettings.h"
 #include "VAC/vpaint_global.h"
+#include "VectorAnimationComplex/CellList.h"
+
 namespace VPaint
 {
 class Scene;
@@ -41,6 +43,7 @@ namespace VectorAnimationComplex
 class VAC;
 class KeyVertex;
 class KeyEdge;
+//class CellSet;
 }
 class Time;
 class Background;
@@ -154,14 +157,18 @@ private slots:
 
 private:
     enum class ShapeType {
-        CIRCLE,
+        CURVE,
+        CURVE_END,
         LINE,
-        POLYGON
-    };
-
-    enum class DrawShapeMode {
-        REMOVE_VERTICES,
-        KEEP_VERTICES
+        LINE_END,
+        CIRCLE,
+        CIRCLE_END,
+        TRIANGLE,
+        TRIANGLE_END,
+        RECTANGLE,
+        RECTANGLE_END,
+        POLYGON,
+        POLYGON_END
     };
 
     // What scene to draw
@@ -202,6 +209,8 @@ private:
     double shapeStartX;
     double shapeStartY;
 
+    VectorAnimationComplex::CellSet lastDrawnCells;
+
     // Dirty implementation:
     VectorAnimationComplex::VAC * vac_;
     VectorAnimationComplex::KeyVertex * ivertex_;
@@ -221,12 +230,19 @@ private:
     void drawBackground_(Background * background, int frame);
     QMap<Background *, BackgroundRenderer *> backgroundRenderers_;
 
-    DrawShapeMode polygonDrawMode;
-
+    void drawCurve(double x, double y);
+    void drawCurveEnd(double x, double y);
     void drawLine(double x, double y);
+    void drawLineEnd(double x, double y);
     void drawCircle(double x, double y);
+    void drawCircleEnd(double x, double y);
+    void drawTriangle(double x, double y);
+    void drawTriangleEnd(double x, double y);
+    void drawRectangle(double x, double y);
+    void drawRectangleEnd(double x, double y);
     void drawPolygon(double x, double y, int countAngles, double rotation);
-    void drawShape(double x, double y, ShapeType shapeType, int countAngles, double rotation, DrawShapeMode drawShapeMode);
+    void drawPolygonEnd(double x, double y, int countAngles, double rotation);
+    void drawShape(double x, double y, ShapeType shapeType, int countAngles = 1, double rotation = 0);
     void updateView();
 };
 

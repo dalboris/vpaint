@@ -559,6 +559,21 @@ void MainWindow::setDrawColor(const QColor& newColor)
     global()->setEdgeColor(newColor);
 }
 
+void MainWindow::setFaceColor(const QColor &newColor)
+{
+    global()->setFaceColor(newColor);
+}
+
+void MainWindow::setDrawShapeFaceEnabled(bool isDrawShapeFaceEnabled)
+{
+    global()->setDrawShapeFaceEnabled(isDrawShapeFaceEnabled);
+}
+
+void MainWindow::setLineWidth(double w)
+{
+    global()->setEdgeWidth(w);
+}
+
 void MainWindow::editCanvasSize()
 {
     if(isEditCanvasSizeVisible())

@@ -818,7 +818,7 @@ void VAC::setHoveredObject(Time /*time*/, int id)
 
 void VAC::setNoHoveredObject()
 {
-    setNoHoveredCell();
+    setNoHoveredAllCells();
     transformTool_.setNoHoveredObject();
 }
 
@@ -867,6 +867,11 @@ Cell * VAC::hoveredCell() const
 const CellSet & VAC::selectedCells() const
 {
     return selectedCells_;
+}
+
+const CellSet& VAC::hoveredCells() const
+{
+    return hoveredCells_;
 }
 
 int VAC::numSelectedCells() const
@@ -5814,25 +5819,67 @@ void VAC::updateCellsToConsiderForCutting()
 // ----- Selection -----
 
 void VAC::setHoveredCell(Cell * cell)
-{
-    if (cell != hoveredCell_)
+{    
+    if (!hoveredCells_.contains(cell))
     {
-        setNoHoveredCell();
+        setNoHoveredAllCells();
         if(cell)
         {
             hoveredCell_ = cell;
             hoveredCell_->setHovered(true);
+            hoveredCells_ << hoveredCell_;
         }
     }
 }
 
+void VAC::hoveveredConnected(bool emitSignal)
+{
+    addToHovered(Algorithms::connected(hoveredCells()), emitSignal);
+}
+
 void VAC::setNoHoveredCell()
 {
-    if(hoveredCell_)
+    setNoHoveredAllCells();
+}
+
+void VAC::addToHovered(Cell *cell, bool emitSignal)
+{
+    if(cell && !cell->isHighlighted())
     {
-        hoveredCell_->setHovered(false);
-        hoveredCell_ = 0;
+        hoveredCells_ << cell;
+        cell->setHovered(true);
+
+        if(emitSignal)
+        {
+            emit changed();
+        }
     }
+}
+
+void VAC::addToHovered(const CellSet &cells, bool emitSignal)
+{
+    for(Cell * c: cells)
+    {
+        addToHovered(c, false);
+    }
+
+    if(emitSignal)
+    {
+        emit changed();
+    }
+}
+
+void VAC::setNoHoveredAllCells()
+{
+    for (Cell* cell : hoveredCells_)
+    {
+        if(cell)
+        {
+            cell->setHovered(false);
+        }
+    }
+    hoveredCells_.clear();
+    hoveredCell_ = nullptr;
 }
 
 void VAC::informTimelineOfSelection()
