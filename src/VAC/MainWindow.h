@@ -76,11 +76,40 @@ public:
     bool isEditCanvasSizeVisible() const;
 
     void resetUndoStack();
+
+    Global::ToolMode currentToolMode() const;
     void setToolMode(Global::ToolMode mode);
+
+    QColor drawColor() const;
     void setDrawColor(const QColor& newColor);
+
+    QColor faceColor() const;
     void setFaceColor(const QColor& newColor);
-    void setDrawShapeFaceEnabled(bool isDrawShapeFaceEnabled);
+
+    int faceAlpha() const;
+    void setFaceAlpha(int alpha);
+
+    bool isDrawShapeFaceEnabled() const;
+    void setDrawShapeFaceEnabled(bool isEnabled);
+
+    bool isShowAroundRectangleWhenDraw() const;
+    void setShowAroundRectangleWhenDraw(bool isShow);
+
+    double lineWidth() const;
     void setLineWidth(double w);
+
+    double highlightColorRatio() const;
+    void setHighlightColorRatio(double ratio);
+
+    double highlightAlphaRatio() const;
+    void setHighlightAlphaRatio(double ratio);
+
+    double selectColorRatio() const;
+    void setSelectColorRatio(double ratio);
+
+    double selectAlphaRatio() const;
+    void setSelectAlphaRatio(double ratio);
+
 
 signals:
     void undoRedoPossibilityUpdated(bool isUndoPossible, bool isRedoPossible);

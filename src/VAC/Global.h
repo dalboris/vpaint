@@ -128,12 +128,13 @@ public:
 
     void setEdgeColor(const QColor& newColor);
     void setFaceColor(const QColor& newColor);
+    void setFaceAlpha(int alpha);
 
     bool isShowAroundRectangleWhenDraw() const;
     void setShowAroundRectangleWhenDraw(bool isShow);
 
     bool isDrawShapeFaceEnabled() const;
-    void setDrawShapeFaceEnabled(bool isDrawShapeFaceEnabled);
+    void setDrawShapeFaceEnabled(bool isEnabled);
 
     double highlightColorRatio() const;
     void setHighlightColorRatio(double ratio);

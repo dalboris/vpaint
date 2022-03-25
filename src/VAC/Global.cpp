@@ -857,6 +857,11 @@ void Global::setFaceColor(const QColor &newColor)
     }
 }
 
+void Global::setFaceAlpha(int alpha)
+{
+    faceColor_.setAlpha(alpha);
+}
+
 bool Global::isShowAroundRectangleWhenDraw() const
 {
     return isShowAroundRectangleWhenDraw_;
@@ -872,9 +877,9 @@ bool Global::isDrawShapeFaceEnabled() const
     return isDrawShapeFaceEnabled_;
 }
 
-void Global::setDrawShapeFaceEnabled(bool isDrawShapeFaceEnabled)
+void Global::setDrawShapeFaceEnabled(bool isEnabled)
 {
-    isDrawShapeFaceEnabled_ = isDrawShapeFaceEnabled;
+    isDrawShapeFaceEnabled_ = isEnabled;
 }
 
 double Global::highlightColorRatio() const
