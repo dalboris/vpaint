@@ -76,6 +76,8 @@ View::View(VPaint::Scene * scene, QWidget * parent) :
     currentAction_(0),
     shapeStartX(0),
     shapeStartY(0),
+    allEdgesCount(0),
+    allVerticesCount(0),
     vac_(0)
 {
     // View settings widget
@@ -644,26 +646,7 @@ void View::PMRPressEvent(int action, double x, double y)
         //   (int xView, int yView) is converted into the point
         //   pos = (double xScene, double yScene)
 
-
-        lastMousePos_ = QPoint(mouse_Event_X_,mouse_Event_Y_);
-
-        // pos = viewToScene(x,y); <- by now: the identity
-        QPointF pos = QPointF(x,y);
-        double xScene = pos.rx();
-        double yScene = pos.ry();
-
-        double w = global()->settings().edgeWidth();
-        bool debug = false;
-        if(!debug)
-        {
-            if(mouse_isTablet_ &&  global()->useTabletPressure())
-                w *= 2 * mouse_tabletPressure_; // 2 so that a half-pressure would get the default width
-        }
-        vac_->beginSketchEdge(xScene,yScene, w, interactiveTime());
-
-        //emit allViewsNeedToUpdatePicking();
-        //updateHighlightedObject(mouse_Event_X_, mouse_Event_Y_);
-        emit allViewsNeedToUpdate();
+        drawCurve(x, y, ShapeDrawPhase::DRAW_START);
     }
     else if(action==DRAG_AND_DROP_ACTION)
     {
@@ -769,13 +752,7 @@ void View::PMRPressEvent(int action, double x, double y)
             action == HEPTAGON_ACTION ||
             action == OCTAGON_ACTION)
     {
-        vac_->beginRectangleOfSelection(x,y,interactiveTime());
-        lastMousePos_ = QPoint(mouse_Event_X_, mouse_Event_Y_);
-
-        // pos = viewToScene(x,y); <- by now: the identity
-        QPointF pos = QPointF(x,y);
-        shapeStartX = pos.rx();
-        shapeStartY = pos.ry();
+        startDrawShape(x, y);
     }
     else
         GLWidget::PMRPressEvent(action, x, y);
@@ -799,43 +776,43 @@ void View::PMRMoveEvent(int action, double x, double y)
     }
     else if(action == SKETCH_ACTION)
     {
-        drawCurve(x, y);
+        drawCurve(x, y, ShapeDrawPhase::DRAW_PROCESS);
     }
     else if(action == LINE_ACTION)
     {
-        drawLine(x, y);
+        drawLine(x, y, ShapeDrawPhase::DRAW_PROCESS);
     }
     else if(action == RECTANGLE_ACTION)
     {
-        drawRectangle(x, y);
+        drawRectangle(x, y, ShapeDrawPhase::DRAW_PROCESS);
     }
     else if(action == CIRCLE_ACTION)
     {
-        drawCircle(x, y);
+        drawCircle(x, y, ShapeDrawPhase::DRAW_PROCESS);
     }
     else if(action == TRIANGLE_ACTION)
     {
-        drawTriangle(x, y);
+        drawTriangle(x, y, ShapeDrawPhase::DRAW_PROCESS);
     }
     else if(action == RHOMBUS_ACTION)
     {
-        drawPolygon(x, y, 4, 0);
+        drawPolygon(x, y, 4, 0, ShapeDrawPhase::DRAW_PROCESS);
     }
     else if(action == PENTAGON_ACTION)
     {
-        drawPolygon(x, y, 5, 180);
+        drawPolygon(x, y, 5, 180, ShapeDrawPhase::DRAW_PROCESS);
     }
     else if(action == HEXAGON_ACTION)
     {
-        drawPolygon(x, y, 6, 90);
+        drawPolygon(x, y, 6, 90, ShapeDrawPhase::DRAW_PROCESS);
     }
     else if(action == HEPTAGON_ACTION)
     {
-        drawPolygon(x, y, 7, 180);
+        drawPolygon(x, y, 7, 180, ShapeDrawPhase::DRAW_PROCESS);
     }
     else if(action == OCTAGON_ACTION)
     {
-        drawPolygon(x, y, 8, 22.5);
+        drawPolygon(x, y, 8, 22.5, ShapeDrawPhase::DRAW_PROCESS);
     }
     else if(action==SCULPT_CHANGE_RADIUS_ACTION)
     {
@@ -979,43 +956,43 @@ void View::PMRReleaseEvent(int action, double x, double y)
     }
     else if(action == SKETCH_ACTION)
     {
-        drawCurveEnd(x, y);
+        drawCurve(x, y, ShapeDrawPhase::DRAW_END);
     }
     else if(action == LINE_ACTION)
     {
-        drawLineEnd(x, y);
+        drawLine(x, y, ShapeDrawPhase::DRAW_END);
     }
     else if(action == RECTANGLE_ACTION)
     {
-        drawRectangleEnd(x, y);
+        drawRectangle(x, y, ShapeDrawPhase::DRAW_END);
     }
     else if(action == CIRCLE_ACTION)
     {
-        drawCircleEnd(x, y);
+        drawCircle(x, y, ShapeDrawPhase::DRAW_END);
     }
     else if(action == TRIANGLE_ACTION)
     {
-        drawTriangleEnd(x, y);
+        drawTriangle(x, y, ShapeDrawPhase::DRAW_END);
     }
     else if(action == RHOMBUS_ACTION)
     {
-        drawPolygonEnd(x, y, 4, 0);
+        drawPolygon(x, y, 4, 0, ShapeDrawPhase::DRAW_END);
     }
     else if(action == PENTAGON_ACTION)
     {
-        drawPolygonEnd(x, y, 5, 180);
+        drawPolygon(x, y, 5, 180, ShapeDrawPhase::DRAW_END);
     }
     else if(action == HEXAGON_ACTION)
     {
-        drawPolygonEnd(x, y, 6, 90);
+        drawPolygon(x, y, 6, 90, ShapeDrawPhase::DRAW_END);
     }
     else if(action == HEPTAGON_ACTION)
     {
-        drawPolygonEnd(x, y, 7, 180);
+        drawPolygon(x, y, 7, 180, ShapeDrawPhase::DRAW_END);
     }
     else if(action == OCTAGON_ACTION)
     {
-        drawPolygonEnd(x, y, 8, 22.5);
+        drawPolygon(x, y, 8, 22.5, ShapeDrawPhase::DRAW_END);
     }
     else
         GLWidget::PMRReleaseEvent(action, x, y);
@@ -1079,76 +1056,187 @@ void View::drawBackground_(Background * background, int frame)
              xSceneMin(), xSceneMax(), ySceneMin(), ySceneMax());
 }
 
-void View::drawCurve(double x, double y)
+void View::processRectangleOfSelection(double x, double y, ShapeDrawPhase drawPhase)
 {
-    vac_->continueRectangleOfSelection(x, y);
-    drawShape(x, y, ShapeType::CURVE);
+    if (!global()->isShowAroundRectangleWhenDraw())
+        return;
+
+    switch (drawPhase) {
+    case ShapeDrawPhase::DRAW_START:
+        vac_->beginRectangleOfSelection(x, y,interactiveTime());
+        break;
+    case ShapeDrawPhase::DRAW_PROCESS:
+        vac_->continueRectangleOfSelection(x, y);
+        break;
+    case ShapeDrawPhase::DRAW_END:
+        vac_->endRectangleOfSelection();
+        break;
+    default:
+        break;
+    }
 }
 
-void View::drawCurveEnd(double x, double y)
+void View::startDrawShape(double x, double y)
 {
-    vac_->endRectangleOfSelection();
-    drawShape(x, y, ShapeType::CURVE_END);
+    processRectangleOfSelection(x, y, ShapeDrawPhase::DRAW_START);
+
+    lastMousePos_ = QPoint(mouse_Event_X_, mouse_Event_Y_);
+
+    QPointF pos = QPointF(x,y);
+    shapeStartX = pos.rx();
+    shapeStartY = pos.ry();
+
+    emit allViewsNeedToUpdate();
 }
 
-void View::drawLine(double x, double y)
+void View::endDrawShape()
 {
-    vac_->continueRectangleOfSelection(x, y);
-    drawShape(x, y, ShapeType::LINE);
+    allEdgesCount = vac_->instantEdges().count();
+    allVerticesCount = vac_->instantVertices().count();
+    lastDrawnCells.clear();
+    vac_->deselectAll();
 }
 
-void View::drawLineEnd(double x, double y)
+void View::drawCurve(double x, double y, ShapeDrawPhase drawPhase)
 {
-    vac_->endRectangleOfSelection();
-    drawShape(x, y, ShapeType::LINE_END);
+    QPointF pos = QPointF(x,y);
+    double xScene = pos.rx();
+    double yScene = pos.ry();
+
+    double w = global()->settings().edgeWidth();
+    bool debug = false;
+
+    if(!debug)
+    {
+        if(mouse_isTablet_ &&  global()->useTabletPressure())
+            w *= 2 * mouse_tabletPressure_;
+    }
+
+    switch (drawPhase) {
+    case ShapeDrawPhase::DRAW_START:
+    {
+        lastMousePos_ = QPoint(mouse_Event_X_,mouse_Event_Y_);
+
+        vac_->beginSketchEdge(xScene, yScene, w, interactiveTime());
+
+        emit allViewsNeedToUpdate();
+        break;
+    }
+    case ShapeDrawPhase::DRAW_PROCESS:
+    {
+        vac_->continueSketchEdge(xScene, yScene, w);
+        break;
+    }
+    case ShapeDrawPhase::DRAW_END:
+    {
+        vac_->endSketchEdge();
+        drawShape(x, y, ShapeType::CURVE);
+        endDrawShape();
+        break;
+    }
+    default:
+        break;
+    }
 }
 
-void View::drawCircle(double x, double y)
+void View::drawLine(double x, double y, ShapeDrawPhase drawPhase)
 {
-    vac_->continueRectangleOfSelection(x, y);
-    drawShape(x, y, ShapeType::CIRCLE);
+    processRectangleOfSelection(x, y, drawPhase);
+
+    switch (drawPhase) {
+    case ShapeDrawPhase::DRAW_PROCESS:
+    {
+        drawShape(x, y, ShapeType::LINE);
+        break;
+    }
+    case ShapeDrawPhase::DRAW_END:
+    {
+        endDrawShape();
+        break;
+    }
+    default:
+        break;
+    }
 }
 
-void View::drawCircleEnd(double x, double y)
+void View::drawCircle(double x, double y, ShapeDrawPhase drawPhase)
 {
-    vac_->endRectangleOfSelection();
-    drawShape(x, y, ShapeType::CIRCLE_END);
+    processRectangleOfSelection(x, y, drawPhase);
+
+    switch (drawPhase) {
+    case ShapeDrawPhase::DRAW_PROCESS:
+    {
+        drawShape(x, y, ShapeType::CIRCLE);
+        break;
+    }
+    case ShapeDrawPhase::DRAW_END:
+    {
+        endDrawShape();
+        break;
+    }
+    default:
+        break;
+    }
 }
 
-void View::drawTriangle(double x, double y)
+void View::drawTriangle(double x, double y, ShapeDrawPhase drawPhase)
 {
-    vac_->continueRectangleOfSelection(x, y);
-    drawShape(x, y, ShapeType::TRIANGLE, 3);
+    processRectangleOfSelection(x, y, drawPhase);
+
+    switch (drawPhase) {
+    case ShapeDrawPhase::DRAW_PROCESS:
+    {
+        drawShape(x, y, ShapeType::TRIANGLE, 3);
+        break;
+    }
+    case ShapeDrawPhase::DRAW_END:
+    {
+        endDrawShape();
+        break;
+    }
+    default:
+        break;
+    }
 }
 
-void View::drawTriangleEnd(double x, double y)
+void View::drawRectangle(double x, double y, ShapeDrawPhase drawPhase)
 {
-    vac_->endRectangleOfSelection();
-    drawShape(x, y, ShapeType::TRIANGLE_END, 3);
+    processRectangleOfSelection(x, y, drawPhase);
+
+    switch (drawPhase) {
+    case ShapeDrawPhase::DRAW_PROCESS:
+    {
+        drawShape(x, y, ShapeType::RECTANGLE, 4);
+        break;
+    }
+    case ShapeDrawPhase::DRAW_END:
+    {
+        endDrawShape();
+        break;
+    }
+    default:
+        break;
+    }
 }
 
-void View::drawRectangle(double x, double y)
+void View::drawPolygon(double x, double y, int countAngles, double rotation, ShapeDrawPhase drawPhase)
 {
-    vac_->continueRectangleOfSelection(x, y);
-    drawShape(x, y, ShapeType::RECTANGLE, 4);
-}
+    processRectangleOfSelection(x, y, drawPhase);
 
-void View::drawRectangleEnd(double x, double y)
-{
-    vac_->endRectangleOfSelection();
-    drawShape(x, y, ShapeType::RECTANGLE_END, 4);
-}
-
-void View::drawPolygon(double x, double y, int countAngles, double rotation)
-{
-    vac_->continueRectangleOfSelection(x, y);
-    drawShape(x, y, ShapeType::POLYGON, countAngles, rotation);
-}
-
-void View::drawPolygonEnd(double x, double y, int countAngles, double rotation)
-{
-    vac_->endRectangleOfSelection();
-    drawShape(x, y, ShapeType::POLYGON_END, countAngles, rotation);
+    switch (drawPhase) {
+    case ShapeDrawPhase::DRAW_PROCESS:
+    {
+        drawShape(x, y, ShapeType::POLYGON, countAngles, rotation);
+        break;
+    }
+    case ShapeDrawPhase::DRAW_END:
+    {
+        endDrawShape();
+        break;
+    }
+    default:
+        break;
+    }
 }
 
 void View::drawShape(double x, double y, ShapeType shapeType, int countAngles, double rotation)
@@ -1175,8 +1263,14 @@ void View::drawShape(double x, double y, ShapeType shapeType, int countAngles, d
     double shapeWidth = rightX - leftX;
     double shapeHeight = bottomY - topY;
 
-    if(shapeWidth + shapeHeight == 0)
+    if((currentMousePos - lastMousePos_).manhattanLength() < 2)
         return;
+
+    if (!lastDrawnCells.isEmpty())
+    {
+        vac_->deleteCells(lastDrawnCells);
+        lastDrawnCells.clear();
+    }
 
     auto adjustSelectColors = [](auto cell)
     {
@@ -1184,75 +1278,53 @@ void View::drawShape(double x, double y, ShapeType shapeType, int countAngles, d
         cell->adjustSelectedColor(global()->selectColorRatio(), global()->selectAlphaRatio());
     };
 
-    auto drawShapePostProcessing = [this, &countAngles, &adjustSelectColors, &x, &y](bool isProcessDraw = true,
-            bool isDrawFaceEnabled = global()->drawShapeFaceEnabled())
+    auto processingCells = [this, &adjustSelectColors](auto cells, int cellsCount)
     {
-        if (isProcessDraw)
-        {
-            qDebug() << "-----------lastDrawnCells:" << lastDrawnCells.count();
-            if (!lastDrawnCells.isEmpty())
-            {
-                vac_->deleteCells(lastDrawnCells);
-            }
-        }
+        if (cells.isEmpty() || cellsCount == 0)
+            return;
 
-        lastDrawnCells.clear();
-
-        //Adjust highlighted and selected colors for the shape edges
-        auto edgesList = vac_->instantEdges(interactiveTime());
-        if (edgesList.count() >= countAngles)
+        for (auto i = 1; i <= cellsCount; i++)
         {
-            for (auto i = edgesList.count() - countAngles; i < edgesList.count(); i++)
-            {
-                auto edgeCell = edgesList[i];
-                adjustSelectColors(edgeCell);
-                vac_->addToSelection(edgeCell);
-                if (isProcessDraw)
-                {
-                    lastDrawnCells << edgeCell;
-                }
-            }
-        }
+            if (i > cells.count())
+                break;
 
-        //Adjust highlighted and selected colors for the shape vertices
-        auto keyVerticesList = vac_->instantVertices(interactiveTime());
-        if (keyVerticesList.count() >= countAngles)
-        {
-            for (auto i = keyVerticesList.count() - countAngles; i < keyVerticesList.count(); i++)
-            {
-                auto keyVerticeCell = keyVerticesList[i];
-                keyVerticeCell->setColor(global()->edgeColor());
-                adjustSelectColors(keyVerticeCell);
-                vac_->addToSelection(keyVerticeCell);
-            }
+            auto cell = cells.at(cells.count() - i);
+            lastDrawnCells << cell;
+            cell->setColor(global()->edgeColor());
+            adjustSelectColors(cell);
+            vac_->addToSelection(cell, false);
         }
+    };
+
+    auto drawShapePostProcessing = [this, &countAngles, &adjustSelectColors, &processingCells](bool isCanBeFace = true)
+    {
+        bool isDrawFaceEnabled = global()->isDrawShapeFaceEnabled() && isCanBeFace;
+
+        //Add to selection, adjust highlighted and selected colors for the shape edges
+        auto edges = vac_->instantEdges();
+        auto edgesCount = edges.count() - allEdgesCount;
+        processingCells(edges, edgesCount);
+
+        //Add to selection, adjust highlighted and selected colors for the shape vertices
+        auto vertices = vac_->instantVertices();
+        auto verticesCount = vertices.count() - allVerticesCount;
+        processingCells(vertices, verticesCount);
 
         //Draw the face of shape and adjust highlighted and selected colors if enabled
-        if (isDrawFaceEnabled)
+        if (isDrawFaceEnabled && !vac_->selectedCells().isEmpty())
         {
             scene()->createFace();
             auto faceCell = vac_->faces().last();
             vac_->addToSelection(faceCell);
             adjustSelectColors(faceCell);
+            lastDrawnCells << faceCell;
         }
-        //vac_->deselectAll();
     };
 
     switch (shapeType) {
-
     case ShapeType::CURVE:
     {
-        if (currentMousePos != lastMousePos_)
-        {
-            // Note: this call "changed", hence all views are updated
-            vac_->continueSketchEdge(x, y, w);
-        }
-        break;
-    }
-    case ShapeType::CURVE_END:
-    {
-        vac_->endSketchEdge();
-        drawShapePostProcessing(false, false);
+        drawShapePostProcessing(false);
         break;
     }
     case ShapeType::LINE:
@@ -1260,13 +1332,7 @@ void View::drawShape(double x, double y, ShapeType shapeType, int countAngles, d
         vac_->beginSketchEdge(shapeStartX, shapeStartY, w, interactiveTime());
         vac_->continueSketchEdge(xScene, yScene, w);
         vac_->endSketchEdge();
-
-        drawShapePostProcessing(true, false);
-        break;
-    }
-    case ShapeType::LINE_END:
-    {
-        drawShapePostProcessing(false, false);
+        drawShapePostProcessing(false);
         break;
     }
     case ShapeType::CIRCLE:
@@ -1349,18 +1415,10 @@ void View::drawShape(double x, double y, ShapeType shapeType, int countAngles, d
         drawShapePostProcessing();
         break;
     }
-    case ShapeType::CIRCLE_END:
-    case ShapeType::TRIANGLE_END:
-    case ShapeType::RECTANGLE_END:
-    case ShapeType::POLYGON_END:
-    {
-        drawShapePostProcessing(false);
-        lastDrawnCells.clear();
-        break;
-    }
     default:
         break;
     }
+
     lastMousePos_ = currentMousePos;
 }
 

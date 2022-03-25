@@ -158,17 +158,17 @@ private slots:
 private:
     enum class ShapeType {
         CURVE,
-        CURVE_END,
         LINE,
-        LINE_END,
         CIRCLE,
-        CIRCLE_END,
         TRIANGLE,
-        TRIANGLE_END,
         RECTANGLE,
-        RECTANGLE_END,
         POLYGON,
-        POLYGON_END
+    };
+
+    enum class ShapeDrawPhase {
+        DRAW_START,
+        DRAW_PROCESS,
+        DRAW_END
     };
 
     // What scene to draw
@@ -209,6 +209,9 @@ private:
     double shapeStartX;
     double shapeStartY;
 
+    int allEdgesCount;
+    int allVerticesCount;
+
     VectorAnimationComplex::CellSet lastDrawnCells;
 
     // Dirty implementation:
@@ -230,18 +233,15 @@ private:
     void drawBackground_(Background * background, int frame);
     QMap<Background *, BackgroundRenderer *> backgroundRenderers_;
 
-    void drawCurve(double x, double y);
-    void drawCurveEnd(double x, double y);
-    void drawLine(double x, double y);
-    void drawLineEnd(double x, double y);
-    void drawCircle(double x, double y);
-    void drawCircleEnd(double x, double y);
-    void drawTriangle(double x, double y);
-    void drawTriangleEnd(double x, double y);
-    void drawRectangle(double x, double y);
-    void drawRectangleEnd(double x, double y);
-    void drawPolygon(double x, double y, int countAngles, double rotation);
-    void drawPolygonEnd(double x, double y, int countAngles, double rotation);
+    void processRectangleOfSelection(double x, double y, ShapeDrawPhase drawPhase);
+    void startDrawShape(double x, double y);
+    void endDrawShape();
+    void drawCurve(double x, double y, ShapeDrawPhase drawPhase);
+    void drawLine(double x, double y, ShapeDrawPhase drawPhase);
+    void drawCircle(double x, double y, ShapeDrawPhase drawPhase);
+    void drawTriangle(double x, double y, ShapeDrawPhase drawPhase);
+    void drawRectangle(double x, double y, ShapeDrawPhase drawPhase);
+    void drawPolygon(double x, double y, int countAngles, double rotation, ShapeDrawPhase drawPhase);
     void drawShape(double x, double y, ShapeType shapeType, int countAngles = 1, double rotation = 0);
     void updateView();
 };

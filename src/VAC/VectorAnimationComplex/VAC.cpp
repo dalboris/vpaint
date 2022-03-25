@@ -5858,7 +5858,7 @@ void VAC::addToHovered(Cell *cell, bool emitSignal)
 
 void VAC::addToHovered(const CellSet &cells, bool emitSignal)
 {
-    for(Cell * c: cells)
+    for(auto c: cells)
     {
         addToHovered(c, false);
     }

@@ -129,7 +129,10 @@ public:
     void setEdgeColor(const QColor& newColor);
     void setFaceColor(const QColor& newColor);
 
-    bool drawShapeFaceEnabled() const;
+    bool isShowAroundRectangleWhenDraw() const;
+    void setShowAroundRectangleWhenDraw(bool isShow);
+
+    bool isDrawShapeFaceEnabled() const;
     void setDrawShapeFaceEnabled(bool isDrawShapeFaceEnabled);
 
     double highlightColorRatio() const;
@@ -291,7 +294,8 @@ private:
     QLabel * statusBarHelp_;
     QColor faceColor_;
 
-    bool isDrawShapeFaceEnabled;
+    bool isDrawShapeFaceEnabled_;
+    bool isShowAroundRectangleWhenDraw_;
 
     double highlightColorRatio_;
     double highlightAlphaRatio_;

@@ -63,7 +63,8 @@ Global::Global(MainWindow * w) :
     settings_(0),
     documentDir_(QDir::home()),
     faceColor_(QColor::fromRgb(100, 100, 100, 10)),
-    isDrawShapeFaceEnabled(true),
+    isDrawShapeFaceEnabled_(true),
+    isShowAroundRectangleWhenDraw_(false),
     highlightColorRatio_(1.3),
     highlightAlphaRatio_(2.0),
     selectColorRatio_(1.5),
@@ -856,14 +857,24 @@ void Global::setFaceColor(const QColor &newColor)
     }
 }
 
-bool Global::drawShapeFaceEnabled() const
+bool Global::isShowAroundRectangleWhenDraw() const
 {
-    return isDrawShapeFaceEnabled;
+    return isShowAroundRectangleWhenDraw_;
+}
+
+void Global::setShowAroundRectangleWhenDraw(bool isShow)
+{
+    isShowAroundRectangleWhenDraw_ = isShow;
+}
+
+bool Global::isDrawShapeFaceEnabled() const
+{
+    return isDrawShapeFaceEnabled_;
 }
 
 void Global::setDrawShapeFaceEnabled(bool isDrawShapeFaceEnabled)
 {
-    this->isDrawShapeFaceEnabled = isDrawShapeFaceEnabled;
+    isDrawShapeFaceEnabled_ = isDrawShapeFaceEnabled;
 }
 
 double Global::highlightColorRatio() const
