@@ -200,6 +200,13 @@ public:
     void continueCutFace(double x, double y, double w);
     void endCutFace(KeyVertex * endVertex);
 
+    //Colors change
+    void changeEdgesColor();
+    void changeFacesColor();
+    void adjusSelectedAndHighlighted(Cell* cell);
+    void adjustSelectColors(Cell* cell);
+    void adjustSelectColorsAll();
+
     /////////////////////////////////////////////////////////////////
     //                 MOUSE CLIC ACTIONS                          //
 

@@ -27,6 +27,8 @@
 #include "VectorAnimationComplex/KeyVertex.h"
 #include "VectorAnimationComplex/CellList.h"
 #include "VectorAnimationComplex/FaceCell.h"
+#include "VectorAnimationComplex/KeyFace.h"
+
 #include "Layer.h"
 
 #include <QtDebug>
@@ -76,8 +78,6 @@ View::View(VPaint::Scene * scene, QWidget * parent) :
     currentAction_(0),
     shapeStartX(0),
     shapeStartY(0),
-    allEdgesCount(0),
-    allVerticesCount(0),
     vac_(0)
 {
     // View settings widget
@@ -101,6 +101,9 @@ View::View(VPaint::Scene * scene, QWidget * parent) :
     connect(this, SIGNAL(viewChanged(int, int)), this, SLOT(update()));
 
     connect(global(), SIGNAL(keyboardModifiersChanged()), this, SLOT(handleNewKeyboardModifiers()));
+
+    connect(global(), &Global::edgeColorChanged, this, [this]() { if(vac_) { vac_->changeEdgesColor(); }});
+    connect(global(), &Global::faceColorChanged, this, [this]() { if(vac_) { vac_->changeFacesColor(); }});
 }
 
 View::~View()
@@ -509,6 +512,8 @@ void View::ClicEvent(int action, double x, double y)
             emit allViewsNeedToUpdatePicking();
             updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
             emit allViewsNeedToUpdate();
+
+            vac_->selectConnected(false);
         }
     }
     else if(action==DESELECT_ACTION)
@@ -1091,10 +1096,10 @@ void View::startDrawShape(double x, double y)
 
 void View::endDrawShape()
 {
-    allEdgesCount = vac_->instantEdges().count();
-    allVerticesCount = vac_->instantVertices().count();
+    adjustCellsColors();
     lastDrawnCells.clear();
     vac_->deselectAll();
+    scene()->emitCheckpoint();
 }
 
 void View::drawCurve(double x, double y, ShapeDrawPhase drawPhase)
@@ -1116,7 +1121,6 @@ void View::drawCurve(double x, double y, ShapeDrawPhase drawPhase)
     case ShapeDrawPhase::DRAW_START:
     {
         lastMousePos_ = QPoint(mouse_Event_X_,mouse_Event_Y_);
-
         vac_->beginSketchEdge(xScene, yScene, w, interactiveTime());
 
         emit allViewsNeedToUpdate();
@@ -1130,8 +1134,13 @@ void View::drawCurve(double x, double y, ShapeDrawPhase drawPhase)
     case ShapeDrawPhase::DRAW_END:
     {
         vac_->endSketchEdge();
-        drawShape(x, y, ShapeType::CURVE);
-        endDrawShape();
+        lastDrawnCells.clear();
+        auto keyVertices = vac_->instantVertices();
+        lastDrawnCells << keyVertices.last();
+        lastDrawnCells << keyVertices.at(keyVertices.count() - 2);
+        lastDrawnCells <<  vac_->instantEdges().last();
+        adjustCellsColors();
+        lastDrawnCells.clear();
         break;
     }
     default:
@@ -1146,7 +1155,7 @@ void View::drawLine(double x, double y, ShapeDrawPhase drawPhase)
     switch (drawPhase) {
     case ShapeDrawPhase::DRAW_PROCESS:
     {
-        drawShape(x, y, ShapeType::LINE);
+        drawShape(x, y, ShapeType::LINE, 2);
         break;
     }
     case ShapeDrawPhase::DRAW_END:
@@ -1166,7 +1175,9 @@ void View::drawCircle(double x, double y, ShapeDrawPhase drawPhase)
     switch (drawPhase) {
     case ShapeDrawPhase::DRAW_PROCESS:
     {
-        drawShape(x, y, ShapeType::CIRCLE);
+        //Draw circle as polygon
+        drawShape(x, y, ShapeType::POLYGON, 50);
+//        drawShape(x, y, ShapeType::CIRCLE);
         break;
     }
     case ShapeDrawPhase::DRAW_END:
@@ -1239,9 +1250,27 @@ void View::drawPolygon(double x, double y, int countAngles, double rotation, Sha
     }
 }
 
+void View::adjustCellsColors()
+{
+    for (auto cell : lastDrawnCells)
+    {
+        vac_->adjustSelectColors(cell);
+    }
+}
+
 void View::drawShape(double x, double y, ShapeType shapeType, int countAngles, double rotation)
 {
     QPoint currentMousePos = QPoint(mouse_Event_X_,mouse_Event_Y_);
+
+    if((currentMousePos - lastMousePos_).manhattanLength() < 3)
+        return;
+
+    using Vertex = VectorAnimationComplex::KeyVertex;
+    using Edge = VectorAnimationComplex::KeyEdge;
+    using EggeSet = VectorAnimationComplex::KeyEdgeSet;
+    using Cycle = VectorAnimationComplex::Cycle;
+
+    QVector<QPointF> verticesPoints(countAngles);
 
     QPointF pos = QPointF(x,y);
     double xScene = pos.rx();
@@ -1263,8 +1292,19 @@ void View::drawShape(double x, double y, ShapeType shapeType, int countAngles, d
     double shapeWidth = rightX - leftX;
     double shapeHeight = bottomY - topY;
 
-    if((currentMousePos - lastMousePos_).manhattanLength() < 2)
-        return;
+    if (shapeType != ShapeType::LINE && global()->keyboardModifiers() == Qt::ShiftModifier)
+    {
+        if (shapeWidth > shapeHeight)
+        {
+            bottomY = topY + shapeWidth;
+            shapeHeight = shapeWidth;
+        }
+        else if (shapeHeight > shapeWidth)
+        {
+            rightX = leftX + shapeHeight;
+            shapeWidth = shapeHeight;
+        }
+    }
 
     if (!lastDrawnCells.isEmpty())
     {
@@ -1272,67 +1312,47 @@ void View::drawShape(double x, double y, ShapeType shapeType, int countAngles, d
         lastDrawnCells.clear();
     }
 
-    auto adjustSelectColors = [](auto cell)
+    auto processDrawShape = [this, &verticesPoints, &w]()
     {
-        cell->adjustHighlightedColor(global()->highlightColorRatio(), global()->highlightAlphaRatio());
-        cell->adjustSelectedColor(global()->selectColorRatio(), global()->selectAlphaRatio());
-    };
-
-    auto processingCells = [this, &adjustSelectColors](auto cells, int cellsCount)
-    {
-        if (cells.isEmpty() || cellsCount == 0)
-            return;
-
-        for (auto i = 1; i <= cellsCount; i++)
+        int verticesCount = verticesPoints.count();
+        //Draw Vertices
+        QVector<Vertex*> vertices;
+        for (auto point : verticesPoints)
         {
-            if (i > cells.count())
-                break;
-
-            auto cell = cells.at(cells.count() - i);
-            lastDrawnCells << cell;
-            cell->setColor(global()->edgeColor());
-            adjustSelectColors(cell);
-            vac_->addToSelection(cell, false);
+            auto vertex = vac_->newKeyVertex(interactiveTime(), Eigen::Vector2d(point.x(), point.y()));
+            vertex->setColor(global()->edgeColor());
+            vertices << vertex;
+            lastDrawnCells << vertex;
         }
-    };
 
-    auto drawShapePostProcessing = [this, &countAngles, &adjustSelectColors, &processingCells](bool isCanBeFace = true)
-    {
-        bool isDrawFaceEnabled = global()->isDrawShapeFaceEnabled() && isCanBeFace;
-
-        //Add to selection, adjust highlighted and selected colors for the shape edges
-        auto edges = vac_->instantEdges();
-        auto edgesCount = edges.count() - allEdgesCount;
-        processingCells(edges, edgesCount);
-
-        //Add to selection, adjust highlighted and selected colors for the shape vertices
-        auto vertices = vac_->instantVertices();
-        auto verticesCount = vertices.count() - allVerticesCount;
-        processingCells(vertices, verticesCount);
-
-        //Draw the face of shape and adjust highlighted and selected colors if enabled
-        if (isDrawFaceEnabled && !vac_->selectedCells().isEmpty())
+        //Draw Edges
+        EggeSet edges;
+        for (auto i = 0; i < verticesCount - 1; i++)
         {
-            scene()->createFace();
-            auto faceCell = vac_->faces().last();
-            vac_->addToSelection(faceCell);
-            adjustSelectColors(faceCell);
-            lastDrawnCells << faceCell;
+            auto keyEdge = vac_->newKeyEdge(interactiveTime(), vertices[i], vertices[i + 1], 0, w);
+            edges << keyEdge;
+            lastDrawnCells << keyEdge;
+        }
+        auto keyEdge = vac_->newKeyEdge(interactiveTime(), vertices[verticesCount - 1], vertices[0], 0, w);
+        edges << keyEdge;
+        lastDrawnCells << keyEdge;
+
+        //Draw face
+        if (global()->isDrawShapeFaceEnabled())
+        {
+            Cycle cycle(edges);
+            auto faceCell = vac_->newKeyFace(cycle);
+            faceCell->setColor(global()->faceColor());
+            lastDrawnCells << faceCell->toFaceCell();
         }
     };
 
     switch (shapeType) {
-    case ShapeType::CURVE:
-    {
-        drawShapePostProcessing(false);
-        break;
-    }
     case ShapeType::LINE:
     {
-        vac_->beginSketchEdge(shapeStartX, shapeStartY, w, interactiveTime());
-        vac_->continueSketchEdge(xScene, yScene, w);
-        vac_->endSketchEdge();
-        drawShapePostProcessing(false);
+        verticesPoints[0] = QPointF(shapeStartX, shapeStartY);
+        verticesPoints[1] = QPointF(xScene, yScene);
+        processDrawShape();
         break;
     }
     case ShapeType::CIRCLE:
@@ -1357,46 +1377,40 @@ void View::drawShape(double x, double y, ShapeType shapeType, int countAngles, d
             vac_->continueSketchEdge(newX, newY, w);
         }
         vac_->endSketchEdge();
+        lastDrawnCells << vac_->instantVertices().last();
+        lastDrawnCells <<  vac_->instantEdges().last();
 
-        drawShapePostProcessing();
+        if (global()->isDrawShapeFaceEnabled())
+        {
+            for (auto cell : lastDrawnCells)
+            {
+                vac_->addToSelection(cell, false);
+            }
+            scene()->createFace();
+            auto faceCell = vac_->faces().last();
+            vac_->addToSelection(faceCell);
+            lastDrawnCells << faceCell;
+            endDrawShape();
+        }
         break;
     }
     case ShapeType::TRIANGLE:
     {
-        vac_->beginSketchEdge(leftX + shapeWidth / 2, topY, w, interactiveTime());
-        vac_->continueSketchEdge(rightX, bottomY, w);
-        vac_->endSketchEdge();
+        verticesPoints[0] = QPointF(leftX + shapeWidth / 2, topY);
+        verticesPoints[1] = QPointF(rightX, bottomY);
+        verticesPoints[2] = QPointF(leftX, bottomY);
 
-        vac_->beginSketchEdge(rightX, bottomY, w, interactiveTime());
-        vac_->continueSketchEdge(leftX, bottomY, w);
-        vac_->endSketchEdge();
-
-        vac_->beginSketchEdge(leftX, bottomY, w, interactiveTime());
-        vac_->continueSketchEdge(leftX + shapeWidth / 2, topY, w);
-        vac_->endSketchEdge();
-
-        drawShapePostProcessing();
+        processDrawShape();
         break;
     }
     case ShapeType::RECTANGLE:
     {
-        vac_->beginSketchEdge(leftX, topY, w, interactiveTime());
-        vac_->continueSketchEdge(rightX, topY, w);
-        vac_->endSketchEdge();
+        verticesPoints[0] = QPointF(leftX, topY);
+        verticesPoints[1] = QPointF(rightX, topY);
+        verticesPoints[2] = QPointF(rightX, bottomY);
+        verticesPoints[3] = QPointF(leftX, bottomY);
 
-        vac_->beginSketchEdge(rightX, topY, w, interactiveTime());
-        vac_->continueSketchEdge(rightX, bottomY, w);
-        vac_->endSketchEdge();
-
-        vac_->beginSketchEdge(rightX, bottomY, w, interactiveTime());
-        vac_->continueSketchEdge(leftX, bottomY, w);
-        vac_->endSketchEdge();
-
-        vac_->beginSketchEdge(leftX, bottomY, w, interactiveTime());
-        vac_->continueSketchEdge(leftX, topY, w);
-        vac_->endSketchEdge();
-
-        drawShapePostProcessing();
+        processDrawShape();
         break;
     }
     case ShapeType::POLYGON:
@@ -1408,11 +1422,9 @@ void View::drawShape(double x, double y, ShapeType shapeType, int countAngles, d
 
         for (auto i = 0; i < countAngles; i++)
         {
-            vac_->beginSketchEdge(getX(360 * i / countAngles + rotation), getY(360 * i / countAngles + rotation), w, interactiveTime());
-            vac_->continueSketchEdge(getX(360 * (i + 1) / countAngles + rotation), getY(360 * (i + 1) / countAngles + rotation), w);
-            vac_->endSketchEdge();
+            verticesPoints[i] = QPointF(getX(360 * i / countAngles + rotation), getY(360 * i / countAngles + rotation));
         }
-        drawShapePostProcessing();
+        processDrawShape();
         break;
     }
     default:
@@ -1707,8 +1719,6 @@ bool View::updateHoveredObject(int x, int y)
                 activeTime(),
                 hoveredObject_.index(),
                 hoveredObject_.id());
-
-            vac_->hoveveredConnected();
         }
     }
     else

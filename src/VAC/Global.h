@@ -148,6 +148,9 @@ public:
     double selectAlphaRatio() const;
     void setSelectAlphaRatio(double ratio);
 
+    //For help and debug GCode generation
+    bool isShowVerticesOnSelection() const;
+    void setShowVerticesOnSelection(bool isShow);
 
     // Display modes
     enum DisplayMode {
@@ -185,6 +188,8 @@ public:
 
 signals:
     void keyboardModifiersChanged();
+    void edgeColorChanged();
+    void faceColorChanged();
 
 public slots:
     void setToolMode(Global::ToolMode mode);
@@ -297,6 +302,7 @@ private:
 
     bool isDrawShapeFaceEnabled_;
     bool isShowAroundRectangleWhenDraw_;
+    bool isShowVerticesOnSelection_;
 
     double highlightColorRatio_;
     double highlightAlphaRatio_;

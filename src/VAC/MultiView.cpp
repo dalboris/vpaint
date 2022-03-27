@@ -440,11 +440,13 @@ void MultiView::fitSelectionInWindow()
 
 void MultiView::keyPressEvent(QKeyEvent *event)
 {
+    emit keyPressed(event);
     event->ignore();
 }
 
 void MultiView::keyReleaseEvent(QKeyEvent *event)
 {
+    emit keyReleased(event);
     event->ignore();
 }
 

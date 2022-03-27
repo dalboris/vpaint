@@ -83,6 +83,8 @@ signals:
     void hoveredViewChanged();
     void cameraChanged();
     void settingsChanged();
+    void keyPressed(QKeyEvent* event);
+    void keyReleased(QKeyEvent* event);
 
 private slots:
     void setActive(GLWidget * w);

@@ -110,6 +110,13 @@ public:
     double selectAlphaRatio() const;
     void setSelectAlphaRatio(double ratio);
 
+    //For help and debug GCode generation
+    bool isShowVerticesOnSelection() const;
+    void setShowVerticesOnSelection(bool isShow);
+
+private:
+    //Parsing keyboard events
+    void parseKeyPressEvent(QKeyEvent* event);
 
 signals:
     void undoRedoPossibilityUpdated(bool isUndoPossible, bool isRedoPossible);

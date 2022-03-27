@@ -65,9 +65,10 @@ Global::Global(MainWindow * w) :
     faceColor_(QColor::fromRgb(100, 100, 100, 10)),
     isDrawShapeFaceEnabled_(true),
     isShowAroundRectangleWhenDraw_(false),
-    highlightColorRatio_(1.3),
+    isShowVerticesOnSelection_(false),
+    highlightColorRatio_(1.2),
     highlightAlphaRatio_(2.0),
-    selectColorRatio_(1.5),
+    selectColorRatio_(1.4),
     selectAlphaRatio_(3.0)
 {
     // Color selectors
@@ -844,16 +845,21 @@ QColor Global::faceColor()
     return faceColor_;
 }
 
-void Global::setEdgeColor(const QColor &newColor)
+void Global::setEdgeColor(const QColor& newColor)
 {
-    currentColor_->setColor(newColor);
+    if (newColor.isValid())
+    {
+        currentColor_->setColor(newColor);
+        emit edgeColorChanged();
+    }
 }
 
-void Global::setFaceColor(const QColor &newColor)
+void Global::setFaceColor(const QColor& newColor)
 {
     if (newColor.isValid())
     {
         faceColor_ = newColor;
+        emit faceColorChanged();
     }
 }
 
@@ -920,6 +926,16 @@ double Global::selectAlphaRatio() const
 void Global::setSelectAlphaRatio(double ratio)
 {
     selectAlphaRatio_ = ratio;
+}
+
+bool Global::isShowVerticesOnSelection() const
+{
+    return isShowVerticesOnSelection_;
+}
+
+void Global::setShowVerticesOnSelection(bool isShow)
+{
+    isShowVerticesOnSelection_ = isShow;
 }
 
 bool Global::useTabletPressure() const

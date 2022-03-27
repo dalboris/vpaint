@@ -204,6 +204,8 @@ MainWindow::MainWindow(VPaint::Scene *_scene, QWidget* parent) :
     // Set initial focus
     multiView_->setFocus(Qt::OtherFocusReason);
 
+    connect(multiView_, &MultiView::keyPressed, this, [this](QKeyEvent* event) { parseKeyPressEvent(event); });
+
     // Autosave
     autosaveBegin();
 }
@@ -369,7 +371,6 @@ VPaint::Scene * MainWindow::scene() const
     return scene_;
 }
 
-
 void MainWindow::addToUndoStack()
 {
     undoIndex_++;
@@ -420,6 +421,7 @@ void MainWindow::goToUndoIndex_(int undoIndex)
 
     // Set scene data from undo history
     scene_->copyFrom(undoStack_[undoIndex].second);
+    scene_->activeVAC()->adjustSelectColorsAll();
 
     // Update window title
     updateWindowTitle_();
@@ -520,8 +522,6 @@ void MainWindow::setOnionSkinningEnabled(bool enabled)
 {
     multiView_->setOnionSkinningEnabled(enabled);
 }
-
-
 
 void MainWindow::toggleShowCanvas(bool)
 {
@@ -657,6 +657,52 @@ double MainWindow::selectAlphaRatio() const
 void MainWindow::setSelectAlphaRatio(double ratio)
 {
     global()->setSelectAlphaRatio(ratio);
+}
+
+bool MainWindow::isShowVerticesOnSelection() const
+{
+    return global()->isShowVerticesOnSelection();
+}
+
+void MainWindow::setShowVerticesOnSelection(bool isShow)
+{
+    global()->setShowVerticesOnSelection(isShow);
+}
+
+void MainWindow::parseKeyPressEvent(QKeyEvent* event)
+{
+    const QKeySequence keySequence = QKeySequence(event->key() + global()->keyboardModifiers());
+
+    if (keySequence == QKeySequence(QKeySequence::Undo))
+    {
+        undo();
+    }
+    else if (keySequence == QKeySequence(QKeySequence::Redo))
+    {
+        redo();
+    }
+    else if (keySequence == QKeySequence(QKeySequence::Copy))
+    {
+        copy();
+    }
+    else if (keySequence == QKeySequence(QKeySequence::Paste))
+    {
+        paste();
+    }
+    else if (keySequence == QKeySequence(QKeySequence::Cut))
+    {
+        cut();
+    }
+    else if (keySequence == QKeySequence(QKeySequence::Delete))
+    {
+        scene()->smartDelete();
+    }
+    else if (keySequence == QKeySequence(Qt::CTRL + Qt::Key_Delete))
+    {
+        scene()->deleteSelectedCells();
+    }
+
+    event->ignore();
 }
 
 void MainWindow::editCanvasSize()
@@ -1687,53 +1733,53 @@ void MainWindow::createActions()
     ///////////////        EDIT        ///////////////
 
     // Undo
-    actionUndo = new QAction(/*QIcon(":/iconUndo"),*/ tr("&Undo"), this);
-    actionUndo->setStatusTip(tr("Undo the last action."));
-    actionUndo->setShortcut(QKeySequence::Undo);
-    connect(actionUndo, SIGNAL(triggered()), this, SLOT(undo()));
+//    actionUndo = new QAction(/*QIcon(":/iconUndo"),*/ tr("&Undo"), this);
+//    actionUndo->setStatusTip(tr("Undo the last action."));
+//    actionUndo->setShortcut(QKeySequence::Undo);
+//    connect(actionUndo, SIGNAL(triggered()), this, SLOT(undo()));
 
     // Redo
-    actionRedo = new QAction(/*QIcon(":/iconRedo"),*/ tr("&Redo"), this);
-    actionRedo->setStatusTip(tr("Redo an undone action."));
-    actionRedo->setShortcut(QKeySequence::Redo);
-    connect(actionRedo, SIGNAL(triggered()), this, SLOT(redo()));
+//    actionRedo = new QAction(/*QIcon(":/iconRedo"),*/ tr("&Redo"), this);
+//    actionRedo->setStatusTip(tr("Redo an undone action."));
+//    actionRedo->setShortcut(QKeySequence::Redo);
+//    connect(actionRedo, SIGNAL(triggered()), this, SLOT(redo()));
 
     // Cut
-    actionCut = new QAction(tr("Cut"), this);
-    actionCut->setStatusTip(tr("Move selected objects to the clipboard."));
-    actionCut->setShortcut(QKeySequence::Cut);
-    connect(actionCut, SIGNAL(triggered()), this, SLOT(cut()));
+//    actionCut = new QAction(tr("Cut"), this);
+//    actionCut->setStatusTip(tr("Move selected objects to the clipboard."));
+//    actionCut->setShortcut(QKeySequence::Cut);
+//    connect(actionCut, SIGNAL(triggered()), this, SLOT(cut()));
 
     // Copy
-    actionCopy = new QAction(tr("Copy"), this);
-    actionCopy->setStatusTip(tr("Copy the selected objects to the clipboard."));
-    actionCopy->setShortcut(QKeySequence::Copy);
-    connect(actionCopy, SIGNAL(triggered()), this, SLOT(copy()));
+//    actionCopy = new QAction(tr("Copy"), this);
+//    actionCopy->setStatusTip(tr("Copy the selected objects to the clipboard."));
+//    actionCopy->setShortcut(QKeySequence::Copy);
+//    connect(actionCopy, SIGNAL(triggered()), this, SLOT(copy()));
 
     // Paste
-    actionPaste = new QAction(tr("Paste"), this);
-    actionPaste->setStatusTip(tr("Paste the objects from the clipboard."));
-    actionPaste->setShortcut(QKeySequence::Paste);
-    connect(actionPaste, SIGNAL(triggered()), this, SLOT(paste()));
+//    actionPaste = new QAction(tr("Paste"), this);
+//    actionPaste->setStatusTip(tr("Paste the objects from the clipboard."));
+//    actionPaste->setShortcut(QKeySequence::Paste);
+//    connect(actionPaste, SIGNAL(triggered()), this, SLOT(paste()));
 
 
     // Smart Delete
-    actionSmartDelete = new QAction(tr("Delete"), this);
-    actionSmartDelete->setStatusTip(tr("Delete the selected objects, merging adjacent objects when possible."));
-#ifdef Q_OS_MAC
-    actionSmartDelete->setShortcut(QKeySequence(Qt::Key_Delete));
-#else
-    actionSmartDelete->setShortcut(QKeySequence::Delete);
-#endif
-    actionSmartDelete->setShortcutContext(Qt::ApplicationShortcut);
-    connect(actionSmartDelete, SIGNAL(triggered()), scene_, SLOT(smartDelete()));
+//    actionSmartDelete = new QAction(tr("Delete"), this);
+//    actionSmartDelete->setStatusTip(tr("Delete the selected objects, merging adjacent objects when possible."));
+//#ifdef Q_OS_MAC
+//    actionSmartDelete->setShortcut(QKeySequence(Qt::Key_Delete));
+//#else
+//    actionSmartDelete->setShortcut(QKeySequence::Delete);
+//#endif
+//    actionSmartDelete->setShortcutContext(Qt::ApplicationShortcut);
+//    connect(actionSmartDelete, SIGNAL(triggered()), scene_, SLOT(smartDelete()));
 
     // Hard Delete
-    actionHardDelete = new QAction(tr("Hard Delete"), this);
-    actionHardDelete->setStatusTip(tr("Delete the selected objects and adjacent objects together."));
-    actionHardDelete->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Delete));
-    actionHardDelete->setShortcutContext(Qt::ApplicationShortcut);
-    connect(actionHardDelete, SIGNAL(triggered()), scene_, SLOT(deleteSelectedCells()));
+//    actionHardDelete = new QAction(tr("Hard Delete"), this);
+//    actionHardDelete->setStatusTip(tr("Delete the selected objects and adjacent objects together."));
+//    actionHardDelete->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Delete));
+//    actionHardDelete->setShortcutContext(Qt::ApplicationShortcut);
+//    connect(actionHardDelete, SIGNAL(triggered()), scene_, SLOT(deleteSelectedCells()));
 
     // Hard Delete
     actionTest = new QAction(tr("Test"), this);
@@ -2199,15 +2245,15 @@ void MainWindow::createMenus()
 
     /// ---- EDIT ----
     menuEdit = new QMenu(tr("&Edit"));
-    menuEdit->addAction(actionUndo);
-    menuEdit->addAction(actionRedo);
+//    menuEdit->addAction(actionUndo);
+//    menuEdit->addAction(actionRedo);
     menuEdit->addSeparator();
-    menuEdit->addAction(actionCut);
-    menuEdit->addAction(actionCopy);
-    menuEdit->addAction(actionPaste);
+//    menuEdit->addAction(actionCut);
+//    menuEdit->addAction(actionCopy);
+//    menuEdit->addAction(actionPaste);
     menuEdit->addSeparator();
-    menuEdit->addAction(actionSmartDelete);
-    menuEdit->addAction(actionHardDelete);
+//    menuEdit->addAction(actionSmartDelete);
+//    menuEdit->addAction(actionHardDelete);
     //menuEdit->addAction(actionTest);
     menuBar()->addMenu(menuEdit);
 
@@ -2328,14 +2374,6 @@ void MainWindow::createMenus()
     //menuHelp->addAction(actionAboutQt);
     menuBar()->addMenu(menuHelp);
 }
-
-
-
-
-
-
-
-
 
 /*********************************************************************
  *               Dock Windows

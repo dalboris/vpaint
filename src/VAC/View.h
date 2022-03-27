@@ -209,9 +209,6 @@ private:
     double shapeStartX;
     double shapeStartY;
 
-    int allEdgesCount;
-    int allVerticesCount;
-
     VectorAnimationComplex::CellSet lastDrawnCells;
 
     // Dirty implementation:
@@ -233,6 +230,7 @@ private:
     void drawBackground_(Background * background, int frame);
     QMap<Background *, BackgroundRenderer *> backgroundRenderers_;
 
+    void adjustCellsColors();
     void processRectangleOfSelection(double x, double y, ShapeDrawPhase drawPhase);
     void startDrawShape(double x, double y);
     void endDrawShape();
