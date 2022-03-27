@@ -321,9 +321,19 @@ public:
     bool isSelected()    const  { return isSelected_;    }
     bool isHighlighted() const;
 
-    // Change the color of the cell
+    // Get and change the color of the cell
     QColor color() const;
-    void setColor(const QColor & c);
+    void setColor(const QColor& c);
+
+    // Get and change the highlighted color of the cell
+    QColor highlightedColor() const;
+    void setHighlightedColor(const QColor& c);
+    void adjustHighlightedColor(const double colorRatio, const double alphaRatio = 1.2);
+
+    // Get and change the selected color of the cell
+    QColor selectedColor() const;
+    void setSelectedColor(const QColor& c);
+    void adjustSelectedColor(const double colorRatio, const double alphaRatio = 1.4);
 
 protected:
     // Make a call to  glColor, taking into account the member

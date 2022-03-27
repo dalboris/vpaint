@@ -51,6 +51,7 @@
 
 #include "../XmlStreamWriter.h"
 #include "../XmlStreamReader.h"
+#include "../Global.h"
 
 #include <QPair>
 #include <QtDebug>
@@ -366,7 +367,7 @@ QMap<int,int> VAC::import(VAC * other, bool selectImportedCells)
 VAC * VAC::subcomplex(const CellSet & subcomplexCells)
 {
     // Get closure of cells
-    CellSet cellsToKeep = Algorithms::closure(subcomplexCells);
+    CellSet cellsToKeep = Algorithms::connected(subcomplexCells);
     CellSet cellsToDelete = cells();
     cellsToDelete.subtract(cellsToKeep);
     QList<int> idToDelete;
@@ -804,8 +805,6 @@ void VAC::endAggregateSignals_()
     }
 }
 
-
-
 // ----------------- Selecting and Highlighting ----------------
 
 // Should NOT emit changed(). View does it if necessary
@@ -818,13 +817,13 @@ void VAC::setHoveredObject(Time /*time*/, int id)
 
 void VAC::setNoHoveredObject()
 {
-    setNoHoveredCell();
+    setNoHoveredAllCells();
     transformTool_.setNoHoveredObject();
 }
 
 void VAC::select(Time /*time*/, int id)
 {
-    addToSelection(getCell(id),false);
+    addToSelection(getCell(id), false);
 }
 
 void VAC::deselect(Time /*time*/, int id)
@@ -867,6 +866,11 @@ Cell * VAC::hoveredCell() const
 const CellSet & VAC::selectedCells() const
 {
     return selectedCells_;
+}
+
+const CellSet& VAC::hoveredCells() const
+{
+    return hoveredCells_;
 }
 
 int VAC::numSelectedCells() const
@@ -1622,6 +1626,7 @@ void VAC::setSelectedCellsFromRectangleOfSelection(Qt::KeyboardModifiers modifie
     {
         // Set selection
         setSelectedCells(cellsInRectangleOfSelection_, false);
+        selectConnected(false);
     }
     else if(modifiers & Qt::ShiftModifier)
     {
@@ -1631,6 +1636,7 @@ void VAC::setSelectedCellsFromRectangleOfSelection(Qt::KeyboardModifiers modifie
             CellSet newSelectedSet = rectangleOfSelectionSelectedBefore_;
             newSelectedSet.intersect(cellsInRectangleOfSelection_);
             setSelectedCells(newSelectedSet, false);
+            selectConnected(false);
         }
         else
         {
@@ -1638,6 +1644,7 @@ void VAC::setSelectedCellsFromRectangleOfSelection(Qt::KeyboardModifiers modifie
             CellSet newSelectedSet = rectangleOfSelectionSelectedBefore_;
             newSelectedSet.unite(cellsInRectangleOfSelection_);
             setSelectedCells(newSelectedSet, false);
+            selectConnected(false);
         }
     }
     else if(modifiers & Qt::AltModifier)
@@ -1646,6 +1653,7 @@ void VAC::setSelectedCellsFromRectangleOfSelection(Qt::KeyboardModifiers modifie
         CellSet newSelectedSet = rectangleOfSelectionSelectedBefore_;
         newSelectedSet.subtract(cellsInRectangleOfSelection_);
         setSelectedCells(newSelectedSet, false);
+        selectConnected(false);
     }
 }
 
@@ -1807,6 +1815,102 @@ void VAC::endCutFace(KeyVertex * endVertex)
         {
             //emit changed();
             emit checkpoint();
+        }
+    }
+}
+
+void VAC::changeEdgesColor()
+{
+    bool isChanged = false;
+    for(auto cell : selectedCells())
+    {
+        auto face = cell->toKeyFace();
+        if(face == nullptr)
+        {
+            isChanged = true;
+            cell->setColor(global()->edgeColor());
+            adjustSelectColors(cell);
+        }
+    }
+    if (isChanged)
+    {
+        emit changed();
+        emit checkpoint();
+    }
+}
+
+void VAC::changeFacesColor()
+{
+    bool isChanged = false;
+    for(auto cell : selectedCells())
+    {
+        auto face = cell->toKeyFace();
+        if(face != nullptr)
+        {
+            isChanged = true;
+            face->setColor(global()->faceColor());
+            adjustSelectColors(face);
+        }
+    }
+    if (isChanged)
+    {
+        emit changed();
+        emit checkpoint();
+    }
+}
+
+void VAC::adjusSelectedAndHighlighted(Cell* cell)
+{
+    if (cell != nullptr)
+    {
+        cell->adjustHighlightedColor(global()->highlightColorRatio(), global()->highlightAlphaRatio());
+        cell->adjustSelectedColor(global()->selectColorRatio(), global()->selectAlphaRatio());
+    }
+}
+
+void VAC::adjustSelectColors(Cell* cell)
+{
+    if (cell == nullptr)
+        return;
+
+    KeyVertex* keyVertex = cell->toKeyVertex();
+    KeyFace* keyFace = cell->toKeyFace();
+
+    const QColor& edgeColor = global()->edgeColor();
+    const QColor& faceColor = global()->faceColor();
+
+    if (keyVertex != nullptr)
+    {
+        if (!global()->isShowVerticesOnSelection())
+        {
+            keyVertex->setColor(edgeColor);
+            adjusSelectedAndHighlighted(keyVertex);
+        }
+    }
+    else
+    {
+        cell->setColor(keyFace == nullptr ? edgeColor : faceColor);
+        adjusSelectedAndHighlighted(cell);
+    }
+}
+
+void VAC::adjustSelectColorsAll()
+{
+    for (auto cell : cells())
+    {
+        KeyEdge* keyEdge = cell->toKeyEdge();
+        if (keyEdge != nullptr)
+        {
+            adjusSelectedAndHighlighted(keyEdge);
+            KeyVertex* keyVertexStart = keyEdge->startVertex();
+            KeyVertex* keyVertexEnd = keyEdge->endVertex();
+            keyVertexStart->setColor(keyEdge->color());
+            keyVertexEnd->setColor(keyEdge->color());
+            if (!global()->isShowVerticesOnSelection())
+            {
+                adjusSelectedAndHighlighted(keyVertexStart);
+                adjusSelectedAndHighlighted(keyVertexEnd);
+            }
         }
     }
 }
@@ -5814,25 +5918,70 @@ void VAC::updateCellsToConsiderForCutting()
 // ----- Selection -----
 
 void VAC::setHoveredCell(Cell * cell)
-{
-    if (cell != hoveredCell_)
+{    
+    if (!hoveredCells_.contains(cell))
     {
-        setNoHoveredCell();
+        setNoHoveredAllCells();
         if(cell)
         {
             hoveredCell_ = cell;
             hoveredCell_->setHovered(true);
+            hoveredCells_ << hoveredCell_;
         }
+    }
+}
+
+void VAC::hoveveredConnected(bool emitSignal)
+{
+    if (hoveredCell_ && !hoveredCells_.isEmpty())
+    {
+        addToHovered(Algorithms::connected(hoveredCells()), emitSignal);
     }
 }
 
 void VAC::setNoHoveredCell()
 {
-    if(hoveredCell_)
+    setNoHoveredAllCells();
+}
+
+void VAC::addToHovered(Cell *cell, bool emitSignal)
+{
+    if(cell && !cell->isHighlighted())
     {
-        hoveredCell_->setHovered(false);
-        hoveredCell_ = 0;
+        hoveredCells_ << cell;
+        cell->setHovered(true);
+
+        if(emitSignal)
+        {
+            emit changed();
+        }
     }
+}
+
+void VAC::addToHovered(const CellSet &cells, bool emitSignal)
+{
+    for(auto c: cells)
+    {
+        addToHovered(c, false);
+    }
+
+    if(emitSignal)
+    {
+        emit changed();
+    }
+}
+
+void VAC::setNoHoveredAllCells()
+{
+    for (Cell* cell : hoveredCells_)
+    {
+        if(cell)
+        {
+            cell->setHovered(false);
+        }
+    }
+    hoveredCells_.clear();
+    hoveredCell_ = nullptr;
 }
 
 void VAC::informTimelineOfSelection()

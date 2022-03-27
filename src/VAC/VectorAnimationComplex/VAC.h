@@ -98,6 +98,7 @@ public:
     // Get higlighted and selected state
     Cell * hoveredCell() const;
     const CellSet & selectedCells() const;
+    const CellSet& hoveredCells() const;
     int numSelectedCells() const;
 
     // Get hovered transform widget id
@@ -105,7 +106,11 @@ public:
 
     // Modify highligthed and seleted state
     void setHoveredCell(Cell * cell);
+    void hoveveredConnected(bool emitSignal = false);
     void setNoHoveredCell();
+    void addToHovered(Cell * cell, bool emitSignal = false);
+    void addToHovered(const CellSet & cells, bool emitSignal = false);
+    void setNoHoveredAllCells();
     void addToSelection(Cell * cell, bool emitSignal = true);
     void addToSelection(const CellSet & cells, bool emitSignal = true);
     void setSelectedCell(Cell * cell, bool emitSignal = true);
@@ -194,6 +199,13 @@ public:
     void beginCutFace(double x, double y, double w, KeyVertex * startVertex);
     void continueCutFace(double x, double y, double w);
     void endCutFace(KeyVertex * endVertex);
+
+    //Colors change
+    void changeEdgesColor();
+    void changeFacesColor();
+    void adjusSelectedAndHighlighted(Cell* cell);
+    void adjustSelectColors(Cell* cell);
+    void adjustSelectColorsAll();
 
     /////////////////////////////////////////////////////////////////
     //                 MOUSE CLIC ACTIONS                          //
@@ -450,6 +462,7 @@ private:
     int hoveredTransformWidgetId_;
     Cell * hoveredCell_;
     CellSet selectedCells_;
+    CellSet hoveredCells_;
 
     // Z-layering
     ZOrderedCells zOrdering_;

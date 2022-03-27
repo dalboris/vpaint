@@ -127,6 +127,30 @@ public:
     QColor faceColor();
 
     void setEdgeColor(const QColor& newColor);
+    void setFaceColor(const QColor& newColor);
+    void setFaceAlpha(int alpha);
+
+    bool isShowAroundRectangleWhenDraw() const;
+    void setShowAroundRectangleWhenDraw(bool isShow);
+
+    bool isDrawShapeFaceEnabled() const;
+    void setDrawShapeFaceEnabled(bool isEnabled);
+
+    double highlightColorRatio() const;
+    void setHighlightColorRatio(double ratio);
+
+    double highlightAlphaRatio() const;
+    void setHighlightAlphaRatio(double ratio);
+
+    double selectColorRatio() const;
+    void setSelectColorRatio(double ratio);
+
+    double selectAlphaRatio() const;
+    void setSelectAlphaRatio(double ratio);
+
+    //For help and debug GCode generation
+    bool isShowVerticesOnSelection() const;
+    void setShowVerticesOnSelection(bool isShow);
 
     // Display modes
     enum DisplayMode {
@@ -164,6 +188,8 @@ public:
 
 signals:
     void keyboardModifiersChanged();
+    void edgeColorChanged();
+    void faceColorChanged();
 
 public slots:
     void setToolMode(Global::ToolMode mode);
@@ -272,6 +298,16 @@ private:
 
     // Status bar help
     QLabel * statusBarHelp_;
+    QColor faceColor_;
+
+    bool isDrawShapeFaceEnabled_;
+    bool isShowAroundRectangleWhenDraw_;
+    bool isShowVerticesOnSelection_;
+
+    double highlightColorRatio_;
+    double highlightAlphaRatio_;
+    double selectColorRatio_;
+    double selectAlphaRatio_;
 };
 
 class Q_VPAINT_EXPORT ToolModeAction: public QAction

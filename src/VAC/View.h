@@ -32,6 +32,8 @@
 
 #include "ViewSettings.h"
 #include "VAC/vpaint_global.h"
+#include "VectorAnimationComplex/CellList.h"
+
 namespace VPaint
 {
 class Scene;
@@ -41,6 +43,7 @@ namespace VectorAnimationComplex
 class VAC;
 class KeyVertex;
 class KeyEdge;
+//class CellSet;
 }
 class Time;
 class Background;
@@ -154,14 +157,18 @@ private slots:
 
 private:
     enum class ShapeType {
-        CIRCLE,
+        CURVE,
         LINE,
-        POLYGON
+        CIRCLE,
+        TRIANGLE,
+        RECTANGLE,
+        POLYGON,
     };
 
-    enum class DrawShapeMode {
-        REMOVE_VERTICES,
-        KEEP_VERTICES
+    enum class ShapeDrawPhase {
+        DRAW_START,
+        DRAW_PROCESS,
+        DRAW_END
     };
 
     // What scene to draw
@@ -202,6 +209,8 @@ private:
     double shapeStartX;
     double shapeStartY;
 
+    VectorAnimationComplex::CellSet lastDrawnCells;
+
     // Dirty implementation:
     VectorAnimationComplex::VAC * vac_;
     VectorAnimationComplex::KeyVertex * ivertex_;
@@ -221,12 +230,17 @@ private:
     void drawBackground_(Background * background, int frame);
     QMap<Background *, BackgroundRenderer *> backgroundRenderers_;
 
-    DrawShapeMode polygonDrawMode;
-
-    void drawLine(double x, double y);
-    void drawCircle(double x, double y);
-    void drawPolygon(double x, double y, int countAngles, double rotation);
-    void drawShape(double x, double y, ShapeType shapeType, int countAngles, double rotation, DrawShapeMode drawShapeMode);
+    void adjustCellsColors();
+    void processRectangleOfSelection(double x, double y, ShapeDrawPhase drawPhase);
+    void startDrawShape(double x, double y);
+    void endDrawShape();
+    void drawCurve(double x, double y, ShapeDrawPhase drawPhase);
+    void drawLine(double x, double y, ShapeDrawPhase drawPhase);
+    void drawCircle(double x, double y, ShapeDrawPhase drawPhase);
+    void drawTriangle(double x, double y, ShapeDrawPhase drawPhase);
+    void drawRectangle(double x, double y, ShapeDrawPhase drawPhase);
+    void drawPolygon(double x, double y, int countAngles, double rotation, ShapeDrawPhase drawPhase);
+    void drawShape(double x, double y, ShapeType shapeType, int countAngles = 1, double rotation = 0);
     void updateView();
 };
 

@@ -398,6 +398,7 @@ void Scene::setHoveredObject(Time time, int index, int id)
     setNoHoveredObject();
     indexHovered_ = index;
     layers_[index]->setHoveredObject(time, id);
+    layers_[index]->vac()->hoveveredConnected();
 }
 
 void Scene::setNoHoveredObject()
@@ -951,6 +952,7 @@ void Scene::paste(VectorAnimationComplex::VAC* & clipboard)
     if(layer)
     {
         layer->vac()->paste(clipboard);
+        layer->vac()->adjustSelectColorsAll();
     }
 }
 

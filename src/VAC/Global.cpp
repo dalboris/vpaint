@@ -61,7 +61,15 @@ Global::Global(MainWindow * w) :
     preferences_(),
     preferencesDialog_(0),
     settings_(0),
-    documentDir_(QDir::home())
+    documentDir_(QDir::home()),
+    faceColor_(QColor::fromRgb(100, 100, 100, 10)),
+    isDrawShapeFaceEnabled_(true),
+    isShowAroundRectangleWhenDraw_(false),
+    isShowVerticesOnSelection_(false),
+    highlightColorRatio_(1.2),
+    highlightAlphaRatio_(2.0),
+    selectColorRatio_(1.4),
+    selectAlphaRatio_(3.0)
 {
     // Color selectors
     currentColor_ = new ColorSelector();
@@ -834,12 +842,100 @@ QColor Global::edgeColor()
 
 QColor Global::faceColor()
 {
-    return currentColor_->color();
+    return faceColor_;
 }
 
-void Global::setEdgeColor(const QColor &newColor)
+void Global::setEdgeColor(const QColor& newColor)
 {
-    currentColor_->setColor(newColor);
+    if (newColor.isValid())
+    {
+        currentColor_->setColor(newColor);
+        emit edgeColorChanged();
+    }
+}
+
+void Global::setFaceColor(const QColor& newColor)
+{
+    if (newColor.isValid())
+    {
+        faceColor_ = newColor;
+        emit faceColorChanged();
+    }
+}
+
+void Global::setFaceAlpha(int alpha)
+{
+    faceColor_.setAlpha(alpha);
+}
+
+bool Global::isShowAroundRectangleWhenDraw() const
+{
+    return isShowAroundRectangleWhenDraw_;
+}
+
+void Global::setShowAroundRectangleWhenDraw(bool isShow)
+{
+    isShowAroundRectangleWhenDraw_ = isShow;
+}
+
+bool Global::isDrawShapeFaceEnabled() const
+{
+    return isDrawShapeFaceEnabled_;
+}
+
+void Global::setDrawShapeFaceEnabled(bool isEnabled)
+{
+    isDrawShapeFaceEnabled_ = isEnabled;
+}
+
+double Global::highlightColorRatio() const
+{
+    return highlightColorRatio_;
+}
+
+void Global::setHighlightColorRatio(double ratio)
+{
+    highlightColorRatio_ = ratio;
+}
+
+double Global::highlightAlphaRatio() const
+{
+    return highlightAlphaRatio_;
+}
+
+void Global::setHighlightAlphaRatio(double ratio)
+{
+    highlightAlphaRatio_ = ratio;
+}
+
+double Global::selectColorRatio() const
+{
+    return selectColorRatio_;
+}
+
+void Global::setSelectColorRatio(double ratio)
+{
+    selectColorRatio_ = ratio;
+}
+
+double Global::selectAlphaRatio() const
+{
+    return selectAlphaRatio_;
+}
+
+void Global::setSelectAlphaRatio(double ratio)
+{
+    selectAlphaRatio_ = ratio;
+}
+
+bool Global::isShowVerticesOnSelection() const
+{
+    return isShowVerticesOnSelection_;
+}
+
+void Global::setShowVerticesOnSelection(bool isShow)
+{
+    isShowVerticesOnSelection_ = isShow;
 }
 
 bool Global::useTabletPressure() const
