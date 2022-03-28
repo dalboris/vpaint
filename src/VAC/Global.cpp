@@ -69,7 +69,9 @@ Global::Global(MainWindow * w) :
     highlightColorRatio_(1.2),
     highlightAlphaRatio_(2.0),
     selectColorRatio_(1.4),
-    selectAlphaRatio_(3.0)
+    selectAlphaRatio_(3.0),
+    pasteDeltaX_(15),
+    pasteDeltaY_(15)
 {
     // Color selectors
     currentColor_ = new ColorSelector();
@@ -936,6 +938,28 @@ bool Global::isShowVerticesOnSelection() const
 void Global::setShowVerticesOnSelection(bool isShow)
 {
     isShowVerticesOnSelection_ = isShow;
+}
+
+double Global::pasteDeltaX()
+{
+    return pasteDeltaX_;
+}
+
+double Global::pasteDeltaY()
+{
+    return pasteDeltaY_;
+}
+
+void Global::setPasteDelta(double dx, double dy)
+{
+    pasteDeltaX_ = dx;
+    pasteDeltaY_ = dy;
+}
+
+void Global::setPasteDelta(double delta)
+{
+    pasteDeltaX_ = delta;
+    pasteDeltaY_ = delta;
 }
 
 bool Global::useTabletPressure() const

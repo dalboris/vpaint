@@ -275,6 +275,8 @@ void VAC::initNonCopyable()
     transformTool_.setCells(CellSet());
     deselectAll();
     signalCounter_ = 0;
+    pasteDeltaX_ = 0;
+    pasteDeltaY_ = 0;
 }
 
 void VAC::initCopyable()
@@ -332,7 +334,7 @@ VAC * VAC::clone()
 }
 
 // returns a map such as mp[oldID] = newID
-QMap<int,int> VAC::import(VAC * other, bool selectImportedCells)
+QMap<int,int> VAC::import(VAC * other, bool selectImportedCells, bool isMousePaste)
 {
     QMap<int,int> res;
 
@@ -348,15 +350,47 @@ QMap<int,int> VAC::import(VAC * other, bool selectImportedCells)
     }
 
     // Take ownership of all cells
-    for(Cell * c: qAsConst(ordering))
+    KeyVertex* firstKeyVertex = nullptr;
+    double leftX = global()->scene()->width();
+    double topY = global()->scene()->height();
+    for (Cell* cell: qAsConst(ordering))
     {
-        int oldID = c->id();
-        copyOfOther->removeCell_(c);
-        insertCellLast_(c);
+        int oldID = cell->id();
+        copyOfOther->removeCell_(cell);
+        insertCellLast_(cell);
         if(selectImportedCells)
-            addToSelection(c,false);
-        res[oldID] = c->id();
+            addToSelection(cell, true);
+        res[oldID] = cell->id();
+
+        KeyVertex* currentKeyVertex = cell->toKeyVertex();
+        if (currentKeyVertex != nullptr)
+        {
+            double currentX = currentKeyVertex->pos()[0];
+            double currentY = currentKeyVertex->pos()[1];
+
+            leftX = currentX < leftX ? currentX : leftX;
+            topY = currentY < topY ? currentY : topY;
+
+            if (firstKeyVertex == nullptr)
+            {
+                firstKeyVertex = currentKeyVertex;
+            }
+        }
     }
+
+    setHoveredCell(firstKeyVertex);
+    prepareDragAndDrop(leftX, topY, firstKeyVertex->time());
+    if (isMousePaste)
+    {
+        performDragAndDrop(global()->sceneCursorPos()[0], global()->sceneCursorPos()[1]);
+    }
+    else
+    {
+        pasteDeltaX_ += global()->pasteDeltaX();
+        pasteDeltaY_ += global()->pasteDeltaY();
+        performDragAndDrop(leftX + pasteDeltaX_, topY + pasteDeltaY_);
+    }
+    completeDragAndDrop();
 
     // Delete copy of vac
     delete copyOfOther;
@@ -821,19 +855,25 @@ void VAC::setNoHoveredObject()
     transformTool_.setNoHoveredObject();
 }
 
-void VAC::select(Time /*time*/, int id)
+void VAC::select(Time time, int id)
 {
-    addToSelection(getCell(id), false);
+    Q_UNUSED(time);
+    Q_UNUSED(id);
+    addToSelection(hoveredCells(), false);
 }
 
-void VAC::deselect(Time /*time*/, int id)
+void VAC::deselect(Time time, int id)
 {
-    removeFromSelection(getCell(id),false);
+    Q_UNUSED(time);
+    Q_UNUSED(id);
+    removeFromSelection(hoveredCells(), false);
 }
 
-void VAC::toggle(Time /*time*/, int id)
+void VAC::toggle(Time time, int id)
 {
-    toggleSelection(getCell(id),false);
+    Q_UNUSED(time);
+    Q_UNUSED(id);
+    toggleSelection(hoveredCells(), false);
 }
 
 void VAC::deselectAll(Time time)
@@ -5655,6 +5695,9 @@ void VAC::cut(VAC* & clipboard)
     if(selectedCells().isEmpty())
         return;
 
+    pasteDeltaX_ = -global()->pasteDeltaX();
+    pasteDeltaY_ = -global()->pasteDeltaY();
+
     if(clipboard)
         delete clipboard;
 
@@ -5675,6 +5718,9 @@ void VAC::copy(VAC* & clipboard)
     if(selectedCells().isEmpty())
         return;
 
+    pasteDeltaX_ = 0;
+    pasteDeltaY_ = 0;
+
     if(clipboard)
         delete clipboard;
 
@@ -5682,7 +5728,7 @@ void VAC::copy(VAC* & clipboard)
     clipboard->timeCopy_ = global()->activeTime();
 }
 
-void VAC::paste(VAC *& clipboard)
+void VAC::paste(VAC *& clipboard, bool isMousePaste)
 {
     if(!clipboard) return;
 
@@ -5698,8 +5744,8 @@ void VAC::paste(VAC *& clipboard)
     }
 
     // Import into this VAC and set as selection
-    removeFromSelection(selectedCells());
-    import(cloneOfClipboard, true);
+    deselectAll();
+    import(cloneOfClipboard, true, isMousePaste);
 
     // Delete clone
     delete cloneOfClipboard;
@@ -6439,7 +6485,7 @@ void VAC::prepareDragAndDrop(double x0, double y0, Time time)
     if(hoveredCell_->isSelected() && global()->toolMode() == Global::SELECT)
         cellsToDrag = selectedCells();
     else
-        cellsToDrag << hoveredCell_;
+        cellsToDrag = hoveredCells();
 
     // Partition into three sets of cells
     CellSet cellsNotToKeyframe;

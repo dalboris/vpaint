@@ -113,6 +113,16 @@ void Scene::setCanvasDefaultValues()
     // Don't emit changed on purpose
 }
 
+bool Scene::isSelectionNotEmpty()
+{
+    Layer * layer = activeLayer();
+    if(layer)
+    {
+        return layer->vac()->selectedCells().count() > 0;
+    }
+    return false;
+}
+
 void Scene::copyFrom(Scene * other)
 {
     // XXX We should also copy canvas properties
@@ -946,12 +956,12 @@ void Scene::copy(VectorAnimationComplex::VAC* & clipboard)
     }
 }
 
-void Scene::paste(VectorAnimationComplex::VAC* & clipboard)
+void Scene::paste(VectorAnimationComplex::VAC* & clipboard, bool isMousePaste)
 {
     Layer * layer = activeLayer();
     if(layer)
     {
-        layer->vac()->paste(clipboard);
+        layer->vac()->paste(clipboard, isMousePaste);
         layer->vac()->adjustSelectColorsAll();
     }
 }

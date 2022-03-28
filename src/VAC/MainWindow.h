@@ -114,6 +114,13 @@ public:
     bool isShowVerticesOnSelection() const;
     void setShowVerticesOnSelection(bool isShow);
 
+    double pasteDeltaX();
+    double pasteDeltaY();
+    void setPasteDelta(double dx, double dy);
+    void setPasteDelta(double delta);
+
+    bool isClipboardNotEmpty();
+
 private:
     //Parsing keyboard events
     void parseKeyPressEvent(QKeyEvent* event);
@@ -140,6 +147,10 @@ public slots:
 
     void undo();
     void redo();
+    void cut();
+    void copy();
+    void paste(bool isMousePaste = false);
+
 private slots:
     // ---- File ----
     void newDocument();
@@ -157,9 +168,6 @@ private slots:
 
     // ---- Edit ----
     void addToUndoStack();
-    void cut();
-    void copy();
-    void paste();
 
     // ---- View ----
     void displayModeChanged();

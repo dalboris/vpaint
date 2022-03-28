@@ -78,7 +78,7 @@ public:
     void initCopyable();
 
     // VAC extraction and insertion
-    QMap<int, int> import(VAC * other, bool selectImportedCells = false); // insert a copy of other inside this
+    QMap<int, int> import(VAC * other, bool selectImportedCells = false, bool isMousePaste = false); // insert a copy of other inside this
     VAC * subcomplex(const CellSet & subcomplexCells); // Create a new VAC whose cells are cells
 
     // Drawing
@@ -278,7 +278,7 @@ public slots:
     void uncut();
     void cut(VAC* & clipboard);
     void copy(VAC* & clipboard);
-    void paste(VAC* & clipboard);
+    void paste(VAC* & clipboard, bool isMousePaste = false);
     void resetCellsToConsiderForCutting();
     void updateCellsToConsiderForCutting();
     // -- animation --
@@ -477,6 +477,9 @@ private:
     // Transform tool
     TransformTool transformTool_;
     friend class TransformTool;
+
+    double pasteDeltaX_;
+    double pasteDeltaY_;
 };
 
 }

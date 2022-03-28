@@ -462,9 +462,9 @@ void MainWindow::copy()
     scene_->copy(clipboard_);
 }
 
-void MainWindow::paste()
+void MainWindow::paste(bool isMousePaste)
 {
-    scene_->paste(clipboard_);
+    scene_->paste(clipboard_, isMousePaste);
 }
 
 void MainWindow::motionPaste()
@@ -667,6 +667,31 @@ bool MainWindow::isShowVerticesOnSelection() const
 void MainWindow::setShowVerticesOnSelection(bool isShow)
 {
     global()->setShowVerticesOnSelection(isShow);
+}
+
+double MainWindow::pasteDeltaX()
+{
+    return global()->pasteDeltaX();
+}
+
+double MainWindow::pasteDeltaY()
+{
+    return global()->pasteDeltaY();
+}
+
+void MainWindow::setPasteDelta(double dx, double dy)
+{
+    global()->setPasteDelta(dx, dy);
+}
+
+void MainWindow::setPasteDelta(double delta)
+{
+    global()->setPasteDelta(delta);
+}
+
+bool MainWindow::isClipboardNotEmpty()
+{
+    return clipboard_ != nullptr;
 }
 
 void MainWindow::parseKeyPressEvent(QKeyEvent* event)
