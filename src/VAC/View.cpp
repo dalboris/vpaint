@@ -244,26 +244,6 @@ int View::decideClicAction()
                 return TOGGLESELECT_ACTION;
             }
         }
-
-        // Cut edge
-//        if( global()->toolMode() == Global::SELECT &&
-//             mouse_LeftButton_ &&
-//             !mouse_AltWasDown_ &&
-//             mouse_ControlWasDown_ &&
-//             !mouse_ShiftWasDown_)
-//        {
-//            return SPLIT_ACTION;
-//        }
-
-        // Paint
-//        if( global()->toolMode() == Global::PAINT &&
-//            mouse_LeftButton_ &&
-//            !mouse_AltWasDown_ &&
-//            !mouse_ControlWasDown_ &&
-//            !mouse_ShiftWasDown_)
-//        {
-//            return PAINT_ACTION;
-//        }
     }
 
     return GLWidget::decideClicAction();

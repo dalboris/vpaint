@@ -549,66 +549,6 @@ void MainWindow::resetUndoStack()
     resetUndoStack_();
 }
 
-Global::ToolMode MainWindow::currentToolMode() const
-{
-    return global()->toolMode();
-}
-
-void MainWindow::setToolMode(Global::ToolMode mode)
-{
-    global()->setToolMode(mode);
-}
-
-QColor MainWindow::drawColor() const
-{
-    return global()->edgeColor();
-}
-
-void MainWindow::setDrawColor(const QColor& newColor)
-{
-    global()->setEdgeColor(newColor);
-}
-
-QColor MainWindow::faceColor() const
-{
-    return global()->faceColor();
-}
-
-void MainWindow::setFaceColor(const QColor &newColor)
-{
-    global()->setFaceColor(newColor);
-}
-
-int MainWindow::faceAlpha() const
-{
-    return global()->faceColor().alpha();
-}
-
-void MainWindow::setFaceAlpha(int alpha)
-{
-    global()->setFaceAlpha(alpha);
-}
-
-bool MainWindow::isDrawShapeFaceEnabled() const
-{
-    return global()->isDrawShapeFaceEnabled();
-}
-
-void MainWindow::setDrawShapeFaceEnabled(bool isEnabled)
-{
-    global()->setDrawShapeFaceEnabled(isEnabled);
-}
-
-bool MainWindow::isShowAroundRectangleWhenDraw() const
-{
-    return global()->isShowAroundRectangleWhenDraw();
-}
-
-void MainWindow::setShowAroundRectangleWhenDraw(bool isShow)
-{
-    global()->setShowAroundRectangleWhenDraw(isShow);
-}
-
 double MainWindow::lineWidth() const
 {
     return global()->edgeWidth();
@@ -619,79 +559,9 @@ void MainWindow::setLineWidth(double w)
     global()->setEdgeWidth(w);
 }
 
-double MainWindow::highlightColorRatio() const
+const VAC *MainWindow::clipboard() const
 {
-    return global()->highlightColorRatio();
-}
-
-void MainWindow::setHighlightColorRatio(double ratio)
-{
-    global()->setHighlightColorRatio(ratio);
-}
-
-double MainWindow::highlightAlphaRatio() const
-{
-    return global()->highlightAlphaRatio();
-}
-
-void MainWindow::setHighlightAlphaRatio(double ratio)
-{
-    global()->setHighlightAlphaRatio(ratio);
-}
-
-double MainWindow::selectColorRatio() const
-{
-    return global()->selectColorRatio();
-}
-
-void MainWindow::setSelectColorRatio(double ratio)
-{
-    global()->setSelectColorRatio(ratio);
-}
-
-double MainWindow::selectAlphaRatio() const
-{
-    return global()->selectAlphaRatio();
-}
-
-void MainWindow::setSelectAlphaRatio(double ratio)
-{
-    global()->setSelectAlphaRatio(ratio);
-}
-
-bool MainWindow::isShowVerticesOnSelection() const
-{
-    return global()->isShowVerticesOnSelection();
-}
-
-void MainWindow::setShowVerticesOnSelection(bool isShow)
-{
-    global()->setShowVerticesOnSelection(isShow);
-}
-
-double MainWindow::pasteDeltaX()
-{
-    return global()->pasteDeltaX();
-}
-
-double MainWindow::pasteDeltaY()
-{
-    return global()->pasteDeltaY();
-}
-
-void MainWindow::setPasteDelta(double dx, double dy)
-{
-    global()->setPasteDelta(dx, dy);
-}
-
-void MainWindow::setPasteDelta(double delta)
-{
-    global()->setPasteDelta(delta);
-}
-
-bool MainWindow::isClipboardNotEmpty()
-{
-    return clipboard_ != nullptr;
+    return clipboard_;
 }
 
 void MainWindow::parseKeyPressEvent(QKeyEvent* event)

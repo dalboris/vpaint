@@ -289,7 +289,9 @@ void VAC::initCopyable()
 
 
 VAC::VAC() :
-    SceneObject()
+    SceneObject(),
+    pasteDeltaX_(0),
+    pasteDeltaY_(0)
 {
     initNonCopyable();
     initCopyable();
@@ -351,8 +353,8 @@ QMap<int,int> VAC::import(VAC * other, bool selectImportedCells, bool isMousePas
 
     // Take ownership of all cells
     KeyVertex* firstKeyVertex = nullptr;
-    double leftX = global()->scene()->width();
-    double topY = global()->scene()->height();
+    auto leftX = global()->scene()->width();
+    auto topY = global()->scene()->height();
     for (Cell* cell: qAsConst(ordering))
     {
         int oldID = cell->id();
@@ -362,11 +364,10 @@ QMap<int,int> VAC::import(VAC * other, bool selectImportedCells, bool isMousePas
             addToSelection(cell, true);
         res[oldID] = cell->id();
 
-        KeyVertex* currentKeyVertex = cell->toKeyVertex();
-        if (currentKeyVertex != nullptr)
+        if (KeyVertex* currentKeyVertex = cell->toKeyVertex())
         {
-            double currentX = currentKeyVertex->pos()[0];
-            double currentY = currentKeyVertex->pos()[1];
+            auto currentX = currentKeyVertex->pos()[0];
+            auto currentY = currentKeyVertex->pos()[1];
 
             leftX = currentX < leftX ? currentX : leftX;
             topY = currentY < topY ? currentY : topY;
@@ -1034,7 +1035,10 @@ void VAC::exportSVG_(Time t, QTextStream & out)
 }
 
 VAC::VAC(QTextStream & in) :
-    SceneObject()
+    SceneObject(),
+    pasteDeltaX_(0),
+    pasteDeltaY_(0)
+
 {
     clear();
 

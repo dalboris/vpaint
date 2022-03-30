@@ -335,6 +335,6 @@ private:
     Global::ToolMode toolMode;
 };
 
-Global * global();
+Q_VPAINT_EXPORT Global * global();
 
 #endif // GLOBAL_H

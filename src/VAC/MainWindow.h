@@ -77,49 +77,10 @@ public:
 
     void resetUndoStack();
 
-    Global::ToolMode currentToolMode() const;
-    void setToolMode(Global::ToolMode mode);
-
-    QColor drawColor() const;
-    void setDrawColor(const QColor& newColor);
-
-    QColor faceColor() const;
-    void setFaceColor(const QColor& newColor);
-
-    int faceAlpha() const;
-    void setFaceAlpha(int alpha);
-
-    bool isDrawShapeFaceEnabled() const;
-    void setDrawShapeFaceEnabled(bool isEnabled);
-
-    bool isShowAroundRectangleWhenDraw() const;
-    void setShowAroundRectangleWhenDraw(bool isShow);
-
     double lineWidth() const;
     void setLineWidth(double w);
 
-    double highlightColorRatio() const;
-    void setHighlightColorRatio(double ratio);
-
-    double highlightAlphaRatio() const;
-    void setHighlightAlphaRatio(double ratio);
-
-    double selectColorRatio() const;
-    void setSelectColorRatio(double ratio);
-
-    double selectAlphaRatio() const;
-    void setSelectAlphaRatio(double ratio);
-
-    //For help and debug GCode generation
-    bool isShowVerticesOnSelection() const;
-    void setShowVerticesOnSelection(bool isShow);
-
-    double pasteDeltaX();
-    double pasteDeltaY();
-    void setPasteDelta(double dx, double dy);
-    void setPasteDelta(double delta);
-
-    bool isClipboardNotEmpty();
+    const VectorAnimationComplex::VAC* clipboard() const;
 
 private:
     //Parsing keyboard events

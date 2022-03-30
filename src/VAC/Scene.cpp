@@ -113,16 +113,6 @@ void Scene::setCanvasDefaultValues()
     // Don't emit changed on purpose
 }
 
-bool Scene::isSelectionNotEmpty()
-{
-    Layer * layer = activeLayer();
-    if(layer)
-    {
-        return layer->vac()->selectedCells().count() > 0;
-    }
-    return false;
-}
-
 void Scene::copyFrom(Scene * other)
 {
     // XXX We should also copy canvas properties

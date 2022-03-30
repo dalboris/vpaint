@@ -137,8 +137,6 @@ public:
     void setWidth(double w);
     void setHeight(double h);
     void setCanvasDefaultValues();
-
-    bool isSelectionNotEmpty();
     
 public slots:
     // --------- Tools ----------
