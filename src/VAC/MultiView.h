@@ -57,8 +57,6 @@ public slots:
 
     void zoomIn(const double zoomRatio = 0.8);
     void zoomOut(const double zoomRatio = 0.8);
-    void zoomInCenter(const double zoomRatio = 0.8);
-    void zoomOutCenter(const double zoomRatio = 0.8);
 
     void fitAllInWindow();
     void fitSelectionInWindow();

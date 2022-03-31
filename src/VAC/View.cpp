@@ -30,6 +30,7 @@
 #include "VectorAnimationComplex/KeyFace.h"
 
 #include "Layer.h"
+#include "MainWindow.h"
 
 #include <QtDebug>
 #include <QApplication>
@@ -203,8 +204,13 @@ int View::decideClicAction()
     vac_ = scene_->activeVAC();
     if (vac_)
     {
+        if (mouse_RightButton_)
+        {
+            //Temporary for test paste by right click
+            global()->mainWindow()->paste(true);
+        }
         // Selection
-        if (global()->toolMode() == Global::SELECT && mouse_LeftButton_)
+        else if (global()->toolMode() == Global::SELECT && mouse_LeftButton_)
         {
             // Left = set selection
             if(!mouse_AltWasDown_ &&
@@ -237,26 +243,6 @@ int View::decideClicAction()
             {
                 return TOGGLESELECT_ACTION;
             }
-        }
-
-        // Cut edge
-        if( global()->toolMode() == Global::SELECT &&
-             mouse_LeftButton_ &&
-             !mouse_AltWasDown_ &&
-             mouse_ControlWasDown_ &&
-             !mouse_ShiftWasDown_)
-        {
-            return SPLIT_ACTION;
-        }
-
-        // Paint
-        if( global()->toolMode() == Global::PAINT &&
-            mouse_LeftButton_ &&
-            !mouse_AltWasDown_ &&
-            !mouse_ControlWasDown_ &&
-            !mouse_ShiftWasDown_)
-        {
-            return PAINT_ACTION;
         }
     }
 
@@ -491,8 +477,6 @@ void View::ClicEvent(int action, double x, double y)
             emit allViewsNeedToUpdatePicking(); // required because selection bbox pickable
             updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
             emit allViewsNeedToUpdate();
-
-            scene()->selectConnected();
         }
     }
     else if(action==DESELECTALL_ACTION)
@@ -509,11 +493,10 @@ void View::ClicEvent(int action, double x, double y)
             scene_->select(activeTime(),
                            hoveredObject_.index(),
                            hoveredObject_.id());
+
             emit allViewsNeedToUpdatePicking();
             updateHoveredObject(mouse_Event_X_, mouse_Event_Y_);
             emit allViewsNeedToUpdate();
-
-            vac_->selectConnected(false);
         }
     }
     else if(action==DESELECT_ACTION)
@@ -1312,7 +1295,7 @@ void View::drawShape(double x, double y, ShapeType shapeType, int countAngles, d
         lastDrawnCells.clear();
     }
 
-    auto processDrawShape = [this, &verticesPoints, &w]()
+    auto processDrawShape = [this, &verticesPoints, &w](bool isClosedShape = true)
     {
         int verticesCount = verticesPoints.count();
         //Draw Vertices
@@ -1333,12 +1316,15 @@ void View::drawShape(double x, double y, ShapeType shapeType, int countAngles, d
             edges << keyEdge;
             lastDrawnCells << keyEdge;
         }
-        auto keyEdge = vac_->newKeyEdge(interactiveTime(), vertices[verticesCount - 1], vertices[0], 0, w);
-        edges << keyEdge;
-        lastDrawnCells << keyEdge;
+        if (isClosedShape)
+        {
+            auto keyEdge = vac_->newKeyEdge(interactiveTime(), vertices[verticesCount - 1], vertices[0], 0, w);
+            edges << keyEdge;
+            lastDrawnCells << keyEdge;
+        }
 
         //Draw face
-        if (global()->isDrawShapeFaceEnabled())
+        if (global()->isDrawShapeFaceEnabled() && isClosedShape)
         {
             Cycle cycle(edges);
             auto faceCell = vac_->newKeyFace(cycle);
@@ -1352,7 +1338,7 @@ void View::drawShape(double x, double y, ShapeType shapeType, int countAngles, d
     {
         verticesPoints[0] = QPointF(shapeStartX, shapeStartY);
         verticesPoints[1] = QPointF(xScene, yScene);
-        processDrawShape();
+        processDrawShape(false);
         break;
     }
     case ShapeType::CIRCLE:

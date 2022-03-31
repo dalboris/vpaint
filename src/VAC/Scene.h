@@ -145,7 +145,7 @@ public slots:
     void smartDelete();
     void cut(VectorAnimationComplex::VAC* & clipboard);
     void copy(VectorAnimationComplex::VAC* & clipboard);
-    void paste(VectorAnimationComplex::VAC* & clipboard);
+    void paste(VectorAnimationComplex::VAC* & clipboard, bool isMousePaste = false);
     void createFace();
     void addCyclesToFace();
     void removeCyclesFromFace();

@@ -64,7 +64,7 @@ public:
     static const int Zoom = 3;
 };
 
-class GLWidget : public QOpenGLWidget
+class Q_VPAINT_EXPORT GLWidget : public QOpenGLWidget
 {
     Q_OBJECT
 

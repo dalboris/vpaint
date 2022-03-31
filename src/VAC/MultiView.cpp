@@ -418,16 +418,6 @@ void MultiView::zoomOut(const double zoomRatio)
     activeView()->zoomOut(zoomRatio);
 }
 
-void MultiView::zoomInCenter(const double zoomRatio)
-{
-    activeView()->zoomInCenter(zoomRatio);
-}
-
-void MultiView::zoomOutCenter(const double zoomRatio)
-{
-    activeView()->zoomOutCenter(zoomRatio);
-}
-
 void MultiView::fitAllInWindow()
 {
     activeView()->fitAllInWindow();

@@ -152,6 +152,11 @@ public:
     bool isShowVerticesOnSelection() const;
     void setShowVerticesOnSelection(bool isShow);
 
+    double pasteDeltaX();
+    double pasteDeltaY();
+    void setPasteDelta(double dx, double dy);
+    void setPasteDelta(double delta);
+
     // Display modes
     enum DisplayMode {
         ILLUSTRATION,
@@ -308,6 +313,9 @@ private:
     double highlightAlphaRatio_;
     double selectColorRatio_;
     double selectAlphaRatio_;
+
+    double pasteDeltaX_;
+    double pasteDeltaY_;
 };
 
 class Q_VPAINT_EXPORT ToolModeAction: public QAction
@@ -327,6 +335,6 @@ private:
     Global::ToolMode toolMode;
 };
 
-Global * global();
+Q_VPAINT_EXPORT Global * global();
 
 #endif // GLOBAL_H

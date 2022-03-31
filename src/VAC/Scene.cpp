@@ -946,12 +946,12 @@ void Scene::copy(VectorAnimationComplex::VAC* & clipboard)
     }
 }
 
-void Scene::paste(VectorAnimationComplex::VAC* & clipboard)
+void Scene::paste(VectorAnimationComplex::VAC* & clipboard, bool isMousePaste)
 {
     Layer * layer = activeLayer();
     if(layer)
     {
-        layer->vac()->paste(clipboard);
+        layer->vac()->paste(clipboard, isMousePaste);
         layer->vac()->adjustSelectColorsAll();
     }
 }
