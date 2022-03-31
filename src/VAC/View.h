@@ -33,7 +33,7 @@
 #include "ViewSettings.h"
 #include "VAC/vpaint_global.h"
 #include "VectorAnimationComplex/CellList.h"
-
+#include "Scene.h"
 namespace VPaint
 {
 class Scene;
@@ -59,6 +59,7 @@ struct Q_VPAINT_EXPORT MouseEvent
     // Modifiers keys: any number of these can be true
     bool alt, control, shift;
 };
+#define CIRCLE_ANGLES 50
 
 class Q_VPAINT_EXPORT View: public GLWidget
 {
@@ -156,14 +157,7 @@ private slots:
     void onBackgroundDestroyed_(Background * background);
 
 private:
-    enum class ShapeType {
-        CURVE,
-        LINE,
-        CIRCLE,
-        TRIANGLE,
-        RECTANGLE,
-        POLYGON,
-    };
+
 
     enum class ShapeDrawPhase {
         DRAW_START,
@@ -240,7 +234,7 @@ private:
     void drawTriangle(double x, double y, ShapeDrawPhase drawPhase);
     void drawRectangle(double x, double y, ShapeDrawPhase drawPhase);
     void drawPolygon(double x, double y, int countAngles, double rotation, ShapeDrawPhase drawPhase);
-    void drawShape(double x, double y, ShapeType shapeType, int countAngles = 1, double rotation = 0);
+    void drawShape(double x, double y, ShapeType shapeType, int countAngles = 1, double rotation = 0, bool drawingCircle = false);
     void updateView();
 };
 

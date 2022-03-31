@@ -1321,6 +1321,38 @@ void VAC::smartDelete_(const CellSet & cellsToDelete)
         smartDeleteCell(ivertex);
 }
 
+QList<ShapeType> VAC::getAllShapesType()
+{
+    QList<ShapeType> types;
+    KeyFaceSet keyVertices = faces();
+    for( auto vertex : keyVertices)
+    {
+        types.append(vertex->shapeType());
+    }
+    return types;
+}
+
+QList<ShapeType> VAC::getSelectedShapeType()
+{
+    QList<ShapeType> types;
+    KeyFaceSet keyVertices = selectedCells_;
+    for( auto vertex : keyVertices)
+    {
+        types.append(vertex->shapeType());
+    }
+    return types;
+}
+ShapeType VAC::shapeType(const CellSet & cells)
+{
+    KeyFaceSet keyVertices = cells;
+    for( auto vertex : keyVertices)
+    {
+        ShapeType type =  vertex->shapeType();
+        return type;
+    }
+    return ShapeType::NONE;
+}
+
 void VAC::smartDelete()
 {
     if(numSelectedCells() == 0)

@@ -24,6 +24,7 @@
 #include "Picking.h"
 #include "ViewSettings.h"
 #include "VAC/vpaint_global.h"
+#include "VAC/VectorAnimationComplex/Cell.h"
 
 class Background;
 class View;
@@ -88,7 +89,8 @@ public:
     // Emit signals
     void emitChanged() {emit changed();}
     void emitCheckpoint() {emit checkpoint();}
-
+    void emitShapeDrawn(ShapeType type) { emit shapeDrawn(type);}
+    void emitShapeDelete(ShapeType type) { emit shapeDeleted(type);}
     // Save and load
     void exportSVG(Time t, QTextStream & out);
     void save(QTextStream & out);
@@ -114,6 +116,7 @@ public:
     // Set as active layer
     Layer * createLayer();
     Layer * createLayer(const QString & name);
+    void addLayer(Layer * layer );
     void moveActiveLayerUp();
     void moveActiveLayerDown();
 
@@ -137,7 +140,8 @@ public:
     void setWidth(double w);
     void setHeight(double h);
     void setCanvasDefaultValues();
-    
+    QList<ShapeType> getActiveLayerShapesType();
+
 public slots:
     // --------- Tools ----------
     void test();
@@ -215,8 +219,8 @@ signals:
 
     void selectionChanged();
     void layerAttributesChanged();
-
-    
+    void shapeDrawn(ShapeType type);
+    void shapeDeleted(ShapeType type);
 private:
     // Layers are ordered back to front,
     // Example: layers_[0] is the bottom-most layer, rendered first

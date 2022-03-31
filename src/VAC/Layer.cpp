@@ -30,13 +30,14 @@ void Layer::init_(
         Background * background,
         VectorAnimationComplex::VAC * vac,
         const QString & layerName,
-        bool isVisible)
+        bool isVisible,
+        qreal layerHeight)
 {
     background_ = background;
     vac_ = vac;
     name_ = layerName;
     isVisible_ = isVisible;
-
+    layerHeight_ = layerHeight;
     connect(background_, SIGNAL(changed()), this, SIGNAL(changed()));
     connect(background_, SIGNAL(checkpoint()), this, SIGNAL(checkpoint()));
 
@@ -46,12 +47,13 @@ void Layer::init_(
     connect(vac_, SIGNAL(selectionChanged()), this, SIGNAL(selectionChanged()));
 }
 
-Layer::Layer(const QString & layerName)
+Layer::Layer(const QString & layerName, qreal layerHeight)
 {
     init_(new Background(this),
           new VectorAnimationComplex::VAC(),
           layerName,
-          true);
+          true,
+          layerHeight);
 }
 
 Layer::~Layer()
@@ -76,10 +78,21 @@ Layer * Layer::clone()
     //
 
     Layer * res = new Layer(NoInit_());
-    res->init_(new Background(*background(), res),
+/*    res->init_(new Background(*background(), res),
                vac_->clone(),
                name_,
-               isVisible_);
+               isVisible_,
+               layerHeight_);
+  */
+    // new Background() is workign fine.
+    //new Background(*background()) create issue when duplicate the
+    // layer. source layer behave incorrectly.
+    res->init_(new Background(),
+               vac_->clone(),
+               name_,
+               isVisible_,
+               layerHeight_);
+
     return res;
 }
 
@@ -232,6 +245,20 @@ void Layer::setVisible(bool b)
     if (b != isVisible_)
     {
         isVisible_ = b;
+        emit changed();
+        emit needUpdatePicking();
+        emit layerAttributesChanged();
+    }
+}
+qreal Layer::layerHeight() const
+{
+    return layerHeight_;
+}
+void Layer::setLayerHeight(qreal height)
+{
+    if(height != layerHeight_)
+    {
+        layerHeight_ = height;
         emit changed();
         emit needUpdatePicking();
         emit layerAttributesChanged();

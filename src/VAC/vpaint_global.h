@@ -15,6 +15,14 @@
 #else
 #  define Q_VPAINT_EXPORT
 #endif
-
+enum class ShapeType {
+    CURVE,
+    LINE,
+    CIRCLE,
+    TRIANGLE,
+    RECTANGLE,
+    POLYGON,
+    NONE,
+};
 #endif // VPAINT_GLOBAL_H
 
