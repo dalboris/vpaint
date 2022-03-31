@@ -114,6 +114,7 @@ public:
     // Set as active layer
     Layer * createLayer();
     Layer * createLayer(const QString & name);
+    void addLayer(Layer * layer );
     void moveActiveLayerUp();
     void moveActiveLayerDown();
 

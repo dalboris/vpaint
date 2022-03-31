@@ -800,33 +800,39 @@ Layer * Scene::createLayer()
 {
     return createLayer(tr("Layer %1").arg(numLayers() + 1));
 }
+void Scene::addLayer(Layer * layer )
+{
+    if(layer)
+    {
+        addLayer_(layer, true);
+
+        // Move above active layer, or keep last if no active layer
+        int newActiveLayerIndex = layers_.size() - 1;
+        if (0 <= activeLayerIndex_ && activeLayerIndex_ < newActiveLayerIndex - 1)
+        {
+            newActiveLayerIndex = activeLayerIndex_ + 1;
+            for (int i = layers_.size() - 1; i > newActiveLayerIndex; --i)
+            {
+                layers_[i] = layers_[i-1];
+            }
+            layers_[newActiveLayerIndex] = layer;
+        }
+
+        // Set as active
+        activeLayerIndex_ = newActiveLayerIndex;
+
+        // Emit signals
+        emitChanged();
+        emit needUpdatePicking();
+        emit layerAttributesChanged();
+    }
+}
 
 Layer * Scene::createLayer(const QString & name)
 {
     // Create new layer, add it on top for now
     Layer * layer = new Layer(name);
-    addLayer_(layer, true);
-
-    // Move above active layer, or keep last if no active layer
-    int newActiveLayerIndex = layers_.size() - 1;
-    if (0 <= activeLayerIndex_ && activeLayerIndex_ < newActiveLayerIndex - 1)
-    {
-        newActiveLayerIndex = activeLayerIndex_ + 1;
-        for (int i = layers_.size() - 1; i > newActiveLayerIndex; --i)
-        {
-            layers_[i] = layers_[i-1];
-        }
-        layers_[newActiveLayerIndex] = layer;
-    }
-
-    // Set as active
-    activeLayerIndex_ = newActiveLayerIndex;
-
-    // Emit signals
-    emitChanged();
-    emit needUpdatePicking();
-    emit layerAttributesChanged();
-
+    addLayer(layer);
     return layer;
 }
 
