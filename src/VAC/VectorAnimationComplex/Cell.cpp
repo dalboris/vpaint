@@ -179,6 +179,7 @@ Cell::Cell(Cell * other)
     spatialStar_ = other->spatialStar_;
     temporalStarBefore_ = other->temporalStarBefore_;
     temporalStarAfter_ = other->temporalStarAfter_;
+    shapeType_ = other->shapeType_;
 }
 
 void Cell::remapPointers(VAC * newVAC)
@@ -221,6 +222,14 @@ QColor Cell::color() const
     QColor res;
     res.setRgbF(color_[0],color_[1],color_[2],color_[3]);
     return res;
+}
+ShapeType Cell::shapeType() const
+{
+    return shapeType_;
+}
+void Cell::setShapeType(const ShapeType type)
+{
+    shapeType_ = type;
 }
 
 void Cell::setColor(const QColor& c)

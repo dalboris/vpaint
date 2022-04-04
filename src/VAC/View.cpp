@@ -1119,11 +1119,29 @@ void View::drawCurve(double x, double y, ShapeDrawPhase drawPhase)
         vac_->endSketchEdge();
         lastDrawnCells.clear();
         auto keyVertices = vac_->instantVertices();
+        keyVertices.last()->setShapeType(ShapeType::CURVE);
         lastDrawnCells << keyVertices.last();
+        keyVertices.at(keyVertices.count() - 2)->setShapeType(ShapeType::CURVE);
         lastDrawnCells << keyVertices.at(keyVertices.count() - 2);
         lastDrawnCells <<  vac_->instantEdges().last();
+        if (global()->isDrawShapeFaceEnabled())
+        {
+            for (auto cell : lastDrawnCells)
+            {
+                vac_->addToSelection(cell, false);
+            }
+            scene()->createFace();
+            auto faceCell = vac_->faces().last();
+            faceCell->setShapeType(ShapeType::CURVE);
+            vac_->addToSelection(faceCell);
+            lastDrawnCells << faceCell;
+            endDrawShape();
+        }
+
         adjustCellsColors();
         lastDrawnCells.clear();
+
+        scene()->emitShapeDrawn(ShapeType::CURVE);
         break;
     }
     default:
@@ -1144,6 +1162,7 @@ void View::drawLine(double x, double y, ShapeDrawPhase drawPhase)
     case ShapeDrawPhase::DRAW_END:
     {
         endDrawShape();
+        scene()->emitShapeDrawn(ShapeType::LINE);
         break;
     }
     default:
@@ -1159,13 +1178,14 @@ void View::drawCircle(double x, double y, ShapeDrawPhase drawPhase)
     case ShapeDrawPhase::DRAW_PROCESS:
     {
         //Draw circle as polygon
-        drawShape(x, y, ShapeType::POLYGON, 50);
+        drawShape(x, y, ShapeType::POLYGON, CIRCLE_ANGLES, 0, true );
 //        drawShape(x, y, ShapeType::CIRCLE);
         break;
     }
     case ShapeDrawPhase::DRAW_END:
     {
         endDrawShape();
+        scene()->emitShapeDrawn(ShapeType::CIRCLE);
         break;
     }
     default:
@@ -1186,6 +1206,7 @@ void View::drawTriangle(double x, double y, ShapeDrawPhase drawPhase)
     case ShapeDrawPhase::DRAW_END:
     {
         endDrawShape();
+        scene()->emitShapeDrawn(ShapeType::TRIANGLE);
         break;
     }
     default:
@@ -1205,8 +1226,9 @@ void View::drawRectangle(double x, double y, ShapeDrawPhase drawPhase)
     }
     case ShapeDrawPhase::DRAW_END:
     {
-        endDrawShape();
-        break;
+         endDrawShape();
+         scene()->emitShapeDrawn(ShapeType::RECTANGLE);
+         break;
     }
     default:
         break;
@@ -1226,6 +1248,8 @@ void View::drawPolygon(double x, double y, int countAngles, double rotation, Sha
     case ShapeDrawPhase::DRAW_END:
     {
         endDrawShape();
+        scene()->emitShapeDrawn(ShapeType::POLYGON);
+
         break;
     }
     default:
@@ -1240,8 +1264,7 @@ void View::adjustCellsColors()
         vac_->adjustSelectColors(cell);
     }
 }
-
-void View::drawShape(double x, double y, ShapeType shapeType, int countAngles, double rotation)
+void View::drawShape(double x, double y, ShapeType shapeType, int countAngles, double rotation, bool drawingCircle)
 {
     QPoint currentMousePos = QPoint(mouse_Event_X_,mouse_Event_Y_);
 
@@ -1295,7 +1318,7 @@ void View::drawShape(double x, double y, ShapeType shapeType, int countAngles, d
         lastDrawnCells.clear();
     }
 
-    auto processDrawShape = [this, &verticesPoints, &w](bool isClosedShape = true)
+    auto processDrawShape = [this, &verticesPoints, &w, shapeType, &drawingCircle](bool isClosedShape = true)
     {
         int verticesCount = verticesPoints.count();
         //Draw Vertices
@@ -1304,6 +1327,7 @@ void View::drawShape(double x, double y, ShapeType shapeType, int countAngles, d
         {
             auto vertex = vac_->newKeyVertex(interactiveTime(), Eigen::Vector2d(point.x(), point.y()));
             vertex->setColor(global()->edgeColor());
+
             vertices << vertex;
             lastDrawnCells << vertex;
         }
@@ -1329,6 +1353,7 @@ void View::drawShape(double x, double y, ShapeType shapeType, int countAngles, d
             Cycle cycle(edges);
             auto faceCell = vac_->newKeyFace(cycle);
             faceCell->setColor(global()->faceColor());
+            drawingCircle?faceCell->setShapeType(ShapeType::CIRCLE): faceCell->setShapeType(shapeType);
             lastDrawnCells << faceCell->toFaceCell();
         }
     };
@@ -1374,6 +1399,7 @@ void View::drawShape(double x, double y, ShapeType shapeType, int countAngles, d
             }
             scene()->createFace();
             auto faceCell = vac_->faces().last();
+            faceCell->setShapeType(shapeType);
             vac_->addToSelection(faceCell);
             lastDrawnCells << faceCell;
             endDrawShape();

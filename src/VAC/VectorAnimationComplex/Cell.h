@@ -119,6 +119,7 @@ namespace VectorAnimationComplex
 class CellObserver;
 class KeyHalfedge;
 
+
 // The abstract base class Cell
 class Q_VPAINT_EXPORT Cell
 {
@@ -335,6 +336,8 @@ public:
     void setSelectedColor(const QColor& c);
     void adjustSelectedColor(const double colorRatio, const double alphaRatio = 1.4);
 
+    ShapeType shapeType() const;
+    void setShapeType(const ShapeType type);
 protected:
     // Make a call to  glColor, taking into account the member
     // color,  the selected state  and the  highlighted state.
@@ -430,6 +433,7 @@ private:
 
     // Return the list of cells whose geometry depends on this cell's geometry
     CellSet geometryDependentCells_();
+    ShapeType shapeType_;
 };
     
 }

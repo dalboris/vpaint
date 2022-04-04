@@ -39,15 +39,15 @@ private:
     void init_(Background * background,
                VectorAnimationComplex::VAC * vac,
                const QString & layerName,
-               bool isVisible);
+               bool isVisible,
+               qreal layerHeight);
 
 public:
-    explicit Layer(const QString & layerName = QStringLiteral("Layer"));
+    explicit Layer(const QString & layerName = QStringLiteral("Layer"),qreal layerHeight = 0);
     ~Layer() override;
 
     Layer * clone() override;
     QString stringType() override;
-    
     void draw(Time time, ViewSettings & viewSettings) override;
     void drawPick(Time time, ViewSettings & viewSettings) override;
 
@@ -71,7 +71,8 @@ public:
 
     bool isVisible() const;
     void setVisible(bool b);
-
+    qreal layerHeight() const;
+    void setLayerHeight(qreal height);
 signals:
     // defined in base class (Scene Object)
     // void changed();
@@ -89,6 +90,7 @@ private:
     VectorAnimationComplex::VAC * vac_;
     QString name_;
     bool isVisible_;
+    qreal layerHeight_;
 };
 
 #endif

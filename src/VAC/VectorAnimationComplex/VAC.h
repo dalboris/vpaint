@@ -33,6 +33,8 @@
 
 #include "../View3DSettings.h"
 #include "VAC/vpaint_global.h"
+
+
 namespace VPaint
 {
 class Scene;
@@ -334,8 +336,9 @@ public:
     // Check the invariants of the VAC
     bool check() const;
     bool checkContains(const Cell * c) const;
-
-
+    ShapeType shapeType(const CellSet & cells);
+    QList<ShapeType> getSelectedShapeType();
+    QList<ShapeType> getAllShapesType();
 protected:
     // Save & Load
     void save_(QTextStream & out);

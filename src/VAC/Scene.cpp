@@ -716,12 +716,28 @@ void Scene::populateToolBar(QToolBar * toolBar)
     VectorAnimationComplex::VAC::populateToolBar(toolBar, this);
 }
 
+QList<ShapeType>Scene::getActiveLayerShapesType()
+{
+    QList<ShapeType> shapesType;
+    Layer * layer = activeLayer();
+    if(layer)
+    {
+        shapesType =  layer->vac()->getAllShapesType();
+    }
+    return shapesType;
+}
 void Scene::deleteSelectedCells()
 {
     Layer * layer = activeLayer();
     if(layer)
     {
+        QList<ShapeType> shapesType = layer->vac()->getSelectedShapeType();
         layer->vac()->deleteSelectedCells();
+        for(auto shapeType : shapesType)
+        if(shapeType != ShapeType::NONE)
+        {
+            emitShapeDelete(shapeType);
+        }
     }
 }
 
@@ -739,7 +755,14 @@ void Scene::smartDelete()
     Layer * layer = activeLayer();
     if(layer)
     {
+        //TOD - multiselection
+        QList<ShapeType> shapesType = layer->vac()->getSelectedShapeType();
         layer->vac()->smartDelete();
+        for(auto shapeType : shapesType)
+        if(shapeType != ShapeType::NONE)
+        {
+            emitShapeDelete(shapeType);
+        }
     }
 }
 
@@ -800,11 +823,8 @@ Layer * Scene::createLayer()
 {
     return createLayer(tr("Layer %1").arg(numLayers() + 1));
 }
-
-Layer * Scene::createLayer(const QString & name)
+void Scene::addLayer(Layer * layer )
 {
-    // Create new layer, add it on top for now
-    Layer * layer = new Layer(name);
     addLayer_(layer, true);
 
     // Move above active layer, or keep last if no active layer
@@ -826,7 +846,13 @@ Layer * Scene::createLayer(const QString & name)
     emitChanged();
     emit needUpdatePicking();
     emit layerAttributesChanged();
+}
 
+Layer * Scene::createLayer(const QString & name)
+{
+    // Create new layer, add it on top for now
+    Layer * layer = new Layer(name);
+    addLayer(layer);
     return layer;
 }
 
