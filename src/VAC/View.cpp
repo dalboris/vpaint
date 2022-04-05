@@ -1363,7 +1363,7 @@ void View::drawShape(double x, double y, ShapeType shapeType, int countAngles, d
     {
         verticesPoints[0] = QPointF(shapeStartX, shapeStartY);
         verticesPoints[1] = QPointF(xScene, yScene);
-        processDrawShape(false);
+        processDrawShape();
         break;
     }
     case ShapeType::CIRCLE:
