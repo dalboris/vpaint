@@ -658,7 +658,7 @@ void VAC::draw(Time time, ViewSettings & viewSettings)
     }
 
     // Rectangle of selection
-    if(drawRectangleOfSelection_ && viewSettings.isMainDrawing())
+    if(drawRectangleOfSelection_ && viewSettings.isMainDrawing() && time == timeInteractivity_)
     {
         glColor4d(0.5,0.5,0.8,0.2);
         glLineWidth(1);
