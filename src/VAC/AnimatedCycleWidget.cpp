@@ -860,6 +860,7 @@ void GraphicsArrowItem::updatePath()
 
     // Compute target point p2
     QPointF p2;
+    bool isWrapping = false;
     if (socketItem() && sourceItem() && targetItem()) {
         SocketType socketType = socketItem()->socketType();
         // Get source and target rect in scene coordinates. This implementation
@@ -883,20 +884,16 @@ void GraphicsArrowItem::updatePath()
         if(y2 > y2max) y2 = y2max;
 
         if (socketType == NextSocket) {
-            if (isBorderArrow() && x2min < x1) {
-                p2 = QPointF(x1 + ARROW_LENGTH, y2);
+            if (x2min < x1) {
+                isWrapping = true;
             }
-            else {
-                p2 = QPointF(x2min, y2);
-            }
+            p2 = QPointF(x2min, y2);
         }
         else if (socketType == PreviousSocket) {
-            if (isBorderArrow() && x2max > x1) {
-                p2 = QPointF(x1 - ARROW_LENGTH, y2);
+            if (x2max > x1) {
+                isWrapping = true;
             }
-            else {
-                p2 = QPointF(x2max, y2);
-            }
+            p2 = QPointF(x2max, y2);
         }
         else if (socketType == BeforeSocket) {
             p2 = QPointF(x2, y2max);
@@ -907,6 +904,33 @@ void GraphicsArrowItem::updatePath()
     }
     else {
         p2 = endPoint();
+        if (socketItem()) {
+            SocketType socketType = socketItem()->socketType();
+            if (socketType == NextSocket) {
+                if (p2.x() < p1.x()) {
+                    isWrapping = true;
+                }
+            }
+            else if (socketType == PreviousSocket) {
+                if (p1.x() < p2.x()) {
+                    isWrapping = true;
+                }
+            }
+        }
+    }
+    QPointF wrapVerticalOffset;
+    if (isWrapping && socketItem()) {
+        SocketType socketType = socketItem()->socketType();
+        QRectF sourceRect = sourceItem()->rect();
+        sourceRect.translate(sourceItem()->pos());
+        double y = 0.0;
+        if (socketType == NextSocket) {
+            y = std::round(sourceRect.top() - 0.25 * ARROW_LENGTH - socketItem()->scenePos().y());
+        }
+        else if (socketType == PreviousSocket) {
+            y = std::round(sourceRect.bottom() + 0.25 * ARROW_LENGTH - socketItem()->scenePos().y());
+        }
+        wrapVerticalOffset = QPointF(0, y);
     }
 
     // Compute arrow geometry
@@ -914,29 +938,56 @@ void GraphicsArrowItem::updatePath()
     bool hideArrow = hideArrowWhenNoSocket && !socketItem();
     QVector2D n(p2 - p1);
     double length = n.length();
-    if (length < SOCKET_RADIUS || hideArrow) {
-        QPainterPath path;
-        setPath(path);
-    }
-    else {
-        QPointF u = (n / length).toPointF();
-        QPointF v(-u.y(), u.x());
+    QPainterPath path;
+    if (length > SOCKET_RADIUS && !hideArrow) {
         double arrowHeadHalfWidth = 2;
         double arrowHeadLength = 4;
         double arrowEndMargin = 1.5;
-        QPointF arrowStart = p1 + SOCKET_RADIUS * u;
-        QPointF arrowEnd = p2 - arrowEndMargin * u;
-        QPointF arrowHeadBase = arrowEnd - arrowHeadLength * u;
-        QPointF arrowHeadOffset = arrowHeadHalfWidth * v;
-        QPainterPath path;
-        path.moveTo(arrowStart);
-        path.lineTo(arrowHeadBase);
-        path.moveTo(arrowEnd);
-        path.lineTo(arrowHeadBase + arrowHeadOffset);
-        path.lineTo(arrowHeadBase - arrowHeadOffset);
-        path.closeSubpath();
-        setPath(path);
+        if (isWrapping) {
+            QPointF u = (p1.x() > p2.x()) ? QPointF(1, 0) : QPointF(-1, 0);
+            QPointF v(0, -u.x());
+
+            QPointF arrowStart = p1 + SOCKET_RADIUS * u;
+            QPointF arrowEnd = p2 - arrowEndMargin * u;
+            QPointF arrowHeadBase = arrowEnd - arrowHeadLength * u;
+            QPointF arrowHeadOffset = arrowHeadHalfWidth * v;
+
+            QPointF q1 = p1 + 0.5 * ARROW_LENGTH * u;
+            QPointF q2 = p1 + 0.5 * ARROW_LENGTH * u + wrapVerticalOffset;
+            QPointF q3 = p2 - 0.5 * ARROW_LENGTH * u + wrapVerticalOffset;
+            QPointF q4 = p2 - 0.5 * ARROW_LENGTH * u;
+
+            path.moveTo(arrowStart);
+            path.lineTo(q1);
+            path.lineTo(q2);
+            path.lineTo(q3);
+            path.lineTo(q4);
+            path.lineTo(arrowHeadBase);
+            path.lineTo(q4);
+            path.lineTo(q3);
+            path.lineTo(q2);
+            path.lineTo(q1);
+            path.moveTo(arrowEnd);
+            path.lineTo(arrowHeadBase + arrowHeadOffset);
+            path.lineTo(arrowHeadBase - arrowHeadOffset);
+            path.closeSubpath();
+        }
+        else {
+            QPointF u = (n / length).toPointF();
+            QPointF v(-u.y(), u.x());
+            QPointF arrowStart = p1 + SOCKET_RADIUS * u;
+            QPointF arrowEnd = p2 - arrowEndMargin * u;
+            QPointF arrowHeadBase = arrowEnd - arrowHeadLength * u;
+            QPointF arrowHeadOffset = arrowHeadHalfWidth * v;
+            path.moveTo(arrowStart);
+            path.lineTo(arrowHeadBase);
+            path.moveTo(arrowEnd);
+            path.lineTo(arrowHeadBase + arrowHeadOffset);
+            path.lineTo(arrowHeadBase - arrowHeadOffset);
+            path.closeSubpath();
+        }
     }
+    setPath(path);
 }
 
 AnimatedCycleGraphicsView::AnimatedCycleGraphicsView(QGraphicsScene * scene) :
