@@ -53,7 +53,9 @@ GraphicsNodeItem::GraphicsNodeItem(AnimatedCycleWidget * widget, Cell * cell, bo
     isRoot_(false),
     isLeft_(false),
     widget_(widget),
-    isMoved_(false)
+    isMoved_(false),
+    mouseButton_(Qt::NoButton),
+    arrowItem_(nullptr)
 {
     // Set pen
     setPen_();
@@ -267,9 +269,183 @@ void GraphicsNodeItem::setFixedY(int y)
     setY(y_);
 }
 
+namespace {
+
+bool isAllowedAfter_(GraphicsNodeItem* beforeNode, GraphicsNodeItem* afterNode)
+{
+    Cell* before = beforeNode->cell();
+    Cell* after = afterNode->cell();
+    KeyCell* kbefore = before->toKeyCell();
+    InbetweenCell* iafter = after->toInbetweenCell();
+    if (kbefore && iafter) {
+        return kbefore->time() <= iafter->beforeTime();
+    }
+    else {
+        InbetweenCell* ibefore = before->toInbetweenCell();
+        KeyCell* kafter = after->toKeyCell();
+        if (ibefore && kafter) {
+            return ibefore->afterTime() <= kafter->time();
+        }
+        else {
+            return false;
+        }
+    }
+}
+
+GraphicsNodeItem* getNodeItemAtPos_(QGraphicsScene* scene, const QPointF& pos)
+{
+    QGraphicsItem * item = scene->itemAt(pos, QTransform());
+    GraphicsNodeItem * nodeItem = qgraphicsitem_cast<GraphicsNodeItem*>(item);
+    if (!nodeItem) {
+        QGraphicsTextItem * textItem = qgraphicsitem_cast<QGraphicsTextItem*>(item);
+        if(textItem) {
+            nodeItem = qgraphicsitem_cast<GraphicsNodeItem*>(textItem->parentItem());
+        }
+    }
+    return nodeItem;
+}
+
+// Our first UX idea was that the candidate socket was allowed to change based
+// on the current mouse position.
+//
+// However, it turned out to be a bit confusing, so the second idea was to keep
+// the first non-null candidate socket as the final one. This also has the
+// advantage to allow drawing "wrapping" arrows: for example, for leftmost
+// nodes, start dragging to the left, then once the left socket is selected, go
+// the right.
+//
+// So we use the second idea, but just in case we keep the code implementing
+// the first idea: just set the variable below to true to try it.
+//
+const bool allowChangingCandidateSocket = false;
+
+GraphicsSocketItem* getCandidateSocket_(GraphicsNodeItem* node, QGraphicsSceneMouseEvent * event)
+{
+    QPointF p = event->scenePos();
+    QRectF rect = node->rect();
+    rect.translate(node->pos());
+
+    if (allowChangingCandidateSocket) {
+        GraphicsNodeItem * candidateTargetNode = getNodeItemAtPos_(node->scene(), p);
+        if (p.y() > rect.bottom() &&
+            (!candidateTargetNode ||
+             isAllowedAfter_(node, candidateTargetNode)))
+        {
+            return node->afterSocket();
+        }
+        else if (p.y() < rect.top() &&
+                 (!candidateTargetNode ||
+                  isAllowedAfter_(candidateTargetNode, node)))
+        {
+            return node->beforeSocket();
+        }
+        else if (p.x() > rect.right()) {
+            return node->nextSocket();
+        }
+        else if (p.x() < rect.left()){
+            return node->previousSocket();
+        }
+        else {
+            return nullptr;
+        }
+    }
+    else {
+        if (p.y() > rect.bottom())
+        {
+            return node->afterSocket();
+        }
+        else if (p.y() < rect.top())
+        {
+            return node->beforeSocket();
+        }
+        else if (p.x() > rect.right()) {
+            return node->nextSocket();
+        }
+        else if (p.x() < rect.left()){
+            return node->previousSocket();
+        }
+        else {
+            return nullptr;
+        }
+    }
+}
+
+void onNodeArrowMousePress_(GraphicsNodeItem* node,
+                            GraphicsArrowItem*& arrow,
+                            QGraphicsSceneMouseEvent *)
+{
+    if (!arrow) {
+        arrow = new GraphicsArrowItem(node);
+        node->scene()->addItem(arrow);
+    }
+}
+
+void onNodeArrowMouseMove_(GraphicsNodeItem* node,
+                           GraphicsArrowItem*& arrow,
+                           QGraphicsSceneMouseEvent * event)
+{
+    if (arrow) {
+        QPointF p = event->scenePos();
+        arrow->setEndPoint(p);
+
+        GraphicsSocketItem* oldSocket = arrow->socketItem();
+        if (allowChangingCandidateSocket || !oldSocket) {
+            GraphicsSocketItem* newSocket = getCandidateSocket_(node, event);
+            if (newSocket != oldSocket) {
+                // Temporarily hide/show existing arrows from candidate sockets
+                if (oldSocket && oldSocket->arrowItem()) {
+                    oldSocket->arrowItem()->show();
+                }
+                if (newSocket && newSocket->arrowItem()) {
+                    newSocket->arrowItem()->hide();
+                }
+
+                // Set the socket
+                if (newSocket) {
+                    arrow->setSocketItem(newSocket);
+                    // TODO: highlight the socket?
+                }
+                else {
+                    arrow->setSourceItem(node);
+                }
+            }
+        }
+    }
+}
+
+void onNodeArrowMouseRelease_(GraphicsNodeItem* node,
+                              GraphicsArrowItem*& arrow,
+                              QGraphicsSceneMouseEvent * event)
+{
+    if (arrow && arrow->socketItem()) {
+        GraphicsNodeItem * target = getNodeItemAtPos_(node->scene(), event->scenePos());
+        if (target) {
+            // Create a new ArrowItem owned by the socket and make it
+            // point to the target node
+            arrow->socketItem()->setTargetItem(target);
+        }
+        else {
+            GraphicsSocketItem* socket = arrow->socketItem();
+            if (socket && socket->arrowItem()) {
+                socket->arrowItem()->show();
+            }
+        }
+    }
+    delete arrow;
+    arrow = nullptr;
+}
+
+} // namespace
+
 void GraphicsNodeItem::mousePressEvent(QGraphicsSceneMouseEvent * event)
 {
-    if (event->button() == Qt::LeftButton) {
+    // Only support one mouse click at a time
+    if (mouseButton_) {
+        return;
+    }
+    mouseButton_ = event->button();
+
+    if (mouseButton_ == Qt::LeftButton) {
         if (!widget()->isReadOnly() && (event->modifiers() == Qt::CTRL)) {
             setSide(!side());
         }
@@ -283,24 +459,38 @@ void GraphicsNodeItem::mousePressEvent(QGraphicsSceneMouseEvent * event)
             isMoved_ = true;
         }
     }
+    else if (mouseButton_ == Qt::RightButton && !widget()->isReadOnly()) {
+        onNodeArrowMousePress_(this, arrowItem_, event);
+    }
     QGraphicsPathItem::mousePressEvent(event);
 }
 
 void GraphicsNodeItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 {
-    QGraphicsPathItem::mouseMoveEvent(event);
-    double eps = 1.0e-4;
-    double delta = y_ - y();
-    if( delta < -eps || eps < delta )
-        setY(y_);
+    if (mouseButton_ == Qt::LeftButton) {
+        QGraphicsPathItem::mouseMoveEvent(event);
+        double eps = 1.0e-4;
+        double delta = y_ - y();
+        if( delta < -eps || eps < delta )
+            setY(y_);
+    }
+    else if (mouseButton_ == Qt::RightButton && !widget()->isReadOnly()) {
+        onNodeArrowMouseMove_(this, arrowItem_, event);
+        // Note: here, we do not call QGraphicsPathItem::mouseMoveEvent(event);
+        // otherwise it would move the node itself
+    }
 }
 
 void GraphicsNodeItem::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
 {
-    if(event->button() == Qt::LeftButton)
-    {
+    if (mouseButton_ == Qt::LeftButton) {
         isMoved_ = false;
     }
+    else if (mouseButton_ == Qt::RightButton && !widget()->isReadOnly()) {
+        onNodeArrowMouseRelease_(this, arrowItem_, event);
+    }
+
+    mouseButton_ = Qt::NoButton;
     QGraphicsPathItem::mouseReleaseEvent(event);
 }
 
@@ -360,7 +550,9 @@ GraphicsSocketItem::GraphicsSocketItem(SocketType socketType, GraphicsNodeItem *
     QGraphicsEllipseItem(0, 0, 2*SOCKET_RADIUS, 2*SOCKET_RADIUS, sourceItem),
     socketType_(socketType),
     sourceItem_(sourceItem),
-    arrowItem_(nullptr)
+    arrowItem_(nullptr),
+    isHovered_(false),
+    mouseButton_(Qt::NoButton)
 {
     updateStyle();
     updatePosition();
@@ -393,6 +585,9 @@ void GraphicsSocketItem::setTargetItem(GraphicsNodeItem * target)
         arrowItem_ = new GraphicsArrowItem(this);
         arrowItem_->setTargetItem(target);
         scene()->addItem(arrowItem_);
+    }
+    if (arrowItem_) {
+        arrowItem_->show();
     }
     sourceItem()->widget()->updateLeftNodes();
     updateStyle();
@@ -479,10 +674,21 @@ bool GraphicsSocketItem::isValid_()
     }
 }
 
+void GraphicsSocketItem::setHighlighted_()
+{
+    setBrush(QBrush(QColor(255, 178, 178)));
+}
+
+void GraphicsSocketItem::unsetHighlighted_()
+{
+    updateStyle();
+}
+
 void GraphicsSocketItem::hoverEnterEvent(QGraphicsSceneHoverEvent *)
 {
     if (!sourceItem()->widget()->isReadOnly()) {
-        setBrush(QBrush(QColor(255, 178, 178))); // highlighted color
+        isHovered_ = true;
+        setHighlighted_();
         sourceItem()->setFlag(ItemIsMovable, false);
     }
 }
@@ -490,28 +696,51 @@ void GraphicsSocketItem::hoverEnterEvent(QGraphicsSceneHoverEvent *)
 void GraphicsSocketItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *)
 {
     if (!sourceItem()->widget()->isReadOnly()) {
-        updateStyle();
+        isHovered_ = false;
+        unsetHighlighted_();
         sourceItem()->setFlag(ItemIsMovable, true);
     }
 }
 
 void GraphicsSocketItem::mousePressEvent(QGraphicsSceneMouseEvent * event)
 {
+    // Only support one mouse click at a time
+    if (mouseButton_) {
+        return;
+    }
+    mouseButton_ = event->button();
+
     if (!sourceItem()->widget()->isReadOnly()) {
-        if (!arrowItem_) {
-            arrowItem_ = new GraphicsArrowItem(this);
-            scene()->addItem(arrowItem_);
+        if (mouseButton_ == Qt::LeftButton) {
+            if (!arrowItem_) {
+                arrowItem_ = new GraphicsArrowItem(this);
+                scene()->addItem(arrowItem_);
+            }
+            arrowItem_->setTargetItem(nullptr);
+            arrowItem_->setEndPoint(event->scenePos());
         }
-        arrowItem_->setTargetItem(nullptr);
-        arrowItem_->setEndPoint(event->scenePos());
+        else if (mouseButton_ == Qt::RightButton) {
+            unsetHighlighted_();
+            onNodeArrowMousePress_(sourceItem(), sourceItem()->arrowItem_, event);
+        }
     }
 }
 
 void GraphicsSocketItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 {
     if (!sourceItem()->widget()->isReadOnly()) {
-        if (arrowItem_) {
-            arrowItem_->setEndPoint(event->scenePos());
+        if (mouseButton_ == Qt::LeftButton) {
+            if (arrowItem_) {
+                arrowItem_->setEndPoint(event->scenePos());
+            }
+        }
+        else if (mouseButton_ == Qt::RightButton) {
+            onNodeArrowMouseMove_(sourceItem(), sourceItem()->arrowItem_, event);
+            if (sourceItem()->arrowItem_ &&
+                sourceItem()->arrowItem_->socketItem() != this) {
+
+                sourceItem()->arrowItem_->setSocketItem(this);
+            }
         }
     }
 }
@@ -519,32 +748,52 @@ void GraphicsSocketItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 void GraphicsSocketItem::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
 {
     if (!sourceItem()->widget()->isReadOnly()) {
-        if (arrowItem_) {
-            QGraphicsItem * item = scene()->itemAt(event->scenePos(), QTransform());
-            GraphicsNodeItem * nodeItem = qgraphicsitem_cast<GraphicsNodeItem*>(item);
-            if (!nodeItem) {
-                QGraphicsTextItem * textItem = qgraphicsitem_cast<QGraphicsTextItem*>(item);
-                if(textItem) {
-                    nodeItem = qgraphicsitem_cast<GraphicsNodeItem*>(textItem->parentItem());
+        if (mouseButton_ == Qt::LeftButton) {
+            // Set target item
+            if (arrowItem_) {
+                GraphicsNodeItem * nodeItem = getNodeItemAtPos_(scene(), event->scenePos());
+                if (nodeItem) {
+                    arrowItem_->setTargetItem(nodeItem);
+                }
+                else {
+                    arrowItem_->setTargetItem(nullptr);
+                    delete arrowItem_;
+                    arrowItem_ = nullptr;
                 }
             }
-            if (nodeItem) {
-                arrowItem_->setTargetItem(nodeItem);
+        }
+        else if (mouseButton_ == Qt::RightButton) {
+            if (isHovered_) {
+                setHighlighted_();
             }
-            else {
-                arrowItem_->setTargetItem(nullptr);
-                delete arrowItem_;
-                arrowItem_ = nullptr;
-            }
+            onNodeArrowMouseRelease_(sourceItem(), sourceItem()->arrowItem_, event);
         }
     }
+
+    mouseButton_ = Qt::NoButton;
 }
 
 GraphicsArrowItem::GraphicsArrowItem(GraphicsSocketItem * socketItem) :
     QGraphicsPathItem(),
     socketItem_(socketItem),
+    sourceItem_(socketItem ? socketItem->sourceItem() : nullptr),
     targetItem_(nullptr),
     endPoint_(0.0, 0.0)
+{
+    init_();
+}
+
+GraphicsArrowItem::GraphicsArrowItem(GraphicsNodeItem * sourceItem) :
+    QGraphicsPathItem(),
+    socketItem_(nullptr),
+    sourceItem_(sourceItem),
+    targetItem_(nullptr),
+    endPoint_(0.0, 0.0)
+{
+    init_();
+}
+
+void GraphicsArrowItem::init_()
 {
     setPen(QPen(Qt::black, 1.0, Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin));
     setBrush(QBrush(Qt::black));
@@ -555,6 +804,20 @@ GraphicsArrowItem::~GraphicsArrowItem()
     if (targetItem_) {
         targetItem_->backPointers_.remove(this);
     }
+}
+
+void GraphicsArrowItem::setSocketItem(GraphicsSocketItem * socketItem)
+{
+    socketItem_ = socketItem;
+    sourceItem_ = socketItem ? socketItem->sourceItem() : nullptr;
+    updatePath();
+}
+
+void GraphicsArrowItem::setSourceItem(GraphicsNodeItem * sourceItem)
+{
+    socketItem_ = nullptr;
+    sourceItem_ = sourceItem;
+    updatePath();
 }
 
 void GraphicsArrowItem::setTargetItem(GraphicsNodeItem * target)
@@ -578,7 +841,7 @@ void GraphicsArrowItem::setEndPoint(const QPointF & p)
 
 bool GraphicsArrowItem::isBorderArrow() const
 {
-    return targetItem() && (
+    return socketItem() && targetItem() && (
                (socketItem()->socketType() == NextSocket     && targetItem()->isLeft()) ||
                (socketItem()->socketType() == PreviousSocket && sourceItem()->isLeft())
            );
@@ -586,19 +849,25 @@ bool GraphicsArrowItem::isBorderArrow() const
 
 void GraphicsArrowItem::updatePath()
 {
-    // Get source point p1 (center of socket) and compute target point p2
-    QPointF p1 = socketItem()->scenePos();
-    SocketType socketType = socketItem()->socketType();
-    GraphicsNodeItem * targetNodeItem = targetItem();
-    GraphicsNodeItem * sourceNodeItem = socketItem()->sourceItem();
+    // Compute source point p1
+    QPointF p1;
+    if (socketItem()) {
+        p1 = socketItem()->scenePos();
+    }
+    else if (sourceItem()) {
+        p1 = sourceItem()->scenePos();
+    }
+
+    // Compute target point p2
     QPointF p2;
-    if (targetNodeItem) {
+    if (socketItem() && sourceItem() && targetItem()) {
+        SocketType socketType = socketItem()->socketType();
         // Get source and target rect in scene coordinates. This implementation
         // works because we don't use any scaling or rotation.
-        QRectF targetRect = targetNodeItem->rect();
-        targetRect.translate(targetNodeItem->pos());
-        QRectF sourceRect = sourceNodeItem->rect();
-        sourceRect.translate(sourceNodeItem->pos());
+        QRectF targetRect = targetItem()->rect();
+        targetRect.translate(targetItem()->pos());
+        QRectF sourceRect = sourceItem()->rect();
+        sourceRect.translate(sourceItem()->pos());
         // Compute target point p2
         double x1 = p1.x();
         double y1 = p1.y();
@@ -641,9 +910,11 @@ void GraphicsArrowItem::updatePath()
     }
 
     // Compute arrow geometry
+    const bool hideArrowWhenNoSocket = true;
+    bool hideArrow = hideArrowWhenNoSocket && !socketItem();
     QVector2D n(p2 - p1);
     double length = n.length();
-    if (length < SOCKET_RADIUS) {
+    if (length < SOCKET_RADIUS || hideArrow) {
         QPainterPath path;
         setPath(path);
     }
@@ -728,26 +999,39 @@ AnimatedCycleWidget::AnimatedCycleWidget(QWidget *parent) :
     view_ = new AnimatedCycleGraphicsView(scene_);
     view_->setRenderHints(QPainter::Antialiasing);
 
+    help_ = new QWidget();
+    QVBoxLayout * helpLayout = new QVBoxLayout();
+    QString ctrl = QString(ACTION_MODIFIER_NAME_SHORT).toUpper();
+    helpLayout->addWidget(new QLabel(ctrl + tr(" + Click: Toggle edge direction")));
+    helpLayout->addWidget(new QLabel(tr("ALT + Click: Delete node")));
+    helpLayout->addWidget(new QLabel(tr("SHIFT + Click: Change root node")));
+    helpLayout->addWidget(new QLabel(tr("Left Click & Drag:")));
+    helpLayout->addWidget(new QLabel(tr("  - from node: move node")));
+    helpLayout->addWidget(new QLabel(tr("  - from socket: create/delete arrow")));
+    helpLayout->addWidget(new QLabel(tr("Right Click & Drag: create arrow")));
+    help_->setLayout(helpLayout);
+    help_->hide();
+
     QPushButton * addSelectedCellsButton = new QPushButton("Add selected cells");
     QPushButton * reloadButton = new QPushButton("Reload");
     QPushButton * applyButton = new QPushButton("Apply");
+    helpButton_ = new QPushButton("Show Help");
     connect(addSelectedCellsButton, SIGNAL(clicked()), this, SLOT(addSelectedCells()));
     connect(reloadButton, SIGNAL(clicked()), this, SLOT(reload()));
     connect(applyButton, SIGNAL(clicked()), this, SLOT(apply()));
-
+    connect(helpButton_, SIGNAL(clicked()), this, SLOT(toggleHelp()));
+    reload();
     QWidget * editorButtons = new QWidget();
     QHBoxLayout * editorButtonsLayout = new QHBoxLayout();
     editorButtonsLayout->addWidget(addSelectedCellsButton);
     editorButtonsLayout->addWidget(reloadButton);
     editorButtonsLayout->addWidget(applyButton);
+    editorButtonsLayout->addWidget(helpButton_);
     editorButtons->setLayout(editorButtonsLayout);
 
-    QString ctrl = QString(ACTION_MODIFIER_NAME_SHORT).toUpper();
     editModeExtras_ = new QWidget();
     QVBoxLayout * editModeExtrasLayout = new QVBoxLayout();
-    editModeExtrasLayout->addWidget(new QLabel(ctrl + tr(" + Click: Toggle edge direction")));
-    editModeExtrasLayout->addWidget(new QLabel(tr("ALT + Click: Delete node")));
-    editModeExtrasLayout->addWidget(new QLabel(tr("SHIFT + Click: Change root node")));
+    editModeExtrasLayout->addWidget(help_);
     editModeExtrasLayout->addWidget(editorButtons);
     editModeExtras_->setLayout(editModeExtrasLayout);
 
@@ -886,6 +1170,18 @@ void AnimatedCycleWidget::apply()
         emit vac->needUpdatePicking();
         emit vac->changed();
         emit vac->checkpoint();
+    }
+}
+
+void AnimatedCycleWidget::toggleHelp()
+{
+    if (help_->isVisible()) {
+        help_->hide();
+        helpButton_->setText("Show Help");
+    }
+    else {
+        help_->show();
+        helpButton_->setText("Hide Help");
     }
 }
 

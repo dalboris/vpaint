@@ -95,6 +95,7 @@ protected:
 
 private:
     friend class GraphicsArrowItem;
+    friend class GraphicsSocketItem;
     void setPen_();
     void setPath_();
     void destruct_();
@@ -113,12 +114,13 @@ private:
     int awidth_; // abstract width
     int height_;
     int y_;
+    Qt::MouseButton mouseButton_;
 
     GraphicsSocketItem* sockets[4];
     QSet<GraphicsArrowItem*> backPointers_;
+    GraphicsArrowItem* arrowItem_;
 };
 
-class GraphicsArrowItem;
 class GraphicsSocketItem: public QGraphicsEllipseItem
 {
 public:
@@ -150,8 +152,13 @@ private:
     SocketType socketType_;
     GraphicsNodeItem* sourceItem_;
     GraphicsArrowItem* arrowItem_;
+    bool isHovered_;
+
+    Qt::MouseButton mouseButton_;
 
     bool isValid_();
+    void setHighlighted_();
+    void unsetHighlighted_();
 };
 
 class GraphicsArrowItem: public QGraphicsPathItem
@@ -161,14 +168,27 @@ public:
     enum { Type = UserType + 3 };
     int type() const { return Type; }
 
+    // Creates an arrow starting at a socket
     GraphicsArrowItem(GraphicsSocketItem * socketItem);
+
+    // Creates an arrow starting at a node.
+    //
+    // This is useful for temporary arrows created with right-click that do not
+    // yet have a socket item (setting the socket item is deferred and
+    // automatically computed on mouse move / mouse release).
+    //
+    GraphicsArrowItem(GraphicsNodeItem * sourceItem);
+
+    // Destrow the GraphicsArrowItem
     ~GraphicsArrowItem();
 
+    void setSocketItem(GraphicsSocketItem * socketItem);
+    void setSourceItem(GraphicsNodeItem * sourceItem);
     void setTargetItem(GraphicsNodeItem * targetItem);
     void setEndPoint(const QPointF & p);
 
     GraphicsSocketItem * socketItem() const { return socketItem_; }
-    GraphicsNodeItem * sourceItem() const { return socketItem_->sourceItem(); }
+    GraphicsNodeItem * sourceItem() const { return sourceItem_; }
     GraphicsNodeItem * targetItem() const { return targetItem_; }
 
     QPointF endPoint() const { return endPoint_; }
@@ -177,8 +197,11 @@ public:
 
 private:
     GraphicsSocketItem * socketItem_;
+    GraphicsNodeItem * sourceItem_;
     GraphicsNodeItem * targetItem_;
     QPointF endPoint_;
+
+    void init_();
 };
 
 class AnimatedCycleWidget;
@@ -237,6 +260,7 @@ private slots:
     void apply();
     void animate();
     void addSelectedCells();
+    void toggleHelp();
 
 private:
     void clearScene();
@@ -252,6 +276,8 @@ private:
     InbetweenFace * inbetweenFace_;
     int indexCycle_;
     QWidget * editModeExtras_;
+    QWidget * help_;
+    QPushButton * helpButton_;
     Time beforeTime_;
     Time afterTime_;
 };
