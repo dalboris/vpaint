@@ -88,6 +88,7 @@ GraphicsNodeItem::GraphicsNodeItem(AnimatedCycleWidget * widget, Cell * cell, bo
     // the sockets to ensure that the sockets are correctly hoverable.
     text_ = new QGraphicsTextItem(QString(), this);
     text_->setFont(QFont("arial",7));
+    text_->setDefaultTextColor(QColor(Qt::black));
     updateText();
 
     // Create sockets as child items
@@ -670,6 +671,7 @@ void GraphicsArrowItem::updatePath()
 AnimatedCycleGraphicsView::AnimatedCycleGraphicsView(QGraphicsScene * scene) :
     QGraphicsView(scene)
 {
+    setBackgroundBrush(QBrush(Qt::white));
     //setTransformationAnchor(AnchorUnderMouse);
 }
 
