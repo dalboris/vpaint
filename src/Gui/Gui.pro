@@ -90,7 +90,9 @@ win32 {
 # Add shipped external libraries to includepath and dependpath
 INCLUDEPATH += $$PWD/../Third/
 DEPENDPATH += $$PWD/../Third/
-!win32: QMAKE_CXXFLAGS += $$QMAKE_CFLAGS_ISYSTEM $$PWD/../Third/
+!isEmpty(QMAKE_CFLAGS_ISYSTEM) {
+    QMAKE_CXXFLAGS += $$QMAKE_CFLAGS_ISYSTEM $$PWD/../Third/
+}
 
 # Define RELEASE_OR_DEBUG convenient variable
 CONFIG(release, debug|release): RELEASE_OR_DEBUG = release
