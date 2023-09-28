@@ -4959,9 +4959,13 @@ KeyFace * VAC::keyframe_(InbetweenFace * sface, Time time)
         AnimatedCycle beforeCycle = sface->animatedCycle(i);
         AnimatedCycle afterCycle = sface->animatedCycle(i);
 
-        // Compute "first" nodes
-        AnimatedCycleNode * beforeCycleFirst = beforeCycle.first();
-        AnimatedCycleNode * afterCycleFirst = afterCycle.getNode(time)->after();
+        // Compute root nodes
+        AnimatedCycleNode * beforeCycleRoot = beforeCycle.root();
+        while (!beforeCycleRoot->cell()->isBefore(time))
+            beforeCycleRoot = beforeCycleRoot->before();
+        AnimatedCycleNode * afterCycleRoot = afterCycle.root();
+        while (!afterCycleRoot->cell()->isAfter(time))
+            afterCycleRoot = afterCycleRoot->after();
 
         // Compute all nodes to delete
         QSet<AnimatedCycleNode*> beforeCycleNodesToDelete;
@@ -4981,9 +4985,9 @@ KeyFace * VAC::keyframe_(InbetweenFace * sface, Time time)
             if(afterCycleNodesToDelete.contains(node->before()))
                 node->setBefore(0);
 
-        // Set "first"
-        beforeCycle.setFirst(beforeCycleFirst);
-        afterCycle.setFirst(afterCycleFirst);
+        // Set root node
+        beforeCycle.setRoot(beforeCycleRoot);
+        afterCycle.setRoot(afterCycleRoot);
 
         // Delete nodes to delete
         foreach(AnimatedCycleNode * node, beforeCycleNodesToDelete)

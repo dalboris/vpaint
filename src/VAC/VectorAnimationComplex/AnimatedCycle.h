@@ -97,24 +97,24 @@ class AnimatedCycle
 {
 public:
     AnimatedCycle();
-    AnimatedCycle(AnimatedCycleNode * first); // It's the caller responsibility to allocate and create the nodes
-                                              // node ownership is transfered to the cycle (unless you know what you're doing)
+    AnimatedCycle(AnimatedCycleNode * root); // It's the caller responsibility to allocate and create the nodes
+                                             // node ownership is transfered to the cycle (unless you know what you're doing)
     AnimatedCycle(const AnimatedCycle & other);
     AnimatedCycle & operator=(const AnimatedCycle & other);
     ~AnimatedCycle();
 
     // First node
-    AnimatedCycleNode  * first() const;
-    void setFirst(AnimatedCycleNode  * node);
+    AnimatedCycleNode * root() const;
+    void setRoot(AnimatedCycleNode * node);
 
     // Find a node at particular time
-    AnimatedCycleNode  * getNode(Time time);
+    AnimatedCycleNode * getNode(Time time);
 
     // Find all noded refering to particular cell
     QSet<AnimatedCycleNode*> getNodes(Cell * cell);
 
     // Find all nodes
-    QSet<AnimatedCycleNode*> nodes() const; // Note: only return nodes connected to first_ (i.e., may not work if cycle is invalid)
+    QSet<AnimatedCycleNode*> nodes() const; // Note: only return nodes accessible from root (i.e., may not work if cycle is invalid)
 
     // Find all cells
     CellSet cells() const;
@@ -148,7 +148,7 @@ private:
     void clear();
     void copyFrom(const AnimatedCycle & other);
 
-    AnimatedCycleNode * first_;
+    AnimatedCycleNode * root_;
 
     // for unserialization
     friend class InbetweenFace;

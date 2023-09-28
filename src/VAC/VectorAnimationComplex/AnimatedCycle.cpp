@@ -221,17 +221,17 @@ void AnimatedCycleNode::setSide(bool side)
 }
 
 AnimatedCycle::AnimatedCycle() :
-    first_(0)
+    root_(0)
 {
 }
 
-AnimatedCycle::AnimatedCycle(AnimatedCycleNode * first) :
-    first_(first)
+AnimatedCycle::AnimatedCycle(AnimatedCycleNode * root) :
+    root_(root)
 {
 }
 
 AnimatedCycle::AnimatedCycle(const AnimatedCycle & other) :
-    first_(0)
+    root_(0)
 {
     copyFrom(other);
 }
@@ -254,7 +254,7 @@ void AnimatedCycle::clear()
     foreach(AnimatedCycleNode * node, nodes())
         delete node;
 
-    first_ = 0;
+    root_ = 0;
 }
 
 void AnimatedCycle::copyFrom(const AnimatedCycle & other)
@@ -276,37 +276,48 @@ void AnimatedCycle::copyFrom(const AnimatedCycle & other)
         newNode->setSide(oldNode->side());
     }
 
-    first_ = oldToNew[other.first_];
+    root_ = oldToNew[other.root_];
     tempNodes_ = other.tempNodes_;
 }
 
-AnimatedCycleNode  * AnimatedCycle::first() const
+AnimatedCycleNode  * AnimatedCycle::root() const
 {
-    return first_;
+    return root_;
 }
 
-void AnimatedCycle::setFirst(AnimatedCycleNode  * node)
+void AnimatedCycle::setRoot(AnimatedCycleNode  * node)
 {
-    first_ = node;
+    root_ = node;
 }
 
-AnimatedCycleNode  * AnimatedCycle::getNode(Time time)
+AnimatedCycleNode * AnimatedCycle::getNode(Time time)
 {
-    AnimatedCycleNode  * res = first_;
+    AnimatedCycleNode * res = root_;
     if(!res)
     {
-        qWarning("node(t) not found: no first node");
-        return 0;
+        qWarning("node(t) not found: no root node");
+        return nullptr;
     }
-
 
     while(!res->cell()->exists(time))
     {
-        res = res->after();
-        if(!res)
+        if (res->cell()->isAfter(time))
         {
-            qWarning("node(t) not found: no after node");
-            return 0;
+            res = res->before();
+            if(!res)
+            {
+                qWarning("node(t) not found: no before node");
+                return nullptr;
+            }
+        }
+        else
+        {
+            res = res->after();
+            if(!res)
+            {
+                qWarning("node(t) not found: no after node");
+                return nullptr;
+            }
         }
     }
 
@@ -317,12 +328,12 @@ QSet<AnimatedCycleNode*> AnimatedCycle::nodes() const
 {
     QSet<AnimatedCycleNode*> res;
 
-    if(!first_)
+    if(!root_)
         return res;
 
     QStack<AnimatedCycleNode*> toProcess;
-    toProcess.push(first_);
-    res << first_;
+    toProcess.push(root_);
+    res << root_;
     while(!toProcess.isEmpty())
     {
         AnimatedCycleNode * node = toProcess.pop();
@@ -482,11 +493,11 @@ void AnimatedCycle::replaceEdges(KeyEdge * oldEdge, const KeyEdgeList & newEdges
         for(int i=0; i<nAfterEdgeNodes; ++i)
             afterEdgeNodes[i]->setBefore(newEdgeNodes[i*afterInbetweenKeyRatio]);
 
-        // Update first node. Shouldn't occur, since first_ is supposed to be a inbetween node
+        // Update root node
         for(int i=0; i<nOldEdgeNodes; ++i)
         {
-            if(first_ == oldEdgeNodes[i])
-                first_ = newEdgeNodes[0];
+            if(root_ == oldEdgeNodes[i])
+                root_ = newEdgeNodes[0];
         }
 
         // Delete old nodes
@@ -568,9 +579,9 @@ void AnimatedCycle::replaceEdges(KeyEdge * oldEdge, const KeyEdgeList & newEdges
             if(oldEdgeNode->after() && oldEdgeNode->after()->before() == oldEdgeNode)
                 oldEdgeNode->after()->setBefore(newEdgeNodes[n-1]);
 
-            // Update first node
-            if(first_ == oldEdgeNode) // shouldn't occur, since first_ is supposed to be a inbetween node
-                first_ = newEdgeNodes[0];
+            // Update root node
+            if(root_ == oldEdgeNode)
+                root_ = newEdgeNodes[0];
 
             // Delete node
             delete oldEdgeNode;
@@ -669,9 +680,9 @@ void AnimatedCycle::replaceInbetweenVertex(InbetweenVertex * sv,
                 nsv->after()->setBefore(nsv2);
         }
 
-        // Update first node
-        if(first_ == nsv)
-            first_ = nsv1;
+        // Update root node
+        if(root_ == nsv)
+            root_ = nsv1;
 
         // Delete node
         delete nsv;
@@ -763,9 +774,9 @@ void AnimatedCycle::replaceInbetweenEdge(InbetweenEdge * se,
                 quasiAfterNode = quasiAfterNode->next();
             }
 
-            // Update first node
-            if(first_ == nse)
-                first_ = nse1;
+            // Update root node
+            if(root_ == nse)
+                root_ = nse1;
         }
 
         // Delete nodes
@@ -871,9 +882,9 @@ void AnimatedCycle::replaceInbetweenEdge(InbetweenEdge * se,
                 }
             }
 
-            // Update first node
-            if(first_ == nse)
-                first_ = nse1;
+            // Update root node
+            if(root_ == nse)
+                root_ = nse1;
 
             // Delete node
             delete nse;
@@ -1095,23 +1106,37 @@ void AnimatedCycle::convertTempIdsToPointers(VAC * vac)
     // Second pass, link nodes together
     for(int i=0; i<n; ++i)
     {
-        nodes[i]->setPrevious(nodes[tempNodes_[i].previous]);
-        nodes[i]->setNext(nodes[tempNodes_[i].next]);
-        if(tempNodes_[i].before == -1)
+        if(tempNodes_[i].previous == -1) {
+            qWarning() << "AnimatedCycle: previous node shouldn't be null";
+            nodes[i]->setPrevious(0);
+        }
+        else {
+             nodes[i]->setPrevious(nodes[tempNodes_[i].previous]);
+        }
+        if(tempNodes_[i].next == -1) {
+            qWarning() << "AnimatedCycle: next node shouldn't be null";
+            nodes[i]->setNext(0);
+        }
+        else {
+            nodes[i]->setNext(nodes[tempNodes_[i].next]);
+        }
+        if(tempNodes_[i].before == -1) {
             nodes[i]->setBefore(0);
-        else
+        }
+        else {
             nodes[i]->setBefore(nodes[tempNodes_[i].before]);
-        if(tempNodes_[i].after == -1)
+        }
+        if(tempNodes_[i].after == -1) {
             nodes[i]->setAfter(0);
-        else
+        }
+        else {
             nodes[i]->setAfter(nodes[tempNodes_[i].after]);
+        }
     }
 
-    // Find first
+    // Set root node, which is by convention the first when serialized
     if (n > 0) {
-        first_ = nodes[0];
-        while(first_->before())
-            first_ = first_->before();
+        root_ = nodes[0];
     }
 
     // Clean
@@ -1144,17 +1169,28 @@ int toInt(const QMap<int,int> & map, const QString & str)
 
 QString AnimatedCycle::toString() const
 {
-    // Create correspondence between node pointers and [1..n] where n is the number of nodes
+    // Get list of all nodes in the cycle, with root node first.
+    QSet<AnimatedCycleNode*> nodes_ = nodes();
+    QList<AnimatedCycleNode*> nodeList;
+    if (root_)
+        nodeList << root_;
+    foreach(AnimatedCycleNode * node, nodes_)
+    {
+        if (node != root_)
+            nodeList << node;
+    }
+
+    // Create correspondence between node pointers and [0..n-1] where n is the number of nodes.
     QMap<AnimatedCycleNode*,int> nodeMap;
     int id = 1;
-    foreach(AnimatedCycleNode * node, nodes())
+    foreach(AnimatedCycleNode * node, nodeList)
         nodeMap[node] = id++;
 
     // Write
     QString res;
     res += "[";
     bool first = true;
-    foreach(AnimatedCycleNode * node, nodes())
+    foreach(AnimatedCycleNode * node, nodeList)
     {
         if(first)
             first = false;
@@ -1241,15 +1277,27 @@ QTextStream & operator<<(QTextStream & out, const VectorAnimationComplex::Animat
 {
     using namespace VectorAnimationComplex;
 
-    // Create correspondence between node pointers and [0..n-1] where n is the number of nodes
+    // Get list of all nodes in the cycle, with root node first.
+    QSet<AnimatedCycleNode*> nodes_ = cycle.nodes();
+    QList<AnimatedCycleNode*> nodeList;
+    AnimatedCycleNode * root = cycle.root();
+    if (root)
+        nodeList << root;
+    foreach(AnimatedCycleNode * node, nodes_)
+    {
+        if (node != root)
+            nodeList << node;
+    }
+
+    // Create correspondence between node pointers and [0..n-1] where n is the number of nodes.
     QMap<AnimatedCycleNode*,int> nodeMap;
     int id = 0;
-    foreach(AnimatedCycleNode * node, cycle.nodes())
+    foreach(AnimatedCycleNode * node, nodeList)
         nodeMap[node] = id++;
 
     // Write to file
     out << "[";
-    foreach(AnimatedCycleNode * node, cycle.nodes())
+    foreach(AnimatedCycleNode * node, nodeList)
     {
         if(nodeMap[node]!=0) out << " ,";
         out << " "
