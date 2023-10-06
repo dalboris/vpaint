@@ -26,7 +26,7 @@ class UpdateCheckDialog: public QDialog
     Q_OBJECT
 
 public:
-    UpdateCheckDialog(QString newVersion, QWidget *parent = 0, Qt::WindowFlags f = 0);
+    UpdateCheckDialog(QString newVersion, QWidget *parent = 0, Qt::WindowFlags f = {});
     bool skipVersion();
     bool stopChecking();
 

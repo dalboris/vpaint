@@ -508,9 +508,17 @@ void triangulateHelper(const QList<EdgeSample> & samples, Triangles & triangles,
     // List to store the following:
     //  * n+1 vectors d0, d1, .... , dn
     //  * n   points  A0, A1, .... An-1 and B0, B1, .... Bn-1 (An and Bn are not defined)
-    struct QuadInfo    { EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    struct QuadInfo {
         Eigen::Vector2d d;
-        double ax, ay, bx, by; };
+        double ax, ay, bx, by;
+
+        // In some platforms, in extension of EIGEN_MAKE_ALIGNED_OPERATOR_NEW:
+        // `QuadInfo::eigen_aligned_operator_new_marker_type` locally defined but not used.
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wunused-local-typedefs"
+            EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+        #pragma GCC diagnostic pop
+    };
     QList<QuadInfo> quads;
 
     // Computing the di's
@@ -689,7 +697,7 @@ LinearSpline::LinearSpline(QTextStream & in) //:
     {
         in >> nuple;
         QStringList list = nuple.split(QRegExp("\\s*[\\(\\,\\)]\\s*"),
-                                 QString::SkipEmptyParts);
+                                       Qt::SkipEmptyParts);
         vertices << EdgeSample(list[0].toDouble(), list[1].toDouble(), list[2].toDouble());
     }
     in >> bracket;
@@ -726,7 +734,7 @@ LinearSpline::LinearSpline(const QStringRef & str)
 
     // Get data from string
     QStringList strList = str.toString() // Expensive, to change by only using QStringRef
-               .split(QRegExp("[\\,\\s]"), QString::SkipEmptyParts); // either ',', or any whitespace character
+               .split(QRegExp("[\\,\\s]"), Qt::SkipEmptyParts); // either ',', or any whitespace character
     QVector<double> d;
     for(int i=0; i<strList.size(); ++i)
         d << strList[i].toDouble();
@@ -756,7 +764,7 @@ LinearSpline::LinearSpline(XmlStreamReader & xml)
     // Get data from string
     QStringList strList =
             xml.attributes().value("curvedata").toString()
-               .split(QRegExp("[\\,\\s]"), QString::SkipEmptyParts); // either ',', or any whitespace character
+               .split(QRegExp("[\\,\\s]"), Qt::SkipEmptyParts); // either ',', or any whitespace character
     QVector<double> d;
     for(int i=0; i<strList.size(); ++i)
         d << strList[i].toDouble();

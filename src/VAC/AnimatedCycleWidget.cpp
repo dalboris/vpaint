@@ -22,6 +22,8 @@
 #include "VectorAnimationComplex/KeyEdge.h"
 #include "VectorAnimationComplex/VAC.h"
 
+#include <algorithm>
+
 #include <QStack>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -1000,7 +1002,13 @@ AnimatedCycleGraphicsView::AnimatedCycleGraphicsView(QGraphicsScene * scene) :
 void AnimatedCycleGraphicsView::wheelEvent(QWheelEvent *event)
 {
     setTransformationAnchor(AnchorUnderMouse);
-    double ratio = 1.0 / pow( 0.8f, (double) event->delta() / (double) 120.0f);
+    int angle = event->angleDelta().y();
+    if (angle == 0) {
+        // On some platforms, modifier keys may swap horizontal/vertical scrolls,
+        // but in our case we want a vertical scroll regardless.
+        angle = event->angleDelta().x();
+    }
+    double ratio = 1.0 / pow( 0.8f, (double) angle / (double) 120.0f);
     scale(ratio, ratio);
 }
 
@@ -1369,8 +1377,8 @@ void AnimatedCycleWidget::computeItemsHeightAndY()
     }
 
     // Sort key times and compute height and Y of items
-    QList<int> keyTimesSorted = keyTimes.toList();
-    qSort(keyTimesSorted);
+    QList<int> keyTimesSorted = keyTimes.values();
+    std::sort(keyTimesSorted.begin(), keyTimesSorted.end());
     foreach(GraphicsNodeItem * item, items)
     {
         Cell * cell = item->cell();

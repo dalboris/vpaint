@@ -16,6 +16,7 @@
 
 #include "KeyHalfedge.h"
 
+#include <algorithm>
 #include "../GeometryUtils.h"
 #include "KeyVertex.h"
 #include "EdgeGeometry.h"
@@ -167,7 +168,7 @@ QList<KeyHalfedge> KeyHalfedge::sorted(const QList<KeyHalfedge> & adj)
     }
 
     // sort the he according to this angle
-    qSort(list);
+    std::sort(list.begin(), list.end());
 
     // return the he sorted
     QList<KeyHalfedge> res;

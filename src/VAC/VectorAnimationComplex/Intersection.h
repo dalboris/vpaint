@@ -17,6 +17,7 @@
 #ifndef VAC_INTERSECTION_H
 #define VAC_INTERSECTION_H
 
+#include <algorithm>
 #include <QList>
 #include "Eigen.h"
 
@@ -76,8 +77,8 @@ class IntersectionList: public QList<Intersection*>
 {
 public:
 
-    void sort() {qSort(begin(), end(), Intersection::pLessThanS);}
-    void sortT() {qSort(begin(), end(), Intersection::pLessThanT);}
+    void sort() {std::sort(begin(), end(), Intersection::pLessThanS);}
+    void sortT() {std::sort(begin(), end(), Intersection::pLessThanT);}
 
     void clean()
     {

@@ -52,14 +52,6 @@ void removeAttribute(QXmlStreamAttributes & attributes,
     attributes = newAttributes;
 }
 
-void insertAttribute(QXmlStreamAttributes & attributes,
-                     int i,
-                     const QString & qualifiedName,
-                     const QString & value)
-{
-    attributes.insert(i, QXmlStreamAttribute(qualifiedName, value));
-}
-
 void prependAttribute(QXmlStreamAttributes & attributes,
                      const QString & qualifiedName,
                      const QString & value)
@@ -84,7 +76,7 @@ void convertColorStyleToAttribute(QXmlStreamAttributes & attributes)
 
             // Extract color
             QString styleValue = attributes[i].value().toString();
-            QRegularExpression re("(;|^)color:([^;]*)(;|$)");
+            static QRegularExpression re("(;|^)color:([^;]*)(;|$)");
             QRegularExpressionMatch match = re.match(styleValue);
             if (match.hasMatch()) {
                 colorValue = match.captured(2);
@@ -194,7 +186,7 @@ void XmlStreamConverter_1_0_to_1_6::pre()
         {
             // Extract background color
             QString styleValue = attrs.value("style").toString();
-            QRegularExpression re("(;|^)background-color:([^;]*)(;|$)");
+            static QRegularExpression re("(;|^)background-color:([^;]*)(;|$)");
             QRegularExpressionMatch match = re.match(styleValue);
             if (match.hasMatch()) {
                 backgroundColorValue = match.captured(2);
@@ -234,7 +226,7 @@ void XmlStreamConverter_1_0_to_1_6::pre()
         QString newCurveValue;
 
         QString oldCurveValue =  attrs.value("curve").toString();
-        QRegularExpression re("xyw-dense: (.*)");
+        static QRegularExpression re("xyw-dense: (.*)");
         QRegularExpressionMatch match = re.match(oldCurveValue);
         if (match.hasMatch()) {
             newCurveValue = "xywdense(" + match.captured(1) + ")";

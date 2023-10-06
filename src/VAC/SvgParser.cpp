@@ -1786,7 +1786,7 @@ bool readPolylineOrPolygon(
     // choice is consistent with path data error handling. See:
     // https://github.com/w3c/svgwg/issues/764
     //
-    QStringList coords = attrs.value("points").toString().split(QRegExp("[\\s,]+"), QString::SkipEmptyParts);
+    QStringList coords = attrs.value("points").toString().split(QRegExp("[\\s,]+"), Qt::SkipEmptyParts);
     size_t numCoords = static_cast<size_t>(coords.size());
     std::vector<double> d;
     d.reserve(numCoords);
@@ -1850,7 +1850,7 @@ bool readPolygon(const QXmlStreamAttributes& attrs, VAC* vac, Time t,
 //
 QMap<QString, QString> parseStyleAttribute(const QString& style)
 {
-    QStringList declarations = style.split(';', QString::SkipEmptyParts);
+    QStringList declarations = style.split(';', Qt::SkipEmptyParts);
     QMap<QString, QString> res;
     for (const QString& d : declarations) {
         QStringList namevalue = d.split(':');

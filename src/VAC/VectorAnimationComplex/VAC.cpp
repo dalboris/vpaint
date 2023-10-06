@@ -5471,12 +5471,12 @@ void VAC::glue()
 
     if(edgeSet.size() == 2)
     {
-        KeyEdgeList e = edgeSet.toList();
+        KeyEdgeList e = edgeSet.values();
         glue_(e[0],e[1]);
     }
     else if (vertexSet.size() == 2)
     {
-        KeyVertexList v = vertexSet.toList();
+        KeyVertexList v = vertexSet.values();
         glue_(v[0],v[1]);
     }
     else

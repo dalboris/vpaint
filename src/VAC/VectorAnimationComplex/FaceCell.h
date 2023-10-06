@@ -60,10 +60,15 @@ protected:
     FaceCell(VAC * vac, QTextStream & in);
     virtual void read2ndPass();
     FaceCell(VAC * vac, XmlStreamReader & xml);
-
 };
 
-}
+namespace detail {
 
+typedef std::vector< std::vector< std::array<double, 3> > > PolygonData;
+void tesselatePolygon(const PolygonData & polygon, Triangles & triangles);
+
+} // namespace detail
+
+}
 
 #endif

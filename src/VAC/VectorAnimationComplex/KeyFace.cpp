@@ -32,180 +32,20 @@
 #include "KeyFace.h"
 #include "../DevSettings.h"
 #include "../Global.h"
-
 #include "../OpenGL.h"
 
-#if defined(__APPLE__) && defined(__MACH__)
-#  include <OpenGL/glu.h>
-#else
-#  include <GL/glu.h>
-#endif
-
-// ------- Unnamed namespace for non-friend non-member helper functions -------
+namespace VectorAnimationComplex
+{
 
 namespace
 {
 
-using namespace VectorAnimationComplex;
-
-// Active tesselator
-GLUtesselator * tobj = 0;
-
-// Offline tesselator: outputs the triangulation as offlineTessTriangles
-GLUtesselator * tobjOffline = 0;
-Triangles offlineTessTriangles;
-GLenum offlineTessWhich;
-int offlineTessIter;
-double offlineTessAX, offlineTessAY;
-double offlineTessBX, offlineTessBY;
-double offlineTessCX, offlineTessCY;
-
-#ifdef _WIN32
-#define CALLBACK __stdcall
-#else
-#define CALLBACK
-#endif
-
-void CALLBACK offlineTessBegin(GLenum which)
+detail::PolygonData createPolygonData(const QList<Cycle> & cycles)
 {
-    offlineTessWhich = which;
-    offlineTessIter = 0;
-}
-
-void CALLBACK offlineTessEnd(void)
-{
-}
-
-void CALLBACK offlineTessError(GLenum errorCode)
-{
-   const GLubyte *estring;
-   estring = gluErrorString(errorCode);
-
-   qDebug() << "Tessellation Error:" << estring;
-}
-
-void CALLBACK offlineTessVertex(GLvoid *vertex)
-{
-    const GLdouble *pointer = (GLdouble *) vertex;
-
-    if(offlineTessWhich == GL_TRIANGLES)
-    {
-        if(offlineTessIter == 0)
-        {
-            offlineTessAX = pointer[0];
-            offlineTessAY = pointer[1];
-            offlineTessIter = 1;
-        }
-        else if(offlineTessIter == 1)
-        {
-            offlineTessBX = pointer[0];
-            offlineTessBY = pointer[1];
-            offlineTessIter = 2;
-        }
-        else
-        {
-            offlineTessCX = pointer[0];
-            offlineTessCY = pointer[1];
-            offlineTessIter = 0;
-
-            offlineTessTriangles.append(offlineTessAX, offlineTessAY,
-                                        offlineTessBX, offlineTessBY,
-                                        offlineTessCX, offlineTessCY);
-        }
-    }
-    else if(offlineTessWhich == GL_TRIANGLE_FAN)
-    {
-        if(offlineTessIter == 0)
-        {
-            offlineTessAX = pointer[0];
-            offlineTessAY = pointer[1];
-            offlineTessIter = 1;
-        }
-        else if(offlineTessIter == 1)
-        {
-            offlineTessBX = pointer[0];
-            offlineTessBY = pointer[1];
-            offlineTessIter = 2;
-        }
-        else
-        {
-            offlineTessCX = pointer[0];
-            offlineTessCY = pointer[1];
-
-            offlineTessTriangles.append(offlineTessAX, offlineTessAY,
-                                        offlineTessBX, offlineTessBY,
-                                        offlineTessCX, offlineTessCY);
-
-            offlineTessBX = offlineTessCX;
-            offlineTessBY = offlineTessCY;
-        }
-    }
-    else if(offlineTessWhich == GL_TRIANGLE_STRIP)
-    {
-        if(offlineTessIter == 0)
-        {
-            offlineTessAX = pointer[0];
-            offlineTessAY = pointer[1];
-            offlineTessIter = 1;
-        }
-        else if(offlineTessIter == 1)
-        {
-            offlineTessBX = pointer[0];
-            offlineTessBY = pointer[1];
-            offlineTessIter = 2;
-        }
-        else if(offlineTessIter == 2)
-        {
-            offlineTessCX = pointer[0];
-            offlineTessCY = pointer[1];
-
-            offlineTessTriangles.append(offlineTessAX, offlineTessAY,
-                                        offlineTessBX, offlineTessBY,
-                                        offlineTessCX, offlineTessCY);
-
-            offlineTessAX = offlineTessCX;
-            offlineTessAY = offlineTessCY;
-            offlineTessIter = 3;
-        }
-        else
-        {
-            offlineTessCX = pointer[0];
-            offlineTessCY = pointer[1];
-
-            offlineTessTriangles.append(offlineTessAX, offlineTessAY,
-                                        offlineTessBX, offlineTessBY,
-                                        offlineTessCX, offlineTessCY);
-
-            offlineTessBX = offlineTessCX;
-            offlineTessBY = offlineTessCY;
-            offlineTessIter = 2;
-        }
-    }
-    else if(offlineTessWhich == GL_LINE_LOOP)
-    {
-    }
-}
-
-void CALLBACK offlineTessCombine(GLdouble coords[3],
-                        GLdouble * /*vertex_data*/ [4],
-                        GLfloat /*weight*/ [4], GLdouble **dataOut )
-{
-   GLdouble * vertex = (GLdouble *) malloc(6 * sizeof(GLdouble));
-   vertex[0] = coords[0];
-   vertex[1] = coords[1];
-   vertex[2] = coords[2];
-
-   *dataOut = vertex;
-}
-
-typedef std::vector< std::vector< std::array<GLdouble, 3> > > PolygonData;
-
-PolygonData createPolygonData(const QList<Cycle> & cycles)
-{
-    PolygonData vertices;
+    detail::PolygonData vertices;
     for(int k=0; k<cycles.size(); ++k)      // for each cycle
     {
-        vertices << std::vector< std::array<GLdouble, 3> >(); // create a contour data
+        vertices << std::vector< std::array<double, 3> >(); // create a contour data
 
         for(int i=0; i<cycles[k].size(); ++i) // for each edge in the cycle
         {
@@ -221,7 +61,7 @@ PolygonData createPolygonData(const QList<Cycle> & cycles)
                 }
                 for(int j=0; j<=last; ++j)
                 {
-                    std::array<GLdouble, 3> a = {sampling[j][0], sampling[j][1], 0};
+                    std::array<double, 3> a = {sampling[j][0], sampling[j][1], 0};
                     vertices.back().emplace_back(a);
                 }
             }
@@ -236,7 +76,7 @@ PolygonData createPolygonData(const QList<Cycle> & cycles)
                 }
                 for(int j=sampling.size()-1; j>=first; --j)
                 {
-                    std::array<GLdouble, 3> a = {sampling[j][0], sampling[j][1], 0};
+                    std::array<double, 3> a = {sampling[j][0], sampling[j][1], 0};
                     vertices.back().emplace_back(a);
                 }
             }
@@ -248,76 +88,11 @@ PolygonData createPolygonData(const QList<Cycle> & cycles)
 
 void computeTrianglesFromCycles(const QList<Cycle> & cycles, Triangles & triangles)
 {
-
-    // Creating polygon data for GLU tesselator
-    PolygonData vertices = createPolygonData(cycles);
-
-    // Creating the GLU tesselation object
-    if(!tobjOffline)
-    {
-        tobjOffline = gluNewTess();
-    }
-    if(tobj != tobjOffline)
-    {
-        tobj = tobjOffline;
-
-        gluTessCallback(tobj, GLU_TESS_VERTEX,
-                        (GLvoid (CALLBACK*) ()) &offlineTessVertex);
-        gluTessCallback(tobj, GLU_TESS_BEGIN,
-                        (GLvoid (CALLBACK*) ()) &offlineTessBegin);
-        gluTessCallback(tobj, GLU_TESS_END,
-                        (GLvoid (CALLBACK*) ()) &offlineTessEnd);
-        gluTessCallback(tobj, GLU_TESS_ERROR,
-                        (GLvoid (CALLBACK*) ()) &offlineTessError);
-        gluTessCallback(tobj, GLU_TESS_COMBINE,
-                        (GLvoid (CALLBACK*) ()) &offlineTessCombine);
-    }
-
-    // Using the tesselation object
-    gluTessProperty(tobj, GLU_TESS_WINDING_RULE, GLU_TESS_WINDING_ODD);
-
-    // Specifying data
-    offlineTessTriangles.clear();
-    gluTessBeginPolygon(tobj, NULL);
-    {
-        for(auto & vec: vertices) // for each cycle
-        {
-            gluTessBeginContour(tobj); // draw a contour
-            {
-                for(auto & v: vec) // for each vertex in cycle
-                {
-                    // safeguard against NaN and other oddities
-                    const double MAX_VALUE = 10000;
-                    const double MIN_VALUE = -10000;
-                    if( v[0] > MIN_VALUE &&
-                        v[0] < MAX_VALUE &&
-                        v[1] > MIN_VALUE &&
-                        v[1] < MAX_VALUE &&
-                        v[2] > MIN_VALUE &&
-                        v[2] < MAX_VALUE )
-                    {
-                        gluTessVertex(tobj, v.data(), v.data()); // send vertex
-                    }
-                    else
-                    {
-                        qDebug() << "ignored vertex" << v[0]  << v[1]  << v[2] << "for tesselation";
-                    }
-                }
-            }
-            gluTessEndContour(tobj);
-        }
-    }
-    gluTessEndPolygon(tobj);
-
-    // Tranfer to member data
-    triangles = offlineTessTriangles;
+    detail::PolygonData polygon = createPolygonData(cycles);
+    detail::tesselatePolygon(polygon, triangles);
 }
 
 }
-
-
-namespace VectorAnimationComplex
-{
 
 // ------------------------------- Key Face -------------------------------
 
@@ -415,7 +190,7 @@ void KeyFace::triangulate_(Time time, Triangles & out) const
 QList<QList<Eigen::Vector2d> > KeyFace::getSampling(Time /*time*/) const
 {
     QList<QList<Eigen::Vector2d> > res;
-    PolygonData data = createPolygonData(cycles_);
+    detail::PolygonData data = createPolygonData(cycles_);
 
     for(unsigned int k=0; k<data.size(); ++k) // for each cycle
     {

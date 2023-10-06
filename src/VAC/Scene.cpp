@@ -170,7 +170,7 @@ Scene::~Scene()
 
 // ----------------------- Save and Load -------------------------
 
-void Scene::save(QTextStream & out)
+void Scene::save(QTextStream & /*out*/)
 {
     // XXX Deprecated
     /*
@@ -199,7 +199,7 @@ void Scene::exportSVG(Time t, QTextStream & out)
     }
 }
 
-void Scene::read(QTextStream & in)
+void Scene::read(QTextStream & /*in*/)
 {
     // XXX Deprecated
     /*

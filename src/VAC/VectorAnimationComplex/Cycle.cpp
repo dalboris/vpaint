@@ -625,7 +625,7 @@ void Cycle::fromString(const QString & str)
     halfedges_.clear();
 
     // Split at ',', '[', ']', or any whitespace character
-    QStringList strList = str.split(QRegExp("[\\,\\s\\[\\]]"), QString::SkipEmptyParts);
+    QStringList strList = str.split(QRegExp("[\\,\\s\\[\\]]"), Qt::SkipEmptyParts);
 
     // Get some info to determine cycle type
     QString firstStr = strList[0];
@@ -705,7 +705,7 @@ QTextStream & operator>>(QTextStream & in, VectorAnimationComplex::Cycle & cycle
     int i = stringCycle.indexOf('[');
     QString stringVertexStartingPoint = stringCycle.left(i);
     QString stringHalfedges = stringCycle.right(stringCycle.size()-i);
-    QStringList stringListVertexStartingPoint = stringVertexStartingPoint.split(' ',QString::SkipEmptyParts);
+    QStringList stringListVertexStartingPoint = stringVertexStartingPoint.split(' ', Qt::SkipEmptyParts);
 
     // Process vertex and starting point
     if(stringListVertexStartingPoint.size() >= 1)

@@ -1381,7 +1381,7 @@ public:
         //double epsilon = 1e-5;
 
         // get number of split required.
-        const std::size_t nSplitValues = splitValues.size();
+        const int nSplitValues = static_cast<int>(splitValues.size());
 
         // trivial cases
         if(nSplitValues < 2)

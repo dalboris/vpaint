@@ -667,14 +667,20 @@ void GLWidget::tabletEvent(QTabletEvent * event)
 
 void GLWidget::wheelEvent(QWheelEvent *event)
 {
-    
-      if(isBusy())
+
+    if(isBusy())
         return;
 
     if(cameraZoomIsEnabled_)
     {
         // Ratio to apply
-        double ratio = pow( 0.8f, (double) event->delta() / (double) 120.0f);
+        int angle = event->angleDelta().y();
+        if (angle == 0) {
+          // On some platforms, modifier keys may swap horizontal/vertical scrolls,
+          // but in our case we want a vertical scroll regardless.
+          angle = event->angleDelta().x();
+        }
+        double ratio = pow( 0.8f, (double) angle / (double) 120.0f);
 
         // Clamp to avoid getting too far out
         double x = camera2D_.zoom() / ratio;
@@ -735,7 +741,7 @@ void GLWidget::initializeGL()
     // Query extensions
     bool queryExtensions = false;
     if (queryExtensions) {
-        QList<QByteArray> extensions = context()->extensions().toList();
+        QList<QByteArray> extensions = context()->extensions().values();
         qDebug() << "Supported extensions (" << extensions.count() << ")";
         foreach (const QByteArray &extension, extensions)
             qDebug() << "    " << extension;
@@ -769,7 +775,7 @@ void GLWidget::initializeGL()
     //glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 }
 
-void GLWidget::resizeGL(int width, int height)
+void GLWidget::resizeGL(int /*width*/, int /*height*/)
 {
     emit viewResized();
 }

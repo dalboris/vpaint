@@ -166,7 +166,7 @@ void AnimatedVertex::fromString(const QString & str)
     tempIds_.clear();
 
     // Split at ',', '[', ']', or any whitespace character
-    QStringList strList = str.split(QRegExp("[\\,\\s\\[\\]]"), QString::SkipEmptyParts);
+    QStringList strList = str.split(QRegExp("[\\,\\s\\[\\]]"), Qt::SkipEmptyParts);
 
     int n = strList.size();
     for(int i=0; i<n; ++i)

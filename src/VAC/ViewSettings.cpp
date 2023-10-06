@@ -534,7 +534,7 @@ ViewSettingsWidget::~ViewSettingsWidget()
 {
 }
 
-void ViewSettingsWidget::setActive(bool isActive)
+void ViewSettingsWidget::setActive(bool /*isActive*/)
 {
 
 }
