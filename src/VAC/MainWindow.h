@@ -37,6 +37,7 @@ class XmlStreamWriter;
 class XmlStreamReader;
 class QTextStream;
 class EditCanvasSizeDialog;
+class ExportAsDialog;
 class ExportPngDialog;
 class AboutDialog;
 class BackgroundWidget;
@@ -95,10 +96,13 @@ private slots:
     bool saveAs();
     bool exportSVG();
     bool exportPNG();
+    bool exportAs();
     bool exportMesh();
     bool exportPNG3D();
     bool acceptExportPNG();
     bool rejectExportPNG();
+    bool acceptExportAs();
+    bool rejectExportAs();
 
     // ---- Edit ----
     void addToUndoStack();
@@ -208,11 +212,12 @@ private:
     // Selection info
     SelectionInfoWidget * selectionInfo_;
     // Edit Canvas Size
+    ExportAsDialog * exportAsDialog_;
     ExportPngDialog * exportPngDialog_;
     EditCanvasSizeDialog * editCanvasSizeDialog_;
-    bool exportPngCanvasWasVisible_;
+    bool exportAsCanvasWasVisible_;
     QString exportPngFilename_;
-    bool exportingPng_;
+    bool exportingAs_;
 
     // --------- Menus and actions --------
     // FILE
@@ -225,6 +230,7 @@ private:
       QAction * actionPreferences;
       QAction * actionExportSVG;
       QAction * actionExportPNG;
+      QAction * actionExportAs;
       QAction * actionQuit;
     // EDIT
     QMenu * menuEdit;

@@ -27,6 +27,7 @@
 #include "ObjectPropertiesWidget.h"
 #include "AnimatedCycleWidget.h"
 #include "EditCanvasSizeDialog.h"
+#include "ExportAsDialog.h"
 #include "ExportPngDialog.h"
 #include "AboutDialog.h"
 #include "SelectionInfoWidget.h"
@@ -92,9 +93,10 @@ MainWindow::MainWindow() :
     view3D_(0),
     timeline_(0),
     selectionInfo_(0),
+    exportAsDialog_(0),
     exportPngDialog_(0),
     editCanvasSizeDialog_(0),
-    exportingPng_(false)
+    exportingAs_(false)
 {
     // Global object
     Global::initialize(this);
@@ -521,7 +523,10 @@ bool MainWindow::isEditCanvasSizeVisible() const
     if(exportPngDialog_)
         res = res || exportPngDialog_->isVisible();
 
-    if(exportingPng_)
+    if(exportAsDialog_)
+        res = res || exportAsDialog_->isVisible();
+
+    if(exportingAs_)
         res = true;
 
     return res;
@@ -756,11 +761,50 @@ bool MainWindow::exportPNG()
         connect(exportPngDialog_, SIGNAL(rejected()), this, SLOT(rejectExportPNG()));
     }
 
-    exportPngCanvasWasVisible_ = actionShowCanvas->isChecked();
-    if(!exportPngCanvasWasVisible_)
+    exportAsCanvasWasVisible_ = actionShowCanvas->isChecked();
+    if(!exportAsCanvasWasVisible_)
         actionShowCanvas->setChecked(true);
 
     exportPngDialog_->show();
+
+    // Note: the dialog is modeless to allow user to pan/zoom the image while changing
+    //       canvas size and resolution.
+    //       But this mean that we can't return here whether or not the export was done
+
+    // The return value doesn't actually make sense here. Maybe this function
+    // shouldn't return anything instead.
+    return true;
+}
+
+bool MainWindow::exportAs()
+{
+    exportAsCanvasWasVisible_ = actionShowCanvas->isChecked();
+    if(!exportAsCanvasWasVisible_)
+        actionShowCanvas->setChecked(true);
+
+    /*
+    exportPngFilename_ = QFileDialog::getSaveFileName(this, tr("Export as PNG"), global()->documentDir().path());
+    if (exportPngFilename_.isEmpty())
+        return false;
+
+    if(!exportPngFilename_.endsWith(".png"))
+        exportPngFilename_.append(".png");
+
+
+    */
+
+    if(!exportAsDialog_)
+    {
+        exportAsDialog_ = new ExportAsDialog(scene());
+        exportAsDialog_->setParent(this, Qt::Dialog);
+        exportAsDialog_->setModal(false);
+        connect(exportAsDialog_, SIGNAL(accepted()), this, SLOT(acceptExportAs()));
+        connect(exportAsDialog_, SIGNAL(rejected()), this, SLOT(rejectExportAs()));
+    }
+
+    exportAsDialog_->show();
+
+    exportAsDialog_->setFocus();
 
     // Note: the dialog is modeless to allow user to pan/zoom the image while changing
     //       canvas size and resolution.
@@ -795,11 +839,11 @@ bool MainWindow::exportPNG3D()
 
 bool MainWindow::acceptExportPNG()
 {
-    exportingPng_ = true; // This is necessary so that isEditCanvasSizeVisible() returns true
+    exportingAs_ = true; // This is necessary so that isEditCanvasSizeVisible() returns true
                           // so that global()->toolMode() returns EDIT_CANVAS_SIZE so that
                           // selection is not rendered as selected
     bool success = doExportPNG(exportPngFilename_);
-    exportingPng_ = false;
+    exportingAs_ = false;
 
 
     if(!success)
@@ -807,7 +851,7 @@ bool MainWindow::acceptExportPNG()
         QMessageBox::warning(this, tr("Error"), tr("File %1 not saved: couldn't write file").arg(exportPngFilename_));
     }
 
-    if(!exportPngCanvasWasVisible_)
+    if(!exportAsCanvasWasVisible_)
         actionShowCanvas->setChecked(false);
 
     updatePicking();
@@ -818,7 +862,45 @@ bool MainWindow::acceptExportPNG()
 
 bool MainWindow::rejectExportPNG()
 {
-    if(!exportPngCanvasWasVisible_)
+    if(!exportAsCanvasWasVisible_)
+        actionShowCanvas->setChecked(false);
+
+    updatePicking();
+    update();
+
+    return false;
+}
+
+bool MainWindow::acceptExportAs()
+{
+    exportingAs_ = true; // This is necessary so that isEditCanvasSizeVisible() returns true
+        // so that global()->toolMode() returns EDIT_CANVAS_SIZE so that
+        // selection is not rendered as selected
+
+    bool success = true;
+    //bool success = doExportPNG(exportPngFilename_);
+
+    exportingAs_ = false;
+/*
+
+    if(!success)
+    {
+        QMessageBox::warning(this, tr("Error"), tr("File %1 not saved: couldn't write file").arg(exportPngFilename_));
+    }
+*/
+
+    if(!exportAsCanvasWasVisible_)
+        actionShowCanvas->setChecked(false);
+
+    updatePicking();
+    update();
+
+    return success;
+}
+
+bool MainWindow::rejectExportAs()
+{
+    if(!exportAsCanvasWasVisible_)
         actionShowCanvas->setChecked(false);
 
     updatePicking();
@@ -1537,6 +1619,12 @@ void MainWindow::createActions()
     //actionExportPNG->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_E));
     connect(actionExportPNG, SIGNAL(triggered()), this, SLOT(exportPNG()));
 
+    // Export As
+    actionExportAs = new QAction(/*QIcon(":/iconSave"),*/ tr("Export As..."), this);
+    actionExportAs->setStatusTip(tr("Export the current illustration or animation in an external file format."));
+    actionExportAs->setShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_E));
+    connect(actionExportAs, SIGNAL(triggered()), this, SLOT(exportAs()));
+
     // Preferences
     /*
     actionPreferences = new QAction(tr("&Preferences..."), this);
@@ -2058,6 +2146,8 @@ void MainWindow::createMenus()
         exportMenu->addAction(actionExportPNG);
         exportMenu->addAction(actionExportSVG);
     }
+    menuFile->addSeparator();
+    menuFile->addAction(actionExportAs);
     //menuFile->addSeparator();
     //menuFile->addAction(actionPreferences);
     menuFile->addSeparator();
