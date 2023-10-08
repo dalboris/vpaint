@@ -35,6 +35,15 @@
 #include <QTextEdit>
 #include <QVBoxLayout>
 
+const std::vector<ExportFileTypeInfo>& exportFileTypes() {
+    static std::vector<ExportFileTypeInfo> types;
+    using C = ExportFileTypeCategory;
+    types.emplace_back("svg", "SVG Image", C::VectorImage);
+    types.emplace_back("png", "PNG Image", C::RasterImage);
+    return types;
+}
+
+
 namespace {
 
 QRadioButton * createRadioButton(QString label, QButtonGroup * group, QFormLayout * layout)
@@ -74,8 +83,15 @@ ExportAsDialog::ExportAsDialog(Scene * scene) :
 
     // File format
     fileFormatComboBox_ = new QComboBox();
-    fileFormatComboBox_->addItem("SVG");
-    fileFormatComboBox_->addItem("PNG");
+    for (const ExportFileTypeInfo& info : exportFileTypes()) {
+        QString itemName;
+        itemName.append(info.name().data());
+        itemName.append(" (*.");
+        itemName.append(info.extension().data());
+        itemName.append(")");
+        fileFormatComboBox_->addItem(itemName);
+
+    }
     outputFilesLayout->addRow(tr("File Format:"), fileFormatComboBox_);
 
     // Filename(s)
@@ -193,6 +209,34 @@ ExportAsDialog::ExportAsDialog(Scene * scene) :
     connect(outHeightSpinBox_, SIGNAL(valueChanged(int)), this, SLOT(processOutHeightChanged_(int)));
     connect(preserveAspectRatioCheckBox_, SIGNAL(toggled(bool)), this, SLOT(processPreserveAspectRatioChanged_(bool)));
     connect(motionBlurCheckBox_, SIGNAL(toggled(bool)), this, SLOT(processMotionBlurChanged_(bool)));
+}
+
+void ExportAsDialog::setVisible(bool visible)
+{
+    if(visible)
+    {
+        enforcePngAspectRatio_();
+    }
+
+    QDialog::setVisible(visible);
+}
+
+Scene * ExportAsDialog::scene() const
+{
+    return scene_;
+}
+
+const ExportFileTypeInfo* ExportAsDialog::fileTypeInfo() const
+{
+    const auto& fileTypes = exportFileTypes();
+    int n = static_cast<int>(fileTypes.size());
+    int i = fileFormatComboBox_->currentIndex();
+    if (i >= 0 && i < n) {
+        return &fileTypes[i];
+    }
+    else {
+        return nullptr;
+    }
 }
 
 int ExportAsDialog::outWidth() const
@@ -508,6 +552,27 @@ void ExportAsDialog::processFilenameBrowseButtonClicked_()
     filenameLineEdit_->setText(url);
 }
 
+void ExportAsDialog::updateFileName_() {
+    // TODO
+    /*
+    QFileInfo fileInfo = filenameLineEdit_->text();
+    const ExportFileTypeInfo* fileTypeInfo  = this->fileTypeInfo();
+    QString targetExtension = "svg";
+    if (fileTypeInfo) {
+        targetExtension = QString(fileTypeInfo->extension().data());
+    }
+    if (text.isEmpty()) {
+        newText = global()->documentName();
+        // TODO: append extension
+    }
+    else {
+        // TODO: check if extension is ok, else change it
+    }
+    */
+
+}
+
+
 void ExportAsDialog::processOutWidthChanged_(int )
 {
     if(!ignoreWidthHeightChanged_ && preserveAspectRatio())
@@ -543,21 +608,6 @@ void ExportAsDialog::processMotionBlurChanged_(bool b)
              }
         }
     }
-}
-
-void ExportAsDialog::setVisible(bool visible)
-{
-    if(visible)
-    {
-        enforcePngAspectRatio_();
-    }
-
-    QDialog::setVisible(visible);
-}
-
-Scene * ExportAsDialog::scene() const
-{
-    return scene_;
 }
 
 void ExportAsDialog::accept()

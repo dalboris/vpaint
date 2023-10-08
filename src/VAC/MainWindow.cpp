@@ -917,10 +917,12 @@ void MainWindow::setDocumentFilePath_(const QString & filePath)
     if (fileInfo.exists() && fileInfo.isFile())
     {
         global()->setDocumentDir(fileInfo.dir());
+        global()->setDocumentName(fileInfo.baseName());
     }
     else
     {
         global()->setDocumentDir(QDir::home());
+        global()->setDocumentName("unnamed");
     }
 
     updateWindowTitle_();

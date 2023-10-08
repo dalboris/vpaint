@@ -29,18 +29,89 @@ class QRadioButton;
 class QSpinBox;
 class Scene;
 
-class ExportAsDialog: public QDialog
+/// \class ExportFileTypeInfo
+/// \brief Specifies broad categories of file types.
+///
+enum class ExportFileTypeCategory {
+    RasterImage,
+    VectorImage
+    // RasterVideo
+    // VectorVideo
+};
+
+/// \class ExportFileTypeInfo
+/// \brief Specifies meta-information about a given file type.
+///
+///
+class ExportFileTypeInfo
 {
+public:
+    /// Creates an `ExportFileTypeInfo`, with the given `extension` (without
+    /// the leading dot) and the given `name`.
+    ///
+    ExportFileTypeInfo(
+        const std::string& extension,
+        const std::string& name,
+        ExportFileTypeCategory category)
+
+        : extension_(extension)
+        , name_(name)
+        , category_(category) {
+    }
+
+    /// Returns the extension of this file type (without the leading dot).
+    ///
+    /// Example: `svg`.
+    ///
+    /// Note that two different `ExportFileTypeInfo` may have the same
+    /// extension. For example, exporting as an SVG image sequence or as an SVG
+    /// animation (SMIL) are two different export options with different
+    /// `category()`: the first is `VectorImage`, while the second is
+    /// `VectorVideo`.
+    ///
+    const std::string& extension() const {
+        return extension_;
+    }
+
+    /// Returns the name of this file type.
+    ///
+    /// Example: `SVG Image`.
+    ///
+    const std::string& name() const {
+        return name_;
+    }
+
+    /// Returns the category of this file type.
+    ///
+    ExportFileTypeCategory category() const {
+        return category_;
+    }
+
+private:
+    std::string extension_;
+    std::string name_;
+    ExportFileTypeCategory category_;
+};
+
+/// Returns a list of registered file types.
+///
+const std::vector<ExportFileTypeInfo>& exportFileTypes();
+
+class ExportAsDialog : public QDialog {
     Q_OBJECT
 
 public:
-    ExportAsDialog(Scene * scene);
+    ExportAsDialog(Scene* scene);
 
     // Reimplements from QDialog
-    void setVisible(bool visible);
+    void setVisible(bool visible) override;
 
     // Access linked scene
-    Scene * scene() const;
+    Scene* scene() const;
+
+    // Information on the currently selected file type,
+    // or nullptr if no selected file type.
+    const ExportFileTypeInfo* fileTypeInfo() const;
 
     // Access png settings
     int outWidth() const;
@@ -61,40 +132,42 @@ public slots:
     void updateDialogFromScene();
 
 protected:
-    void showEvent(QShowEvent *event) override;
-    void keyPressEvent(QKeyEvent *event) override;
+    void showEvent(QShowEvent* event) override;
+    void keyPressEvent(QKeyEvent* event) override;
 
 private slots:
     // Output files
     void processFilenameLineEditEditingFinished_();
     void processFilenameBrowseButtonClicked_();
+    void updateFileName_();
 
     void processOutWidthChanged_(int w);
     void processOutHeightChanged_(int h);
     void processPreserveAspectRatioChanged_(bool b);
     void processMotionBlurChanged_(bool b);
 
+
 private:
-    Scene * scene_;
+    Scene* scene_;
 
-    QComboBox * fileFormatComboBox_;
+    QComboBox* fileFormatComboBox_;
 
-    QButtonGroup * frameRangeGroup_;
-    QRadioButton * singleImage_;
-    QRadioButton * imageSequenceAll_;
+    QButtonGroup* frameRangeGroup_;
+    QRadioButton* singleImage_;
+    QRadioButton* imageSequenceAll_;
     //QRadioButton * imageSequenceCustom_;
-    QLineEdit * filenameLineEdit_;
-    QPushButton * filenameBrowseButton_;
+    QLineEdit* filenameLineEdit_;
+    QPushButton* filenameBrowseButton_;
 
-    QSpinBox * outWidthSpinBox_;
-    QSpinBox * outHeightSpinBox_;
-    QCheckBox * preserveAspectRatioCheckBox_;
-    QCheckBox * exportSequenceCheckBox_;
-    QCheckBox * useViewSettings_;
+    QSpinBox* outWidthSpinBox_;
+    QSpinBox* outHeightSpinBox_;
+    QCheckBox* preserveAspectRatioCheckBox_;
+    QCheckBox* exportSequenceCheckBox_;
+    QCheckBox* useViewSettings_;
 
-    QCheckBox * motionBlurCheckBox_;
-    QSpinBox * motionBlurNumSamplesSpinBox_;
-    QFormLayout * motionBlurOptionsLayout_;
+    QCheckBox* motionBlurCheckBox_;
+    QSpinBox* motionBlurNumSamplesSpinBox_;
+    QFormLayout* motionBlurOptionsLayout_;
 
     bool ignoreWidthHeightChanged_;
 
@@ -103,5 +176,4 @@ private:
     void setPngHeightForWidth_();
 };
 
-
-#endif // ExportAsDIALOG_H
+#endif // EXPORT_AS_DIALOG_H
