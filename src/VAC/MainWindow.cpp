@@ -28,7 +28,7 @@
 #include "AnimatedCycleWidget.h"
 #include "EditCanvasSizeDialog.h"
 #include "ExportAsDialog.h"
-#include "ExportPngDialog.h"
+#include "FilePath.h"
 #include "AboutDialog.h"
 #include "SelectionInfoWidget.h"
 #include "Background/BackgroundWidget.h"
@@ -93,9 +93,8 @@ MainWindow::MainWindow() :
     view3D_(0),
     timeline_(0),
     selectionInfo_(0),
-    exportAsDialog_(0),
-    exportPngDialog_(0),
     editCanvasSizeDialog_(0),
+    exportAsDialog_(0),
     exportingAs_(false)
 {
     // Global object
@@ -520,9 +519,6 @@ bool MainWindow::isEditCanvasSizeVisible() const
     if(editCanvasSizeDialog_)
         res = res || editCanvasSizeDialog_->isVisible();
 
-    if(exportPngDialog_)
-        res = res || exportPngDialog_->isVisible();
-
     if(exportAsDialog_)
         res = res || exportAsDialog_->isVisible();
 
@@ -720,78 +716,11 @@ bool MainWindow::saveAs()
     }
 }
 
-
-bool MainWindow::exportSVG()
-{
-    QString filename = QFileDialog::getSaveFileName(this, tr("Export as SVG"), global()->documentDir().path());
-    if (filename.isEmpty())
-        return false;
-
-    if(!filename.endsWith(".svg"))
-        filename.append(".svg");
-
-    bool success = doExportSVG(filename);
-
-    if(success)
-    {
-        return true;
-    }
-    else
-    {
-        QMessageBox::warning(this, tr("Error"), tr("File %1 not saved: couldn't write file").arg(filename));
-        return false;
-    }
-}
-
-bool MainWindow::exportPNG()
-{
-    exportPngFilename_ = QFileDialog::getSaveFileName(this, tr("Export as PNG"), global()->documentDir().path());
-    if (exportPngFilename_.isEmpty())
-        return false;
-
-    if(!exportPngFilename_.endsWith(".png"))
-        exportPngFilename_.append(".png");
-
-    if(!exportPngDialog_)
-    {
-        exportPngDialog_ = new ExportPngDialog(scene());
-        exportPngDialog_->setParent(this, Qt::Dialog);
-        exportPngDialog_->setModal(false);
-        connect(exportPngDialog_, SIGNAL(accepted()), this, SLOT(acceptExportPNG()));
-        connect(exportPngDialog_, SIGNAL(rejected()), this, SLOT(rejectExportPNG()));
-    }
-
-    exportAsCanvasWasVisible_ = actionShowCanvas->isChecked();
-    if(!exportAsCanvasWasVisible_)
-        actionShowCanvas->setChecked(true);
-
-    exportPngDialog_->show();
-
-    // Note: the dialog is modeless to allow user to pan/zoom the image while changing
-    //       canvas size and resolution.
-    //       But this mean that we can't return here whether or not the export was done
-
-    // The return value doesn't actually make sense here. Maybe this function
-    // shouldn't return anything instead.
-    return true;
-}
-
 bool MainWindow::exportAs()
 {
     exportAsCanvasWasVisible_ = actionShowCanvas->isChecked();
     if(!exportAsCanvasWasVisible_)
         actionShowCanvas->setChecked(true);
-
-    /*
-    exportPngFilename_ = QFileDialog::getSaveFileName(this, tr("Export as PNG"), global()->documentDir().path());
-    if (exportPngFilename_.isEmpty())
-        return false;
-
-    if(!exportPngFilename_.endsWith(".png"))
-        exportPngFilename_.append(".png");
-
-
-    */
 
     if(!exportAsDialog_)
     {
@@ -837,57 +766,25 @@ bool MainWindow::exportPNG3D()
     }
 }
 
-bool MainWindow::acceptExportPNG()
-{
-    exportingAs_ = true; // This is necessary so that isEditCanvasSizeVisible() returns true
-                          // so that global()->toolMode() returns EDIT_CANVAS_SIZE so that
-                          // selection is not rendered as selected
-    bool success = doExportPNG(exportPngFilename_);
-    exportingAs_ = false;
-
-
-    if(!success)
-    {
-        QMessageBox::warning(this, tr("Error"), tr("File %1 not saved: couldn't write file").arg(exportPngFilename_));
-    }
-
-    if(!exportAsCanvasWasVisible_)
-        actionShowCanvas->setChecked(false);
-
-    updatePicking();
-    update();
-
-    return success;
-}
-
-bool MainWindow::rejectExportPNG()
-{
-    if(!exportAsCanvasWasVisible_)
-        actionShowCanvas->setChecked(false);
-
-    updatePicking();
-    update();
-
-    return false;
-}
-
 bool MainWindow::acceptExportAs()
 {
-    exportingAs_ = true; // This is necessary so that isEditCanvasSizeVisible() returns true
-        // so that global()->toolMode() returns EDIT_CANVAS_SIZE so that
-        // selection is not rendered as selected
+    // Ensures that isEditCanvasSizeVisible() returns true
+    // so that global()->toolMode() returns EDIT_CANVAS_SIZE so that
+    // selection is not rendered as selected.
+    //
+    exportingAs_ = true;
 
-    bool success = true;
-    //bool success = doExportPNG(exportPngFilename_);
+    // Actually exports the files
+    bool success = doExport();
 
+    // Rollback
     exportingAs_ = false;
-/*
 
     if(!success)
     {
-        QMessageBox::warning(this, tr("Error"), tr("File %1 not saved: couldn't write file").arg(exportPngFilename_));
+        // TODO: which files?
+        QMessageBox::warning(this, tr("Error"), tr("Couldn't write file."));
     }
-*/
 
     if(!exportAsCanvasWasVisible_)
         actionShowCanvas->setChecked(false);
@@ -1178,6 +1075,7 @@ void MainWindow::read(XmlStreamReader & xml)
     }
 }
 
+/*
 bool MainWindow::doExportSVG(const QString & filename)
 {
     QFile data(filename);
@@ -1216,19 +1114,33 @@ bool MainWindow::doExportSVG(const QString & filename)
         return false;
     }
 }
+*/
 
-bool MainWindow::doExportPNG(const QString & filename)
+bool MainWindow::doExport()
 {
     QVector<Time> times;
     QStringList filenames;
 
-    if(!exportPngDialog_->exportSequence())
+    if (!exportAsDialog_) {
+        return false;
+        // TODO: store settings independently from the Export dialog?
+    }
+
+    QString filename = exportAsDialog_->filename();
+    if(exportAsDialog_->frameRangeType() == FrameRangeType::SingleImage)
     {
         times.append(multiView_->activeView()->activeTime());
         filenames.append(filename);
     }
     else
     {
+        FilePath path(filename);
+        QDir dir = global()->documentDir();
+
+
+        QString url = dir.absoluteFilePath(filename);
+
+        /*
         // Decompose filename into basename + suffix. Example:
         //     abc_1234_5678.de.png  ->   abc_1234  +  de.png
         QFileInfo info(filename);
@@ -1252,13 +1164,15 @@ bool MainWindow::doExportPNG(const QString & filename)
         {
             QString number = QString("%1").arg(i, 4, 10, QChar('0'));
             QString filePath = dir.absoluteFilePath(
-                        baseName + QString("_") + number + QString(".") + suffix);
+                baseName + QString("_") + number + QString(".") + suffix);
 
             times.append(Time(i));
             filenames.append(filePath);
         }
+        */
     }
 
+    /*
     // Create Progress dialog for feedback
     bool motionBlur = exportPngDialog_->motionBlur();
     int motionBlurNumSamples = exportPngDialog_->motionBlurNumSamples();
@@ -1301,10 +1215,10 @@ bool MainWindow::doExportPNG(const QString & filename)
                 break;
 
             QImage img = multiView_->activeView()->drawToImage(
-                        Time(times[i] - k * numSamplesInv),
-                        scene()->left(), scene()->top(), scene()->width(), scene()->height(),
-                        exportPngDialog_->pngWidth(), exportPngDialog_->pngHeight(),
-                        exportPngDialog_->useViewSettings());
+                Time(times[i] - k * numSamplesInv),
+                scene()->left(), scene()->top(), scene()->width(), scene()->height(),
+                exportPngDialog_->pngWidth(), exportPngDialog_->pngHeight(),
+                exportPngDialog_->useViewSettings());
 
             // Add contribution from this sample to the buffer
             if (numSamples > 1) {
@@ -1349,6 +1263,9 @@ bool MainWindow::doExportPNG(const QString & filename)
     // Destroy image buffer
     delete[] buf;
 
+    */
+
+    // TODO: return false if any file could not be saved
     return true;
 }
 
@@ -1611,18 +1528,6 @@ void MainWindow::createActions()
     actionSaveAs->setStatusTip(tr("Save current illustration with a new name."));
     actionSaveAs->setShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_S));
     connect(actionSaveAs, SIGNAL(triggered()), this, SLOT(saveAs()));
-
-    // Export SVG
-    actionExportSVG = new QAction(/*QIcon(":/iconSave"),*/ tr("SVG (frame) [Beta]"), this);
-    actionExportSVG->setStatusTip(tr("Save the current illustration in the SVG file format."));
-    //actionExportSVG->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_E));
-    connect(actionExportSVG, SIGNAL(triggered()), this, SLOT(exportSVG()));
-
-    // Export PNG
-    actionExportPNG = new QAction(/*QIcon(":/iconSave"),*/ tr("PNG (frame or sequence)"), this);
-    actionExportPNG->setStatusTip(tr("Save the current illustration in the PNG file format."));
-    //actionExportPNG->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_E));
-    connect(actionExportPNG, SIGNAL(triggered()), this, SLOT(exportPNG()));
 
     // Export As
     actionExportAs = new QAction(/*QIcon(":/iconSave"),*/ tr("Export As..."), this);
@@ -2140,17 +2045,12 @@ void MainWindow::createMenus()
     menuFile = new QMenu(tr("&File"));
     menuFile->addAction(actionNew);
     menuFile->addAction(actionOpen);
-    menuFile->addSeparator();
-    menuFile->addAction(actionSave);
-    menuFile->addAction(actionSaveAs);
-    menuFile->addSeparator();
     QMenu * importMenu = menuFile->addMenu(tr("Import")); {
         importMenu->addAction(actionImportSvg);
     }
-    QMenu * exportMenu = menuFile->addMenu(tr("Export")); {
-        exportMenu->addAction(actionExportPNG);
-        exportMenu->addAction(actionExportSVG);
-    }
+    menuFile->addSeparator();
+    menuFile->addAction(actionSave);
+    menuFile->addAction(actionSaveAs);
     menuFile->addSeparator();
     menuFile->addAction(actionExportAs);
     //menuFile->addSeparator();

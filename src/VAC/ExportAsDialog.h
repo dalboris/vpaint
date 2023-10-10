@@ -41,6 +41,15 @@ enum class ExportFileTypeCategory {
 };
 
 /// \class ExportFileTypeInfo
+/// \brief Specifies whether to export a single image or an image sequence.
+///
+enum class FrameRangeType {
+    SingleImage,
+    ImageSequenceAll
+    // ImageSequenceCustomRange + additional getters startFrame()/endFrame()
+};
+
+/// \class ExportFileTypeInfo
 /// \brief Specifies meta-information about a given file type.
 ///
 ///
@@ -123,6 +132,14 @@ public:
     /// or nullptr if no selected file type.
     ///
     const ExportFileTypeInfo* fileTypeInfo() const;
+
+    /// Returns the export filename.
+    ///
+    QString filename() const;
+
+    /// Returns whether to export a single image or an image sequence.
+    ///
+    FrameRangeType frameRangeType() const;
 
     // Access png settings
     int outWidth() const;

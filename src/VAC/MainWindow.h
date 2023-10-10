@@ -38,7 +38,6 @@ class XmlStreamReader;
 class QTextStream;
 class EditCanvasSizeDialog;
 class ExportAsDialog;
-class ExportPngDialog;
 class AboutDialog;
 class BackgroundWidget;
 class LayersWidget;
@@ -94,13 +93,9 @@ private slots:
     bool save();
     void autosave();
     bool saveAs();
-    bool exportSVG();
-    bool exportPNG();
     bool exportAs();
     bool exportMesh();
     bool exportPNG3D();
-    bool acceptExportPNG();
-    bool rejectExportPNG();
     bool acceptExportAs();
     bool rejectExportAs();
 
@@ -193,8 +188,7 @@ private:
     bool maybeSave_();
     bool save_(const QString & filePath, bool relativeRemap = false);
     void doImportSvg(const QString & filename);
-    bool doExportSVG(const QString & filename);
-    bool doExportPNG(const QString & filename);
+    bool doExport();
     bool doExportPNG3D(const QString & filename);
     void read_DEPRECATED(QTextStream & in);
     void write_DEPRECATED(QTextStream & out);
@@ -212,11 +206,10 @@ private:
     // Selection info
     SelectionInfoWidget * selectionInfo_;
     // Edit Canvas Size
-    ExportAsDialog * exportAsDialog_;
-    ExportPngDialog * exportPngDialog_;
     EditCanvasSizeDialog * editCanvasSizeDialog_;
+    // Exporting
+    ExportAsDialog * exportAsDialog_;
     bool exportAsCanvasWasVisible_;
-    QString exportPngFilename_;
     bool exportingAs_;
 
     // --------- Menus and actions --------
@@ -228,8 +221,6 @@ private:
       QAction * actionSave;
       QAction * actionSaveAs;
       QAction * actionPreferences;
-      QAction * actionExportSVG;
-      QAction * actionExportPNG;
       QAction * actionExportAs;
       QAction * actionQuit;
     // EDIT

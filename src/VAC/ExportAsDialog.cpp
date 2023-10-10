@@ -16,6 +16,7 @@
 
 #include "ExportAsDialog.h"
 
+#include "FilePath.h"
 #include "Global.h"
 #include "Scene.h"
 
@@ -264,6 +265,19 @@ const ExportFileTypeInfo* ExportAsDialog::fileTypeInfo(int i) const
 const ExportFileTypeInfo* ExportAsDialog::fileTypeInfo() const
 {
     return fileTypeInfo(fileFormatComboBox_->currentIndex());
+}
+
+QString ExportAsDialog::filename() const {
+    return filenameLineEdit_->text();
+}
+
+FrameRangeType ExportAsDialog::frameRangeType() const {
+    if (singleImage_->isChecked()) {
+        return FrameRangeType::SingleImage;
+    }
+    else {
+        return FrameRangeType::ImageSequenceAll;
+    }
 }
 
 int ExportAsDialog::outWidth() const
@@ -620,146 +634,6 @@ void ExportAsDialog::onFilenameBrowseButtonClicked_()
 
 void ExportAsDialog::onFrameRangeTypeChanged_() {
     updateFilename_();
-}
-
-namespace {
-
-// QFileInfo doesn't have any convenient way for editing non-existing file
-// paths (e.g., methods such as `setSuffix()`), so we do it ourself.
-//
-// Note: QFileInfo has the following behavior in case of trailing dots:
-//
-// path                  baseName    completeSuffix
-//
-// foo/test.tar.         test        tar.
-//
-// foo/test..            test        .
-// foo/test.             test        (nothing)
-// foo/test              test        (nothing)
-//
-// foo/..                (nothing)   .
-// foo/.                 (nothing)   (nothing)
-// foo/                  (nothing)   (nothing)
-//
-// Note how with just the baseName and completeSuffix, it is not possible to
-// distinguish between `test.` and `test`. This means that with this design, we
-// need to somehow store this extra information.
-//
-// In contrast, std::filesystem::path has IMHO the better design, where the
-// leading dot is considered part of the extension, so that user can explicitly
-// set replace_extension(".zip") vs replace_extension(".") vs
-// replace_extension(""). See:
-// https://en.cppreference.com/w/cpp/filesystem/path/replace_extension
-//
-// However, std::filesystem::path doesn't have the concept of "complete
-// extension". It would be nice but for now we only have svg and png,
-// nothing like "tar.gz", so we use the same API as std::filesystem::path
-// so that it's easier to migrate to std::filesystem::path later.
-//
-struct FilePath {
-
-    FilePath(const QString & path) {
-
-        // Extract prefix, that is everything before the filename.
-        //
-        // On Windows, both `/` and `\` are considered path separators.
-        //
-        // On Linux/macSO, only `/` is considered a path separator, and `\` can
-        // be used as normal character.
-        //
-        int i = path.lastIndexOf('/'); // Returns -1 if not found
-//#ifdef Q_OS_WINDOWS
-        i = (std::max)(i, path.lastIndexOf('\\'));
-//#endif
-        prefix_ = path.left(i + 1);         // OK if i == -1
-        QString filename = path.mid(i + 1); // OK if i == -1
-
-        // Decompose filename in stem and extension
-        //
-        // https://en.cppreference.com/w/cpp/filesystem/path/extension
-        //
-        // Path                     Extension
-        //
-        // "/foo/bar.txt"           ".txt"
-        // "/foo/bar."              "."
-        // "/foo/bar"               ""
-        // "/foo/bar.txt/bar.cc"    ".cc"
-        // "/foo/bar.txt/bar."      "."
-        // "/foo/bar.txt/bar"       ""
-        // "/foo/."                 ""
-        // "/foo/.."                ""
-        // "/foo/.hidden"           ""
-        // "/foo/..bar"             ".bar"
-        //
-        int j = filename.lastIndexOf('.');
-        if (j == -1 || j == 0 || filename == "." || filename == "..") {
-            stem_ = filename;
-            extension_ = "";
-        }
-        else {
-            stem_ = filename.left(j);
-            extension_ = filename.mid(j);
-        }
-    }
-
-    /// Converts the file path to a string.
-    ///
-    QString toString() {
-        return prefix_ + stem_ + extension_;
-    }
-
-    /// Returns the part of the path before the filename.
-    ///
-    QString prefix() const {
-        return prefix_;
-    }
-
-    /// Returns the stem.
-    ///
-    QString stem() const {
-        return stem_;
-    }
-
-    /// Returns the extension, including the leading dot if any.
-    ///
-    QString extension() const {
-        return extension_;
-    }
-
-    /// Returns the extension, not including the leading dot (if any).
-    ///
-    QString extensionWithoutLeadingDot() const {
-        QString res = extension_;
-        if (res.startsWith(".")) {
-            res.remove(0, 1); // Remove first character
-        }
-        return res;
-    }
-
-    /// Replaces the extension. Automatically adds a leading
-    /// dot if the given `extension` doesn't start with one.
-    ///
-    void replaceExtension(const QString & extension) {
-        if (!extension.isEmpty() && extension.front() != '.') {
-            extension_ = "." + extension;
-        }
-        else {
-            extension_ = extension;
-        }
-    }
-
-    /// Replaces the stem.
-    ///
-    void replaceStem(const QString & stem) {
-        stem_ = stem;
-    }
-
-private:
-    QString prefix_;    // `some/dir/`
-    QString stem_;      // `myfile.tar`
-    QString extension_; // `.gz`
-};
-
 }
 
 void ExportAsDialog::updateFilename_(bool isManualEdit)

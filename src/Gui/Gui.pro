@@ -196,8 +196,8 @@ HEADERS += ../VAC/MainWindow.h \
     ../VAC/TimeDef.h \
     ../VAC/EditCanvasSizeDialog.h \
     ../VAC/ExportAsDialog.h \
-    ../VAC/ExportPngDialog.h \
     ../VAC/ExportSettings.h \
+    ../VAC/FilePath.h \
     ../VAC/AboutDialog.h \
     ../VAC/ViewWidget.h \
     ../VAC/Background/Background.h \
@@ -292,8 +292,8 @@ SOURCES += main.cpp \
     ../VAC/TimeDef.cpp \
     ../VAC/EditCanvasSizeDialog.cpp \
     ../VAC/ExportAsDialog.cpp \
-    ../VAC/ExportPngDialog.cpp \
     ../VAC/ExportSettings.cpp \
+    ../VAC/FilePath.cpp \
     ../VAC/AboutDialog.cpp \
     ../VAC/ViewWidget.cpp \
     ../VAC/Background/Background.cpp \
