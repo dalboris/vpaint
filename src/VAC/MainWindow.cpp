@@ -780,10 +780,14 @@ bool MainWindow::acceptExportAs()
     // Rollback
     exportingAs_ = false;
 
-    if(!success)
-    {
+    // TODO: Move to doExport, so that it's also done when doing "Export",
+    // not just "Export As"?
+    if (success) {
+        statusBar()->showMessage(tr("File(s) successfully exported."));
+    }
+    else {
         // TODO: which files?
-        QMessageBox::warning(this, tr("Error"), tr("Couldn't write file."));
+        QMessageBox::warning(this, tr("Error"), tr("Couldn't export file(s)."));
     }
 
     if(!exportAsCanvasWasVisible_)
@@ -1075,47 +1079,6 @@ void MainWindow::read(XmlStreamReader & xml)
     }
 }
 
-/*
-bool MainWindow::doExportSVG(const QString & filename)
-{
-    QFile data(filename);
-    if (data.open(QFile::WriteOnly | QFile::Truncate | QFile::Text)) {
-
-        QTextStream out(&data);
-
-        QString header = QString(
-                "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n"
-                "<!-- Created with VPaint (http://www.vpaint.org/) -->\n\n"
-
-                "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\"\n"
-                "  \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n"
-                "<svg \n"
-                "  viewBox=\"%1 %2 %3 %4\"\n"
-                "  xmlns=\"http://www.w3.org/2000/svg\"\n"
-                "  xmlns:xlink=\"http://www.w3.org/1999/xlink\">\n")
-
-                .arg(scene_->left())
-                .arg(scene_->top())
-                .arg(scene_->width())
-                .arg(scene_->height());
-
-        QString footer = "</svg>";
-
-        out << header;
-        scene_->exportSVG(multiView_->activeView()->activeTime(), out);
-        out << footer;
-
-        statusBar()->showMessage(tr("File %1 successfully saved.").arg(filename));
-        return true;
-    }
-    else
-    {
-        qDebug() << "Error: cannot open file";
-        return false;
-    }
-}
-*/
-
 bool MainWindow::doExport()
 {
     if (!exportAsDialog_) {
@@ -1298,10 +1261,41 @@ bool MainWindow::doExportRasterImages(
 }
 
 bool MainWindow::doExportVectorImages(
-    const ExportFileTypeInfo & typeInfo,
+    const ExportFileTypeInfo & /*typeInfo*/,
     const QVector<ExportFileInfo> & files)
 {
-    return false;
+    for (const ExportFileInfo & file : files)
+    {
+        QFile qfile(file.path);
+        if (!qfile.open(QFile::WriteOnly | QFile::Truncate | QFile::Text)) {
+            return false;
+        }
+        QTextStream out(&qfile);
+
+        QString header = QString(
+                             "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n"
+                             "<!-- Created with VPaint (http://www.vpaint.org/) -->\n\n"
+
+                             "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\"\n"
+                             "  \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n"
+                             "<svg \n"
+                             "  viewBox=\"%1 %2 %3 %4\"\n"
+                             "  xmlns=\"http://www.w3.org/2000/svg\"\n"
+                             "  xmlns:xlink=\"http://www.w3.org/1999/xlink\">\n")
+
+                             .arg(scene_->left())
+                             .arg(scene_->top())
+                             .arg(scene_->width())
+                             .arg(scene_->height());
+
+        QString footer = "</svg>";
+
+        out << header;
+        scene_->exportSVG(file.time, out);
+        out << footer;
+    }
+
+    return true;
 }
 
 bool MainWindow::doExportPNG3D(const QString & filename)
