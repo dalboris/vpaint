@@ -19,6 +19,8 @@
 
 #include <QDialog>
 
+#include "ExportSettings.h"
+
 class QButtonGroup;
 class QCheckBox;
 class QComboBox;
@@ -29,83 +31,6 @@ class QLineEdit;
 class QRadioButton;
 class QSpinBox;
 class Scene;
-
-/// \class ExportFileTypeInfo
-/// \brief Specifies broad categories of file types.
-///
-enum class ExportFileTypeCategory {
-    RasterImage,
-    VectorImage
-    // RasterVideo
-    // VectorVideo
-};
-
-/// \class ExportFileTypeInfo
-/// \brief Specifies whether to export a single image or an image sequence.
-///
-enum class FrameRangeType {
-    SingleImage,
-    ImageSequenceAll
-    // ImageSequenceCustomRange + additional getters startFrame()/endFrame()
-};
-
-/// \class ExportFileTypeInfo
-/// \brief Specifies meta-information about a given file type.
-///
-///
-class ExportFileTypeInfo
-{
-public:
-    /// Creates an `ExportFileTypeInfo`, with the given `extension` (without
-    /// the leading dot) and the given `name`.
-    ///
-    ExportFileTypeInfo(
-        const std::string& extension,
-        const std::string& name,
-        ExportFileTypeCategory category)
-
-        : extension_(extension)
-        , name_(name)
-        , category_(category) {
-    }
-
-    /// Returns the extension of this file type (without the leading dot).
-    ///
-    /// Example: `svg`.
-    ///
-    /// Note that two different `ExportFileTypeInfo` may have the same
-    /// extension. For example, exporting as an SVG image sequence or as an SVG
-    /// animation (SMIL) are two different export options with different
-    /// `category()`: the first is `VectorImage`, while the second is
-    /// `VectorVideo`.
-    ///
-    const std::string& extension() const {
-        return extension_;
-    }
-
-    /// Returns the name of this file type.
-    ///
-    /// Example: `SVG Image`.
-    ///
-    const std::string& name() const {
-        return name_;
-    }
-
-    /// Returns the category of this file type.
-    ///
-    ExportFileTypeCategory category() const {
-        return category_;
-    }
-
-private:
-    std::string extension_;
-    std::string name_;
-    ExportFileTypeCategory category_;
-};
-
-/// Returns a list of registered file types.
-///
-const std::vector<ExportFileTypeInfo>& exportFileTypes();
 
 class ExportAsDialog : public QDialog {
     Q_OBJECT
@@ -135,7 +60,7 @@ public:
 
     /// Returns the export filename.
     ///
-    QString filename() const;
+    QString filePath() const;
 
     /// Returns whether to export a single image or an image sequence.
     ///

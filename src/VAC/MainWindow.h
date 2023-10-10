@@ -24,6 +24,9 @@
 #include <QTimer>
 #include <QDir>
 
+#include "ExportSettings.h"
+#include "TimeDef.h"
+
 class QScrollArea;
 class Scene;
 class GLWidget;
@@ -189,6 +192,14 @@ private:
     bool save_(const QString & filePath, bool relativeRemap = false);
     void doImportSvg(const QString & filename);
     bool doExport();
+    struct ExportFileInfo {
+        Time time;
+        QString path;
+    };
+    bool doExportRasterImages(const ExportFileTypeInfo & typeInfo,
+                              const QVector<ExportFileInfo> & files);
+    bool doExportVectorImages(const ExportFileTypeInfo & typeInfo,
+                              const QVector<ExportFileInfo> & files);
     bool doExportPNG3D(const QString & filename);
     void read_DEPRECATED(QTextStream & in);
     void write_DEPRECATED(QTextStream & out);

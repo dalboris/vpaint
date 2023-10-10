@@ -1118,74 +1118,105 @@ bool MainWindow::doExportSVG(const QString & filename)
 
 bool MainWindow::doExport()
 {
-    QVector<Time> times;
-    QStringList filenames;
-
     if (!exportAsDialog_) {
         return false;
         // TODO: store settings independently from the Export dialog?
     }
 
-    QString filename = exportAsDialog_->filename();
-    if(exportAsDialog_->frameRangeType() == FrameRangeType::SingleImage)
+    const ExportFileTypeInfo* typeInfo = exportAsDialog_->fileTypeInfo();
+    if (!typeInfo) {
+        return false;
+    }
+
+    // Convert relative file path to absolute file path and add '*' whenever required
+    QDir dir = global()->documentDir();
+    QString baseFilePath = dir.absoluteFilePath(exportAsDialog_->filePath());
+
+    // Add '*' to the stem of the file path whenever required (image sequence)
+    FilePath wilcardedFilePath(baseFilePath);
+    FrameRangeType frameRangeType = exportAsDialog_->frameRangeType();
+    if (frameRangeType != FrameRangeType::SingleImage) {
+        QString stem = wilcardedFilePath.stem();
+        if (!stem.contains('*')) {
+            stem.append('*');
+        }
+        wilcardedFilePath.replaceStem(stem);
+    }
+    QString wilcardedFilePathString = wilcardedFilePath.toString();
+
+    // Get the parts of the file path before and after the last '*' in the stem, if any
+    QString prefix = wilcardedFilePathString;
+    QString suffix = "";
+    QString stem = wilcardedFilePath.stem();
+    bool hasWildcard = stem.contains('*');
+    if (hasWildcard) {
+        int j = wilcardedFilePathString.lastIndexOf('*');
+        prefix = wilcardedFilePathString.left(j);
+        suffix = wilcardedFilePathString.mid(j+1);
+    }
+
+    // Get times
+    QVector<Time> times;
+    if(frameRangeType == FrameRangeType::SingleImage)
     {
         times.append(multiView_->activeView()->activeTime());
-        filenames.append(filename);
     }
     else
     {
-        FilePath path(filename);
-        QDir dir = global()->documentDir();
-
-
-        QString url = dir.absoluteFilePath(filename);
-
-        /*
-        // Decompose filename into basename + suffix. Example:
-        //     abc_1234_5678.de.png  ->   abc_1234  +  de.png
-        QFileInfo info(filename);
-        QString baseName = info.baseName();
-        QString suffix = info.suffix();
-        // Decompose basename into cleanedbasename + numbering. Examples:
-        //     abc_1234_5678  ->     abc_1234 + 5678
-        int iNumbering = baseName.indexOf(QRegExp("_[0-9]*$"));
-        if(iNumbering != -1)
-        {
-            baseName.chop(baseName.length() - iNumbering);
-        }
-
-        // Get dir
-        QDir dir = info.absoluteDir();
-
-        // Get frame numbers to export
         int firstFrame = timeline()->firstFrame();
         int lastFrame = timeline()->lastFrame();
-        for(int i = firstFrame; i <= lastFrame; ++i)
-        {
-            QString number = QString("%1").arg(i, 4, 10, QChar('0'));
-            QString filePath = dir.absoluteFilePath(
-                baseName + QString("_") + number + QString(".") + suffix);
-
+        for(int i = firstFrame; i <= lastFrame; ++i) {
             times.append(Time(i));
-            filenames.append(filePath);
         }
-        */
     }
 
-    /*
-    // Create Progress dialog for feedback
-    bool motionBlur = exportPngDialog_->motionBlur();
-    int motionBlurNumSamples = exportPngDialog_->motionBlurNumSamples();
-    int numFrames = times.size();
-    int numSamples = 1 + (motionBlur ? motionBlurNumSamples : 0);
+    // Create file paths from times
+    QVector<ExportFileInfo> files;
+    for (const Time & time : times) {
+        ExportFileInfo file;
+        file.time = time;
+        if (hasWildcard) {
+            int i = time.frame();
+            QString number = QString("%1").arg(i, 4, 10, QChar('0'));
+            file.path = prefix + number + suffix;
+        }
+        else {
+            file.path = prefix;
+        }
+        files.append(file);
+    }
+
+    if (typeInfo->category() == ExportFileTypeCategory::RasterImage) {
+        return doExportRasterImages(*typeInfo, files);
+    }
+    else {
+        return doExportVectorImages(*typeInfo, files);
+    }
+}
+
+bool MainWindow::doExportRasterImages(
+    const ExportFileTypeInfo & /*typeInfo*/,
+    const QVector<ExportFileInfo> & files)
+{
+    // TODO: use RasterExportSettings instead of querying values
+    // in exportAsDialog_.
+
+    // Compute how many renders we will need to do
+    int numFrames = files.size();
+    int numSamples = 1;
+    bool motionBlur = exportAsDialog_->motionBlur();
+    int motionBlurNumSamples = exportAsDialog_->motionBlurNumSamples();
+    numSamples = 1 + (motionBlur ? motionBlurNumSamples : 0);
     double numSamplesInv = 1.0 / numSamples;
     int numRenders = numFrames * numSamples;
+
+    // Create Progress dialog for feedback
     QProgressDialog progress("Exporting...", "Abort", 0, numRenders, this);
     progress.setWindowModality(Qt::WindowModal);
 
     // Create image buffer
-    int w = exportPngDialog_->pngWidth();
-    int h = exportPngDialog_->pngHeight();
+    int w = exportAsDialog_->outWidth();
+    int h = exportAsDialog_->outHeight();
     double* buf = nullptr;
     QImage res;
     if (numSamples > 1) {
@@ -1215,10 +1246,9 @@ bool MainWindow::doExport()
                 break;
 
             QImage img = multiView_->activeView()->drawToImage(
-                Time(times[i] - k * numSamplesInv),
+                Time(files[i].time - k * numSamplesInv),
                 scene()->left(), scene()->top(), scene()->width(), scene()->height(),
-                exportPngDialog_->pngWidth(), exportPngDialog_->pngHeight(),
-                exportPngDialog_->useViewSettings());
+                w, h, exportAsDialog_->useViewSettings());
 
             // Add contribution from this sample to the buffer
             if (numSamples > 1) {
@@ -1257,16 +1287,21 @@ bool MainWindow::doExport()
         }
 
         // Save image to disk
-        res.save(filenames[i]);
+        res.save(files[i].path);
     }
 
     // Destroy image buffer
     delete[] buf;
 
-    */
-
     // TODO: return false if any file could not be saved
     return true;
+}
+
+bool MainWindow::doExportVectorImages(
+    const ExportFileTypeInfo & typeInfo,
+    const QVector<ExportFileInfo> & files)
+{
+    return false;
 }
 
 bool MainWindow::doExportPNG3D(const QString & filename)

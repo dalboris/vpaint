@@ -16,6 +16,23 @@
 
 #include "ExportSettings.h"
 
+namespace {
+
+std::vector<ExportFileTypeInfo> createFileTypes() {
+    std::vector<ExportFileTypeInfo> types;
+    using C = ExportFileTypeCategory;
+    types.emplace_back("svg", "SVG Image", C::VectorImage);
+    types.emplace_back("png", "PNG Image", C::RasterImage);
+    return types;
+}
+
+} // namespace
+
+const std::vector<ExportFileTypeInfo>& exportFileTypes() {
+    static std::vector<ExportFileTypeInfo> types = createFileTypes();
+    return types;
+}
+
 RasterExportSettings::RasterExportSettings()
 {
 }

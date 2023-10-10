@@ -39,23 +39,6 @@
 
 namespace {
 
-std::vector<ExportFileTypeInfo> createFileTypes() {
-    std::vector<ExportFileTypeInfo> types;
-    using C = ExportFileTypeCategory;
-    types.emplace_back("svg", "SVG Image", C::VectorImage);
-    types.emplace_back("png", "PNG Image", C::RasterImage);
-    return types;
-}
-
-} // namespace
-
-const std::vector<ExportFileTypeInfo>& exportFileTypes() {
-    static std::vector<ExportFileTypeInfo> types = createFileTypes();
-    return types;
-}
-
-namespace {
-
 QRadioButton * createRadioButton(QString label, QButtonGroup * group, QFormLayout * layout)
 {
     QRadioButton * res = new QRadioButton(label);
@@ -267,7 +250,7 @@ const ExportFileTypeInfo* ExportAsDialog::fileTypeInfo() const
     return fileTypeInfo(fileFormatComboBox_->currentIndex());
 }
 
-QString ExportAsDialog::filename() const {
+QString ExportAsDialog::filePath() const {
     return filenameLineEdit_->text();
 }
 
@@ -683,13 +666,16 @@ void ExportAsDialog::updateFilename_(bool isManualEdit)
         }
     }
 
-    // Add '*' for image sequence formats.
+    // Ensure there is a '*' for image sequence formats.
+    // Remove the '*' for single image, except in case of manual edit.
     if (singleImage_->isChecked()) {
-        stem.replace("*", "");
+        if (!isManualEdit) {
+            stem.replace("*", "");
+        }
     }
     else {
-        if (stem.indexOf('*') == -1) {
-            stem += '*';
+        if (!stem.contains('*')) {
+            stem.append('*');
         }
     }
     path.replaceStem(stem);
@@ -730,7 +716,6 @@ void ExportAsDialog::updateFilename_(bool isManualEdit)
         fileFormatComboBox_->setCurrentIndex(targetTypeIndex);
     }
 }
-
 
 void ExportAsDialog::onOutWidthChanged_(int )
 {
