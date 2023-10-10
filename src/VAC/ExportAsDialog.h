@@ -109,8 +109,18 @@ public:
     // Access linked scene
     Scene* scene() const;
 
-    // Information on the currently selected file type,
-    // or nullptr if no selected file type.
+    /// Returns the number of available file types.
+    ///
+    int numFileTypes() const;
+
+    /// Returns information on the i-th available file type,
+    /// or nullptr if `i` is out of range.
+    ///
+    const ExportFileTypeInfo* fileTypeInfo(int i) const;
+
+    /// Information on the currently selected file type,
+    /// or nullptr if no selected file type.
+    ///
     const ExportFileTypeInfo* fileTypeInfo() const;
 
     // Access png settings
@@ -130,6 +140,7 @@ public slots:
 
     // Backend <-> Frontend conversions
     void updateDialogFromScene();
+    void updateFilenameFromDocumentName();
 
 protected:
     void showEvent(QShowEvent* event) override;
@@ -137,14 +148,16 @@ protected:
 
 private slots:
     // Output files
-    void processFilenameLineEditEditingFinished_();
-    void processFilenameBrowseButtonClicked_();
-    void updateFileName_();
+    void onFileTypeChanged_();
+    void onFilenameLineEditEditingFinished_();
+    void onFilenameBrowseButtonClicked_();
+    void onFrameRangeTypeChanged_();
+    void updateFilename_(bool isManualEdit = false);
 
-    void processOutWidthChanged_(int w);
-    void processOutHeightChanged_(int h);
-    void processPreserveAspectRatioChanged_(bool b);
-    void processMotionBlurChanged_(bool b);
+    void onOutWidthChanged_(int w);
+    void onOutHeightChanged_(int h);
+    void onPreserveAspectRatioChanged_(bool b);
+    void onMotionBlurChanged_(bool b);
 
 
 private:
@@ -158,6 +171,7 @@ private:
     //QRadioButton * imageSequenceCustom_;
     QLineEdit* filenameLineEdit_;
     QPushButton* filenameBrowseButton_;
+    bool hasExplicitExportFilename_ = false;
 
     QSpinBox* outWidthSpinBox_;
     QSpinBox* outHeightSpinBox_;

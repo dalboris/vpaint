@@ -926,6 +926,9 @@ void MainWindow::setDocumentFilePath_(const QString & filePath)
     }
 
     updateWindowTitle_();
+    if (exportAsDialog_) {
+        exportAsDialog_->updateFilenameFromDocumentName();
+    }
 }
 
 bool MainWindow::isNewDocument_() const
