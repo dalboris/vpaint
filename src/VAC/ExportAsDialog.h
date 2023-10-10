@@ -24,6 +24,7 @@ class QCheckBox;
 class QComboBox;
 class QDoubleSpinBox;
 class QFormLayout;
+class QGroupBox;
 class QLineEdit;
 class QRadioButton;
 class QSpinBox;
@@ -163,22 +164,21 @@ private slots:
 private:
     Scene* scene_;
 
+    // File format and filename selection
     QComboBox* fileFormatComboBox_;
-
     QButtonGroup* frameRangeGroup_;
     QRadioButton* singleImage_;
     QRadioButton* imageSequenceAll_;
-    //QRadioButton * imageSequenceCustom_;
     QLineEdit* filenameLineEdit_;
     QPushButton* filenameBrowseButton_;
     bool hasExplicitExportFilename_ = false;
 
+    // Raster settings
+    QGroupBox* rasterSettingsBox_;
     QSpinBox* outWidthSpinBox_;
     QSpinBox* outHeightSpinBox_;
     QCheckBox* preserveAspectRatioCheckBox_;
-    QCheckBox* exportSequenceCheckBox_;
     QCheckBox* useViewSettings_;
-
     QCheckBox* motionBlurCheckBox_;
     QSpinBox* motionBlurNumSamplesSpinBox_;
     QFormLayout* motionBlurOptionsLayout_;
@@ -188,6 +188,11 @@ private:
     void enforcePngAspectRatio_();
     void setPngWidthForHeight_();
     void setPngHeightForWidth_();
+
+    // Vector settings
+    QGroupBox* vectorSettingsBox_;
+    QCheckBox* backgroundAsRect_;
+    QCheckBox* fillVariableWidthStrokes_;
 };
 
 #endif // EXPORT_AS_DIALOG_H

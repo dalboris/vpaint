@@ -64,10 +64,11 @@ QRadioButton * createRadioButton(QString label, QButtonGroup * group, QFormLayou
     return res;
 }
 
-QCheckBox * createCheckBox(QString label, QLayout * layout)
+QCheckBox * createCheckBox(QString label, bool isChecked, QLayout * layout)
 {
     QCheckBox * res = new QCheckBox(label);
     res->setFocusPolicy(Qt::NoFocus);
+    res->setChecked(isChecked);
     layout->addWidget(res);
     return res;
 }
@@ -106,9 +107,6 @@ ExportAsDialog::ExportAsDialog(Scene * scene) :
 
     // Filename(s)
     filenameLineEdit_ = new QLineEdit();
-    /*
-    imageLineEdit_->setValidator(new BackgroundUrlValidator(imageLineEdit_));
-    */
     QString filenameTip = tr(
         "Specify output file path(s), relative to current VPaint file.\n"
         "The character `*`, if any, will be replaced by the frame number.");
@@ -144,43 +142,34 @@ ExportAsDialog::ExportAsDialog(Scene * scene) :
     connect(frameRangeGroup_, SIGNAL(buttonClicked(int)),
             this, SLOT(onFrameRangeTypeChanged_()));
 
+    // Raster settings
+    rasterSettingsBox_ = new QGroupBox(tr("Options"));
+    QVBoxLayout * rasterSettingsLayout = new QVBoxLayout();
+    rasterSettingsBox_->setLayout(rasterSettingsLayout);
+
     // Image output size
-    QGroupBox * outSizeGroupBox = new QGroupBox(tr("Image Output Size"));
-    QVBoxLayout * outSizeLayout = new QVBoxLayout();
-    outSizeGroupBox->setLayout(outSizeLayout);
-
     QFormLayout * outWidthHeightLayout = new QFormLayout();
-    outSizeLayout->addLayout(outWidthHeightLayout);
-
+    rasterSettingsLayout->addLayout(outWidthHeightLayout);
     outWidthSpinBox_ = new QSpinBox();
     outWidthSpinBox_->setRange(1,100000);
     outWidthSpinBox_->setValue(1280);
     outWidthSpinBox_->setMaximumWidth(60);
     outWidthHeightLayout->addRow(tr("Width:"), outWidthSpinBox_);
-
     outHeightSpinBox_ = new QSpinBox();
     outHeightSpinBox_->setRange(1,100000);
     outHeightSpinBox_->setValue(720);
     outHeightSpinBox_->setMaximumWidth(60);
     outWidthHeightLayout->addRow(tr("Height:"), outHeightSpinBox_);
+    preserveAspectRatioCheckBox_ = createCheckBox(
+        tr("Preserve canvas aspect ratio"), true, rasterSettingsLayout);
 
-    preserveAspectRatioCheckBox_ = createCheckBox(tr("Preserve canvas aspect ratio"), outSizeLayout);
-    preserveAspectRatioCheckBox_->setChecked(true);
+    // View Settings
+    useViewSettings_ = createCheckBox(tr("Use view settings"), false, rasterSettingsLayout);
 
-    // Rendering
-    QGroupBox * renderingGroupBox = new QGroupBox(tr("Rendering"));
-    QVBoxLayout * renderingLayout = new QVBoxLayout();
-    renderingGroupBox->setLayout(renderingLayout);
-
-    useViewSettings_ = createCheckBox(tr("Use view settings"), renderingLayout);
-    useViewSettings_->setChecked(false);
-
-    motionBlurCheckBox_ = createCheckBox(tr("Motion blur"), renderingLayout);
-    motionBlurCheckBox_->setChecked(false);
-
+    // Motion Blur
+    motionBlurCheckBox_ = createCheckBox(tr("Motion blur"), false, rasterSettingsLayout);
     motionBlurOptionsLayout_ = new QFormLayout();
-    renderingLayout->addLayout(motionBlurOptionsLayout_);
-
+    rasterSettingsLayout->addLayout(motionBlurOptionsLayout_);
     motionBlurNumSamplesSpinBox_ = new QSpinBox();
     motionBlurNumSamplesSpinBox_->setRange(1,100000);
     motionBlurNumSamplesSpinBox_->setValue(16);
@@ -190,6 +179,21 @@ ExportAsDialog::ExportAsDialog(Scene * scene) :
     // Hide motion blur options until checked
     onMotionBlurChanged_(motionBlurCheckBox_->isChecked());
 
+    // Vector settings
+    vectorSettingsBox_ = new QGroupBox(tr("Options"));
+    QVBoxLayout * vectorSettingsLayout = new QVBoxLayout();
+    vectorSettingsBox_->setLayout(vectorSettingsLayout);
+
+    // Background as rect
+    backgroundAsRect_ = createCheckBox(
+        tr("Export background color and/or images as rectangle shapes"),
+        false, vectorSettingsLayout);
+
+    // Fill variable-width strokes
+    fillVariableWidthStrokes_ = createCheckBox(
+        tr("Export variable-width strokes as filled paths"),
+        false, vectorSettingsLayout);
+
     // Export/Cancel dialog buttons
     QDialogButtonBox * buttonBox = new QDialogButtonBox(QDialogButtonBox::Cancel);
     buttonBox->addButton(tr("Export"), QDialogButtonBox::AcceptRole);
@@ -197,16 +201,16 @@ ExportAsDialog::ExportAsDialog(Scene * scene) :
     // Main layout
     QVBoxLayout * layout = new QVBoxLayout();
     layout->addWidget(outputFilesGroupBox);
-    layout->addWidget(outSizeGroupBox);
-    layout->addWidget(renderingGroupBox);
+    layout->addWidget(rasterSettingsBox_);
+    layout->addWidget(vectorSettingsBox_);
     layout->addStretch();
     layout->addWidget(buttonBox);
     setLayout(layout);
 
-
     // Set initial widget values
     updateFilename_();
     updateDialogFromScene();
+    onFileTypeChanged_();
 
     // By default, set focus to the dialog, so that pressing Enter
     // does the export.
@@ -352,7 +356,20 @@ void ExportAsDialog::keyPressEvent(QKeyEvent *event)
 void ExportAsDialog::onFileTypeChanged_()
 {
     updateFilename_();
-    // TODO: show/hide relevant settings
+
+    const ExportFileTypeInfo* info = this->fileTypeInfo();
+    if (info) {
+        switch (info->category()) {
+        case ExportFileTypeCategory::RasterImage:
+            vectorSettingsBox_->hide();
+            rasterSettingsBox_->show();
+            break;
+        case ExportFileTypeCategory::VectorImage:
+            rasterSettingsBox_->hide();
+            vectorSettingsBox_->show();
+            break;
+        }
+    }
 }
 
 void ExportAsDialog::onFilenameLineEditEditingFinished_()
