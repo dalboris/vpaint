@@ -796,14 +796,12 @@ bool MainWindow::acceptExportAs()
     // Rollback
     exportingAs_ = false;
 
-    // TODO: Move to doExport, so that it's also done when doing "Export",
-    // not just "Export As"?
+    // Report success or failure
     if (success) {
         hasAlreadyBeenExported_ = true;
         statusBar()->showMessage(tr("File(s) successfully exported."));
     }
     else {
-        // TODO: which files?
         QMessageBox::warning(this, tr("Error"), tr("Couldn't export file(s)."));
     }
 
