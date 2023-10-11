@@ -830,7 +830,6 @@ bool MainWindow::rejectExportAs()
 void MainWindow::setDocumentFilePath_(const QString & filePath)
 {
     documentFilePath_ = filePath;
-    hasAlreadyBeenExported_ = false;
 
     QFileInfo fileInfo(filePath);
     if (fileInfo.exists() && fileInfo.isFile())
@@ -845,6 +844,8 @@ void MainWindow::setDocumentFilePath_(const QString & filePath)
     }
 
     updateWindowTitle_();
+
+    hasAlreadyBeenExported_ = false;
     if (exportAsDialog_) {
         exportAsDialog_->updateFilenameFromDocumentName();
     }
@@ -1110,8 +1111,8 @@ bool MainWindow::doExport()
     }
 
     // Convert relative file path to absolute file path and add '*' whenever required
-    QDir dir = global()->documentDir();
-    QString baseFilePath = dir.absoluteFilePath(exportAsDialog_->filePath());
+    QDir documentDir = global()->documentDir();
+    QString baseFilePath = documentDir.absoluteFilePath(exportAsDialog_->filePath());
 
     // Add '*' to the stem of the file path whenever required (image sequence)
     FilePath wilcardedFilePath(baseFilePath);
@@ -1167,6 +1168,19 @@ bool MainWindow::doExport()
         files.append(file);
     }
 
+    // Create parent directories if they do not exist
+    if (files.isEmpty()) {
+        return true;
+    }
+    QFileInfo fileInfo(files.first().path);
+    QDir parentDir = fileInfo.dir();
+    if (!parentDir.exists()) {
+        bool success = parentDir.mkpath(".");
+        if (!success) {
+            return false;
+        }
+    }
+
     if (typeInfo->category() == ExportFileTypeCategory::RasterImage) {
         RasterExportSettings settings = exportAsDialog_->rasterSettings();
         return doExportRasterImages(*typeInfo, settings, files);
@@ -1207,11 +1221,9 @@ bool MainWindow::doExportRasterImages(
     }
 
     // Iterate over all frames
+    bool success = true;
     for(int i = 0; i < numFrames; ++i)
     {
-        if (progress.wasCanceled())
-            break;
-
         if (numSamples > 1) {
             for (int j = 0; j < 4*w*h; ++j) {
                 buf[j] = 0.0;
@@ -1251,6 +1263,9 @@ bool MainWindow::doExportRasterImages(
             progress.setValue(i * numSamples + k + 1);
         }
 
+        if (progress.wasCanceled())
+            break;
+
         // Convert double-precision buffer to QImage
         if (numSamples > 1) {
             for (int y = 0; y < h; ++y) {
@@ -1266,14 +1281,16 @@ bool MainWindow::doExportRasterImages(
         }
 
         // Save image to disk
-        res.save(files[i].path);
+        success = res.save(files[i].path);
+        if (!success) {
+            break;
+        }
     }
 
     // Destroy image buffer
     delete[] buf;
 
-    // TODO: return false if any file could not be saved
-    return true;
+    return success;
 }
 
 bool MainWindow::doExportVectorImages(
