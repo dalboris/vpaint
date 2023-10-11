@@ -197,8 +197,10 @@ private:
         QString path;
     };
     bool doExportRasterImages(const ExportFileTypeInfo & typeInfo,
+                              const RasterExportSettings & settings,
                               const QVector<ExportFileInfo> & files);
     bool doExportVectorImages(const ExportFileTypeInfo & typeInfo,
+                              const VectorExportSettings & settings,
                               const QVector<ExportFileInfo> & files);
     bool doExportPNG3D(const QString & filename);
     void read_DEPRECATED(QTextStream & in);

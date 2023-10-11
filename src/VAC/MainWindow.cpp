@@ -1150,26 +1150,24 @@ bool MainWindow::doExport()
     }
 
     if (typeInfo->category() == ExportFileTypeCategory::RasterImage) {
-        return doExportRasterImages(*typeInfo, files);
+        RasterExportSettings settings = exportAsDialog_->rasterSettings();
+        return doExportRasterImages(*typeInfo, settings, files);
     }
     else {
-        return doExportVectorImages(*typeInfo, files);
+        VectorExportSettings settings = exportAsDialog_->vectorSettings();
+        return doExportVectorImages(*typeInfo, settings, files);
     }
 }
 
 bool MainWindow::doExportRasterImages(
     const ExportFileTypeInfo & /*typeInfo*/,
+    const RasterExportSettings & settings,
     const QVector<ExportFileInfo> & files)
 {
-    // TODO: use RasterExportSettings instead of querying values
-    // in exportAsDialog_.
-
     // Compute how many renders we will need to do
     int numFrames = files.size();
     int numSamples = 1;
-    bool motionBlur = exportAsDialog_->motionBlur();
-    int motionBlurNumSamples = exportAsDialog_->motionBlurNumSamples();
-    numSamples = 1 + (motionBlur ? motionBlurNumSamples : 0);
+    numSamples = 1 + (settings.motionBlur() ? settings.motionBlurNumSamples() : 0);
     double numSamplesInv = 1.0 / numSamples;
     int numRenders = numFrames * numSamples;
 
@@ -1178,8 +1176,8 @@ bool MainWindow::doExportRasterImages(
     progress.setWindowModality(Qt::WindowModal);
 
     // Create image buffer
-    int w = exportAsDialog_->outWidth();
-    int h = exportAsDialog_->outHeight();
+    int w = settings.width();
+    int h = settings.height();
     double* buf = nullptr;
     QImage res;
     if (numSamples > 1) {
@@ -1211,7 +1209,7 @@ bool MainWindow::doExportRasterImages(
             QImage img = multiView_->activeView()->drawToImage(
                 Time(files[i].time - k * numSamplesInv),
                 scene()->left(), scene()->top(), scene()->width(), scene()->height(),
-                w, h, exportAsDialog_->useViewSettings());
+                settings);
 
             // Add contribution from this sample to the buffer
             if (numSamples > 1) {
@@ -1262,6 +1260,7 @@ bool MainWindow::doExportRasterImages(
 
 bool MainWindow::doExportVectorImages(
     const ExportFileTypeInfo & /*typeInfo*/,
+    const VectorExportSettings & /*settings*/,
     const QVector<ExportFileInfo> & files)
 {
     for (const ExportFileInfo & file : files)

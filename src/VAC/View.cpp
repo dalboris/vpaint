@@ -1465,13 +1465,17 @@ void imageCleanupHandler(void * info)
 
 }
 
-QImage View::drawToImage(double x, double y, double w, double h, int imgW, int imgH, bool useViewSettings)
+QImage View::drawToImage(double x, double y, double w, double h, const RasterExportSettings & settings)
 {
-    return drawToImage(activeTime(), x, y, w, h, imgW, imgH, useViewSettings);
+    return drawToImage(activeTime(), x, y, w, h, settings);
 }
 
-QImage View::drawToImage(Time t, double x, double y, double w, double h, int IMG_SIZE_X, int IMG_SIZE_Y, bool useViewSettings)
+QImage View::drawToImage(Time t, double x, double y, double w, double h, const RasterExportSettings & settings)
 {
+    int IMG_SIZE_X = settings.width();
+    int IMG_SIZE_Y = settings.height();
+    bool useViewSettings = settings.useViewSettings();
+
     // Make this widget's rendering context the current OpenGL context
     makeCurrent();
 

@@ -254,13 +254,33 @@ QString ExportAsDialog::filePath() const {
     return filenameLineEdit_->text();
 }
 
-FrameRangeType ExportAsDialog::frameRangeType() const {
+FrameRangeType ExportAsDialog::frameRangeType() const
+{
     if (singleImage_->isChecked()) {
         return FrameRangeType::SingleImage;
     }
     else {
         return FrameRangeType::ImageSequenceAll;
     }
+}
+
+RasterExportSettings ExportAsDialog::rasterSettings() const
+{
+    RasterExportSettings res;
+    res.setWidth(outWidth());
+    res.setHeight(outHeight());
+    res.setUseViewSettings(useViewSettings());
+    res.setMotionBlur(motionBlur());
+    res.setMotionBlurNumSamples(motionBlurNumSamples());
+    return res;
+}
+
+VectorExportSettings ExportAsDialog::vectorSettings() const
+{
+    VectorExportSettings res;
+    res.setBackgroundAsRect(backgroundAsRect_->isChecked());
+    res.setFillVariableWidthStrokes(fillVariableWidthStrokes_->isChecked());
+    return res;
 }
 
 int ExportAsDialog::outWidth() const
@@ -615,7 +635,8 @@ void ExportAsDialog::onFilenameBrowseButtonClicked_()
     updateFilename_(isManualEdit);
 }
 
-void ExportAsDialog::onFrameRangeTypeChanged_() {
+void ExportAsDialog::onFrameRangeTypeChanged_()
+{
     updateFilename_();
 }
 

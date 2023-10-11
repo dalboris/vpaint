@@ -66,13 +66,19 @@ public:
     ///
     FrameRangeType frameRangeType() const;
 
-    // Access png settings
+    /// Returns the current raster settings as displayed in this dialog.
+    ///
+    RasterExportSettings rasterSettings() const;
+
+    /// Returns the current vector settings as displayed in this dialog.
+    ///
+    VectorExportSettings vectorSettings() const;
+
+    // Individual settings
     int outWidth() const;
     int outHeight() const;
     bool preserveAspectRatio() const;
     bool useViewSettings() const;
-
-    // Motion blur
     bool motionBlur() const;
     int motionBlurNumSamples() const;
 

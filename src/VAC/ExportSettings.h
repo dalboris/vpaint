@@ -104,24 +104,24 @@ public:
 
     // Image size
 
-    int pngWidth() const {
-        return pngWidth_;
+    int width() const {
+        return width_;
     }
 
-    void setPngWidth(int w) {
-        pngWidth_ = w;
+    void setWidth(int w) {
+        width_ = w;
     }
 
-    int pngHeight() const {
-        return pngHeight_;
+    int height() const {
+        return height_;
     }
 
-    void setPngHeight(int h) {
-        pngHeight_ = h;
+    void setHeight(int h) {
+        height_ = h;
     }
 
     // Whether to render using view settings
-    // Note: might be useful for RasterExportSettings too.
+    // Note: might be useful for VectorExportSettings too.
 
     bool useViewSettings() const {
         return useViewSettings_;
@@ -150,8 +150,8 @@ public:
     }
 
 private:
-    int pngWidth_ = 0;
-    int pngHeight_ = 0;
+    int width_ = 0;
+    int height_ = 0;
 
     bool useViewSettings_ = false;
 
