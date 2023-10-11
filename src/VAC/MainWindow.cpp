@@ -716,6 +716,22 @@ bool MainWindow::saveAs()
     }
 }
 
+bool MainWindow::export_()
+{
+    if(!hasAlreadyBeenExported_ || !exportAsDialog_)
+    {
+        return exportAs();
+    }
+    else
+    {
+        exportAsCanvasWasVisible_ = actionShowCanvas->isChecked();
+        if(!exportAsCanvasWasVisible_)
+            actionShowCanvas->setChecked(true);
+
+        return acceptExportAs();
+    }
+}
+
 bool MainWindow::exportAs()
 {
     exportAsCanvasWasVisible_ = actionShowCanvas->isChecked();
@@ -783,6 +799,7 @@ bool MainWindow::acceptExportAs()
     // TODO: Move to doExport, so that it's also done when doing "Export",
     // not just "Export As"?
     if (success) {
+        hasAlreadyBeenExported_ = true;
         statusBar()->showMessage(tr("File(s) successfully exported."));
     }
     else {
@@ -813,6 +830,7 @@ bool MainWindow::rejectExportAs()
 void MainWindow::setDocumentFilePath_(const QString & filePath)
 {
     documentFilePath_ = filePath;
+    hasAlreadyBeenExported_ = false;
 
     QFileInfo fileInfo(filePath);
     if (fileInfo.exists() && fileInfo.isFile())
@@ -1556,8 +1574,15 @@ void MainWindow::createActions()
     connect(actionSaveAs, SIGNAL(triggered()), this, SLOT(saveAs()));
 
     // Export As
+    actionExport = new QAction(/*QIcon(":/iconSave"),*/ tr("&Export"), this);
+    actionExport->setStatusTip(tr("Export the current illustration in an external file format "
+                                  "using the last used export settings."));
+    actionExport->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_E));
+    connect(actionExport, SIGNAL(triggered()), this, SLOT(export_()));
+
+    // Export As
     actionExportAs = new QAction(/*QIcon(":/iconSave"),*/ tr("Export As..."), this);
-    actionExportAs->setStatusTip(tr("Export the current illustration or animation in an external file format."));
+    actionExportAs->setStatusTip(tr("Export the current illustration in an external file format."));
     actionExportAs->setShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_E));
     connect(actionExportAs, SIGNAL(triggered()), this, SLOT(exportAs()));
 
@@ -2078,6 +2103,7 @@ void MainWindow::createMenus()
     menuFile->addAction(actionSave);
     menuFile->addAction(actionSaveAs);
     menuFile->addSeparator();
+    menuFile->addAction(actionExport);
     menuFile->addAction(actionExportAs);
     //menuFile->addSeparator();
     //menuFile->addAction(actionPreferences);

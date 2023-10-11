@@ -96,6 +96,7 @@ private slots:
     bool save();
     void autosave();
     bool saveAs();
+    bool export_();
     bool exportAs();
     bool exportMesh();
     bool exportPNG3D();
@@ -224,6 +225,7 @@ private:
     ExportAsDialog * exportAsDialog_;
     bool exportAsCanvasWasVisible_;
     bool exportingAs_;
+    bool hasAlreadyBeenExported_ = false;
 
     // --------- Menus and actions --------
     // FILE
@@ -234,6 +236,7 @@ private:
       QAction * actionSave;
       QAction * actionSaveAs;
       QAction * actionPreferences;
+      QAction * actionExport;
       QAction * actionExportAs;
       QAction * actionQuit;
     // EDIT
