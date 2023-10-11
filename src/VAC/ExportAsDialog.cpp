@@ -345,6 +345,7 @@ void ExportAsDialog::enforcePngAspectRatio_()
 }
 
 void ExportAsDialog::updateFilenameFromDocumentName() {
+    hasExplicitExportFilename_ = false;
     updateFilename_();
 }
 
@@ -640,68 +641,62 @@ void ExportAsDialog::onFrameRangeTypeChanged_()
     updateFilename_();
 }
 
-void ExportAsDialog::updateFilename_(bool isManualEdit)
+namespace {
+
+QString getDefaultFilePath(const QString & name, const QString & extension, const QString & pattern)
 {
-    FilePath path(filenameLineEdit_->text());
-    QString stem = path.stem();
+    QString res = pattern;
+    res.replace("{name}", name);
+    res.replace("{extension}", extension);
+    return res;
+}
 
-    // Determine whether the new exprt filename is an explicit filename that
-    // shouldn't be changed even after doing a "Save As". For now we only check
-    // whether the export name is exactly equal (except for '*') to the
-    // document name. In the future, we may want to do smarter pattern
-    // matching, e.g.:
-    //
-    //    previous        previous         new             automatic new
-    //    document name   export path      document name   export path
-    //
-    //    myFile          out/myFile - *   myOtherFile     out/myOtherFile - *
-    //
-    if (isManualEdit) {
-        if (stem.isEmpty()) {
-            hasExplicitExportFilename_ = false;
-        }
-        else {
-            QString documentName = global()->documentName();
-            QString stemWithoutStar = stem;
-            stemWithoutStar.replace("*", "");
-            if (stemWithoutStar == documentName) {
-                hasExplicitExportFilename_ = false;
-            }
-            else {
-                hasExplicitExportFilename_ = true;
-            }
-        }
-    }
+// Note: the patterns could be user-defined and stored as application settings.
 
-    // Auto-set the stem based on the document name if no explicit export
-    // filename had previously been given.
-    //
-    if (hasExplicitExportFilename_ == false) {
-        hasExplicitExportFilename_ = false;
-        QString documentName = global()->documentName();
-        if (documentName.isEmpty()) {
-            stem = "unnamed";
-        }
-        else {
-            stem = documentName;
-        }
-    }
+QString getImageSequenceDefaultFilePath(const QString & documentName, const QString & extension)
+{
+#ifdef Q_OS_WINDOWS
+    QString pattern = "{name}_{extension}s\\*.{extension}";
+#else
+    QString pattern = "{name}_{extension}s/*.{extension}";
+#endif
+    return getDefaultFilePath(documentName, extension, pattern);
+}
 
-    // Ensure there is a '*' for image sequence formats.
-    // Remove the '*' for single image, except in case of manual edit.
-    if (singleImage_->isChecked()) {
-        if (!isManualEdit) {
-            stem.replace("*", "");
-        }
+QString getSingleImageDefaultFilePath(const QString & documentName, const QString & extension)
+{
+#ifdef Q_OS_WINDOWS
+    QString pattern = "{name}.{extension}";
+#else
+    QString pattern = "{name}.{extension}";
+#endif
+    return getDefaultFilePath(documentName, extension, pattern);
+}
+
+QString getDefaultFilePath(const QString & documentName, const QString & extension, bool isSingleImage)
+{
+    if (isSingleImage) {
+        return getSingleImageDefaultFilePath(documentName, extension);
     }
     else {
-        if (!stem.contains('*')) {
-            stem.append('*');
-        }
+        return getImageSequenceDefaultFilePath(documentName, extension);
     }
-    path.replaceStem(stem);
+}
 
-    // Update extension.
+} // namespace
+
+void ExportAsDialog::updateFilename_(bool isManualEdit)
+{
+    QString filePathText = filenameLineEdit_->text();
+    bool isSingleImage = singleImage_->isChecked();
+
+    // Get document name
+    QString documentName = global()->documentName();
+    if (documentName.isEmpty()) {
+        documentName = "unnamed";
+    }
+
+    // Get target extension
     QString targetExtension = "svg";
     int targetTypeIndex = fileFormatComboBox_->currentIndex();
     const ExportFileTypeInfo* currentFileTypeInfo = this->fileTypeInfo();
@@ -709,6 +704,7 @@ void ExportAsDialog::updateFilename_(bool isManualEdit)
         targetExtension = QString(currentFileTypeInfo->extension().data());
     }
     if (isManualEdit) {
+        FilePath path(filePathText);
         QString currentExtension = path.extensionWithoutLeadingDot();
         if (currentExtension != targetExtension) {
             // Set file type based on file path
@@ -723,6 +719,51 @@ void ExportAsDialog::updateFilename_(bool isManualEdit)
             }
         }
     }
+
+    // Determine whether the new export filename is an explicit filename that
+    // shouldn't be changed even after doing a "Save As".
+    //
+    QString defaultFilePath = getDefaultFilePath(documentName, targetExtension, isSingleImage);
+    if (isManualEdit) {
+        if (filePathText.isEmpty() || defaultFilePath == filePathText) {
+            hasExplicitExportFilename_ = false;
+        }
+        else {
+            hasExplicitExportFilename_ = true;
+        }
+    }
+
+    // Auto-set the stem based on the document name if no explicit export
+    // filename had previously been given.
+    //
+    if (hasExplicitExportFilename_ == false) {
+        filePathText = defaultFilePath;
+    }
+
+    // Ensure there is a '*' in the stem for image sequence formats.
+    // Remove the '*' for single image, even in case of explicit name, unless manual edit.
+    //
+    // This makes it possible to switch between "single image" and "image
+    // sequence" with the '*' automatically added/removed (even in case of
+    // explicit name), while still allowing users to have a '*' in "single
+    // image" mode if they explicitly edit it while already being in "single
+    // image" mode.
+    //
+    FilePath path(filePathText);
+    QString stem = path.stem();
+    if (isSingleImage) {
+        if (!isManualEdit) {
+            stem.replace('*', "");
+        }
+    }
+    else { // image sequence
+        if (!stem.contains('*')) {
+            stem.append('*');
+        }
+    }
+    path.replaceStem(stem);
+
+    // Update extension
     path.replaceExtension(targetExtension);
 
     // Update file path.
