@@ -979,13 +979,13 @@ void VAC::save_(QTextStream & out)
     out << "\n" << Save::indent() << "]";
 }
 
-void VAC::exportSVG_(Time t, QTextStream & out)
+void VAC::exportSVG_(QTextStream & out, const VectorExportSettings & settings, Time t)
 {
     // list of objects
     for(Cell * c: zOrdering_)
     {
         if(c->exists(t))
-            c->exportSVG(t, out);
+            c->exportSVG(out, settings, t);
     }
 }
 

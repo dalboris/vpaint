@@ -238,7 +238,7 @@ void Layer::setVisible(bool b)
     }
 }
 
-void Layer::exportSVG_(Time t, QTextStream & out)
+void Layer::exportSVG_(QTextStream & out, const VectorExportSettings & settings, Time t)
 {
     // This function does not export the background, because the API
     // for Background::exportSVG() requires the canvas' size, which
@@ -249,5 +249,5 @@ void Layer::exportSVG_(Time t, QTextStream & out)
     //
     // XXX We should improve this ugly design
     //
-    vac()->exportSVG(t, out);
+    vac()->exportSVG(out, settings, t);
 }

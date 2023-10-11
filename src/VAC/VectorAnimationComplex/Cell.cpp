@@ -18,6 +18,8 @@
 #include "../OpenGL.h"
 #include <QtDebug>
 #include <QTextStream>
+
+#include "../ExportSettings.h"
 #include "../Picking.h"
 #include "../DevSettings.h"
 #include "../Global.h"
@@ -650,7 +652,7 @@ void Cell::save_(QTextStream & /*out*/)
 {
 }
 
-void Cell::exportSVG(Time /*t*/, QTextStream & /*out*/)
+void Cell::exportSVG(QTextStream & /*out*/, const VectorExportSettings & /*settings*/, Time /*t*/)
 {
 }
 

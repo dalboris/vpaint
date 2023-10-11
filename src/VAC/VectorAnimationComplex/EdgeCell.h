@@ -53,7 +53,7 @@ public:
     virtual EdgeSample endSample(Time time) const;
 
     // Export SVG
-    virtual void exportSVG(Time t, QTextStream & out);
+    virtual void exportSVG(QTextStream & out, const VectorExportSettings & settings, Time t);
 
 protected:
     // Special handling to draw edges of fixed screen-width in topology mode

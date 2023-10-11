@@ -171,12 +171,12 @@ ExportAsDialog::ExportAsDialog(Scene * scene) :
     // Background as rect
     backgroundAsRect_ = createCheckBox(
         tr("Export background color and/or images as rectangle shapes"),
-        false, vectorSettingsLayout);
+        true, vectorSettingsLayout);
 
     // Fill variable-width strokes
     fillVariableWidthStrokes_ = createCheckBox(
         tr("Export variable-width strokes as filled paths"),
-        false, vectorSettingsLayout);
+        true, vectorSettingsLayout);
 
     // Export/Cancel dialog buttons
     QDialogButtonBox * buttonBox = new QDialogButtonBox(QDialogButtonBox::Cancel);

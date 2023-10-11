@@ -29,17 +29,17 @@ void SceneObject::save(QTextStream & out)
     save_(out);
 }
 
-void SceneObject::exportSVG(Time t, QTextStream & out)
+void SceneObject::exportSVG(QTextStream & out, const VectorExportSettings & settings, Time t)
 {
     // Save Derived members
-    exportSVG_(t, out);
+    exportSVG_(out, settings, t);
 }
 
 void SceneObject::save_(QTextStream & /*out*/)
 {
 }
 
-void SceneObject::exportSVG_(Time /*t*/, QTextStream & /*out*/)
+void SceneObject::exportSVG_(QTextStream & /*out*/, const VectorExportSettings & /*settings*/, Time /*t*/)
 {
 }
 

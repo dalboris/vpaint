@@ -20,8 +20,10 @@
 #include <QObject>
 #include <QMap>
 #include <QList>
-#include "TimeDef.h"
+
+#include "ExportSettings.h"
 #include "Picking.h"
+#include "TimeDef.h"
 #include "ViewSettings.h"
 
 class Background;
@@ -88,7 +90,7 @@ public:
     void emitCheckpoint() {emit checkpoint();}
 
     // Save and load
-    void exportSVG(Time t, QTextStream & out);
+    void exportSVG(QTextStream & out, const VectorExportSettings & settings, Time t);
     void save(QTextStream & out);
     void read(QTextStream & in);
     void writeAllLayers(XmlStreamWriter & xml);

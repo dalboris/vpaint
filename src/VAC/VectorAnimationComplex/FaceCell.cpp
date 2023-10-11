@@ -87,7 +87,7 @@ void FaceCell::computeOutlineBoundingBox_(Time t, BoundingBox & out) const
     out = boundingBox(t);
 }
 
-void FaceCell::exportSVG(Time t, QTextStream & out)
+void FaceCell::exportSVG(QTextStream & out, const VectorExportSettings & /*settings*/, Time t)
 {
     // Get polygon data
     QList< QList<Eigen::Vector2d> > samples = getSampling(t);

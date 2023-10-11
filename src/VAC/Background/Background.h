@@ -21,6 +21,7 @@
 
 #include "BackgroundData.h"
 #include "../Color.h"
+#include "../ExportSettings.h"
 
 #include <QString>
 #include <QImage>
@@ -124,7 +125,9 @@ public:
     void read(XmlStreamReader & xml);
 
     // SVG export
-    void exportSVG(int frame, QTextStream & out,
+    void exportSVG(QTextStream & out,
+                   const VectorExportSettings & settings,
+                   int frame,
                    double canvasLeft, double canvasTop,
                    double canvasWidth, double canvasHeight);
 

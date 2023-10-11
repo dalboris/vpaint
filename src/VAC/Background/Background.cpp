@@ -660,7 +660,9 @@ void Background::read(XmlStreamReader & xml)
     setData(data);
 }
 
-void Background::exportSVG(int frame, QTextStream & out,
+void Background::exportSVG(QTextStream & out,
+                           const VectorExportSettings & /*settings*/,
+                           int frame,
                            double canvasLeft, double canvasTop,
                            double canvasWidth, double canvasHeight)
 {

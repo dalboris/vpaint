@@ -35,7 +35,7 @@ public:
     virtual QList< QList<Eigen::Vector2d> > getSampling(Time time) const = 0;
 
     // Export SVG
-    virtual void exportSVG(Time t, QTextStream & out);
+    virtual void exportSVG(QTextStream & out, const VectorExportSettings & settings, Time t);
 
 protected:
     virtual ~FaceCell()=0;

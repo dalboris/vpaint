@@ -1260,7 +1260,7 @@ bool MainWindow::doExportRasterImages(
 
 bool MainWindow::doExportVectorImages(
     const ExportFileTypeInfo & /*typeInfo*/,
-    const VectorExportSettings & /*settings*/,
+    const VectorExportSettings & settings,
     const QVector<ExportFileInfo> & files)
 {
     for (const ExportFileInfo & file : files)
@@ -1272,11 +1272,9 @@ bool MainWindow::doExportVectorImages(
         QTextStream out(&qfile);
 
         QString header = QString(
-                             "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n"
+                             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
                              "<!-- Created with VPaint (http://www.vpaint.org/) -->\n\n"
 
-                             "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\"\n"
-                             "  \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n"
                              "<svg \n"
                              "  viewBox=\"%1 %2 %3 %4\"\n"
                              "  xmlns=\"http://www.w3.org/2000/svg\"\n"
@@ -1290,7 +1288,7 @@ bool MainWindow::doExportVectorImages(
         QString footer = "</svg>";
 
         out << header;
-        scene_->exportSVG(file.time, out);
+        scene_->exportSVG(out, settings, file.time);
         out << footer;
     }
 
