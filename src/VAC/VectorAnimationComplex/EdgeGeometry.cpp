@@ -352,8 +352,9 @@ EdgeGeometry::ClosestVertexInfo EdgeGeometry::closestPoint(double x, double y)
     res.d = res.p.distanceTo(EdgeSample(x,y));
     return res;
 }
-void EdgeGeometry::exportSVG(QTextStream & /*out*/)
+EdgeGeometryExportSVGInfo EdgeGeometry::exportSVG(QTextStream & /*out*/, const VectorExportSettings & /*settings*/)
 {
+    return EdgeGeometryExportSVGInfo();
 }
 void EdgeGeometry::write(XmlStreamWriter & /*xml*/) const
 {
@@ -1259,75 +1260,123 @@ EdgeGeometry::ClosestVertexInfo LinearSpline::closestPoint(double x, double y)
     }
 }
 
-void LinearSpline::exportSVG(QTextStream & out)
+EdgeGeometryExportSVGInfo LinearSpline::exportSVG(QTextStream & out, const VectorExportSettings & settings)
 {
+
+    EdgeGeometryExportSVGInfo info;
+    info.setType(EdgeGeometryExportSVGType::Stroke);
+
     // ---- Compute data to export ----
 
     std::vector<double> ax, ay, bx, by;
 
-    if(curve_.size() < 2)
-        return;
+    if(curve_.size() < 2) {
+        // Note: it might be nicer to return "EdgeGeometryExportSVGType::None",
+        // and not write any path at all in the SVG export, but the current
+        // architecture doesn't make it very practical. It'd be better if
+        // we were using a QXmlStreamWriter instead of a QTextStream, so
+        // that the callee of this function can first create a <path>,
+        // call this function, then delete the <path> if `None` is returned.
 
-    // helper function
-    auto getNormal = [] (double x1, double y1, double x2, double y2)
-    {
-        Eigen::Vector2d p1(x1, y1);
-        Eigen::Vector2d p2(x2, y2);
-        Eigen::Vector2d v = p2-p1;
-        v.normalize();
-        return Eigen::Vector2d(-v[1],v[0]);
-    };
+        return info;
+    }
 
-    Eigen::Vector2d u = getNormal(curve_[0].x(), curve_[0].y(),
-                                  curve_[1].x(), curve_[1].y());
-    Eigen::Vector2d p( curve_[0].x(), curve_[0].y() );
-    Eigen::Vector2d A = p + curve_[0].width() * 0.5 * u;
-    Eigen::Vector2d B = p - curve_[0].width() * 0.5 * u;
-    ax.push_back(A[0]);
-    ay.push_back(A[1]);
-    bx.push_back(B[0]);
-    by.push_back(B[1]);
-    p = Eigen::Vector2d( curve_[1].x(), curve_[1].y() );
-    A = p + curve_[1].width() * 0.5 * u;
-    B = p - curve_[1].width() * 0.5 * u;
-    ax.push_back(A[0]);
-    ay.push_back(A[1]);
-    bx.push_back(B[0]);
-    by.push_back(B[1]);
+    // Compute this stroke's average width and whether it has variable width
     int n = curve_.size();
-    if(isClosed()) // clean junction drawing for loops
+    bool isVariableWidth = false;
+    double startWidth = curve_[0].width();
+    double averageWidth = 0;
+    for(int i=0; i<n; i++)
     {
-        n -= 1;
+        double width = curve_[i].width();
+        averageWidth += width;
+        if (width != startWidth) {
+            isVariableWidth = true;
+        }
     }
-    for(int i=2; i<n; i++)
+    if (isVariableWidth) {
+        averageWidth /= n;
+        if (settings.fillVariableWidthStrokes()) {
+            info.setType(EdgeGeometryExportSVGType::Fill);
+        }
+    }
+    else {
+        averageWidth = startWidth;
+    }
+    info.setStrokeWidth(averageWidth);
+
+    if (info.type() == EdgeGeometryExportSVGType::Stroke)
     {
-        Eigen::Vector2d u = getNormal(curve_[i-1].x(), curve_[i-1].y(),
-                                      curve_[i].x(), curve_[i].y());
-        p = Eigen::Vector2d( curve_[i].x(), curve_[i].y() );
-        Eigen::Vector2d A = p + curve_[i].width() * 0.5 * u;
-        Eigen::Vector2d B = p - curve_[i].width() * 0.5 * u;
+        out << "M " << curve_[0].x() << "," << curve_[0].y() << " ";
+        for (int i = 1; i < n; ++i) {
+            out << "L " << curve_[i].x() << "," << curve_[i].y() << " ";
+        }
+    }
+    else
+    {
+        // helper function
+        auto getNormal = [] (double x1, double y1, double x2, double y2)
+        {
+            Eigen::Vector2d p1(x1, y1);
+            Eigen::Vector2d p2(x2, y2);
+            Eigen::Vector2d v = p2-p1;
+            v.normalize();
+            return Eigen::Vector2d(-v[1],v[0]);
+        };
+
+        Eigen::Vector2d u = getNormal(curve_[0].x(), curve_[0].y(),
+                                      curve_[1].x(), curve_[1].y());
+        Eigen::Vector2d p( curve_[0].x(), curve_[0].y() );
+        Eigen::Vector2d A = p + curve_[0].width() * 0.5 * u;
+        Eigen::Vector2d B = p - curve_[0].width() * 0.5 * u;
         ax.push_back(A[0]);
         ay.push_back(A[1]);
         bx.push_back(B[0]);
         by.push_back(B[1]);
-    }
-    if(isClosed()) // clean junction drawing for loops
-    {
+        p = Eigen::Vector2d( curve_[1].x(), curve_[1].y() );
+        A = p + curve_[1].width() * 0.5 * u;
+        B = p - curve_[1].width() * 0.5 * u;
         ax.push_back(A[0]);
         ay.push_back(A[1]);
         bx.push_back(B[0]);
         by.push_back(B[1]);
+        if(isClosed()) // clean junction drawing for loops
+        {
+            n -= 1;
+        }
+        for(int i=2; i<n; i++)
+        {
+            Eigen::Vector2d u = getNormal(curve_[i-1].x(), curve_[i-1].y(),
+                                          curve_[i].x(), curve_[i].y());
+            p = Eigen::Vector2d( curve_[i].x(), curve_[i].y() );
+            Eigen::Vector2d A = p + curve_[i].width() * 0.5 * u;
+            Eigen::Vector2d B = p - curve_[i].width() * 0.5 * u;
+            ax.push_back(A[0]);
+            ay.push_back(A[1]);
+            bx.push_back(B[0]);
+            by.push_back(B[1]);
+        }
+        if(isClosed()) // clean junction drawing for loops
+        {
+            ax.push_back(A[0]);
+            ay.push_back(A[1]);
+            bx.push_back(B[0]);
+            by.push_back(B[1]);
+        }
+
+        // ---- Write to file ----
+
+        out << "M " << ax[0] << "," << ay[0] << " ";
+        for(int i=1; i< (int) ax.size(); ++i) {
+            out << "L " << ax[i] << "," << ay[i] << " ";
+        }
+        for(int i = (int)bx.size()-1; i>=0; --i) {
+            out << "L " << bx[i] << "," << by[i] << " ";
+        }
+        out << "Z";
     }
 
-
-    // ---- Write to file ----
-
-    out << "M " << ax[0] << "," << ay[0] << " ";
-    for(int i=1; i< (int) ax.size(); ++i)
-        out << "L " << ax[i] << "," << ay[i] << " ";
-    for(int i = (int)bx.size()-1; i>=0; --i)
-        out << "L " << bx[i] << "," << by[i] << " ";
-    out << "Z";
+    return info;
 }
 
 }

@@ -19,8 +19,10 @@
 
 #include <QObject>
 #include <QString>
-#include "TimeDef.h" 
-#include "Picking.h" 
+
+#include "ExportSettings.h"
+#include "Picking.h"
+#include "TimeDef.h"
 #include "ViewSettings.h"
 
 class QTextStream;
@@ -57,7 +59,7 @@ public:
     bool shouldBeSaved() { return shouldBeSaved_; }
     void setShouldBeSaved(bool b) { shouldBeSaved_ = b; }
     void save(QTextStream & out);
-    void exportSVG(Time t, QTextStream & out);
+    void exportSVG(QTextStream & out, const VectorExportSettings & settings, Time t);
     static SceneObject * read(QTextStream & in);
 
 
@@ -77,7 +79,7 @@ signals:
     
 protected:
     virtual void save_(QTextStream & out);
-    virtual void exportSVG_(Time t, QTextStream & out);
+    virtual void exportSVG_(QTextStream & out, const VectorExportSettings & settings, Time t);
     bool canBeSaved_;
 
 private:

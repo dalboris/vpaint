@@ -188,14 +188,16 @@ void Scene::save(QTextStream & /*out*/)
     */
 }
 
-void Scene::exportSVG(Time t, QTextStream & out)
+void Scene::exportSVG(QTextStream & out, const VectorExportSettings & settings, Time t)
 {
     // Export Layers
     foreach(Layer * layer, layers_)
     {
-        layer->background()->exportSVG(
-            t.frame(), out, left(), top(), width(), height());
-        layer->exportSVG(t, out);
+        if (settings.backgroundAsRect()) {
+            layer->background()->exportSVG(
+                out, settings, t.frame(), left(), top(), width(), height());
+        }
+        layer->exportSVG(out, settings, t);
     }
 }
 

@@ -950,3 +950,13 @@ QDir Global::documentDir() const
 {
     return documentDir_;
 }
+
+void Global::setDocumentName(const QString & name)
+{
+    documentName_ = name;
+}
+
+QString Global::documentName() const
+{
+    return documentName_;
+}

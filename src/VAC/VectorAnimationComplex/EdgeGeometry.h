@@ -25,12 +25,46 @@
 #include "SculptCurve.h"
 #include "Triangles.h"
 
+#include "../ExportSettings.h"
+
 class QTextStream;
 class XmlStreamWriter;
 class XmlStreamReader;
 
 namespace VectorAnimationComplex
 {
+
+enum class EdgeGeometryExportSVGType {
+    Fill,
+    Stroke
+};
+
+class EdgeGeometryExportSVGInfo
+{
+public:
+    EdgeGeometryExportSVGInfo() {
+    }
+
+    EdgeGeometryExportSVGType type() const {
+        return type_;
+    }
+
+    void setType(EdgeGeometryExportSVGType type) {
+        type_ = type;
+    }
+
+    double strokeWidth() const {
+        return strokeWidth_;
+    }
+
+    void setStrokeWidth(double strokeWidth) {
+        strokeWidth_ = strokeWidth;
+    }
+
+private:
+    EdgeGeometryExportSVGType type_ = EdgeGeometryExportSVGType::Fill;
+    double strokeWidth_ = 0;
+};
 
 class EdgeGeometry
 {
@@ -107,7 +141,9 @@ public:
     static EdgeGeometry * read(QTextStream & in);
     static EdgeGeometry * read(XmlStreamReader & xml);
     void save(QTextStream & out);
-    virtual void exportSVG(QTextStream & out);
+
+    // Returns whether the stroke was exported as a filled path
+    virtual EdgeGeometryExportSVGInfo exportSVG(QTextStream & out, const VectorExportSettings & settings);
     virtual QString stringType() const {return "EdgeGeometry";}
     virtual void write(XmlStreamWriter & xml) const;
 
@@ -163,7 +199,7 @@ public:
     virtual void triangulate(Triangles & triangles);
     virtual void triangulate(double width, Triangles & triangles);
 
-    void exportSVG(QTextStream & out);
+    EdgeGeometryExportSVGInfo exportSVG(QTextStream & out, const VectorExportSettings & settings);
 
     virtual EdgeSample leftPos() const;
     virtual EdgeSample rightPos() const;

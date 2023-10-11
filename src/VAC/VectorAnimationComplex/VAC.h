@@ -324,7 +324,7 @@ public:
 protected:
     // Save & Load
     void save_(QTextStream & out);
-    virtual void exportSVG_(Time t, QTextStream & out);
+    virtual void exportSVG_(QTextStream & out, const VectorExportSettings & settings, Time t);
     void read2ndPass_();
 
 signals:

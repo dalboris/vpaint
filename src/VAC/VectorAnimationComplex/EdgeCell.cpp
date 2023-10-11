@@ -15,18 +15,22 @@
 // limitations under the License.
 
 #include "EdgeCell.h"
-#include "VertexCell.h"
+
+#include <array>
+#include <cmath>
+
+#include <QTextStream>
+
+#include "EdgeGeometry.h"
 #include "FaceCell.h"
 #include "VAC.h"
-#include "../Random.h"
+#include "VertexCell.h"
+
+#include "../CssColor.h"
 #include "../DevSettings.h"
 #include "../Global.h"
-#include <cmath>
-#include <QtDebug>
-#include <QTextStream>
+#include "../Random.h"
 #include "../SaveAndLoad.h"
-#include "../CssColor.h"
-#include "EdgeGeometry.h"
 
 namespace VectorAnimationComplex
 {
@@ -188,22 +192,37 @@ EdgeSample EdgeCell::endSample(Time time) const
         return sampling.last();
 }
 
-void EdgeCell::exportSVG(Time t, QTextStream & out)
+void EdgeCell::exportSVG(QTextStream & out, const VectorExportSettings & settings, Time t)
 {
     QList<EdgeSample> samples = getSampling(t);
     LinearSpline ls(samples);
     if(isClosed())
         ls.makeLoop();
 
+    std::array<int, 3> color = {
+        static_cast<int>(color_[0]*255),
+        static_cast<int>(color_[1]*255),
+        static_cast<int>(color_[2]*255),
+    };
+    double opacity = color_[3];
+
     out << "<path d=\"";
-    ls.exportSVG(out);
-    out << "\" style=\""
-        << "fill:rgb("
-        << (int) (color_[0]*255) << ","
-        << (int) (color_[1]*255) << ","
-        << (int) (color_[2]*255) << ");"
-        << "fill-opacity:" << color_[3] << ";"
-        << "fill-rule:nonzero;stroke:none\" />\n";
+    EdgeGeometryExportSVGInfo info = ls.exportSVG(out, settings);
+    out << "\" style=\"";
+    if (info.type() == EdgeGeometryExportSVGType::Fill) {
+        out << "fill:rgb(" << color[0] << "," << color[1] << "," << color[2] << ");"
+            << "fill-opacity:" << opacity << ";"
+            << "fill-rule:nonzero;"
+            << "stroke:none;";
+    }
+    else { // Stroke
+        out << "stroke:rgb(" << color[0] << "," << color[1] << "," << color[2] << ");"
+            << "stroke-opacity:" << opacity << ";"
+            << "stroke-width:" << info.strokeWidth() << ";"
+            << "stroke-linecap:round;"
+            << "fill:none;";
+    }
+    out << "\" />\n";
 }
 
 EdgeCell::~EdgeCell()

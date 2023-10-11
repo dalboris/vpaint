@@ -79,7 +79,7 @@ signals:
     void layerAttributesChanged();
 
 protected:
-    void exportSVG_(Time t, QTextStream & out) override;
+    void exportSVG_(QTextStream & out, const VectorExportSettings & settings, Time t) override;
 
 private:
     Background * background_;

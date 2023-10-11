@@ -146,6 +146,10 @@ public:
     void setDocumentDir(const QDir & dir);
     QDir documentDir() const;
 
+    // Current file name
+    void setDocumentName(const QString & name);
+    QString documentName() const;
+
 signals:
     void keyboardModifiersChanged();
 
@@ -253,6 +257,7 @@ private:
     DevSettings * settings_;
     Qt::KeyboardModifiers keyboardModifiers_;
     QDir documentDir_;
+    QString documentName_;
 
     // Status bar help
     QLabel * statusBarHelp_;

@@ -98,6 +98,7 @@
  *      
  */
 
+#include "../ExportSettings.h"
 #include "../TimeDef.h"
 #include "../ViewSettings.h"
 #include "../View3DSettings.h"
@@ -373,7 +374,7 @@ protected:
     static Cell * read1stPass(VAC * vac, QTextStream & in);
 
     // Export
-    virtual void exportSVG(Time t, QTextStream & out);
+    virtual void exportSVG(QTextStream & out, const VectorExportSettings & settings, Time t);
 
 
 //###################################################################

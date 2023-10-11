@@ -26,6 +26,7 @@
 #include <QPointF>
 #include <QPoint>
 #include "TimeDef.h"
+#include "ExportSettings.h"
 
 #include <QImage>
 #include <QMap>
@@ -118,8 +119,8 @@ public:
     // View opened (e.g., command-line vec->png conversion).
     // In the meantime, that was the easiest way to implement it.
     // Will refactor later.
-    QImage drawToImage(double x, double y, double w, double h, int imgW, int imgH, bool useViewSettings);
-    QImage drawToImage(Time t, double x, double y, double w, double h, int imgW, int imgH, bool useViewSettings);
+    QImage drawToImage(double x, double y, double w, double h, const RasterExportSettings & settings);
+    QImage drawToImage(Time t, double x, double y, double w, double h, const RasterExportSettings & settings);
 
 public slots:
     void update();        // update only this view (i.e., redraw the scene, leave other views unchanged)

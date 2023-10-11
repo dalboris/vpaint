@@ -65,7 +65,9 @@ set(VAC_HEADER_FILES
     CssColor.h
     DevSettings.h
     EditCanvasSizeDialog.h
-    ExportPngDialog.h
+    ExportAsDialog.h
+    ExportSettings.h
+    FilePath.h
     GLUtils.h
     GLWidget.h
     GLWidget_Camera.h
@@ -161,7 +163,9 @@ set(VAC_SOURCE_FILES
     CssColor.cpp
     DevSettings.cpp
     EditCanvasSizeDialog.cpp
-    ExportPngDialog.cpp
+    ExportAsDialog.cpp
+    ExportSettings.cpp
+    FilePath.cpp
     GLUtils.cpp
     GLWidget.cpp
     GeometryUtils.cpp

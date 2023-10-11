@@ -24,6 +24,9 @@
 #include <QTimer>
 #include <QDir>
 
+#include "ExportSettings.h"
+#include "TimeDef.h"
+
 class QScrollArea;
 class Scene;
 class GLWidget;
@@ -37,7 +40,7 @@ class XmlStreamWriter;
 class XmlStreamReader;
 class QTextStream;
 class EditCanvasSizeDialog;
-class ExportPngDialog;
+class ExportAsDialog;
 class AboutDialog;
 class BackgroundWidget;
 class LayersWidget;
@@ -93,12 +96,12 @@ private slots:
     bool save();
     void autosave();
     bool saveAs();
-    bool exportSVG();
-    bool exportPNG();
+    bool export_();
+    bool exportAs();
     bool exportMesh();
     bool exportPNG3D();
-    bool acceptExportPNG();
-    bool rejectExportPNG();
+    bool acceptExportAs();
+    bool rejectExportAs();
 
     // ---- Edit ----
     void addToUndoStack();
@@ -189,8 +192,17 @@ private:
     bool maybeSave_();
     bool save_(const QString & filePath, bool relativeRemap = false);
     void doImportSvg(const QString & filename);
-    bool doExportSVG(const QString & filename);
-    bool doExportPNG(const QString & filename);
+    bool doExport();
+    struct ExportFileInfo {
+        Time time;
+        QString path;
+    };
+    bool doExportRasterImages(const ExportFileTypeInfo & typeInfo,
+                              const RasterExportSettings & settings,
+                              const QVector<ExportFileInfo> & files);
+    bool doExportVectorImages(const ExportFileTypeInfo & typeInfo,
+                              const VectorExportSettings & settings,
+                              const QVector<ExportFileInfo> & files);
     bool doExportPNG3D(const QString & filename);
     void read_DEPRECATED(QTextStream & in);
     void write_DEPRECATED(QTextStream & out);
@@ -208,11 +220,12 @@ private:
     // Selection info
     SelectionInfoWidget * selectionInfo_;
     // Edit Canvas Size
-    ExportPngDialog * exportPngDialog_;
     EditCanvasSizeDialog * editCanvasSizeDialog_;
-    bool exportPngCanvasWasVisible_;
-    QString exportPngFilename_;
-    bool exportingPng_;
+    // Exporting
+    ExportAsDialog * exportAsDialog_;
+    bool exportAsCanvasWasVisible_;
+    bool exportingAs_;
+    bool hasAlreadyBeenExported_ = false;
 
     // --------- Menus and actions --------
     // FILE
@@ -223,8 +236,8 @@ private:
       QAction * actionSave;
       QAction * actionSaveAs;
       QAction * actionPreferences;
-      QAction * actionExportSVG;
-      QAction * actionExportPNG;
+      QAction * actionExport;
+      QAction * actionExportAs;
       QAction * actionQuit;
     // EDIT
     QMenu * menuEdit;
