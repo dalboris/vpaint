@@ -44,41 +44,46 @@ testing VPaint!
 ## Build Instructions
 
 Prerequisites:
-- **C++11**: We recommend Visual Studio 2017 on Windows, and any recent version of Clang/GCC on macOS/Linux.
-- **Qt 5.12**: We recommend installing the latest Qt 5.12.x version using the [Qt installer](https://www.qt.io/download-qt-installer).
+- **C++11**: We recommend Visual Studio 2019 on Windows, and any recent version of Clang/GCC on macOS/Linux.
+- **Qt 5.15**: We recommend installing Qt 5.15.2 using the [Qt installer](https://www.qt.io/download-qt-installer).
 - **GLU**: This is already installed on Windows, macOS, and many Linux distributions. However, on Ubuntu, you need to install it yourself via `sudo apt-get install libglu1-mesa-dev`.
+
+Supported platforms (see [Qt 5.15 Supported Platforms](https://doc.qt.io/qt-5/supported-platforms.html) for details):
+- Windows 7+
+- macOS 10.13+
+- Linux Ubuntu 18.04+ or any recent Linux distribution on X11 (Wayland not tested)
 
 ### Using qmake (application only)
 
-#### Windows 7/8/10, Visual Studio 2017 64bit, Qt 5.12.6
+#### Windows 7+, Visual Studio 2019 64bit, Qt 5.15.2
 
 ```
 git clone https://github.com/dalboris/vpaint.git
 mkdir build && cd build
 "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\Tools\VsDevCmd.bat" -arch=amd64
-C:\Qt\5.12.6\msvc2017_64\bin\qmake.exe ..\vpaint\src
+C:\Qt\5.15.2\msvc2019_64\bin\qmake.exe ..\vpaint\src
 nmake
-set PATH=%PATH%;C:\Qt\5.12.6\msvc2017_64\bin
+set PATH=%PATH%;C:\Qt\5.15.2\msvc2019_64\bin
 Gui\release\VPaint.exe
 ```
 
-#### macOS 10.14.6, Xcode 10.3, Qt 5.12.6
+#### macOS 10.13+, Xcode/Clang, Qt 5.15.2
 
 ```
 git clone https://github.com/dalboris/vpaint.git
 mkdir build && cd build
-~/Qt/5.12.6/clang_64/bin/qmake ../vpaint/src
+~/Qt/5.15.2/clang_64/bin/qmake ../vpaint/src
 make
 ./Gui/VPaint.app/Contents/MacOS/VPaint
 ```
 
-#### Ubuntu 18.04, GCC, Qt 5.12.6
+#### Ubuntu 18.04+, GCC, Qt 5.15.2
 
 ```
 sudo apt-get install build-essential libglu1-mesa-dev
 git clone https://github.com/dalboris/vpaint.git
 mkdir build && cd build
-~/Qt/5.12.6/gcc_64/bin/qmake ../vpaint/src
+~/Qt/5.15.2/gcc_64/bin/qmake ../vpaint/src
 make
 ./Gui/VPaint
 ```
