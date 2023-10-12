@@ -1260,6 +1260,52 @@ EdgeGeometry::ClosestVertexInfo LinearSpline::closestPoint(double x, double y)
     }
 }
 
+namespace {
+
+void writeCoords(QTextStream & out, const Eigen::Vector2d & p)
+{
+    out << p.x() << "," << p.y() << " ";
+};
+
+// p0  p1
+//        p2
+//
+// p      p3
+//
+//        p4
+// p6  p5
+//
+void writeRoundLineCap(QTextStream & out, const Eigen::Vector2d & p, const Eigen::Vector2d & u, double w)
+{
+    using Vec2d = Eigen::Vector2d;
+
+    // Coefficient (up to double precision) for approximating circles with
+    // cubic Béziers. See: https://spencermortensen.com/articles/bezier-circle
+    double c = 0.5519150244935106;
+
+    Vec2d pp0 = 0.5 * w * u;
+    Vec2d p3p2 = c * pp0;
+    Vec2d pp3 = Vec2d(pp0[1], -pp0[0]);
+    Vec2d p0p1 = Vec2d(p3p2[1], -p3p2[0]);
+    Vec2d p0 = p + pp0;
+    Vec2d p3 = p + pp3;
+    Vec2d p6 = p - pp0;
+    Vec2d p1 = p0 + p0p1;
+    Vec2d p2 = p3 + p3p2;
+    Vec2d p4 = p3 - p3p2;
+    Vec2d p5 = p6 + p0p1;
+
+    out << "C ";
+    writeCoords(out, p1);
+    writeCoords(out, p2);
+    writeCoords(out, p3);
+    writeCoords(out, p4);
+    writeCoords(out, p5);
+    writeCoords(out, p6);
+};
+
+} // namespace
+
 EdgeGeometryExportSVGInfo LinearSpline::exportSVG(QTextStream & out, const VectorExportSettings & settings)
 {
 
@@ -1268,7 +1314,8 @@ EdgeGeometryExportSVGInfo LinearSpline::exportSVG(QTextStream & out, const Vecto
 
     // ---- Compute data to export ----
 
-    std::vector<double> ax, ay, bx, by;
+    using Vec2d = Eigen::Vector2d;
+    using Vec2dArray = std::vector<Vec2d,Eigen::aligned_allocator<Vec2d> >;
 
     if(curve_.size() < 2) {
         // Note: it might be nicer to return "EdgeGeometryExportSVGType::None",
@@ -1283,6 +1330,9 @@ EdgeGeometryExportSVGInfo LinearSpline::exportSVG(QTextStream & out, const Vecto
 
     // Compute this stroke's average width and whether it has variable width
     int n = curve_.size();
+    if(isClosed()) {
+        n -= 1; // n is the number of samples not including the first/last duplicate
+    }
     bool isVariableWidth = false;
     double startWidth = curve_[0].width();
     double averageWidth = 0;
@@ -1307,71 +1357,106 @@ EdgeGeometryExportSVGInfo LinearSpline::exportSVG(QTextStream & out, const Vecto
 
     if (info.type() == EdgeGeometryExportSVGType::Stroke)
     {
-        out << "M " << curve_[0].x() << "," << curve_[0].y() << " ";
+        out << "M ";
+        writeCoords(out, curve_[0].pos());
+        out << "L ";
         for (int i = 1; i < n; ++i) {
-            out << "L " << curve_[i].x() << "," << curve_[i].y() << " ";
+            writeCoords(out, curve_[i].pos());
+        }
+        if (isClosed()) {
+            out << "Z";
         }
     }
     else
     {
         // helper function
-        auto getNormal = [] (double x1, double y1, double x2, double y2)
-        {
-            Eigen::Vector2d p1(x1, y1);
-            Eigen::Vector2d p2(x2, y2);
-            Eigen::Vector2d v = p2-p1;
+        auto getNormal = [](const Vec2d & p1, const Vec2d & p2) {
+            Vec2d v = p2-p1;
             v.normalize();
-            return Eigen::Vector2d(-v[1],v[0]);
+            return Vec2d(-v[1],v[0]);
         };
 
-        Eigen::Vector2d u = getNormal(curve_[0].x(), curve_[0].y(),
-                                      curve_[1].x(), curve_[1].y());
-        Eigen::Vector2d p( curve_[0].x(), curve_[0].y() );
-        Eigen::Vector2d A = p + curve_[0].width() * 0.5 * u;
-        Eigen::Vector2d B = p - curve_[0].width() * 0.5 * u;
-        ax.push_back(A[0]);
-        ay.push_back(A[1]);
-        bx.push_back(B[0]);
-        by.push_back(B[1]);
-        p = Eigen::Vector2d( curve_[1].x(), curve_[1].y() );
-        A = p + curve_[1].width() * 0.5 * u;
-        B = p - curve_[1].width() * 0.5 * u;
-        ax.push_back(A[0]);
-        ay.push_back(A[1]);
-        bx.push_back(B[0]);
-        by.push_back(B[1]);
-        if(isClosed()) // clean junction drawing for loops
-        {
-            n -= 1;
+        // Compute sample normals as average of adjacent segments normals
+        Vec2dArray normals;
+        Vec2d lastSegmentNormal;
+        if (isClosed()) {
+            lastSegmentNormal = getNormal(curve_[n-1].pos(), curve_[0].pos());
         }
-        for(int i=2; i<n; i++)
-        {
-            Eigen::Vector2d u = getNormal(curve_[i-1].x(), curve_[i-1].y(),
-                                          curve_[i].x(), curve_[i].y());
-            p = Eigen::Vector2d( curve_[i].x(), curve_[i].y() );
-            Eigen::Vector2d A = p + curve_[i].width() * 0.5 * u;
-            Eigen::Vector2d B = p - curve_[i].width() * 0.5 * u;
-            ax.push_back(A[0]);
-            ay.push_back(A[1]);
-            bx.push_back(B[0]);
-            by.push_back(B[1]);
+        else {
+            lastSegmentNormal = getNormal(curve_[0].pos(), curve_[1].pos());
+            normals.push_back(lastSegmentNormal);
         }
-        if(isClosed()) // clean junction drawing for loops
-        {
-            ax.push_back(A[0]);
-            ay.push_back(A[1]);
-            bx.push_back(B[0]);
-            by.push_back(B[1]);
+        int iBegin = isClosed() ? 0 : 1;
+        int iEnd = isClosed() ? n : n - 1;
+        for (int i = iBegin; i < iEnd; ++i) {
+            Vec2d segmentNormal = getNormal(curve_[i].pos(), curve_[i+1].pos());
+            Vec2d sampleNormal = lastSegmentNormal + segmentNormal;
+            double unorm2 = sampleNormal.squaredNorm();
+            if(unorm2 > 0) {
+                sampleNormal.normalize();
+            }
+            else {
+                sampleNormal = lastSegmentNormal;
+            }
+            normals.push_back(sampleNormal);
+            lastSegmentNormal = segmentNormal;
+        }
+        if (!isClosed()) {
+            normals.push_back(lastSegmentNormal);
         }
 
         // ---- Write to file ----
 
-        out << "M " << ax[0] << "," << ay[0] << " ";
-        for(int i=1; i< (int) ax.size(); ++i) {
-            out << "L " << ax[i] << "," << ay[i] << " ";
+        // Note: Using explicit return types in these lambdas is required
+        // because Eigen operators return types are things like
+        // `CwiseBinaryOp<...>` doing lazy evaluation. This would be the type
+        // auto-deduced, but then doing the actual evaluation out of the lambda
+        // is undefined behavior because the operands are local to the function
+        // and now destroyed.
+
+        auto width = [&](int i) -> double {
+            return curve_[i].width();
+        };
+
+        auto centerPos = [&](int i) -> Vec2d {
+            return curve_[i].pos();
+        };
+
+        // Using this one works fine
+        auto leftPos = [&](int i) -> Vec2d {
+            return centerPos(i) + 0.5 * width(i) * normals[i];
+        };
+
+        auto rightPos = [&](int i) -> Vec2d {
+            return centerPos(i) - 0.5 * width(i) * normals[i];
+        };
+
+        // Left offset line
+        out << "M ";
+        writeCoords(out, leftPos(0));
+        out << "L ";
+        for (int i = 1; i < n; ++i) {
+            writeCoords(out, leftPos(i));
         }
-        for(int i = (int)bx.size()-1; i>=0; --i) {
-            out << "L " << bx[i] << "," << by[i] << " ";
+
+        // Transition between left and right offset lines
+        if (isClosed()) {
+            out << "Z M ";
+            writeCoords(out, rightPos(n-1));
+        }
+        else {
+            writeRoundLineCap(out, centerPos(n-1), normals[n-1], width(n-1));
+        }
+
+        // Right offset line
+        out << "L ";
+        for(int i = n - 2; i >= 0; --i) {
+            writeCoords(out, rightPos(i));
+        }
+
+        // Transition between right and left offset lines and close
+        if (!isClosed()) {
+            writeRoundLineCap(out, centerPos(0), -normals[0], width(0));
         }
         out << "Z";
     }
