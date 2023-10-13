@@ -129,7 +129,8 @@ public:
                    const VectorExportSettings & settings,
                    int frame,
                    double canvasLeft, double canvasTop,
-                   double canvasWidth, double canvasHeight);
+                   double canvasWidth, double canvasHeight,
+                   int backgroundId);
 
     // Remap relative files
     void relativeRemap(const QDir & oldDir, const QDir & newDir);
