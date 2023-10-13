@@ -60,7 +60,7 @@ Supported platforms (see [Qt 5.15 Supported Platforms](https://doc.qt.io/qt-5/su
 ```
 git clone https://github.com/dalboris/vpaint.git
 mkdir build && cd build
-"C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\Tools\VsDevCmd.bat" -arch=amd64
+"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools\VsDevCmd.bat" -arch=amd64
 C:\Qt\5.15.2\msvc2019_64\bin\qmake.exe ..\vpaint\src
 nmake
 set PATH=%PATH%;C:\Qt\5.15.2\msvc2019_64\bin

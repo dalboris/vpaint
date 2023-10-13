@@ -3861,7 +3861,7 @@ void VAC::insertSketchedEdgeInVAC(double tolerance, bool useFaceToConsiderForCut
             }
         }
     }
-    int nClusters= clusters.size();
+    int nClusters= static_cast<int>(clusters.size());
 
 #if MYDEBUG
     /////////  Print clusters  /////////

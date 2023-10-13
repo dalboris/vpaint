@@ -17,6 +17,8 @@
 #ifndef VAC_FACE_CELL_H
 #define VAC_FACE_CELL_H
 
+#include <array>
+
 #include "Cell.h"
 #include "Triangles.h"
 

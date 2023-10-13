@@ -515,10 +515,14 @@ void triangulateHelper(const QList<EdgeSample> & samples, Triangles & triangles,
 
         // In some platforms, in extension of EIGEN_MAKE_ALIGNED_OPERATOR_NEW:
         // `QuadInfo::eigen_aligned_operator_new_marker_type` locally defined but not used.
-        #pragma GCC diagnostic push
-        #pragma GCC diagnostic ignored "-Wunused-local-typedefs"
+        #if defined(__clang__) || defined(__GNUC__) || defined(__GNUG__)
+            #pragma GCC diagnostic push
+            #pragma GCC diagnostic ignored "-Wunused-local-typedefs"
             EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-        #pragma GCC diagnostic pop
+            #pragma GCC diagnostic pop
+        #else
+            EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+        #endif
     };
     QList<QuadInfo> quads;
 
