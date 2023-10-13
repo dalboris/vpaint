@@ -16,15 +16,15 @@
 
 #include "EdgeGeometry.h"
 
-#include <QTextStream>
-#include "../XmlStreamWriter.h"
-#include "../XmlStreamReader.h"
-
-#include "../SaveAndLoad.h"
-#include "../OpenGL.h"
 #include <cmath>
+
+#include <QTextStream>
+
 #include "../DevSettings.h"
-#include <QtDebug>
+#include "../OpenGL.h"
+#include "../SaveAndLoad.h"
+#include "../XmlStreamReader.h"
+#include "../XmlStreamWriter.h"
 
 using namespace std;
 
@@ -1322,7 +1322,17 @@ EdgeGeometryExportSVGInfo LinearSpline::exportSVG(QTextStream & out, const Vecto
     using Vec2d = Eigen::Vector2d;
     using Vec2dArray = std::vector<Vec2d,Eigen::aligned_allocator<Vec2d> >;
 
-    if(curve_.size() < 2) {
+    // Get number of samples, not including the first/last duplicate
+    // in case of closed curves.
+    //
+    int n = curve_.size();
+    if(isClosed()) {
+        n -= 1; // n is the number of samples not
+    }
+
+    // Early return if there is only one sample.
+    //
+    if(n < 2) {
         // Note: it might be nicer to return "EdgeGeometryExportSVGType::None",
         // and not write any path at all in the SVG export, but the current
         // architecture doesn't make it very practical. It'd be better if
@@ -1334,18 +1344,15 @@ EdgeGeometryExportSVGInfo LinearSpline::exportSVG(QTextStream & out, const Vecto
     }
 
     // Compute this stroke's average width and whether it has variable width
-    int n = curve_.size();
-    if(isClosed()) {
-        n -= 1; // n is the number of samples not including the first/last duplicate
-    }
     bool isVariableWidth = false;
     double startWidth = curve_[0].width();
     double averageWidth = 0;
+    double epsilon = 1e-6;
     for(int i=0; i<n; i++)
     {
         double width = curve_[i].width();
         averageWidth += width;
-        if (width != startWidth) {
+        if (std::abs(width - startWidth) > epsilon) {
             isVariableWidth = true;
         }
     }
