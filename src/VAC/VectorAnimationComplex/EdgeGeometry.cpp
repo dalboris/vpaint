@@ -1267,15 +1267,11 @@ void writeCoords(QTextStream & out, const Eigen::Vector2d & p)
     out << p.x() << "," << p.y() << " ";
 };
 
-// p0  p1
-//        p2
-//
-// p      p3
-//
-//        p4
-// p6  p5
-//
-void writeRoundLineCap(QTextStream & out, const Eigen::Vector2d & p, const Eigen::Vector2d & u, double w)
+void writeRoundLineCap(
+        QTextStream & out,
+        const Eigen::Vector2d & center,
+        const Eigen::Vector2d & normal,
+        double width)
 {
     using Vec2d = Eigen::Vector2d;
 
@@ -1283,7 +1279,16 @@ void writeRoundLineCap(QTextStream & out, const Eigen::Vector2d & p, const Eigen
     // cubic Béziers. See: https://spencermortensen.com/articles/bezier-circle
     double c = 0.5519150244935106;
 
-    Vec2d pp0 = 0.5 * w * u;
+    // p0  p1
+    //        p2
+    //
+    // p      p3
+    //
+    //        p4
+    // p6  p5
+    //
+    const Vec2d & p = center;
+    Vec2d pp0 = 0.5 * width * normal;
     Vec2d p3p2 = c * pp0;
     Vec2d pp3 = Vec2d(pp0[1], -pp0[0]);
     Vec2d p0p1 = Vec2d(p3p2[1], -p3p2[0]);
@@ -1370,13 +1375,13 @@ EdgeGeometryExportSVGInfo LinearSpline::exportSVG(QTextStream & out, const Vecto
     else
     {
         // helper function
-        auto getNormal = [](const Vec2d & p1, const Vec2d & p2) {
+        auto getNormal = [](const Vec2d & p1, const Vec2d & p2) -> Vec2d {
             Vec2d v = p2-p1;
             v.normalize();
             return Vec2d(-v[1],v[0]);
         };
 
-        // Compute sample normals as average of adjacent segments normals
+        // Compute sample normals as average of its two adjacent segment normals
         Vec2dArray normals;
         Vec2d lastSegmentNormal;
         if (isClosed()) {
@@ -1391,8 +1396,8 @@ EdgeGeometryExportSVGInfo LinearSpline::exportSVG(QTextStream & out, const Vecto
         for (int i = iBegin; i < iEnd; ++i) {
             Vec2d segmentNormal = getNormal(curve_[i].pos(), curve_[i+1].pos());
             Vec2d sampleNormal = lastSegmentNormal + segmentNormal;
-            double unorm2 = sampleNormal.squaredNorm();
-            if(unorm2 > 0) {
+            double squaredNorm = sampleNormal.squaredNorm();
+            if(squaredNorm > 0) {
                 sampleNormal.normalize();
             }
             else {
@@ -1408,11 +1413,20 @@ EdgeGeometryExportSVGInfo LinearSpline::exportSVG(QTextStream & out, const Vecto
         // ---- Write to file ----
 
         // Note: Using explicit return types in these lambdas is required
-        // because Eigen operators return types are things like
-        // `CwiseBinaryOp<...>` doing lazy evaluation. This would be the type
-        // auto-deduced, but then doing the actual evaluation out of the lambda
-        // is undefined behavior because the operands are local to the function
-        // and now destroyed.
+        // because Eigen operators return types such as `CwiseBinaryOp<...>`
+        // for lazy evaluation.
+        //
+        // See: https://eigen.tuxfamily.org/dox/TopicLazyEvaluation.html
+        //
+        // In our case, CwiseBinaryOp<...> would be the auto-deduced type,
+        // delaying evaluation too much: by the time the BinaryOp is assigned
+        // to a Vec2d and evaluation takes place, its operands (which are
+        // local variables of the lambda function) are already out of scope
+        // and destroyed, causing undefined behavior (in practice, garbage
+        // values).
+        //
+        // An alternative to adding explicit return types would be to call
+        // eval(): `return (centerPos + 0.5 * width * normal).eval();`.
 
         auto width = [&](int i) -> double {
             return curve_[i].width();
