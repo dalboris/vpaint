@@ -192,14 +192,24 @@ void Scene::exportSVG(QTextStream & out, const VectorExportSettings & settings, 
 {
     // Export Layers
     int layerId = 0;
+    int numLayers = layers_.length();
     foreach(Layer * layer, layers_)
     {
         ++layerId;
+        if (!layer->isVisible()) {
+            continue;
+        }
+        if (numLayers > 1) {
+            out << "<g>\n";
+        }
         if (settings.backgroundAsRect()) {
             layer->background()->exportSVG(
                 out, settings, t.frame(), left(), top(), width(), height(), layerId);
         }
         layer->exportSVG(out, settings, t);
+        if (numLayers > 1) {
+            out << "</g>\n";
+        }
     }
 }
 
