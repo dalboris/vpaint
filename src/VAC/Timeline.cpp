@@ -628,7 +628,6 @@ Timeline::Timeline(Scene *scene, QWidget *parent) :
     // Global layout
     QHBoxLayout * layout = new QHBoxLayout();
     layout->setSpacing(0);
-    layout->setMargin(0);
     layout->setContentsMargins(0, 8, 5, 0);
     layout->addWidget(settingsButton);
     layout->addSpacing(5);

@@ -304,15 +304,15 @@ ViewSettingsWidget::ViewSettingsWidget(ViewSettings & viewSettings, QWidget * pa
     QSize buttonIconSize(24, 24);
 
     QHBoxLayout * displayModeLayout = new QHBoxLayout();
-    displayModeLayout->setMargin(0);
+    displayModeLayout->setContentsMargins(0, 0, 0, 0);
     displayModeLayout->setSpacing(0);
 
     QVBoxLayout * displayModeLayoutLeftColumn = new QVBoxLayout();
-    displayModeLayoutLeftColumn->setMargin(0);
+    displayModeLayoutLeftColumn->setContentsMargins(0, 0, 0, 0);
     displayModeLayoutLeftColumn->setSpacing(0);
 
     QFormLayout * displayModeLayoutRightColumn = new QFormLayout();
-    displayModeLayoutRightColumn->setMargin(10);
+    displayModeLayoutRightColumn->setContentsMargins(10, 10, 10, 10);
     displayModeLayoutRightColumn->setSpacing(10);
 
     displayModeButton_Normal_ = new QPushButton();
@@ -385,19 +385,19 @@ ViewSettingsWidget::ViewSettingsWidget(ViewSettings & viewSettings, QWidget * pa
     // Menu to change onion skinning options
 
     QHBoxLayout * onionSkinningLayout = new QHBoxLayout();
-    onionSkinningLayout->setMargin(0);
+    onionSkinningLayout->setContentsMargins(0, 0, 0, 0);
     onionSkinningLayout->setSpacing(0);
 
     QVBoxLayout * onionSkinningLayoutLeftColumn = new QVBoxLayout();
-    onionSkinningLayoutLeftColumn->setMargin(0);
+    onionSkinningLayoutLeftColumn->setContentsMargins(0, 0, 0, 0);
     onionSkinningLayoutLeftColumn->setSpacing(0);
 
     QFormLayout * onionSkinningLayoutRightColumn = new QFormLayout();
-    onionSkinningLayoutRightColumn->setMargin(10);
+    onionSkinningLayoutRightColumn->setContentsMargins(10, 10, 10, 10);
     onionSkinningLayoutRightColumn->setSpacing(10);
 
     QFormLayout * onionSkinningLayoutRightColumn2 = new QFormLayout();
-    onionSkinningLayoutRightColumn2->setMargin(10);
+    onionSkinningLayoutRightColumn2->setContentsMargins(10, 10, 10, 10);
     onionSkinningLayoutRightColumn2->setSpacing(10);
 
     onionSkinningButton_Off_ = new QPushButton();

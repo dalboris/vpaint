@@ -26,7 +26,7 @@ ViewWidget::ViewWidget(Scene *scene, QWidget *parent) :
     view_ = new View(scene, this);
 
     QVBoxLayout * layout = new QVBoxLayout();
-    layout->setMargin(0);
+    layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
     layout->addWidget(view_);
     setLayout(layout);
