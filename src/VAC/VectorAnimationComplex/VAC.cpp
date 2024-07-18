@@ -602,7 +602,7 @@ void VAC::draw(Time time, ViewSettings & viewSettings)
 
         // Set color of cursor. We enforce alpha>0.2 to make sure users see something
         QColor color = global()->edgeColor();
-        glColor4d(color.redF(),color.greenF(),color.blueF(), std::max(0.2, color.alphaF()));
+        glColor4d(color.redF(),color.greenF(),color.blueF(), (std::max)(0.2f, color.alphaF()));
 
         // Get position of cursor in scene coordinates
         Eigen::Vector2d p = global()->sceneCursorPos();
