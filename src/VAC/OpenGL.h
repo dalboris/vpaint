@@ -21,11 +21,12 @@
 //
 // OpenGL 2.x functions can be called via the following:
 //
-//   auto* f = context()->versionFunctions<OpenGLFunctions>();
+//   auto* f = getOpenGLFunctions(context());
 //   f->glBlendFuncSeparate(...)
 //
-// OpenGL 3.x or 4.x are not direcly available, but may be available
-// as extensions to OpenGL 2.1, for example:
+// If compiling with Qt 5, we use OpenGL 2.1. This means that OpenGL 3.x or 4.x
+// are not direcly available, but may be available as extensions to OpenGL 2.1,
+// for example:
 //
 //   // Query extensions
 //   QList extensions = context()->extensions().toList();
@@ -49,6 +50,7 @@
 //
 // For more details, see: https://www.kdab.com/opengl-in-qt-5-1-part-1/
 //
+// If compiling with Qt 6, we use OpenGL 3.0, and extensions are not supported.
 
 #ifndef OPENGL_H
 #define OPENGL_H
