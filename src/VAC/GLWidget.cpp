@@ -463,7 +463,7 @@ void GLWidget::delegateMousePress(QMouseEvent * event)
     case Qt::LeftButton:
         mouse_LeftButton_ = true;
         break;
-    case Qt::MidButton:
+    case Qt::MiddleButton:
         mouse_MidButton_ = true;
         break;
     case Qt::RightButton:
@@ -611,7 +611,7 @@ void GLWidget::delegateMouseRelease(QMouseEvent *event)
           return;
         mouse_LeftButton_ = false;
         break;
-      case Qt::MidButton:
+      case Qt::MiddleButton:
         if(!mouse_MidButton_)
           return;
         mouse_MidButton_ = false;

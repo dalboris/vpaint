@@ -226,7 +226,7 @@ void Timeline_HBar::paintEvent (QPaintEvent * /*event*/)
 void Timeline_HBar::mousePressEvent (QMouseEvent * event)
 {
     // Pan the timeline
-    if(event->button() == Qt::MidButton)
+    if(event->button() == Qt::MiddleButton)
     {
         hasHighlightedFrame_ = false;
         scrollingInitialX_ = event->x();
@@ -270,7 +270,7 @@ void Timeline_HBar::mousePressEvent (QMouseEvent * event)
 
 void Timeline_HBar::mouseReleaseEvent (QMouseEvent * event)
 {
-    if(event->button() == Qt::MidButton)
+    if(event->button() == Qt::MiddleButton)
     {
         isScrolling_ = false;
         if(event->y() >=0 && event->y()<height() && event->x()>0 && event->x()<width())

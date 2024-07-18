@@ -1014,7 +1014,7 @@ void AnimatedCycleGraphicsView::wheelEvent(QWheelEvent *event)
 
 void AnimatedCycleGraphicsView::mousePressEvent(QMouseEvent * event)
 {
-    if(event->button() == Qt::MidButton)
+    if(event->button() == Qt::MiddleButton)
     {
         setTransformationAnchor(AnchorUnderMouse);
         setInteractive(false);
@@ -1035,7 +1035,7 @@ void AnimatedCycleGraphicsView::mouseMoveEvent(QMouseEvent * event)
 
 void AnimatedCycleGraphicsView::mouseReleaseEvent(QMouseEvent * event)
 {
-    if(event->button() == Qt::MidButton)
+    if(event->button() == Qt::MiddleButton)
     {
         QMouseEvent fake(event->type(), event->pos(), Qt::LeftButton, Qt::LeftButton, event->modifiers());
         QGraphicsView::mouseReleaseEvent(&fake);
