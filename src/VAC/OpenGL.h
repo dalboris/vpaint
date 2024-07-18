@@ -71,7 +71,7 @@
 using OpenGLFunctions = QOpenGLFunctions_2_1;
 using FrameBufferObjectPtr = std::unique_ptr<QOpenGLExtension_ARB_framebuffer_object>;
 
-OpenGLFunctions* getOpenGLFunctions(QOpenGLContext * context) {
+inline OpenGLFunctions* getOpenGLFunctions(QOpenGLContext * context) {
     OpenGLFunctions* gl = context()->versionFunctions<OpenGLFunctions>();
     if (!gl) {
         qFatal("Failed to access OpenGL " VPAINT_OPENGL_VERSION " functions.");
@@ -79,7 +79,7 @@ OpenGLFunctions* getOpenGLFunctions(QOpenGLContext * context) {
     return gl;
 }
 
-void initFrameBufferObject(FrameBufferObjectPtr & fbo, QOpenGLContext * context) {
+inline void initFrameBufferObject(FrameBufferObjectPtr & fbo, QOpenGLContext * context) {
 
     // Query extensions
     bool queryExtensions = false;
@@ -111,7 +111,7 @@ void initFrameBufferObject(FrameBufferObjectPtr & fbo, QOpenGLContext * context)
 using OpenGLFunctions = QOpenGLFunctions_3_0;
 using FrameBufferObjectPtr = QOpenGLFunctions_3_0*;
 
-OpenGLFunctions* getOpenGLFunctions(QOpenGLContext * context) {
+inline OpenGLFunctions* getOpenGLFunctions(QOpenGLContext * context) {
     OpenGLFunctions* gl = QOpenGLVersionFunctionsFactory::get<QOpenGLFunctions_3_0>(context);
     if (!gl) {
         qFatal("Failed to access OpenGL " VPAINT_OPENGL_VERSION " functions.");
@@ -119,7 +119,7 @@ OpenGLFunctions* getOpenGLFunctions(QOpenGLContext * context) {
     return gl;
 }
 
-void initFrameBufferObject(FrameBufferObjectPtr & fbo, QOpenGLContext * context) {
+inline void initFrameBufferObject(FrameBufferObjectPtr & fbo, QOpenGLContext * context) {
     if (!fbo) {
         fbo = getOpenGLFunctions(context);
     }
