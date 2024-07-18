@@ -1560,6 +1560,43 @@ void MainWindow::updateViewMenu()
  *                             Actions
  */
 
+// Qt 6 introduced QKeyCombination. With this, QKeySequence now has two overloads for:
+//
+// - [Qt 5 and 6] QKeySequence(int, int, int, int)
+// - [Qt 6 only]  QKeySequence(QKeyCombination, QKeyCombination, QKeyCombination, QKeyCombination)
+//
+// And combining keys such as `Qt::SHIFT | Qt_Key_A` returns a QKeyCombination.
+//
+// But this means that `QKeySequence(Qt::Key_S, Qt::SHIFT | Qt::Key_V)`
+//                                   ^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^
+//                      Qt 6 types:  Qt::Key    int
+//                      Qt 5 types:  Qt::Key    QKeyCombination
+//
+// is ambiguous in Qt 6 since:
+// - Qt::Key is implicitly convertible to int
+// - QKeyCombination is implicitly convertible to int (but deprecated)
+// - Qt::Key is implicitly convertible to QKeyCombination
+//
+// The proper solution in Qt6 is to explicitly convert Qt::Key_S to a
+// QKeyCombination to resolve the ambiguity, like so:
+//
+//   `QKeySequence(QKeyCombination(Qt::Key_S), Qt::SHIFT | Qt::Key_V)`
+//
+// But this is not valid code in Qt 5, since QKeyCombination does not exist.
+// Therefore, we implement the "polyfill" below as a workaround.
+//
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+
+namespace {
+
+int QKeyCombination(Qt::Key key)
+{
+    return static_cast<int>(key);
+}
+
+}
+
+#endif
 
 void MainWindow::createActions()
 {
@@ -1881,21 +1918,21 @@ void MainWindow::createActions()
     // Deselect Vertices
     actionDeselectVertices = new QAction(tr("Deselect vertices"), this);
     actionDeselectVertices->setStatusTip(tr("Deselect all vertices."));
-    actionDeselectVertices->setShortcut(QKeySequence(Qt::Key_S, Qt::SHIFT | Qt::Key_V));
+    actionDeselectVertices->setShortcut(QKeySequence(QKeyCombination(Qt::Key_S), Qt::SHIFT | Qt::Key_V));
     actionDeselectVertices->setShortcutContext(Qt::ApplicationShortcut);
     connect(actionDeselectVertices, SIGNAL(triggered()), scene_, SLOT(deselectVertices()));
 
     // Deselect Edges
     actionDeselectEdges = new QAction(tr("Deselect edges"), this);
     actionDeselectEdges->setStatusTip(tr("Deselect all edges."));
-    actionDeselectEdges->setShortcut(QKeySequence(Qt::Key_S, Qt::SHIFT | Qt::Key_E));
+    actionDeselectEdges->setShortcut(QKeySequence(QKeyCombination(Qt::Key_S), Qt::SHIFT | Qt::Key_E));
     actionDeselectEdges->setShortcutContext(Qt::ApplicationShortcut);
     connect(actionDeselectEdges, SIGNAL(triggered()), scene_, SLOT(deselectEdges()));
 
     // Deselect Faces
     actionDeselectFaces = new QAction(tr("Deselect faces"), this);
     actionDeselectFaces->setStatusTip(tr("Deselect all faces."));
-    actionDeselectFaces->setShortcut(QKeySequence(Qt::Key_S, Qt::SHIFT | Qt::Key_F));
+    actionDeselectFaces->setShortcut(QKeySequence(QKeyCombination(Qt::Key_S), Qt::SHIFT | Qt::Key_F));
     actionDeselectFaces->setShortcutContext(Qt::ApplicationShortcut);
     connect(actionDeselectFaces, SIGNAL(triggered()), scene_, SLOT(deselectFaces()));
 
@@ -1916,14 +1953,14 @@ void MainWindow::createActions()
     // Deselect Key Cells
     actionDeselectKeyCells = new QAction(tr("Deselect key cells"), this);
     actionDeselectKeyCells->setStatusTip(tr("Deselect all key cells."));
-    actionDeselectKeyCells->setShortcut(QKeySequence(Qt::Key_S, Qt::SHIFT | Qt::Key_K));
+    actionDeselectKeyCells->setShortcut(QKeySequence(QKeyCombination(Qt::Key_S), Qt::SHIFT | Qt::Key_K));
     actionDeselectKeyCells->setShortcutContext(Qt::ApplicationShortcut);
     connect(actionDeselectKeyCells, SIGNAL(triggered()), scene_, SLOT(deselectKeyCells()));
 
     // Deselect Inbetween Cells
     actionDeselectInbetweenCells = new QAction(tr("Deselect inbetween cells"), this);
     actionDeselectInbetweenCells->setStatusTip(tr("Deselect all inbetween cells."));
-    actionDeselectInbetweenCells->setShortcut(QKeySequence(Qt::Key_S, Qt::SHIFT | Qt::Key_I));
+    actionDeselectInbetweenCells->setShortcut(QKeySequence(QKeyCombination(Qt::Key_S), Qt::SHIFT | Qt::Key_I));
     actionDeselectInbetweenCells->setShortcutContext(Qt::ApplicationShortcut);
     connect(actionDeselectInbetweenCells, SIGNAL(triggered()), scene_, SLOT(deselectInbetweenCells()));
 
