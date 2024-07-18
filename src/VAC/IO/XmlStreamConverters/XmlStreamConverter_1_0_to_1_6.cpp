@@ -68,9 +68,11 @@ void appendAttribute(QXmlStreamAttributes & attributes,
 
 void convertColorStyleToAttribute(QXmlStreamAttributes & attributes)
 {
+    static QString style = QString("style");
+
     for (int i=0; i<attributes.size(); ++i)
     {
-        if (attributes[i].qualifiedName() == "style")
+        if (attributes[i].qualifiedName() == style)
         {
             QString colorValue;
 

@@ -55,6 +55,9 @@ int FileVersionConverter::fileMinor() const
 
 void FileVersionConverter::readVersion_()
 {
+    static QString vec = "vec";
+    static QString version = "version";
+
     // Open file
     QFile file(filePath_);
     if (!file.open(QFile::ReadOnly | QFile::Text))
@@ -63,11 +66,11 @@ void FileVersionConverter::readVersion_()
     // Parse XML to get version
     XmlStreamReader xml(&file);
     if (xml.readNextStartElement() &&
-        xml.name() == "vec" &&
-        xml.attributes().hasAttribute("version"))
+        xml.name() == vec &&
+        xml.attributes().hasAttribute(version))
     {
         // Get version as string
-        fileVersion_ = xml.attributes().value("version").toString();
+        fileVersion_ = xml.attributes().value(version).toString();
 
         // Split string version at dots and spaces
         QStringList list = fileVersion_.split(QRegularExpression("\\.| "));

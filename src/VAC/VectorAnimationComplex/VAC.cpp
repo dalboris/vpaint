@@ -902,17 +902,23 @@ void VAC::read(XmlStreamReader & xml)
     {
         Cell * cell = 0;
 
-        if(xml.name() == "vertex")
+        static QString s_vertex = "vertex";
+        static QString s_edge = "edge";
+        static QString s_face = "face";
+        static QString s_inbetweenvertex = "inbetweenvertex";
+        static QString s_inbetweenedge = "inbetweenedge";
+        static QString s_inbetweenface = "inbetweenface";
+        if(xml.name() == s_vertex)
             cell = new KeyVertex(this, xml);
-        else if(xml.name() == "edge")
+        else if(xml.name() == s_edge)
             cell = new KeyEdge(this, xml);
-        else if(xml.name() == "face")
+        else if(xml.name() == s_face)
             cell = new KeyFace(this, xml);
-        else if(xml.name() == "inbetweenvertex")
+        else if(xml.name() == s_inbetweenvertex)
             cell = new InbetweenVertex(this, xml);
-        else if(xml.name() == "inbetweenedge")
+        else if(xml.name() == s_inbetweenedge)
             cell = new InbetweenEdge(this, xml);
-        else if(xml.name() == "inbetweenface")
+        else if(xml.name() == s_inbetweenface)
             cell = new InbetweenFace(this, xml);
 
         xml.skipCurrentElement(); // XXX this should be in "Cell(this, xml)"

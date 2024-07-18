@@ -146,34 +146,40 @@ void Layer::invertSelection()
 void Layer::read(XmlStreamReader & xml)
 {
     // Name
+    static QString s_name = "name";
     name_ = "Layer";
-    if(xml.attributes().hasAttribute("name"))
+    if(xml.attributes().hasAttribute(s_name))
     {
-        name_ = xml.attributes().value("name").toString();
+        name_ = xml.attributes().value(s_name).toString();
     }
 
     // Visible
+    static QString s_visible = "visible";
+    static QString s_true = "true";
+    static QString s_false = "false";
     isVisible_ = true;
-    if(xml.attributes().hasAttribute("visible"))
+    if(xml.attributes().hasAttribute(s_visible))
     {
-        QString value = xml.attributes().value("visible").toString();
-        if (value == "true")
+        QString value = xml.attributes().value(s_visible).toString();
+        if (value == s_true)
         {
             isVisible_ = true;
         }
-        else if (value == "false")
+        else if (value == s_false)
         {
             isVisible_ = false;
         }
     }
 
+    static QString s_background = "background";
+    static QString s_objects = "objects";
     while (xml.readNextStartElement())
     {
-        if (xml.name() == "background")
+        if (xml.name() == s_background)
         {
             background()->read(xml);
         }
-        else if (xml.name() == "objects")
+        else if (xml.name() == s_objects)
         {
             vac()->read(xml);
         }

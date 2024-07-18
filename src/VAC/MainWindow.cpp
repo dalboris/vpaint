@@ -1055,11 +1055,17 @@ void MainWindow::write(XmlStreamWriter &xml)
 
 void MainWindow::read(XmlStreamReader & xml)
 {
+    static QString s_vec = "vec";
+    static QString s_playback = "playback";
+    static QString s_canvas = "canvas";
+    static QString s_layer = "layer";
+
+
     scene_->clear();
 
     if (xml.readNextStartElement())
     {
-        if (xml.name() != "vec")
+        if (xml.name() != s_vec)
         {
             QMessageBox::warning(this,
                 "Cannot open file",
@@ -1070,19 +1076,19 @@ void MainWindow::read(XmlStreamReader & xml)
         while (xml.readNextStartElement())
         {
             // Playback
-            if (xml.name() == "playback")
+            if (xml.name() == s_playback)
             {
                 timeline_->read(xml);
             }
 
             // Canvas
-            else if (xml.name() == "canvas")
+            else if (xml.name() == s_canvas)
             {
                 scene_->readCanvas(xml);
             }
 
             // Layer
-            else if (xml.name() == "layer")
+            else if (xml.name() == s_layer)
             {
                 scene_->readOneLayer(xml);
             }

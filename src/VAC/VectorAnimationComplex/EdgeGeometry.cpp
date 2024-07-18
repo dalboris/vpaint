@@ -79,7 +79,8 @@ EdgeGeometry * EdgeGeometry::clone()
      QStringView curveData = str.mid(i+1, str.length()-i-2);
 
      // Switch on type
-     if(curveType == "xywdense")
+     static QString s_xywdense = "xywdense";
+     if(curveType == s_xywdense)
          return new LinearSpline(curveData);
      else
          return 0;

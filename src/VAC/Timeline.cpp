@@ -412,8 +412,9 @@ void PlaybackSettings::read(XmlStreamReader & xml)
         setFps(xml.attributes().value("fps").toInt());
     if(xml.attributes().hasAttribute("playmode"))
         setPlayMode(stringToPlayMode(xml.attributes().value("playmode").toString()));
+    static QString x_on = "on";
     if(xml.attributes().hasAttribute("subframeinbetweening"))
-        setSubframeInbetweening((xml.attributes().value("subframeinbetweening") == "on") ? true : false);
+        setSubframeInbetweening((xml.attributes().value("subframeinbetweening") == x_on) ? true : false);
 
     xml.skipCurrentElement();
 }

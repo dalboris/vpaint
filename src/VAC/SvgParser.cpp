@@ -1916,9 +1916,51 @@ QMap<QString, QString> parseStyleAttribute(const QString& style)
 //
 void SvgParser::readSvg(XmlStreamReader & xml, const SvgImportParams& params)
 {
+    static QString s_svg = "svg";
+    static QString s_transform = "transform";
+    static QString s_g = "g";
+    static QString s_defs = "defs";
+    static QString s_symbol = "symbol";
+    static QString s_use = "use";
+    static QString s_switch = "switch";
+    static QString s_image = "image";
+    static QString s_foreignObject = "foreignObject";
+    static QString s_desc = "desc";
+    static QString s_title = "title";
+    static QString s_metadata = "metadata";
+    static QString s_path = "path";
+    static QString s_rect = "rect";
+    static QString s_circle = "circle";
+    static QString s_ellipse = "ellipse";
+    static QString s_line = "line";
+    static QString s_polyline = "polyline";
+    static QString s_polygon = "polygon";
+    static QString s_text = "text";
+    static QString s_font = "font";
+    static QString s_font_face = "font-face";
+    static QString s_altGlyphDef = "altGlyphDef";
+    static QString s_style = "style";
+    static QString s_marker = "marker";
+    static QString s_color_profile = "color-profile";
+    static QString s_linearGradient = "linearGradient";
+    static QString s_radialGradient = "radialGradient";
+    static QString s_pattern = "pattern";
+    static QString s_clipPath = "clipPath";
+    static QString s_mask = "mask";
+    static QString s_filter = "filter";
+    static QString s_cursor = "cursor";
+    static QString s_a = "a";
+    static QString s_view = "view";
+    static QString s_script = "script";
+    static QString s_animate = "animate";
+    static QString s_set = "set";
+    static QString s_animateMotion = "animateMotion";
+    static QString s_animateColor = "animateColor";
+    static QString s_animateTransform = "animateTransform";
+
     // Ensure that this is a SVG file
     xml.readNextStartElement();
-    if(xml.name() != "svg") {
+    if(xml.name() != s_svg) {
         QMessageBox::warning(global()->mainWindow(),
                              QObject::tr("Not a SVG file"),
                              QObject::tr("This file doesn't seem to be a SVG file."));
@@ -1955,8 +1997,8 @@ void SvgParser::readSvg(XmlStreamReader & xml, const SvgImportParams& params)
 
             // Apply child transform to CTM (= Current Transform Matrix)
             Transform ctm = transformStack.top();
-            if (attrs.hasAttribute("transform")) {
-                std::string ts = attrs.value("transform").toString().toStdString();
+            if (attrs.hasAttribute(s_transform)) {
+                std::string ts = attrs.value(s_transform).toString().toStdString();
                 ctm = ctm * parseTransform(ts);
             }
             transformStack.push(ctm);
@@ -1965,7 +2007,7 @@ void SvgParser::readSvg(XmlStreamReader & xml, const SvgImportParams& params)
             //
             // https://www.w3.org/TR/SVG11/struct.html
             //
-            if(xml.name() == "svg") {
+            if(xml.name() == s_svg) {
                 // https://www.w3.org/TR/SVG11/struct.html#NewDocument
                 //
                 // TODO: implement x, y, width, height, viewBox and preserveAspectRatio.
@@ -1981,12 +2023,12 @@ void SvgParser::readSvg(XmlStreamReader & xml, const SvgImportParams& params)
                 //  interactivity elements
                 //  animation elements
             }
-            else if(xml.name() == "g") {
+            else if(xml.name() == s_g) {
                 // https://www.w3.org/TR/SVG11/struct.html#Groups
                 // We support this. We just have to keep reading its children.
                 // Allowed children: same as <svg>
             }
-            else if(xml.name() == "defs") {
+            else if(xml.name() == s_defs) {
                 // https://www.w3.org/TR/SVG11/struct.html#Head
                 // This is an unrendered group where to define referenced
                 // content such as symbols, markers, gradients, etc. Note that
@@ -1996,14 +2038,14 @@ void SvgParser::readSvg(XmlStreamReader & xml, const SvgImportParams& params)
                 // Allowed children: same as <svg>
                 xml.skipCurrentElement();
             }
-            else if(xml.name() == "symbol") {
+            else if(xml.name() == s_symbol) {
                 // https://www.w3.org/TR/SVG11/struct.html#SymbolElement
                 // This is an unrendered group to be instanciated with <use>.
                 // We don't support <symbol> yet, but we may want to support it later.
                 // Allowed children: same as <svg>
                 xml.skipCurrentElement();
             }
-            else if(xml.name() == "use") {
+            else if(xml.name() == s_use) {
                 // https://www.w3.org/TR/SVG11/struct.html#UseElement
                 // This is for instanciating a <symbol>.
                 // We don't support <use> yet, but we may want to support it later.
@@ -2019,7 +2061,7 @@ void SvgParser::readSvg(XmlStreamReader & xml, const SvgImportParams& params)
             // https://www.w3.org/TR/SVG11/backward.html
             // https://www.w3.org/TR/SVG11/extend.html
             //
-            else if (xml.name() == "switch") {
+            else if (xml.name() == s_switch) {
                 // https://www.w3.org/TR/SVG11/struct.html#ConditionalProcessing
                 // https://www.w3.org/TR/SVG11/struct.html#SwitchElement
                 // https://www.w3.org/TR/SVG11/backward.html
@@ -2035,7 +2077,7 @@ void SvgParser::readSvg(XmlStreamReader & xml, const SvgImportParams& params)
                 //  animation elements
                 xml.skipCurrentElement();
             }
-            else if (xml.name() == "image") {
+            else if (xml.name() == s_image) {
                 // https://www.w3.org/TR/SVG11/struct.html#ImageElement
                 // This is for rendering an external image (e.g.: jpg, png, svg).
                 // We don't support <image> yet, but may want to support it later.
@@ -2044,7 +2086,7 @@ void SvgParser::readSvg(XmlStreamReader & xml, const SvgImportParams& params)
                 //  animation elements
                 xml.skipCurrentElement();
             }
-            else if (xml.name() == "foreignObject") {
+            else if (xml.name() == s_foreignObject) {
                 // https://www.w3.org/TR/SVG11/extend.html#ForeignObjectElement
                 // This is for inline embedding of other XML documents which aren't
                 // SVG documents, such as MathML (for mathematical expressions), or
@@ -2068,9 +2110,9 @@ void SvgParser::readSvg(XmlStreamReader & xml, const SvgImportParams& params)
             // geometry or rendering in any ways, and can't be meaningfully
             // imported into VPaint.
             //
-            else if (xml.name() == "desc" ||
-                     xml.name() == "title" ||
-                     xml.name() == "metadata") {
+            else if (xml.name() == s_desc ||
+                     xml.name() == s_title ||
+                     xml.name() == s_metadata) {
                 xml.skipCurrentElement();
             }
 
@@ -2083,25 +2125,25 @@ void SvgParser::readSvg(XmlStreamReader & xml, const SvgImportParams& params)
             //  descriptive elements
             //  animation elements
             //
-            else if(xml.name() == "path") {
+            else if(xml.name() == s_path) {
                 if(!readPath(attrs, vac, t, pa, ctm, params)) return;
             }
-            else if(xml.name() == "rect") {
+            else if(xml.name() == s_rect) {
                 if(!readRect(attrs, vac, t, pa, ctm, params)) return;
             }
-            else if(xml.name() == "circle") {
+            else if(xml.name() == s_circle) {
                 if(!readCircle(attrs, vac, t, pa, ctm, params)) return;
             }
-            else if(xml.name() == "ellipse") {
+            else if(xml.name() == s_ellipse) {
                 if(!readEllipse(attrs, vac, t, pa, ctm, params)) return;
             }
-            else if(xml.name() == "line") {
+            else if(xml.name() == s_line) {
                 if(!readLine(attrs, vac, t, pa, ctm, params)) return;
             }
-            else if(xml.name() == "polyline") {
+            else if(xml.name() == s_polyline) {
                 if(!readPolyline(attrs, vac, t, pa, ctm, params)) return;
             }
-            else if(xml.name() == "polygon") {
+            else if(xml.name() == s_polygon) {
                 if(!readPolygon(attrs, vac, t, pa, ctm, params)) return;
             }
 
@@ -2123,10 +2165,10 @@ void SvgParser::readSvg(XmlStreamReader & xml, const SvgImportParams& params)
             // We don't support text-font elements for now, but we may want to
             // support them in the future.
             //
-            else if (xml.name() == "text" ||
-                     xml.name() == "font" ||
-                     xml.name() == "font-face" ||
-                     xml.name() == "altGlyphDef") {
+            else if (xml.name() == s_text ||
+                     xml.name() == s_font ||
+                     xml.name() == s_font_face ||
+                     xml.name() == s_altGlyphDef) {
                 xml.skipCurrentElement();
             }
 
@@ -2153,15 +2195,15 @@ void SvgParser::readSvg(XmlStreamReader & xml, const SvgImportParams& params)
             // We don't support styling elements for now, but we may want to
             // support them in the future.
             //
-            else if (xml.name() == "style" ||
-                     xml.name() == "marker" ||
-                     xml.name() == "color-profile" ||
-                     xml.name() == "linearGradient" ||
-                     xml.name() == "radialGradient" ||
-                     xml.name() == "pattern" ||
-                     xml.name() == "clipPath" ||
-                     xml.name() == "mask" ||
-                     xml.name() == "filter") {
+            else if (xml.name() == s_style ||
+                     xml.name() == s_marker ||
+                     xml.name() == s_color_profile ||
+                     xml.name() == s_linearGradient ||
+                     xml.name() == s_radialGradient ||
+                     xml.name() == s_pattern ||
+                     xml.name() == s_clipPath ||
+                     xml.name() == s_mask ||
+                     xml.name() == s_filter) {
                 xml.skipCurrentElement();
             }
 
@@ -2174,7 +2216,7 @@ void SvgParser::readSvg(XmlStreamReader & xml, const SvgImportParams& params)
             // We ignore all of these as they make no sense in VPaint.
             // We are not planning to ever support them in the future.
             //
-            else if (xml.name() == "cursor") {
+            else if (xml.name() == s_cursor) {
                 // https://www.w3.org/TR/SVG11/interact.html#CursorElement
                 // This is for defining a PNG image of a cursor, e.g. to define
                 // what the mouse cursor looks like when hovering some elements.
@@ -2183,7 +2225,7 @@ void SvgParser::readSvg(XmlStreamReader & xml, const SvgImportParams& params)
                 //  descriptive elements
                 xml.skipCurrentElement();
             }
-            else if (xml.name() == "a") {
+            else if (xml.name() == s_a) {
                 // https://www.w3.org/TR/SVG11/linking.html#Links
                 // This is to be redirected to another URI when clicking on
                 // any graphical element containted under the <a>. We ignore
@@ -2191,7 +2233,7 @@ void SvgParser::readSvg(XmlStreamReader & xml, const SvgImportParams& params)
                 // it was a normal group <g>.
                 // Allowed children: same as <svg>
             }
-            else if (xml.name() == "view") {
+            else if (xml.name() == s_view) {
                 // https://www.w3.org/TR/SVG11/linking.html#LinksIntoSVG
                 // https://www.w3.org/TR/SVG11/linking.html#ViewElement
                 // This is to predefine a specific viewBox or viewTarget within
@@ -2203,7 +2245,7 @@ void SvgParser::readSvg(XmlStreamReader & xml, const SvgImportParams& params)
                 //  descriptive elements
                 xml.skipCurrentElement();
             }
-            else if (xml.name() == "script") {
+            else if (xml.name() == s_script) {
                 // https://www.w3.org/TR/SVG11/script.html#ScriptElement
                 // This is for running scripts, or defining script functions to
                 // be run when interacting with SVG content (clicking, hovering, etc.)
@@ -2224,11 +2266,11 @@ void SvgParser::readSvg(XmlStreamReader & xml, const SvgImportParams& params)
             // animation tool, we obviously may want to support them in the
             // future.
             //
-            else if (xml.name() == "animate" ||
-                     xml.name() == "set" ||
-                     xml.name() == "animateMotion" ||
-                     xml.name() == "animateColor" ||
-                     xml.name() == "animateTransform") {
+            else if (xml.name() == s_animate ||
+                     xml.name() == s_set ||
+                     xml.name() == s_animateMotion ||
+                     xml.name() == s_animateColor ||
+                     xml.name() == s_animateTransform) {
                 xml.skipCurrentElement();
             }
 
