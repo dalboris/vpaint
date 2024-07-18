@@ -27,10 +27,10 @@
 #include <QColor>
 #include <QDebug>
 #include <QMessageBox>
-#include <QRegExp>
+#include <QRegularExpression>
 #include <QStack>
 #include <QString>
-#include <QStringRef>
+#include <QStringView>
 #include <QVector>
 #include <QtGlobal>
 #include <QtMath>
@@ -1786,7 +1786,7 @@ bool readPolylineOrPolygon(
     // choice is consistent with path data error handling. See:
     // https://github.com/w3c/svgwg/issues/764
     //
-    QStringList coords = attrs.value("points").toString().split(QRegExp("[\\s,]+"), Qt::SkipEmptyParts);
+    QStringList coords = attrs.value("points").toString().split(QRegularExpression("[\\s,]+"), Qt::SkipEmptyParts);
     size_t numCoords = static_cast<size_t>(coords.size());
     std::vector<double> d;
     d.reserve(numCoords);

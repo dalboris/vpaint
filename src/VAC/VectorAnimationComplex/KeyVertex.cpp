@@ -144,7 +144,7 @@ KeyVertex::KeyVertex(VAC * vac, QTextStream & in) :
     // be  careful,  would not  give
     // the   expexcted   result   if
     // whitespace are in pos
-    QStringList list = stringPos.split(QRegExp("\\s*[\\(\\,\\)]\\s*"),
+    QStringList list = stringPos.split(QRegularExpression("\\s*[\\(\\,\\)]\\s*"),
                                        Qt::SkipEmptyParts);
     pos_[0] = list[0].toDouble();
     pos_[1] = list[1].toDouble();

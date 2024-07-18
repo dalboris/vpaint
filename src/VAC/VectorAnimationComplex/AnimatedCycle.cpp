@@ -1226,7 +1226,7 @@ void AnimatedCycle::fromString(const QString & str)
     // Example:
     //  "[1:(15+,2,5,_,_) 2:(12,1,2,3,4)]" becomes:
     //  [ "1" ; "15+" ; "2" ; "5" ; "_" ; "_" ; "2" ; "12" ; "1" ; "2" ; "3" ; "4" ]
-    QStringList d = str.split(QRegExp("[\\[\\]\\s\\,\\(\\):]"), Qt::SkipEmptyParts); // use , ( ) [ ] : and whitespaces as delimiters
+    QStringList d = str.split(QRegularExpression("[\\[\\]\\s\\,\\(\\):]"), Qt::SkipEmptyParts); // use , ( ) [ ] : and whitespaces as delimiters
 
     // Get the number of nodes
     int n = d.size()/6;
@@ -1351,7 +1351,7 @@ QTextStream & operator>>(QTextStream & in, VectorAnimationComplex::AnimatedCycle
         while(delimiter == ",")
         {
             newIn >> nuple;
-            QStringList list = nuple.split(QRegExp("\\s*[\\(\\,\\)]\\s*"),
+            QStringList list = nuple.split(QRegularExpression("\\s*[\\(\\,\\)]\\s*"),
                                            Qt::SkipEmptyParts);
             AnimatedCycle::TempNode tempNode;
             tempNode.cell = list[0].toInt();

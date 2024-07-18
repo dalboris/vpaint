@@ -73,10 +73,10 @@ EdgeGeometry * EdgeGeometry::clone()
  EdgeGeometry * EdgeGeometry::read(XmlStreamReader & xml)
  {
      // Find curve type and data
-     QStringRef str =  xml.attributes().value("curve");
+     QStringView str =  xml.attributes().value("curve");
      int i = str.indexOf('(');
-     QStringRef curveType = str.left(i);
-     QStringRef curveData = str.mid(i+1, str.length()-i-2);
+     QStringView curveType = str.left(i);
+     QStringView curveData = str.mid(i+1, str.length()-i-2);
 
      // Switch on type
      if(curveType == "xywdense")
@@ -701,7 +701,7 @@ LinearSpline::LinearSpline(QTextStream & in) //:
     for(int i=0; i<n; i++)
     {
         in >> nuple;
-        QStringList list = nuple.split(QRegExp("\\s*[\\(\\,\\)]\\s*"),
+        QStringList list = nuple.split(QRegularExpression("\\s*[\\(\\,\\)]\\s*"),
                                        Qt::SkipEmptyParts);
         vertices << EdgeSample(list[0].toDouble(), list[1].toDouble(), list[2].toDouble());
     }
@@ -732,14 +732,14 @@ QString double2qstring(double x)
 }
 }
 
-LinearSpline::LinearSpline(const QStringRef & str)
+LinearSpline::LinearSpline(const QStringView & str)
 {
     // Clear curve
     curve_.clear();
 
     // Get data from string
-    QStringList strList = str.toString() // Expensive, to change by only using QStringRef
-               .split(QRegExp("[\\,\\s]"), Qt::SkipEmptyParts); // either ',', or any whitespace character
+    QStringList strList = str.toString() // Expensive, to change by only using QStringView
+               .split(QRegularExpression("[\\,\\s]"), Qt::SkipEmptyParts); // either ',', or any whitespace character
     QVector<double> d;
     for(int i=0; i<strList.size(); ++i)
         d << strList[i].toDouble();
@@ -769,7 +769,7 @@ LinearSpline::LinearSpline(XmlStreamReader & xml)
     // Get data from string
     QStringList strList =
             xml.attributes().value("curvedata").toString()
-               .split(QRegExp("[\\,\\s]"), Qt::SkipEmptyParts); // either ',', or any whitespace character
+               .split(QRegularExpression("[\\,\\s]"), Qt::SkipEmptyParts); // either ',', or any whitespace character
     QVector<double> d;
     for(int i=0; i<strList.size(); ++i)
         d << strList[i].toDouble();

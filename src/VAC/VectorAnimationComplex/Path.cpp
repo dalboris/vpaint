@@ -405,7 +405,7 @@ void Path::fromString(const QString & str)
     halfedges_.clear();
 
     // Split at ',', '[', ']', or any whitespace character
-    QStringList strList = str.split(QRegExp("[\\,\\s\\[\\]]"), Qt::SkipEmptyParts);
+    QStringList strList = str.split(QRegularExpression("[\\,\\s\\[\\]]"), Qt::SkipEmptyParts);
 
     // Get some info to determine cycle type
     QString firstStr = strList[0];

@@ -234,7 +234,7 @@ KeyFace::KeyFace(VAC * vac, XmlStreamReader & xml) :
 {
     // Cycles
     QString str;
-    QStringRef d = xml.attributes().value("cycles");
+    QStringView d = xml.attributes().value("cycles");
     bool opened = false;
     for(int i=0; i<d.length(); ++i)
     {

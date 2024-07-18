@@ -70,7 +70,7 @@ void FileVersionConverter::readVersion_()
         fileVersion_ = xml.attributes().value("version").toString();
 
         // Split string version at dots and spaces
-        QStringList list = fileVersion_.split(QRegExp("\\.| "));
+        QStringList list = fileVersion_.split(QRegularExpression("\\.| "));
 
         // Extract major and minor integers
         if (list.size() >= 2)
@@ -91,7 +91,7 @@ bool FileVersionConverter::convertToVersion(
     // Get target minor and major
     int targetMajor = 0;
     int targetMinor = 0;
-    QStringList list = targetVersion.split(QRegExp("\\.| "));
+    QStringList list = targetVersion.split(QRegularExpression("\\.| "));
     if (list.size() >= 2)
     {
         targetMajor = list[0].toInt();

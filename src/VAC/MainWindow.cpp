@@ -1347,7 +1347,7 @@ bool MainWindow::doExportPNG3D(const QString & filename)
         QString suffix = info.suffix();
         // Decompose basename into cleanedbasename + numbering. Examples:
         //     abc_1234_5678  ->     abc_1234 + 5678
-        int iNumbering = baseName.indexOf(QRegExp("_[0-9]*$"));
+        int iNumbering = baseName.indexOf(QRegularExpression("_[0-9]*$"));
         if(iNumbering != -1)
         {
             baseName.chop(baseName.length() - iNumbering);
