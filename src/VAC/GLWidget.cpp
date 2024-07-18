@@ -32,13 +32,14 @@ GLWidget::GLWidget(QWidget *parent, bool isOnly2D) :
     QOpenGLWidget(parent),
 
     gl_(nullptr),
+    gl_fbo_(nullptr),
 
     isOnly2D_(isOnly2D),
-    
+
     cameraDollyIsEnabled_(true),
     cameraTravellingIsEnabled_(true),
     cameraZoomIsEnabled_(true),
-    
+
     mouse_LeftButton_(false),
     mouse_MidButton_(false),
     mouse_RightButton_(false),
@@ -730,31 +731,9 @@ void GLWidget::initializeGL()
     qInfo() << "Initializing OpenGL, using the following format:";
     qInfo() << format();
 
-    // Access OpenGL 2.1 functions
-    if (!gl_) {
-        gl_ = context()->versionFunctions<OpenGLFunctions>();
-        if (!gl_) {
-            qFatal("Failed to access OpenGL " VPAINT_OPENGL_VERSION " functions.");
-        }
-    }
-
-    // Query extensions
-    bool queryExtensions = false;
-    if (queryExtensions) {
-        QList<QByteArray> extensions = context()->extensions().values();
-        qDebug() << "Supported extensions (" << extensions.count() << ")";
-        foreach (const QByteArray &extension, extensions)
-            qDebug() << "    " << extension;
-    }
-
-    // Access GL_ARB_framebuffer_object extension
-    if (!gl_fbo_) {
-        if (!context()->hasExtension(QByteArrayLiteral("GL_ARB_framebuffer_object"))) {
-            qFatal("GL_ARB_framebuffer_object is not supported");
-        }
-        gl_fbo_.reset(new QOpenGLExtension_ARB_framebuffer_object());
-        gl_fbo_->initializeOpenGLFunctions();
-    }
+    // Access OpenGL functions
+    gl_ = getOpenGLFunctions(context());
+    initFrameBufferObject(gl_fbo_, context());
 
     // Depth test
     if(isOnly2D_)

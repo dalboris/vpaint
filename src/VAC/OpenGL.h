@@ -53,13 +53,76 @@
 #ifndef OPENGL_H
 #define OPENGL_H
 
-#include <QOpenGLFunctions_2_1>
-#include <QOpenGLExtensions>
+#include <QtDebug>
+#include <QtGlobal>
+#include <QtOpenGL>
 
-using OpenGLFunctions = QOpenGLFunctions_2_1;
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+
+#include <QOpenGLExtensions>
+#include <QOpenGLFunctions_2_1>
 
 #define VPAINT_OPENGL_VERSION_MAJOR 2
 #define VPAINT_OPENGL_VERSION_MINOR 1
 #define VPAINT_OPENGL_VERSION "2.1"
+
+using OpenGLFunctions = QOpenGLFunctions_2_1;
+using FrameBufferObjectPtr = std::unique_ptr<QOpenGLExtension_ARB_framebuffer_object>;
+
+OpenGLFunctions* getOpenGLFunctions(QOpenGLContext * context) {
+    OpenGLFunctions* gl = context()->versionFunctions<OpenGLFunctions>();
+    if (!gl) {
+        qFatal("Failed to access OpenGL " VPAINT_OPENGL_VERSION " functions.");
+    }
+    return gl;
+}
+
+void initFrameBufferObject(FrameBufferObjectPtr & fbo, QOpenGLContext * context) {
+
+    // Query extensions
+    bool queryExtensions = false;
+    if (queryExtensions) {
+        QList<QByteArray> extensions = context->extensions().values();
+        qDebug() << "Supported extensions (" << extensions.count() << ")";
+        foreach (const QByteArray &extension, extensions)
+            qDebug() << "    " << extension;
+    }
+
+    // Access GL_ARB_framebuffer_object extension
+    if (!fbo) {
+        if (!context->hasExtension(QByteArrayLiteral("GL_ARB_framebuffer_object"))) {
+            qFatal("GL_ARB_framebuffer_object is not supported");
+        }
+        fbo.reset(new QOpenGLExtension_ARB_framebuffer_object());
+        fbo->initializeOpenGLFunctions();
+    }
+}
+
+#else
+
+#include <QOpenGLFunctions_3_0>
+
+#define VPAINT_OPENGL_VERSION_MAJOR 3
+#define VPAINT_OPENGL_VERSION_MINOR 0
+#define VPAINT_OPENGL_VERSION "3.0"
+
+using OpenGLFunctions = QOpenGLFunctions_3_0;
+using FrameBufferObjectPtr = QOpenGLFunctions_3_0*;
+
+OpenGLFunctions* getOpenGLFunctions(QOpenGLContext * context) {
+    OpenGLFunctions* gl = QOpenGLVersionFunctionsFactory::get<QOpenGLFunctions_3_0>(context);
+    if (!gl) {
+        qFatal("Failed to access OpenGL " VPAINT_OPENGL_VERSION " functions.");
+    }
+    return gl;
+}
+
+void initFrameBufferObject(FrameBufferObjectPtr & fbo, QOpenGLContext * context) {
+    if (!fbo) {
+        fbo = getOpenGLFunctions(context);
+    }
+}
+
+#endif
 
 #endif

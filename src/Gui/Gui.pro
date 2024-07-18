@@ -18,7 +18,13 @@
 TEMPLATE = app
 TARGET = VPaint
 CONFIG += qt c++11
-QT += opengl openglextensions network
+
+equals(QT_MAJOR_VERSION, 5) {
+    QT += opengl openglextensions network
+}
+greaterThan(QT_MAJOR_VERSION, 5) {
+    QT += core gui widgets opengl openglwidgets network
+}
 
 # App version
 #

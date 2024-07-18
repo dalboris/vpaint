@@ -188,7 +188,7 @@ protected slots:
 protected:
     // Access to OpenGL 2.x functions and extensions
     OpenGLFunctions* gl_;
-    std::unique_ptr<QOpenGLExtension_ARB_framebuffer_object> gl_fbo_;
+    FrameBufferObjectPtr gl_fbo_;
 
     // Member variables
     bool isOnly2D_;
