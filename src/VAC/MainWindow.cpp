@@ -246,7 +246,7 @@ void MainWindow::autosaveBegin()
 {
     bool success = true;
 
-    QString dataPath = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
+    QString dataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
     QDir().mkpath(dataPath);
     QDir dataDir(dataPath);
     if(!dataDir.exists())
