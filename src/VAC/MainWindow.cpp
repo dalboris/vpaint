@@ -1591,20 +1591,20 @@ void MainWindow::createActions()
     // Save As
     actionSaveAs = new QAction(/*QIcon(":/iconSave"),*/ tr("Save &As..."), this);
     actionSaveAs->setStatusTip(tr("Save current illustration with a new name."));
-    actionSaveAs->setShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_S));
+    actionSaveAs->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_S));
     connect(actionSaveAs, SIGNAL(triggered()), this, SLOT(saveAs()));
 
     // Export As
     actionExport = new QAction(/*QIcon(":/iconSave"),*/ tr("&Export"), this);
     actionExport->setStatusTip(tr("Export the current illustration in an external file format "
                                   "using the last used export settings."));
-    actionExport->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_E));
+    actionExport->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_E));
     connect(actionExport, SIGNAL(triggered()), this, SLOT(export_()));
 
     // Export As
     actionExportAs = new QAction(/*QIcon(":/iconSave"),*/ tr("Export As..."), this);
     actionExportAs->setStatusTip(tr("Export the current illustration in an external file format."));
-    actionExportAs->setShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_E));
+    actionExportAs->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_E));
     connect(actionExportAs, SIGNAL(triggered()), this, SLOT(exportAs()));
 
     // Preferences
@@ -1669,7 +1669,7 @@ void MainWindow::createActions()
     // Hard Delete
     actionHardDelete = new QAction(tr("Hard Delete"), this);
     actionHardDelete->setStatusTip(tr("Delete the selected objects and adjacent objects together."));
-    actionHardDelete->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Delete));
+    actionHardDelete->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Delete));
     actionHardDelete->setShortcutContext(Qt::ApplicationShortcut);
     connect(actionHardDelete, SIGNAL(triggered()), scene_, SLOT(deleteSelectedCells()));
 
@@ -1732,7 +1732,7 @@ void MainWindow::createActions()
 
     actionToggleOutlineOnly = new QAction(tr("Toggle only outline"), this);
     actionToggleOutlineOnly->setStatusTip(tr("Toggle only the outline of the illustration"));
-    actionToggleOutlineOnly->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Space));
+    actionToggleOutlineOnly->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Space));
     actionToggleOutlineOnly->setShortcutContext(Qt::ApplicationShortcut);
     connect(actionToggleOutlineOnly, SIGNAL(triggered()), multiView_, SLOT(toggleOutlineOnly()));
 
@@ -1774,7 +1774,7 @@ void MainWindow::createActions()
     actionOpenCloseView3DSettings = new QAction(tr("3D View Settings [Beta]"), this);
     actionOpenCloseView3DSettings->setCheckable(true);
     actionOpenCloseView3DSettings->setStatusTip(tr("Open or Close the settings dialog for the 3D view"));
-    //actionOpenView3DSettings->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_5));
+    //actionOpenView3DSettings->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_5));
     //actionOpenView3DSettings->setShortcutContext(Qt::ApplicationShortcut);
     connect(actionOpenCloseView3DSettings, SIGNAL(triggered()), this, SLOT(openClose3DSettings()));
     connect(view3DSettingsWidget_, SIGNAL(closed()), this, SLOT(view3DSettingsActionSetUnchecked()));
@@ -1789,25 +1789,25 @@ void MainWindow::createActions()
     // Splitting
     actionSplitClose = new QAction(tr("Close active view"), this);
     actionSplitClose->setStatusTip(tr("Close the active view"));
-    actionSplitClose->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_0));
+    actionSplitClose->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_0));
     actionSplitClose->setShortcutContext(Qt::ApplicationShortcut);
     connect(actionSplitClose, SIGNAL(triggered()), multiView_, SLOT(splitClose()));
 
     actionSplitOne = new QAction(tr("Close all but active view"), this);
     actionSplitOne->setStatusTip(tr("Close all views except the active view"));
-    actionSplitOne->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_1));
+    actionSplitOne->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_1));
     actionSplitOne->setShortcutContext(Qt::ApplicationShortcut);
     connect(actionSplitOne, SIGNAL(triggered()), multiView_, SLOT(splitOne()));
 
     actionSplitVertical = new QAction(tr("Split view vertically"), this);
     actionSplitVertical->setStatusTip(tr("Split the active view vertically"));
-    actionSplitVertical->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_2));
+    actionSplitVertical->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_2));
     actionSplitVertical->setShortcutContext(Qt::ApplicationShortcut);
     connect(actionSplitVertical, SIGNAL(triggered()), multiView_, SLOT(splitVertical()));
 
     actionSplitHorizontal = new QAction(tr("Split view horizontally"), this);
     actionSplitHorizontal->setStatusTip(tr("Split the active view horizontally"));
-    actionSplitHorizontal->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_3));
+    actionSplitHorizontal->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_3));
     actionSplitHorizontal->setShortcutContext(Qt::ApplicationShortcut);
     connect(actionSplitHorizontal, SIGNAL(triggered()), multiView_, SLOT(splitHorizontal()));
 
@@ -1818,28 +1818,28 @@ void MainWindow::createActions()
     // Select All In Frame
     actionSelectAllInFrame = new QAction(tr("Select all (current frame)"), this);
     actionSelectAllInFrame->setStatusTip(tr("Select all the objects in the current frame."));
-    actionSelectAllInFrame->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_A));
+    actionSelectAllInFrame->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_A));
     actionSelectAllInFrame->setShortcutContext(Qt::ApplicationShortcut);
     connect(actionSelectAllInFrame, SIGNAL(triggered()), scene_, SLOT(selectAllInFrame()));
 
     // Select All In Animation
     actionSelectAllInAnimation = new QAction(tr("Select all (whole animation)"), this);
     actionSelectAllInAnimation->setStatusTip(tr("Select all the objects in the whole animation."));
-    actionSelectAllInAnimation->setShortcut(QKeySequence(Qt::CTRL + Qt::ALT + Qt::Key_A));
+    actionSelectAllInAnimation->setShortcut(QKeySequence(Qt::CTRL | Qt::ALT | Qt::Key_A));
     actionSelectAllInAnimation->setShortcutContext(Qt::ApplicationShortcut);
     connect(actionSelectAllInAnimation, SIGNAL(triggered()), scene_, SLOT(selectAllInAnimation()));
 
     // Deselect All
     actionDeselectAll = new QAction(tr("Deselect all"), this);
     actionDeselectAll->setStatusTip(tr("Deselect all the objects."));
-    actionDeselectAll->setShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_A));
+    actionDeselectAll->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_A));
     actionDeselectAll->setShortcutContext(Qt::ApplicationShortcut);
     connect(actionDeselectAll, SIGNAL(triggered()), scene_, SLOT(deselectAll()));
 
     // Invert Selection
     actionInvertSelection = new QAction(tr("Invert Selection"), this);
     actionInvertSelection->setStatusTip(tr("Deselect all the selected objects and select all the other objects."));
-    actionInvertSelection->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_I));
+    actionInvertSelection->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_I));
     actionInvertSelection->setShortcutContext(Qt::ApplicationShortcut);
     connect(actionInvertSelection, SIGNAL(triggered()), scene_, SLOT(invertSelection()));
 
@@ -1853,7 +1853,7 @@ void MainWindow::createActions()
     // Select Closure
     actionSelectClosure = new QAction(tr("Add boundary to selection"), this);
     actionSelectClosure->setStatusTip(tr("Add the boundary of the selected objects to the selection."));
-    actionSelectClosure->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Tab));
+    actionSelectClosure->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Tab));
     actionSelectClosure->setShortcutContext(Qt::ApplicationShortcut);
     connect(actionSelectClosure, SIGNAL(triggered()), scene_, SLOT(selectClosure()));
 
@@ -1881,21 +1881,21 @@ void MainWindow::createActions()
     // Deselect Vertices
     actionDeselectVertices = new QAction(tr("Deselect vertices"), this);
     actionDeselectVertices->setStatusTip(tr("Deselect all vertices."));
-    actionDeselectVertices->setShortcut(QKeySequence(Qt::Key_S, Qt::SHIFT + Qt::Key_V));
+    actionDeselectVertices->setShortcut(QKeySequence(Qt::Key_S, Qt::SHIFT | Qt::Key_V));
     actionDeselectVertices->setShortcutContext(Qt::ApplicationShortcut);
     connect(actionDeselectVertices, SIGNAL(triggered()), scene_, SLOT(deselectVertices()));
 
     // Deselect Edges
     actionDeselectEdges = new QAction(tr("Deselect edges"), this);
     actionDeselectEdges->setStatusTip(tr("Deselect all edges."));
-    actionDeselectEdges->setShortcut(QKeySequence(Qt::Key_S, Qt::SHIFT + Qt::Key_E));
+    actionDeselectEdges->setShortcut(QKeySequence(Qt::Key_S, Qt::SHIFT | Qt::Key_E));
     actionDeselectEdges->setShortcutContext(Qt::ApplicationShortcut);
     connect(actionDeselectEdges, SIGNAL(triggered()), scene_, SLOT(deselectEdges()));
 
     // Deselect Faces
     actionDeselectFaces = new QAction(tr("Deselect faces"), this);
     actionDeselectFaces->setStatusTip(tr("Deselect all faces."));
-    actionDeselectFaces->setShortcut(QKeySequence(Qt::Key_S, Qt::SHIFT + Qt::Key_F));
+    actionDeselectFaces->setShortcut(QKeySequence(Qt::Key_S, Qt::SHIFT | Qt::Key_F));
     actionDeselectFaces->setShortcutContext(Qt::ApplicationShortcut);
     connect(actionDeselectFaces, SIGNAL(triggered()), scene_, SLOT(deselectFaces()));
 
@@ -1916,14 +1916,14 @@ void MainWindow::createActions()
     // Deselect Key Cells
     actionDeselectKeyCells = new QAction(tr("Deselect key cells"), this);
     actionDeselectKeyCells->setStatusTip(tr("Deselect all key cells."));
-    actionDeselectKeyCells->setShortcut(QKeySequence(Qt::Key_S, Qt::SHIFT + Qt::Key_K));
+    actionDeselectKeyCells->setShortcut(QKeySequence(Qt::Key_S, Qt::SHIFT | Qt::Key_K));
     actionDeselectKeyCells->setShortcutContext(Qt::ApplicationShortcut);
     connect(actionDeselectKeyCells, SIGNAL(triggered()), scene_, SLOT(deselectKeyCells()));
 
     // Deselect Inbetween Cells
     actionDeselectInbetweenCells = new QAction(tr("Deselect inbetween cells"), this);
     actionDeselectInbetweenCells->setStatusTip(tr("Deselect all inbetween cells."));
-    actionDeselectInbetweenCells->setShortcut(QKeySequence(Qt::Key_S, Qt::SHIFT + Qt::Key_I));
+    actionDeselectInbetweenCells->setShortcut(QKeySequence(Qt::Key_S, Qt::SHIFT | Qt::Key_I));
     actionDeselectInbetweenCells->setShortcutContext(Qt::ApplicationShortcut);
     connect(actionDeselectInbetweenCells, SIGNAL(triggered()), scene_, SLOT(deselectInbetweenCells()));
 
@@ -2021,7 +2021,7 @@ void MainWindow::createActions()
     actionAltRaise = new QAction(tr("Alternative Raise"), this);
     actionAltRaise->setStatusTip(tr("Raise the selected objects, "
                                     "without enforcing that they stay below their boundary."));
-    actionAltRaise->setShortcut(QKeySequence(Qt::ALT + Qt::Key_PageUp));
+    actionAltRaise->setShortcut(QKeySequence(Qt::ALT | Qt::Key_PageUp));
     actionAltRaise->setShortcutContext(Qt::ApplicationShortcut);
     connect(actionAltRaise, SIGNAL(triggered()), scene_, SLOT(altRaise()));
 
@@ -2029,7 +2029,7 @@ void MainWindow::createActions()
     actionAltLower = new QAction(tr("Alternative Lower"), this);
     actionAltLower->setStatusTip(tr("Lower the selected objects, "
                                     "without enforcing that they stay below their boundary."));
-    actionAltLower->setShortcut(QKeySequence(Qt::ALT + Qt::Key_PageDown));
+    actionAltLower->setShortcut(QKeySequence(Qt::ALT | Qt::Key_PageDown));
     actionAltLower->setShortcutContext(Qt::ApplicationShortcut);
     connect(actionAltLower, SIGNAL(triggered()), scene_, SLOT(altLower()));
 
@@ -2037,7 +2037,7 @@ void MainWindow::createActions()
     actionAltRaiseToTop = new QAction(tr("Alternative Raise to top"), this);
     actionAltRaiseToTop->setStatusTip(tr("Raise the selected objects to the foreground, "
                                          "without enforcing that they stay below their boundary."));
-    actionAltRaiseToTop->setShortcut(QKeySequence(Qt::ALT + Qt::Key_Home));
+    actionAltRaiseToTop->setShortcut(QKeySequence(Qt::ALT | Qt::Key_Home));
     actionAltRaiseToTop->setShortcutContext(Qt::ApplicationShortcut);
     connect(actionAltRaiseToTop, SIGNAL(triggered()), scene_, SLOT(altRaiseToTop()));
 
@@ -2045,7 +2045,7 @@ void MainWindow::createActions()
     actionAltLowerToBottom = new QAction(tr("Alternative Lower to bottom"), this);
     actionAltLowerToBottom->setStatusTip(tr("Lower the selected objects to the background, "
                                             "without enforcing that they stay below their boundary."));
-    actionAltLowerToBottom->setShortcut(QKeySequence(Qt::ALT + Qt::Key_End));
+    actionAltLowerToBottom->setShortcut(QKeySequence(Qt::ALT | Qt::Key_End));
     actionAltLowerToBottom->setShortcutContext(Qt::ApplicationShortcut);
     connect(actionAltLowerToBottom, SIGNAL(triggered()), scene_, SLOT(altLowerToBottom()));
 
@@ -2062,7 +2062,7 @@ void MainWindow::createActions()
     // Motion Paste
     actionMotionPaste = new QAction(tr("Motion paste"), this);
     actionMotionPaste->setStatusTip(tr("Paste the cells in the clipboard, and inbetween them with the copied cells."));
-    actionMotionPaste->setShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_V));
+    actionMotionPaste->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_V));
     actionMotionPaste->setShortcutContext(Qt::ApplicationShortcut);
     connect(actionMotionPaste, SIGNAL(triggered()), this, SLOT(motionPaste()));
 
@@ -2076,7 +2076,7 @@ void MainWindow::createActions()
     // Create inbetween Face
     actionCreateInbetweenFace = new QAction(tr("Create inbetween face [Beta]"), this);
     actionCreateInbetweenFace->setStatusTip(tr("Open the animated cycle editor to create a new inbetween face."));
-    actionCreateInbetweenFace->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_F));
+    actionCreateInbetweenFace->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_F));
     actionCreateInbetweenFace->setShortcutContext(Qt::ApplicationShortcut);
     connect(actionCreateInbetweenFace, SIGNAL(triggered()), this, SLOT(createInbetweenFace()));
 

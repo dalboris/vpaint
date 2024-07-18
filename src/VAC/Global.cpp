@@ -335,7 +335,7 @@ void Global::createToolBars()
     actionRemoveCycles_->setText(tr("Remove Holes (Ctrl+H)"));
     actionRemoveCycles_->setIcon(QIcon(":/images/remove-cycles.png"));
     actionRemoveCycles_->setStatusTip(tr("Remove holes from the selected face, whose boundaries are the selected edges"));
-    actionRemoveCycles_->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_H));
+    actionRemoveCycles_->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_H));
     actionRemoveCycles_->setShortcutContext(Qt::ApplicationShortcut);
     mainWindow()->addAction(actionRemoveCycles_);
     connect(actionRemoveCycles_, SIGNAL(triggered()), mainWindow()->scene(), SLOT(removeCyclesFromFace()));
@@ -357,7 +357,7 @@ void Global::createToolBars()
     actionUnglue_->setToolTip(tr("Explode (E)"));
     actionUnglue_->setIcon(QIcon(":/images/unglue.png"));
     actionUnglue_->setStatusTip(tr("Duplicate the selected objects to disconnect adjacent curves and surfaces"));
-    //actionUnglue_->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_G));
+    //actionUnglue_->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_G));
     actionUnglue_->setShortcut(QKeySequence(Qt::Key_E));
     actionUnglue_->setShortcutContext(Qt::ApplicationShortcut);
     mainWindow()->addAction(actionUnglue_);

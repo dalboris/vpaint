@@ -548,7 +548,7 @@ Timeline::Timeline(Scene *scene, QWidget *parent) :
     actionGoToFirstFrame_ = new QAction(tr("Go to first frame"), this);
     actionGoToFirstFrame_->setStatusTip(tr("Set frame of active view to be the first frame in playback range."));
     actionGoToFirstFrame_->setToolTip(QString(ACTION_MODIFIER_NAME_SHORT).toUpper() + tr(" + Left"));
-    actionGoToFirstFrame_->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Left));
+    actionGoToFirstFrame_->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Left));
     actionGoToFirstFrame_->setShortcutContext(Qt::ApplicationShortcut);
     connect(actionGoToFirstFrame_, SIGNAL(triggered()), this, SLOT(goToFirstFrame()));
 
@@ -576,7 +576,7 @@ Timeline::Timeline(Scene *scene, QWidget *parent) :
     actionGoToLastFrame_ = new QAction(tr("Go to last frame"), this);
     actionGoToLastFrame_->setStatusTip(tr("Set frame of active view to be the last frame in playback range."));
     actionGoToLastFrame_->setToolTip(QString(ACTION_MODIFIER_NAME_SHORT).toUpper() + tr(" + Right"));
-    actionGoToLastFrame_->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Right));
+    actionGoToLastFrame_->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Right));
     actionGoToLastFrame_->setShortcutContext(Qt::WindowShortcut);
     connect(actionGoToLastFrame_, SIGNAL(triggered()), this, SLOT(goToLastFrame()));
 
