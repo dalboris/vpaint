@@ -21,6 +21,8 @@
 #include "Application.h"
 #include "UpdateCheck.h"
 
+#include <QStyleFactory>
+
 int main(int argc, char *argv[])
 {
 
@@ -34,6 +36,14 @@ int main(int argc, char *argv[])
     //
     GLUtils::init();
 
+    // With some default styles, notably the macOS style with Qt6, then there
+    // are ugly transparency issues (rendered as black background) with widgets
+    // overlayed on top of a QOpenGLWidget, as well as sometimes ugly margins.
+    // Therefore, we use the Fusion style on all platforms, which does not look
+    // native but at least provides a reasonable and predictible look on all
+    // platforms.
+    //
+    QApplication::setStyle(QStyleFactory::create("Fusion"));
 
     Application app(argc, argv);
     MainWindow mainWindow;
