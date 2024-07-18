@@ -206,6 +206,10 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE _USE_MATH_DEFINES)
 target_compile_definitions(${PROJECT_NAME} PRIVATE ACTION_MODIFIER_NAME="${ACTION_MODIFIER_NAME}")
 target_compile_definitions(${PROJECT_NAME} PRIVATE ACTION_MODIFIER_NAME_SHORT="${ACTION_MODIFIER_NAME_SHORT}")
 
+# Note: if in the future, support for Qt 6 is added to this CMakeLists, then it
+# is also needed to create a new CMakeLists for Third/QtOpenGLExtensions. See
+# comments in VAC/OpenGL.h.
+#
 find_package(Qt5 COMPONENTS Core Gui Widgets OpenGL OpenGLExtensions Network REQUIRED)
 target_link_libraries(${PROJECT_NAME} PUBLIC Qt5::Widgets Qt5::Core Qt5::Gui Qt5::OpenGL Qt5::OpenGLExtensions Qt5::Network)
 

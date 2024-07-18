@@ -323,3 +323,10 @@ SOURCES += main.cpp \
     Application.cpp \
     UpdateCheckDialog.cpp \
     UpdateCheck.cpp
+
+# Qt 6 removed QtOpenGLExtensions, so we add them back...
+#
+greaterThan(QT_MAJOR_VERSION, 5) {
+    HEADERS += ../Third/QtOpenGLExtensions/qopenglextensions.h
+    SOURCES += ../Third/QtOpenGLExtensions/qopenglextensions.cpp
+}

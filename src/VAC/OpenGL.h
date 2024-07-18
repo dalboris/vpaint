@@ -58,10 +58,29 @@
 #include <QtDebug>
 #include <QtGlobal>
 #include <QtOpenGL>
+#include <QSurfaceFormat>
 
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+// VPaint uses legacy OpenGL and requires either:
+// - OpenGL 2.1 with GL_ARB_framebuffer_object extension, or
+// - OpenGL 3.0 and 3.1 with deprecated function
+// - OpenGL 3+ with compatibility profile
+//
+// Unfortunately:
+// - macOS only supports OpenGL 2.1, or OpenGL 3.2+ with core profile
+// - Qt 6 removed the QtOpenGLExtensions module
+// - Qt 5 is not natively supported on Apple Silicon (M1, ...)
+//
+// So in order to compile VPaint natively on macOS on Apple Silicon, we need:
+// - Qt 6
+// - OpenGL 2.1
+// - Manually add back QtOpenGLExtensions.
+//
+// This is why we have manually added the Third/QtOpenGLExtensions folder
 
-#include <QOpenGLExtensions>
+#define VPAINT_OPENGL_USE_2_1_WITH_EXTENSION 1
+
+#if VPAINT_OPENGL_USE_2_1_WITH_EXTENSION
+
 #include <QOpenGLFunctions_2_1>
 
 #define VPAINT_OPENGL_VERSION_MAJOR 2
@@ -69,10 +88,41 @@
 #define VPAINT_OPENGL_VERSION "2.1"
 
 using OpenGLFunctions = QOpenGLFunctions_2_1;
+
+static constexpr QSurfaceFormat::OpenGLContextProfile openGLProfile = QSurfaceFormat::NoProfile;
+static constexpr QSurfaceFormat::FormatOptions openGLOptions = {};
+
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+#include <QOpenGLExtensions>
+#else
+#include <QtOpenGLExtensions/qopenglextensions.h>
+#endif
+
 using FrameBufferObjectPtr = std::unique_ptr<QOpenGLExtension_ARB_framebuffer_object>;
 
+#else
+
+#include <QOpenGLFunctions_3_2_Compatibility>
+
+#define VPAINT_OPENGL_VERSION_MAJOR 3
+#define VPAINT_OPENGL_VERSION_MINOR 2
+#define VPAINT_OPENGL_VERSION "3.2"
+
+using OpenGLFunctions = QOpenGLFunctions_3_2_Compatibility;
+
+static constexpr QSurfaceFormat::OpenGLContextProfile openGLProfile = QSurfaceFormat::CompatibilityProfile;
+static constexpr QSurfaceFormat::FormatOptions openGLOptions = QSurfaceFormat::DeprecatedFunctions;
+
+using FrameBufferObjectPtr = OpenGLFunctions*;
+
+#endif
+
 inline OpenGLFunctions* getOpenGLFunctions(QOpenGLContext * context) {
-    OpenGLFunctions* gl = context()->versionFunctions<OpenGLFunctions>();
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    OpenGLFunctions* gl = context->versionFunctions<OpenGLFunctions>();
+#else
+    OpenGLFunctions* gl = QOpenGLVersionFunctionsFactory::get<OpenGLFunctions>(context);
+#endif
     if (!gl) {
         qFatal("Failed to access OpenGL " VPAINT_OPENGL_VERSION " functions.");
     }
@@ -80,6 +130,12 @@ inline OpenGLFunctions* getOpenGLFunctions(QOpenGLContext * context) {
 }
 
 inline void initFrameBufferObject(FrameBufferObjectPtr & fbo, QOpenGLContext * context) {
+
+    if (fbo) {
+        return;
+    }
+
+#if VPAINT_OPENGL_USE_2_1_WITH_EXTENSION
 
     // Query extensions
     bool queryExtensions = false;
@@ -91,40 +147,14 @@ inline void initFrameBufferObject(FrameBufferObjectPtr & fbo, QOpenGLContext * c
     }
 
     // Access GL_ARB_framebuffer_object extension
-    if (!fbo) {
-        if (!context->hasExtension(QByteArrayLiteral("GL_ARB_framebuffer_object"))) {
-            qFatal("GL_ARB_framebuffer_object is not supported");
-        }
-        fbo.reset(new QOpenGLExtension_ARB_framebuffer_object());
-        fbo->initializeOpenGLFunctions();
+    if (!context->hasExtension(QByteArrayLiteral("GL_ARB_framebuffer_object"))) {
+        qFatal("GL_ARB_framebuffer_object is not supported");
     }
-}
-
+    fbo.reset(new QOpenGLExtension_ARB_framebuffer_object());
+    fbo->initializeOpenGLFunctions();
 #else
-
-#include <QOpenGLFunctions_3_0>
-
-#define VPAINT_OPENGL_VERSION_MAJOR 3
-#define VPAINT_OPENGL_VERSION_MINOR 0
-#define VPAINT_OPENGL_VERSION "3.0"
-
-using OpenGLFunctions = QOpenGLFunctions_3_0;
-using FrameBufferObjectPtr = QOpenGLFunctions_3_0*;
-
-inline OpenGLFunctions* getOpenGLFunctions(QOpenGLContext * context) {
-    OpenGLFunctions* gl = QOpenGLVersionFunctionsFactory::get<QOpenGLFunctions_3_0>(context);
-    if (!gl) {
-        qFatal("Failed to access OpenGL " VPAINT_OPENGL_VERSION " functions.");
-    }
-    return gl;
-}
-
-inline void initFrameBufferObject(FrameBufferObjectPtr & fbo, QOpenGLContext * context) {
-    if (!fbo) {
-        fbo = getOpenGLFunctions(context);
-    }
-}
-
+    fbo = getOpenGLFunctions(context);
 #endif
+}
 
 #endif

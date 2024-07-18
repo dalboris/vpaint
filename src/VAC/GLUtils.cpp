@@ -57,7 +57,7 @@ void GLUtils::init()
 
     QSurfaceFormat format;
     format.setVersion(VPAINT_OPENGL_VERSION_MAJOR, VPAINT_OPENGL_VERSION_MINOR);
-    format.setOption(QSurfaceFormat::DeprecatedFunctions);
+    format.setOptions(openGLOptions);
     format.setDepthBufferSize(24);
     format.setRedBufferSize(8);
     format.setGreenBufferSize(8);
@@ -68,7 +68,7 @@ void GLUtils::init()
     format.setSwapBehavior(QSurfaceFormat::DefaultSwapBehavior);
     format.setSwapInterval(0);
     format.setColorSpace(QSurfaceFormat::DefaultColorSpace);
-    format.setProfile(QSurfaceFormat::CompatibilityProfile);
+    format.setProfile(openGLProfile);
     QSurfaceFormat::setDefaultFormat(format);
 }
 
